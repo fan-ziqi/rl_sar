@@ -29,7 +29,11 @@ Unitree_RL::Unitree_RL()
     std::string actor_path = ros::package::getPath(package_name) + "/models/actor.pt";
     std::string encoder_path = ros::package::getPath(package_name) + "/models/encoder.pt";
     std::string vq_path = ros::package::getPath(package_name) + "/models/vq_layer.pt";
-    this->init_models(actor_path, encoder_path, vq_path);
+
+    this->actor = torch::jit::load(actor_path);
+    this->encoder = torch::jit::load(encoder_path);
+    this->vq = torch::jit::load(vq_path);
+    this->init_observations();
     
     this->params.num_observations = 45;
     this->params.clip_obs = 100.0;
