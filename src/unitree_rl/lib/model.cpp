@@ -1,13 +1,5 @@
 #include "model.hpp"
 
-void Model::init_models(std::string actor_path, std::string encoder_path, std::string vq_path)
-{
-    this->actor = torch::jit::load(actor_path);
-    this->encoder = torch::jit::load(encoder_path);
-    this->vq = torch::jit::load(vq_path);
-    this->init_observations();
-}
-
 torch::Tensor Model::quat_rotate_inverse(torch::Tensor q, torch::Tensor v)
 {
     c10::IntArrayRef shape = q.sizes();
