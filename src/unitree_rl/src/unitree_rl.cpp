@@ -43,6 +43,7 @@ Unitree_RL::Unitree_RL()
     this->params.d_gains = torch::ones(12) * this->params.damping;
     this->params.p_gains = torch::ones(12) * this->params.stiffness;
     this->params.action_scale = 0.25;
+    this->params.hip_scale_reduction = 0.5;
     this->params.num_of_dofs = 12;
     this->params.lin_vel_scale = 2.0;
     this->params.ang_vel_scale = 0.25;
