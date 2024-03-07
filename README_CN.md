@@ -1,23 +1,23 @@
 # rl_sim2sim
 
-[中文文档](README_CN.md)
+[English document](README.md)
 
-## Preparation
+## 准备
 
-Pull the code (synchronously pull submodules)
+拉取代码（同步拉取子模块）
 
 ```bash
 git clone --recursive https://github.com/fan-ziqi/rl_sim2sim.git
 ```
 
-If there are updates:
+如有更新：
 
 ```bash
 git pull
 git submodule update --remote --recursive
 ```
 
-Download and deploy `libtorch` at any location
+在任意位置下载并部署`libtorch`
 
 ```bash
 cd /path/to/your/torchlib
@@ -26,47 +26,47 @@ unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
 echo 'export Torch_DIR=/path/to/your/torchlib' >> ~/.bashrc
 ```
 
-Install `teleop-twist-keyboard` 
+安装 `teleop-twist-keyboard` 
 
 ```bash
 sudo apt install ros-noetic-teleop-twist-keyboard
 ```
 
-## Compilation
+## 编译
 
-Customize the following two functions in the code to adapt to different models:
+自定义代码中的以下两个函数，以适配不同的模型：
 
 ```cpp
 torch::Tensor forward() override;
 torch::Tensor compute_observation() override;
 ```
 
-Then compile in the root directory
+然后到根目录编译
 
 ```bash
 cd ..
 catkin build
 ```
 
-## Run
+## 运行
 
-Copy the trained pt model file to `sim2sim/src/unitree_rl/models`
+将训练好的pt模型文件拷贝到`sim2sim/src/unitree_rl/models`中
 
-Open a new terminal, start the gazebo simulation environment
+新建终端，启动gazebo仿真环境
 
 ```bash
 source devel/setup.bash
 roslaunch unitree_rl start_env.launch
 ```
 
-Open a new terminal, start the control program
+新建终端，启动控制程序
 
 ```bash
 source devel/setup.bash
 rosrun unitree_rl unitree_rl
 ```
 
-Open a new terminal, keyboard control program
+新建终端，键盘控制程序
 
 ```bash
 rosrun teleop_twist_keyboard teleop_twist_keyboard.py
@@ -74,4 +74,4 @@ rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 
 
 
-> Part of the code refers to https://github.com/mertgungor/unitree_model_control
+> 部分代码参考https://github.com/mertgungor/unitree_model_control
