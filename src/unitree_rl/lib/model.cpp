@@ -13,8 +13,14 @@ torch::Tensor Model::quat_rotate_inverse(torch::Tensor q, torch::Tensor v)
 
 torch::Tensor Model::compute_torques(torch::Tensor actions)
 {
-    actions *= this->params.action_scale;
-    torch::Tensor torques = this->params.p_gains * (actions + this->params.default_dof_pos - this->obs.dof_pos) - this->params.d_gains * this->obs.dof_vel;
+    torch::Tensor actions_scaled = actions * this->params.action_scale;
+    int indices[] = {0, 3, 6, 9};
+    for (int i : indices)
+    {
+        actions_scaled[0][i] *= this->params.hip_scale_reduction;
+    }
+
+    torch::Tensor torques = this->params.p_gains * (actions_scaled + this->params.default_dof_pos - this->obs.dof_pos) - this->params.d_gains * this->obs.dof_vel;
     torch::Tensor clamped = torch::clamp(torques, -(this->params.torque_limits), this->params.torque_limits);
     return clamped;
 }
