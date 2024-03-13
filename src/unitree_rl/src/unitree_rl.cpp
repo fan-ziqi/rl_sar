@@ -10,21 +10,6 @@ Unitree_RL::Unitree_RL()
 
     torque_commands.resize(12);
 
-    ros_namespace = "/a1_gazebo/";
-
-    joint_names = {
-        "FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
-        "FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
-        "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint",
-        "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint",
-    };
-
-    for (int i = 0; i < 12; ++i)
-    {
-        torque_publishers[joint_names[i]] = nh.advertise<unitree_legged_msgs::MotorCmd>(
-            ros_namespace + joint_names[i].substr(0, joint_names[i].size() - 6) + "_controller/command", 10);
-    }
-
     std::string package_name = "unitree_rl";
     std::string actor_path = ros::package::getPath(package_name) + "/models/actor.pt";
     std::string encoder_path = ros::package::getPath(package_name) + "/models/encoder.pt";
@@ -51,30 +36,45 @@ Unitree_RL::Unitree_RL()
     this->params.dof_vel_scale = 0.05;
     this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale});
 
-    //                                           hip, thigh, calf
-    this->params.torque_limits = torch::tensor({{20.0, 55.0, 55.0,    // front left
-                                                 20.0, 55.0, 55.0,    // front right
-                                                 20.0, 55.0, 55.0,    // rear  left
-                                                 20.0, 55.0, 55.0}}); // rear  right
+    
+    this->params.torque_limits = torch::tensor({{20.0, 55.0, 55.0,    
+                                                 20.0, 55.0, 55.0,
+                                                 20.0, 55.0, 55.0,
+                                                 20.0, 55.0, 55.0}});
 
-    this->params.default_dof_pos = torch::tensor({{0.1000, 0.8000, -1.5000,
-                                                  -0.1000, 0.8000, -1.5000,
-                                                   0.1000, 1.0000, -1.5000,
-                                                  -0.1000, 1.0000, -1.5000}});
+    //                                             hip,    thigh,   calf
+    this->params.default_dof_pos = torch::tensor({{0.1000, 0.8000, -1.5000,   // front left
+                                                  -0.1000, 0.8000, -1.5000,   // front right
+                                                   0.1000, 1.0000, -1.5000,   // rear  left
+                                                  -0.1000, 1.0000, -1.5000}});// rear  right
 
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
-
-    // Create a subscriber object
-    model_state_subscriber_ = nh.subscribe<gazebo_msgs::ModelStates>(
-        "/gazebo/model_states", 10, &Unitree_RL::modelStatesCallback, this);
-
-    joint_state_subscriber_ = nh.subscribe<sensor_msgs::JointState>(
-        "/a1_gazebo/joint_states", 10, &Unitree_RL::jointStatesCallback, this);
 
     cmd_vel_subscriber_ = nh.subscribe<geometry_msgs::Twist>(
         "/cmd_vel", 10, &Unitree_RL::cmdvelCallback, this);
 
     timer = nh.createTimer(ros::Duration(0.005), &Unitree_RL::runModel, this);
+
+    ros_namespace = "/a1_gazebo/";
+
+    joint_names = {
+        "FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
+        "FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
+        "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint",
+        "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint",
+    };
+
+    for (int i = 0; i < 12; ++i)
+    {
+        torque_publishers[joint_names[i]] = nh.advertise<unitree_legged_msgs::MotorCmd>(
+            ros_namespace + joint_names[i].substr(0, joint_names[i].size() - 6) + "_controller/command", 10);
+    }
+
+    model_state_subscriber_ = nh.subscribe<gazebo_msgs::ModelStates>(
+        "/gazebo/model_states", 10, &Unitree_RL::modelStatesCallback, this);
+
+    joint_state_subscriber_ = nh.subscribe<sensor_msgs::JointState>(
+        "/a1_gazebo/joint_states", 10, &Unitree_RL::jointStatesCallback, this);
 }
 
 void Unitree_RL::modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg)
@@ -98,6 +98,7 @@ void Unitree_RL::jointStatesCallback(const sensor_msgs::JointState::ConstPtr &ms
 void Unitree_RL::runModel(const ros::TimerEvent &event)
 {
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+    // std::cout << "Execution time: " << duration << " microseconds" << std::endl;
     start_time = std::chrono::high_resolution_clock::now();
 
     this->obs.lin_vel = torch::tensor({{vel.linear.x, vel.linear.y, vel.linear.z}});
@@ -113,8 +114,8 @@ void Unitree_RL::runModel(const ros::TimerEvent &event)
                                         joint_velocities[7], joint_velocities[8], joint_velocities[6],
                                         joint_velocities[10], joint_velocities[11], joint_velocities[9]}});
 
-    torques = this->compute_torques(this->forward());
-
+    torch::Tensor actions = this->forward();
+    torques = this->compute_torques(actions);
 
     for (int i = 0; i < 12; ++i)
     {
