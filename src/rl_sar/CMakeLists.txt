@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(unitree_rl)
+project(rl_sar)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+
+add_definitions(-DCMAKE_CURRENT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 find_package(Torch REQUIRED)
 
@@ -39,22 +41,22 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
-add_library(model library/model/model.cpp library/model/model.hpp)
-target_link_libraries(model "${TORCH_LIBRARIES}")
-set_property(TARGET model PROPERTY CXX_STANDARD 14)
+add_library(rl library/rl/rl.cpp library/rl/rl.hpp)
+target_link_libraries(rl "${TORCH_LIBRARIES}")
+set_property(TARGET rl PROPERTY CXX_STANDARD 14)
 
 add_library(observation_buffer library/observation_buffer/observation_buffer.cpp library/observation_buffer/observation_buffer.hpp)
 target_link_libraries(observation_buffer "${TORCH_LIBRARIES}")
 set_property(TARGET observation_buffer PROPERTY CXX_STANDARD 14)
 
-add_executable(unitree_rl src/unitree_rl.cpp )
-target_link_libraries(unitree_rl
+add_executable(rl_sim src/rl_sim.cpp )
+target_link_libraries(rl_sim
   ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
-  model observation_buffer
+  rl observation_buffer
 )
 
-add_executable(unitree_rl_real src/unitree_rl_real.cpp )
-target_link_libraries(unitree_rl_real
+add_executable(rl_real src/rl_real.cpp )
+target_link_libraries(rl_real
   ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
-  model observation_buffer
+  rl observation_buffer
 )

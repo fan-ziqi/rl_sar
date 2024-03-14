@@ -1,5 +1,5 @@
-#ifndef MODEL_HPP
-#define MODEL_HPP
+#ifndef RL_HPP
+#define RL_HPP
 
 #include <torch/script.h>
 #include <iostream>
@@ -36,14 +36,14 @@ struct Observations {
     torch::Tensor actions;
 };
 
-class Model {
+class RL {
 public:
-    Model(){};
+    RL(){};
     ModelParams params;
     Observations obs;
 
-    virtual torch::Tensor forward();
-    virtual torch::Tensor compute_observation();
+    virtual torch::Tensor forward() = 0;
+    virtual torch::Tensor compute_observation() = 0;
 
     torch::Tensor compute_torques(torch::Tensor actions);
     torch::Tensor quat_rotate_inverse(torch::Tensor q, torch::Tensor v);
@@ -63,4 +63,4 @@ protected:
     torch::Tensor actions;
 };
 
-#endif // MODEL_HPP
+#endif // RL_HPP
