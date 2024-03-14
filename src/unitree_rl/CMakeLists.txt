@@ -28,8 +28,6 @@ catkin_package(
 include_directories(library/unitree_legged_sdk_3.2/include)
 link_directories(library/unitree_legged_sdk_3.2/lib)
 set(EXTRA_LIBS -pthread libunitree_legged_sdk_amd64.so lcm)
-add_executable(lcm_server $ENV{UNITREE_LEGGED_SDK_PATH}/examples/lcm_server.cpp)
-target_link_libraries(lcm_server ${EXTRA_LIBS} ${catkin_LIBRARIES})
 
 include_directories(
     include
@@ -41,11 +39,11 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
-add_library(model lib/model.cpp lib/model.hpp)
+add_library(model library/model/model.cpp library/model/model.hpp)
 target_link_libraries(model "${TORCH_LIBRARIES}")
 set_property(TARGET model PROPERTY CXX_STANDARD 14)
 
-add_library(observation_buffer lib/observation_buffer.cpp lib/observation_buffer.hpp)
+add_library(observation_buffer library/observation_buffer/observation_buffer.cpp library/observation_buffer/observation_buffer.hpp)
 target_link_libraries(observation_buffer "${TORCH_LIBRARIES}")
 set_property(TARGET observation_buffer PROPERTY CXX_STANDARD 14)
 
