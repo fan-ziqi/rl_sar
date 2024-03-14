@@ -15,7 +15,7 @@ void RL_Real::RobotControl()
     motiontime++;
     udp.GetRecv(state);
 
-    if( motiontime < 50)
+    if( motiontime < 500)
     {
         for(int i = 0; i < 12; ++i)
         {
@@ -24,9 +24,9 @@ void RL_Real::RobotControl()
         }
     }
 
-    if( motiontime >= 50 && _percent != 1)
+    if( motiontime >= 500 && _percent != 1)
     {
-        _percent += (float) 1 / 100;
+        _percent += (float) 1 / 1000;
         _percent = _percent > 1 ? 1 : _percent;
         for(int i = 0; i < 12; ++i)
         {
@@ -40,15 +40,15 @@ void RL_Real::RobotControl()
     if(_percent == 1 && !init_done)
     {
         init_done = true;
-        this->init_observations();
         loop_rl->start();
+        this->init_observations();
         std::cout << "init done" << std::endl;
         motiontime = 0;
     }
 
     if(init_done)
     {
-        if( motiontime < 50)
+        if( motiontime < 500)
         {
             for(int i = 0; i < 12; ++i)
             {
@@ -60,11 +60,13 @@ void RL_Real::RobotControl()
                 _startPos[i] = state.motorState[i].q;
             }
         }
-        if( motiontime >= 50)
+        if( motiontime >= 500)
         {
+            int mapping[13] = {3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8};
+
             for (int i = 0; i < 12; ++i)
             {
-                float torque = torques[0][i].item<double>();
+                float torque = torques[0][mapping[i]].item<double>();
                 // if(torque > 5.0f) torque = 5.0f;
                 // if(torque < -5.0f) torque = -5.0f;
 
@@ -77,7 +79,7 @@ void RL_Real::RobotControl()
         }
     }
 
-    // safe.PowerProtect(cmd, state, 1);
+    safe.PowerProtect(cmd, state, 1);
     udp.SetSend(cmd);
 }
 
@@ -129,7 +131,7 @@ RL_Real::RL_Real() : safe(LeggedType::A1), udp(LOWLEVEL)
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
 
     // InitEnvironment();
-    loop_control = std::make_shared<LoopFunc>("control_loop", 0.02 ,    boost::bind(&RL_Real::RobotControl, this));
+    loop_control = std::make_shared<LoopFunc>("control_loop", 0.002,    boost::bind(&RL_Real::RobotControl, this));
     loop_udpSend = std::make_shared<LoopFunc>("udp_send"    , 0.002, 3, boost::bind(&RL_Real::UDPSend,      this));
     loop_udpRecv = std::make_shared<LoopFunc>("udp_recv"    , 0.002, 3, boost::bind(&RL_Real::UDPRecv,      this));
     loop_rl      = std::make_shared<LoopFunc>("rl_loop"     , 0.02 ,    boost::bind(&RL_Real::runModel,     this));
@@ -139,7 +141,6 @@ RL_Real::RL_Real() : safe(LeggedType::A1), udp(LOWLEVEL)
     loop_control->start();
 }
 
-// void RL_Real::runModel(const ros::TimerEvent &event)
 void RL_Real::runModel()
 {
     if(init_done)
@@ -156,14 +157,14 @@ void RL_Real::runModel()
         this->obs.ang_vel = torch::tensor({{state.imu.gyroscope[0], state.imu.gyroscope[1], state.imu.gyroscope[2]}});
         // this->obs.commands = torch::tensor({{cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z}});
         this->obs.base_quat = torch::tensor({{state.imu.quaternion[1], state.imu.quaternion[2], state.imu.quaternion[3], state.imu.quaternion[0]}});
-        this->obs.dof_pos = torch::tensor({{state.motorState[FR_0].q, state.motorState[FR_1].q, state.motorState[FR_2].q,
-                                            state.motorState[FL_0].q, state.motorState[FL_1].q, state.motorState[FL_2].q,
-                                            state.motorState[RR_0].q, state.motorState[RR_1].q, state.motorState[RR_2].q,
-                                            state.motorState[RL_0].q, state.motorState[RL_1].q, state.motorState[RL_2].q}});
-        this->obs.dof_vel = torch::tensor({{state.motorState[FR_0].dq, state.motorState[FR_1].dq, state.motorState[FR_2].dq,
-                                            state.motorState[FL_0].dq, state.motorState[FL_1].dq, state.motorState[FL_2].dq,
-                                            state.motorState[RR_0].dq, state.motorState[RR_1].dq, state.motorState[RR_2].dq,
-                                            state.motorState[RL_0].dq, state.motorState[RL_1].dq, state.motorState[RL_2].dq}});
+        this->obs.dof_pos = torch::tensor({{state.motorState[FL_0].q, state.motorState[FL_1].q, state.motorState[FL_2].q,
+                                            state.motorState[FR_0].q, state.motorState[FR_1].q, state.motorState[FR_2].q,
+                                            state.motorState[RL_0].q, state.motorState[RL_1].q, state.motorState[RL_2].q,
+                                            state.motorState[RR_0].q, state.motorState[RR_1].q, state.motorState[RR_2].q}});
+        this->obs.dof_vel = torch::tensor({{state.motorState[FL_0].dq, state.motorState[FL_1].dq, state.motorState[FL_2].dq,
+                                            state.motorState[FR_0].dq, state.motorState[FR_1].dq, state.motorState[FR_2].dq,
+                                            state.motorState[RL_0].dq, state.motorState[RL_1].dq, state.motorState[RL_2].dq,
+                                            state.motorState[RR_0].dq, state.motorState[RR_1].dq, state.motorState[RR_2].dq}});
         
         torch::Tensor actions = this->forward();
         torques = this->compute_torques(actions);
