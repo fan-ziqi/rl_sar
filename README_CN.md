@@ -12,6 +12,12 @@
 git clone --recursive https://github.com/fan-ziqi/rl_sar.git
 ```
 
+UnitreeA1只能使用v3.2.1的unitree_ros_to_real以及v3.2的unitree_legged_sdk，使用以下命令切换分支
+
+```bash
+cd src/unitree_ros/unitree_ros_to_real && git checkout v3.2.1 && cd - && cd src/unitree_ros/unitree_ros_to_real/unitree_legged_sdk && git checkout v3.2 && cd -
+```
+
 如有更新：
 
 ```bash
