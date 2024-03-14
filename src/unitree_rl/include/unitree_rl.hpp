@@ -5,8 +5,8 @@
 #include <gazebo_msgs/ModelStates.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Twist.h>
-#include "../lib/model.cpp"
-#include "../lib/observation_buffer.hpp"
+#include "../library/model/model.hpp"
+#include "../library/observation_buffer/observation_buffer.hpp"
 #include "unitree_legged_msgs/MotorCmd.h"
 
 class Unitree_RL : public Model

@@ -5,11 +5,13 @@
 #include <gazebo_msgs/ModelStates.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Twist.h>
-#include "../lib/model.cpp"
-#include "../lib/observation_buffer.hpp"
+#include "../library/model/model.hpp"
+#include "../library/observation_buffer/observation_buffer.hpp"
 #include <unitree_legged_msgs/LowCmd.h>
 #include "unitree_legged_msgs/LowState.h"
-#include "convert.h"
+#include <unitree_legged_msgs/MotorCmd.h>
+#include <unitree_legged_msgs/MotorState.h>
+#include "unitree_legged_sdk/unitree_legged_sdk.h"
 #include <pthread.h>
 
 using namespace UNITREE_LEGGED_SDK;
