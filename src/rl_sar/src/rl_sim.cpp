@@ -1,7 +1,7 @@
-#include "../include/unitree_rl.hpp"
+#include "../include/rl_sim.hpp"
 #include <ros/package.h>
 
-Unitree_RL::Unitree_RL()
+RL_Sim::RL_Sim()
 {
     ros::NodeHandle nh;
     start_time = std::chrono::high_resolution_clock::now();
@@ -10,10 +10,9 @@ Unitree_RL::Unitree_RL()
 
     torque_commands.resize(12);
 
-    std::string package_name = "unitree_rl";
-    std::string actor_path = ros::package::getPath(package_name) + "/models/actor.pt";
-    std::string encoder_path = ros::package::getPath(package_name) + "/models/encoder.pt";
-    std::string vq_path = ros::package::getPath(package_name) + "/models/vq_layer.pt";
+    std::string actor_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/actor.pt";
+    std::string encoder_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/encoder.pt";
+    std::string vq_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/vq_layer.pt";
 
     this->actor = torch::jit::load(actor_path);
     this->encoder = torch::jit::load(encoder_path);
@@ -51,9 +50,9 @@ Unitree_RL::Unitree_RL()
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
 
     cmd_vel_subscriber_ = nh.subscribe<geometry_msgs::Twist>(
-        "/cmd_vel", 10, &Unitree_RL::cmdvelCallback, this);
+        "/cmd_vel", 10, &RL_Sim::cmdvelCallback, this);
 
-    timer = nh.createTimer(ros::Duration(0.005), &Unitree_RL::runModel, this);
+    timer = nh.createTimer(ros::Duration(0.005), &RL_Sim::runModel, this);
 
     ros_namespace = "/a1_gazebo/";
 
@@ -71,31 +70,31 @@ Unitree_RL::Unitree_RL()
     }
 
     model_state_subscriber_ = nh.subscribe<gazebo_msgs::ModelStates>(
-        "/gazebo/model_states", 10, &Unitree_RL::modelStatesCallback, this);
+        "/gazebo/model_states", 10, &RL_Sim::modelStatesCallback, this);
 
     joint_state_subscriber_ = nh.subscribe<sensor_msgs::JointState>(
-        "/a1_gazebo/joint_states", 10, &Unitree_RL::jointStatesCallback, this);
+        "/a1_gazebo/joint_states", 10, &RL_Sim::jointStatesCallback, this);
 }
 
-void Unitree_RL::modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg)
+void RL_Sim::modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg)
 {
 
     vel = msg->twist[2];
     pose = msg->pose[2];
 }
 
-void Unitree_RL::cmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg)
+void RL_Sim::cmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg)
 {
     cmd_vel = *msg;
 }
 
-void Unitree_RL::jointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg)
+void RL_Sim::jointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg)
 {
     joint_positions = msg->position;
     joint_velocities = msg->velocity;
 }
 
-void Unitree_RL::runModel(const ros::TimerEvent &event)
+void RL_Sim::runModel(const ros::TimerEvent &event)
 {
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
     // std::cout << "Execution time: " << duration << " microseconds" << std::endl;
@@ -126,7 +125,7 @@ void Unitree_RL::runModel(const ros::TimerEvent &event)
     }
 }
 
-torch::Tensor Unitree_RL::compute_observation()
+torch::Tensor RL_Sim::compute_observation()
 {
     torch::Tensor obs = torch::cat({// (this->quat_rotate_inverse(this->base_quat, this->lin_vel)) * this->params.lin_vel_scale,
                                     (this->quat_rotate_inverse(this->obs.base_quat, this->obs.ang_vel)) * this->params.ang_vel_scale,
@@ -140,7 +139,7 @@ torch::Tensor Unitree_RL::compute_observation()
     return obs;
 }
 
-torch::Tensor Unitree_RL::forward()
+torch::Tensor RL_Sim::forward()
 {
     torch::Tensor obs = this->compute_observation();
 
@@ -163,8 +162,8 @@ torch::Tensor Unitree_RL::forward()
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "unitree_rl");
-    Unitree_RL unitree_rl;
+    ros::init(argc, argv, "rl_sar");
+    RL_Sim rl_sar;
     ros::spin();
     return 0;
 }

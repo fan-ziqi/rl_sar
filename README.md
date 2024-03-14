@@ -52,7 +52,7 @@ catkin build
 
 ## Running
 
-Before running, copy the trained pt model file to `rl_sar/src/unitree_rl/models`
+Before running, copy the trained pt model file to `rl_sar/src/rl_sar/models`
 
 ### Simulation
 
@@ -60,14 +60,14 @@ Open a new terminal, launch the gazebo simulation environment
 
 ```bash
 source devel/setup.bash
-roslaunch unitree_rl start_env.launch
+roslaunch rl_sar start_env.launch
 ```
 
 Open a new terminal, run the control program
 
 ```bash
 source devel/setup.bash
-rosrun unitree_rl unitree_rl
+rosrun rl_sar unitree_rl
 ```
 
 Open a new terminal, run the keyboard control program
@@ -82,7 +82,7 @@ Open a new terminal, run the control program
 
 ```bash
 source devel/setup.bash
-rosrun unitree_rl unitree_rl_real
+rosrun rl_sar unitree_rl_real
 ```
 
 > Some code references: https://github.com/mertgungor/unitree_model_control

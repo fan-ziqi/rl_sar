@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>unitree_rl</name>
-    <version>0.0.0</version>
-    <description>The unitree_rl package</description>
+    <name>rl_sar</name>
+    <version>2.0.0</version>
+    <description>The rl_sar package</description>
 
     <maintainer email="fanziqi614@gmail.com">Ziqi Fan</maintainer>
 

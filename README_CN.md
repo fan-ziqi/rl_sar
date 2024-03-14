@@ -52,7 +52,7 @@ catkin build
 
 ## 运行
 
-运行前请将训练好的pt模型文件拷贝到`rl_sar/src/unitree_rl/models`中
+运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/models`中
 
 ### 仿真
 
@@ -60,14 +60,14 @@ catkin build
 
 ```bash
 source devel/setup.bash
-roslaunch unitree_rl start_env.launch
+roslaunch rl_sar start_env.launch
 ```
 
 新建终端，启动控制程序
 
 ```bash
 source devel/setup.bash
-rosrun unitree_rl unitree_rl
+rosrun rl_sar unitree_rl
 ```
 
 新建终端，键盘控制程序
@@ -82,7 +82,7 @@ rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 
 ```bash
 source devel/setup.bash
-rosrun unitree_rl unitree_rl_real
+rosrun rl_sar unitree_rl_real
 ```
 
 > 部分代码参考https://github.com/mertgungor/unitree_model_control

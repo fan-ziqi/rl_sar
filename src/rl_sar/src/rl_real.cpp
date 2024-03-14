@@ -1,17 +1,16 @@
-#include "../include/unitree_rl_real.hpp"
-#include <ros/package.h>
+#include "../include/rl_real.hpp"
 
-void Unitree_RL::UDPRecv()
+void RL_Real::UDPRecv()
 { 
     udp.Recv();
 }
 
-void Unitree_RL::UDPSend()
+void RL_Real::UDPSend()
 {  
     udp.Send();
 }
 
-void Unitree_RL::RobotControl()
+void RL_Real::RobotControl()
 {
     motiontime++;
     udp.GetRecv(state);
@@ -82,20 +81,17 @@ void Unitree_RL::RobotControl()
     udp.SetSend(cmd);
 }
 
-Unitree_RL::Unitree_RL() : safe(LeggedType::A1), udp(LOWLEVEL)
+RL_Real::RL_Real() : safe(LeggedType::A1), udp(LOWLEVEL)
 {
     udp.InitCmdData(cmd);
 
     start_time = std::chrono::high_resolution_clock::now();
 
-    cmd_vel = geometry_msgs::Twist();
-
     torque_commands.resize(12);
 
-    std::string package_name = "unitree_rl";
-    std::string actor_path = ros::package::getPath(package_name) + "/models/actor.pt";
-    std::string encoder_path = ros::package::getPath(package_name) + "/models/encoder.pt";
-    std::string vq_path = ros::package::getPath(package_name) + "/models/vq_layer.pt";
+    std::string actor_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/actor.pt";
+    std::string encoder_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/encoder.pt";
+    std::string vq_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/vq_layer.pt";
 
     this->actor = torch::jit::load(actor_path);
     this->encoder = torch::jit::load(encoder_path);
@@ -133,23 +129,18 @@ Unitree_RL::Unitree_RL() : safe(LeggedType::A1), udp(LOWLEVEL)
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
 
     // InitEnvironment();
-    loop_control = std::make_shared<LoopFunc>("control_loop", 0.02 ,    boost::bind(&Unitree_RL::RobotControl, this));
-    loop_udpSend = std::make_shared<LoopFunc>("udp_send"    , 0.002, 3, boost::bind(&Unitree_RL::UDPSend,      this));
-    loop_udpRecv = std::make_shared<LoopFunc>("udp_recv"    , 0.002, 3, boost::bind(&Unitree_RL::UDPRecv,      this));
-    loop_rl      = std::make_shared<LoopFunc>("rl_loop"     , 0.02 ,    boost::bind(&Unitree_RL::runModel,     this));
+    loop_control = std::make_shared<LoopFunc>("control_loop", 0.02 ,    boost::bind(&RL_Real::RobotControl, this));
+    loop_udpSend = std::make_shared<LoopFunc>("udp_send"    , 0.002, 3, boost::bind(&RL_Real::UDPSend,      this));
+    loop_udpRecv = std::make_shared<LoopFunc>("udp_recv"    , 0.002, 3, boost::bind(&RL_Real::UDPRecv,      this));
+    loop_rl      = std::make_shared<LoopFunc>("rl_loop"     , 0.02 ,    boost::bind(&RL_Real::runModel,     this));
 
     loop_udpSend->start();
     loop_udpRecv->start();
     loop_control->start();
 }
 
-void Unitree_RL::cmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg)
-{
-    cmd_vel = *msg;
-}
-
-// void Unitree_RL::runModel(const ros::TimerEvent &event)
-void Unitree_RL::runModel()
+// void RL_Real::runModel(const ros::TimerEvent &event)
+void RL_Real::runModel()
 {
     if(init_done)
     {
@@ -163,7 +154,7 @@ void Unitree_RL::runModel()
         // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", state.motorState[FL_0].dq, state.motorState[FL_1].dq, state.motorState[FL_2].dq, state.motorState[FR_0].dq, state.motorState[FR_1].dq, state.motorState[FR_2].dq, state.motorState[RL_0].dq, state.motorState[RL_1].dq, state.motorState[RL_2].dq, state.motorState[RR_0].dq, state.motorState[RR_1].dq, state.motorState[RR_2].dq);
 
         this->obs.ang_vel = torch::tensor({{state.imu.gyroscope[0], state.imu.gyroscope[1], state.imu.gyroscope[2]}});
-        this->obs.commands = torch::tensor({{cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z}});
+        // this->obs.commands = torch::tensor({{cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z}});
         this->obs.base_quat = torch::tensor({{state.imu.quaternion[1], state.imu.quaternion[2], state.imu.quaternion[3], state.imu.quaternion[0]}});
         this->obs.dof_pos = torch::tensor({{state.motorState[FR_0].q, state.motorState[FR_1].q, state.motorState[FR_2].q,
                                             state.motorState[FL_0].q, state.motorState[FL_1].q, state.motorState[FL_2].q,
@@ -180,7 +171,7 @@ void Unitree_RL::runModel()
     
 }
 
-torch::Tensor Unitree_RL::compute_observation()
+torch::Tensor RL_Real::compute_observation()
 {
     torch::Tensor ang_vel = this->quat_rotate_inverse(this->obs.base_quat, this->obs.ang_vel);
     // float ang_vel_temp = ang_vel[0][0].item<double>();
@@ -204,7 +195,7 @@ torch::Tensor Unitree_RL::compute_observation()
     return obs;
 }
 
-torch::Tensor Unitree_RL::forward()
+torch::Tensor RL_Real::forward()
 {
     torch::Tensor obs = this->compute_observation();
 
@@ -229,7 +220,7 @@ torch::Tensor Unitree_RL::forward()
 
 int main(int argc, char **argv)
 {
-    Unitree_RL unitree_rl;
+    RL_Real rl_sar;
 
     while(1){
         sleep(10);

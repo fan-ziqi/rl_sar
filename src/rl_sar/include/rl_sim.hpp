@@ -1,18 +1,18 @@
-#ifndef UNITREE_RL
-#define UNITREE_RL
+#ifndef RL_SIM_HPP
+#define RL_SIM_HPP
 
 #include <ros/ros.h>
 #include <gazebo_msgs/ModelStates.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Twist.h>
-#include "../library/model/model.hpp"
+#include "../library/rl/rl.hpp"
 #include "../library/observation_buffer/observation_buffer.hpp"
 #include "unitree_legged_msgs/MotorCmd.h"
 
-class Unitree_RL : public Model
+class RL_Sim : public RL
 {
 public:
-    Unitree_RL();
+    RL_Sim();
     void modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg);
     void jointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg);
     void cmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);

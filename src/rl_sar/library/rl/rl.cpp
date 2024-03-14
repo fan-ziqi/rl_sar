@@ -1,6 +1,6 @@
-#include "model.hpp"
+#include "rl.hpp"
 
-torch::Tensor Model::quat_rotate_inverse(torch::Tensor q, torch::Tensor v)
+torch::Tensor RL::quat_rotate_inverse(torch::Tensor q, torch::Tensor v)
 {
     c10::IntArrayRef shape = q.sizes();
     torch::Tensor q_w = q.index({torch::indexing::Slice(), -1});
@@ -11,7 +11,19 @@ torch::Tensor Model::quat_rotate_inverse(torch::Tensor q, torch::Tensor v)
     return a - b + c;
 }
 
-torch::Tensor Model::compute_torques(torch::Tensor actions)
+void RL::init_observations()
+{
+    this->obs.lin_vel = torch::tensor({{0.0, 0.0, 0.0}});
+    this->obs.ang_vel = torch::tensor({{0.0, 0.0, 0.0}});
+    this->obs.gravity_vec = torch::tensor({{0.0, 0.0, -1.0}});
+    this->obs.commands = torch::tensor({{0.0, 0.0, 0.0}});
+    this->obs.base_quat = torch::tensor({{0.0, 0.0, 0.0, 1.0}});
+    this->obs.dof_pos = this->params.default_dof_pos;
+    this->obs.dof_vel = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
+    this->obs.actions = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
+}
+
+torch::Tensor RL::compute_torques(torch::Tensor actions)
 {
     torch::Tensor actions_scaled = actions * this->params.action_scale;
     int indices[] = {0, 3, 6, 9};
@@ -25,10 +37,9 @@ torch::Tensor Model::compute_torques(torch::Tensor actions)
     return clamped;
 }
 
-torch::Tensor Model::compute_observation()
+/* You may need to override this compute_observation() function
+torch::Tensor RL::compute_observation()
 {
-    std::cout << "You may need to override this compute_observation() function" << std::endl;
-
     torch::Tensor obs = torch::cat({(this->quat_rotate_inverse(this->base_quat, this->lin_vel)) * this->params.lin_vel_scale,
                                     (this->quat_rotate_inverse(this->obs.base_quat, this->obs.ang_vel)) * this->params.ang_vel_scale,
                                     this->quat_rotate_inverse(this->obs.base_quat, this->obs.gravity_vec),
@@ -40,27 +51,15 @@ torch::Tensor Model::compute_observation()
 
     obs = torch::clamp(obs, -this->params.clip_obs, this->params.clip_obs);
 
-    // printf("observation size: %d, %d\n", obs.sizes()[0], obs.sizes()[1]);
+    printf("observation size: %d, %d\n", obs.sizes()[0], obs.sizes()[1]);
 
     return obs;
 }
+*/
 
-void Model::init_observations()
+/* You may need to override this forward() function
+torch::Tensor RL::forward()
 {
-    this->obs.lin_vel = torch::tensor({{0.0, 0.0, 0.0}});
-    this->obs.ang_vel = torch::tensor({{0.0, 0.0, 0.0}});
-    this->obs.gravity_vec = torch::tensor({{0.0, 0.0, -1.0}});
-    this->obs.commands = torch::tensor({{0.0, 0.0, 0.0}});
-    this->obs.base_quat = torch::tensor({{0.0, 0.0, 0.0, 1.0}});
-    this->obs.dof_pos = this->params.default_dof_pos;
-    this->obs.dof_vel = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
-    this->obs.actions = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
-}
-
-torch::Tensor Model::forward()
-{
-    std::cout << "You may need to override this forward() function" << std::endl;
-
     torch::Tensor obs = this->compute_observation();
 
     torch::Tensor actor_input = torch::cat({obs}, 1);
@@ -72,3 +71,4 @@ torch::Tensor Model::forward()
 
     return clamped;
 }
+*/
