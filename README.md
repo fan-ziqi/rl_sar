@@ -67,7 +67,7 @@ Open a new terminal, run the control program
 
 ```bash
 source devel/setup.bash
-rosrun rl_sar unitree_rl
+rosrun rl_sar rl_sim
 ```
 
 Open a new terminal, run the keyboard control program
@@ -82,7 +82,7 @@ Open a new terminal, run the control program
 
 ```bash
 source devel/setup.bash
-rosrun rl_sar unitree_rl_real
+rosrun rl_sar rl_real
 ```
 
 > Some code references: https://github.com/mertgungor/unitree_model_control

@@ -67,7 +67,7 @@ roslaunch rl_sar start_env.launch
 
 ```bash
 source devel/setup.bash
-rosrun rl_sar unitree_rl
+rosrun rl_sar rl_sim
 ```
 
 新建终端，键盘控制程序
@@ -82,7 +82,7 @@ rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 
 ```bash
 source devel/setup.bash
-rosrun rl_sar unitree_rl_real
+rosrun rl_sar rl_real
 ```
 
 > 部分代码参考https://github.com/mertgungor/unitree_model_control
