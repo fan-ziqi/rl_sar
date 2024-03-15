@@ -48,6 +48,7 @@ void RL_Real::RobotControl()
         _percent = _percent > 1 ? 1 : _percent;
         for(int i = 0; i < 12; ++i)
         {
+            cmd.motorCmd[i].mode = 0x0A;
             cmd.motorCmd[i].q = (1 - _percent) * _startPos[i] + _percent * params.default_dof_pos[0][dof_mapping[i]].item<double>();
             cmd.motorCmd[i].dq = 0;
             cmd.motorCmd[i].Kp = 50;
@@ -72,6 +73,7 @@ void RL_Real::RobotControl()
         {
             for(int i = 0; i < 12; ++i)
             {
+                cmd.motorCmd[i].mode = 0x0A;
                 cmd.motorCmd[i].q = params.default_dof_pos[0][dof_mapping[i]].item<double>();
                 cmd.motorCmd[i].dq = 0;
                 cmd.motorCmd[i].Kp = 50;
@@ -88,7 +90,7 @@ void RL_Real::RobotControl()
                 float torque = torques[0][dof_mapping[i]].item<double>();
                 // if(torque > 5.0f) torque = 5.0f;
                 // if(torque < -5.0f) torque = -5.0f;
-
+                cmd.motorCmd[i].mode = 0x0A;
                 cmd.motorCmd[i].q = 0;
                 cmd.motorCmd[i].dq = 0;
                 cmd.motorCmd[i].Kp = 0;
@@ -98,6 +100,7 @@ void RL_Real::RobotControl()
 #else
             for (int i = 0; i < 12; ++i)
             {
+                cmd.motorCmd[i].mode = 0x0A;
                 cmd.motorCmd[i].q = target_dof_pos[0][dof_mapping[i]].item<double>();
                 cmd.motorCmd[i].dq = 0;
                 cmd.motorCmd[i].Kp = 15;
@@ -130,8 +133,8 @@ RL_Real::RL_Real() : safe(LeggedType::A1), udp(LOWLEVEL)
     this->params.num_observations = 45;
     this->params.clip_obs = 100.0;
     this->params.clip_actions = 100.0;
-    this->params.damping = 1.0; // TODO
-    this->params.stiffness = 5; // TODO
+    this->params.damping = 0.5;
+    this->params.stiffness = 20;
     this->params.d_gains = torch::ones(12) * this->params.damping;
     this->params.p_gains = torch::ones(12) * this->params.stiffness;
     this->params.action_scale = 0.25;
