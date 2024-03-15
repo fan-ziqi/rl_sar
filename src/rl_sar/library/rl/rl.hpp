@@ -44,8 +44,8 @@ public:
 
     virtual torch::Tensor forward() = 0;
     virtual torch::Tensor compute_observation() = 0;
-
     torch::Tensor compute_torques(torch::Tensor actions);
+    torch::Tensor compute_pos(torch::Tensor actions);
     torch::Tensor quat_rotate_inverse(torch::Tensor q, torch::Tensor v);
     void init_observations();
 
@@ -61,6 +61,9 @@ protected:
     torch::Tensor dof_pos;           
     torch::Tensor dof_vel;           
     torch::Tensor actions;
+
+    torch::Tensor torques = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
+    torch::Tensor target_dof_pos;
 };
 
 #endif // RL_HPP

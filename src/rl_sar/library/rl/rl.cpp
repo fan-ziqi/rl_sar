@@ -37,6 +37,18 @@ torch::Tensor RL::compute_torques(torch::Tensor actions)
     return clamped;
 }
 
+torch::Tensor RL::compute_pos(torch::Tensor actions)
+{
+    torch::Tensor actions_scaled = actions * this->params.action_scale;
+    int indices[] = {0, 3, 6, 9};
+    for (int i : indices)
+    {
+        actions_scaled[0][i] *= this->params.hip_scale_reduction;
+    }
+
+    return actions_scaled + this->params.default_dof_pos;
+}
+
 /* You may need to override this compute_observation() function
 torch::Tensor RL::compute_observation()
 {

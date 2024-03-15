@@ -34,7 +34,7 @@
     <!-- Load joint controller configurations from YAML file to parameter server -->
     <rosparam file="$(arg dollar)$(arg robot_path)/config/robot_control.yaml" command="load"/>
 
-    <rosparam param="/a1_gazebo/joint_state_controller/publish_rate">5000</rosparam>
+    <!-- <rosparam param="/a1_gazebo/joint_state_controller/publish_rate">5000</rosparam> -->
 
     <!-- load the controllers -->
     <node pkg="controller_manager" type="spawner" name="controller_spawner" respawn="false"
