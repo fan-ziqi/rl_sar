@@ -28,6 +28,7 @@ class RL_Real : public RL
 public:
     RL_Real();
     ~RL_Real();
+    
     void runModel();
     torch::Tensor forward() override;
     torch::Tensor compute_observation() override;

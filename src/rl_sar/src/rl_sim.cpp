@@ -1,5 +1,6 @@
 #include "../include/rl_sim.hpp"
-#include <ros/package.h>
+
+RL_Sim rl_sar;
 
 RL_Sim::RL_Sim()
 {
@@ -8,7 +9,7 @@ RL_Sim::RL_Sim()
 
     cmd_vel = geometry_msgs::Twist();
 
-    torque_commands.resize(12);
+    motor_commands.resize(12);
 
     std::string actor_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/actor.pt";
     std::string encoder_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/encoder.pt";
@@ -49,14 +50,14 @@ RL_Sim::RL_Sim()
 
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
 
+    torques = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
     target_dof_pos = params.default_dof_pos;
 
-    cmd_vel_subscriber_ = nh.subscribe<geometry_msgs::Twist>(
-        "/cmd_vel", 10, &RL_Sim::cmdvelCallback, this);
+    cmd_vel_subscriber_ = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Sim::cmdvelCallback, this);
 
     timer = nh.createTimer(ros::Duration(0.02), &RL_Sim::runModel, this);
 
-    ros_namespace = "/a1_gazebo/";
+    std::string ros_namespace = "/a1_gazebo/";
 
     joint_names = {
         "FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
@@ -98,9 +99,9 @@ void RL_Sim::jointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg)
 
 void RL_Sim::runModel(const ros::TimerEvent &event)
 {
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+    // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
     // std::cout << "Execution time: " << duration << " microseconds" << std::endl;
-    start_time = std::chrono::high_resolution_clock::now();
+    // start_time = std::chrono::high_resolution_clock::now();
 
     this->obs.lin_vel = torch::tensor({{vel.linear.x, vel.linear.y, vel.linear.z}});
     this->obs.ang_vel = torch::tensor({{vel.angular.x, vel.angular.y, vel.angular.z}});
@@ -121,15 +122,15 @@ void RL_Sim::runModel(const ros::TimerEvent &event)
 
     for (int i = 0; i < 12; ++i)
     {
-        torque_commands[i].mode = 0x0A;
-        // torque_commands[i].tau = torques[0][i].item<double>();
-        torque_commands[i].tau = 0;
-        torque_commands[i].q = target_dof_pos[0][i].item<double>();
-        torque_commands[i].dq = 0;
-        torque_commands[i].Kp = params.stiffness;
-        torque_commands[i].Kd = params.damping;
+        motor_commands[i].mode = 0x0A;
+        // motor_commands[i].tau = torques[0][i].item<double>();
+        motor_commands[i].tau = 0;
+        motor_commands[i].q = target_dof_pos[0][i].item<double>();
+        motor_commands[i].dq = 0;
+        motor_commands[i].Kp = params.stiffness;
+        motor_commands[i].Kd = params.damping;
 
-        torque_publishers[joint_names[i]].publish(torque_commands[i]);
+        torque_publishers[joint_names[i]].publish(motor_commands[i]);
     }
 }
 
@@ -168,10 +169,19 @@ torch::Tensor RL_Sim::forward()
     return clamped;
 }
 
+void signalHandler(int signum)
+{
+    ros::shutdown();
+    exit(0);
+}
+
 int main(int argc, char **argv)
 {
+    signal(SIGINT, signalHandler);
+
     ros::init(argc, argv, "rl_sar");
-    RL_Sim rl_sar;
+    
     ros::spin();
+
     return 0;
 }

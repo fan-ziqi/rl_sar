@@ -5,7 +5,8 @@
 #include <iostream>
 #include <string>
 
-struct ModelParams {
+struct ModelParams
+{
     int num_observations;
     float damping;
     float stiffness;
@@ -25,7 +26,8 @@ struct ModelParams {
     torch::Tensor default_dof_pos;
 };
 
-struct Observations {
+struct Observations
+{
     torch::Tensor lin_vel;           
     torch::Tensor ang_vel;      
     torch::Tensor gravity_vec;      
@@ -36,9 +38,11 @@ struct Observations {
     torch::Tensor actions;
 };
 
-class RL {
+class RL
+{
 public:
     RL(){};
+
     ModelParams params;
     Observations obs;
 
@@ -61,8 +65,8 @@ protected:
     torch::Tensor dof_pos;           
     torch::Tensor dof_vel;           
     torch::Tensor actions;
-
-    torch::Tensor torques = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
+    // output buffer
+    torch::Tensor torques;
     torch::Tensor target_dof_pos;
 };
 

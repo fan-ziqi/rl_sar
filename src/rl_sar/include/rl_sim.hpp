@@ -1,21 +1,24 @@
 #ifndef RL_SIM_HPP
 #define RL_SIM_HPP
 
+#include "../library/rl/rl.hpp"
+#include "../library/observation_buffer/observation_buffer.hpp"
 #include <ros/ros.h>
 #include <gazebo_msgs/ModelStates.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Twist.h>
-#include "../library/rl/rl.hpp"
-#include "../library/observation_buffer/observation_buffer.hpp"
 #include "unitree_legged_msgs/MotorCmd.h"
+#include <csignal>
 
 class RL_Sim : public RL
 {
 public:
     RL_Sim();
+
     void modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg);
     void jointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg);
     void cmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
+    
     void runModel(const ros::TimerEvent &event);
     torch::Tensor forward() override;
     torch::Tensor compute_observation() override;
@@ -24,8 +27,6 @@ public:
     torch::Tensor history_obs;
 
 private:
-    std::string ros_namespace;
-
     std::vector<std::string> torque_command_topics;
 
     ros::Subscriber model_state_subscriber_;
@@ -33,7 +34,7 @@ private:
     ros::Subscriber cmd_vel_subscriber_;
 
     std::map<std::string, ros::Publisher> torque_publishers;
-    std::vector<unitree_legged_msgs::MotorCmd> torque_commands;
+    std::vector<unitree_legged_msgs::MotorCmd> motor_commands;
 
     geometry_msgs::Twist vel;
     geometry_msgs::Pose pose;
