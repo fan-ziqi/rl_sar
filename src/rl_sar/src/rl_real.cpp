@@ -103,8 +103,8 @@ void RL_Real::RobotControl()
                 cmd.motorCmd[i].mode = 0x0A;
                 cmd.motorCmd[i].q = target_dof_pos[0][dof_mapping[i]].item<double>();
                 cmd.motorCmd[i].dq = 0;
-                cmd.motorCmd[i].Kp = 15;
-                cmd.motorCmd[i].Kd = 1.5;
+                cmd.motorCmd[i].Kp = params.stiffness;
+                cmd.motorCmd[i].Kd = params.damping;
                 cmd.motorCmd[i].tau = 0;
             }
 #endif
@@ -181,24 +181,12 @@ RL_Real::~RL_Real()
     printf("shutdown\n");
 }
 
-torch::Tensor RL_Real::compute_pos(torch::Tensor actions)
-{
-    torch::Tensor actions_scaled = actions * this->params.action_scale;
-    int indices[] = {0, 3, 6, 9};
-    for (int i : indices)
-    {
-        actions_scaled[0][i] *= this->params.hip_scale_reduction;
-    }
-
-    return actions_scaled + this->params.default_dof_pos;
-}
-
 void RL_Real::runModel()
 {
     if(init_state == STATE_RL_START)
     {
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
-        // std::cout << "Execution time: " << duration << " microseconds" << std::endl;
+        std::cout << "Execution time: " << duration << " microseconds" << std::endl;
         start_time = std::chrono::high_resolution_clock::now();
 
         // printf("%f, %f, %f\n", state.imu.gyroscope[0], state.imu.gyroscope[1], state.imu.gyroscope[2]);

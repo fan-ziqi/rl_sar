@@ -52,8 +52,6 @@ public:
     std::shared_ptr<LoopFunc> loop_rl;
 
     float _percent;
-    // float _targetPos[12] = {0.0, 0.8, -1.6, 0.0, 0.8, -1.6,
-	//                         0.0, 0.8, -1.6, 0.0, 0.8, -1.6};
 	float _startPos[12];
 
     int init_state = STATE_WAITING;
@@ -63,21 +61,7 @@ private:
     std::vector<double> joint_positions;
     std::vector<double> joint_velocities;
 
-    torch::Tensor torques = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
-    int dof_mapping[13] = {3, 4, 5, 
-                           0, 1, 2, 
-                           9, 10, 11, 
-                           6, 7, 8};
-    float Kp[13] = {20, 10, 10, 
-                    20, 10, 10, 
-                    20, 10, 10, 
-                    20, 10, 10};
-    float Kd[13] = {1.0, 0.5, 0.5, 
-                    1.0, 0.5, 0.5, 
-                    1.0, 0.5, 0.5, 
-                    1.0, 0.5, 0.5};
-    torch::Tensor target_dof_pos;
-    torch::Tensor compute_pos(torch::Tensor actions);
+    int dof_mapping[13] = {3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8};
 
     std::chrono::high_resolution_clock::time_point start_time;
 

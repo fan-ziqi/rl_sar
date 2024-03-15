@@ -49,10 +49,12 @@ RL_Sim::RL_Sim()
 
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
 
+    target_dof_pos = params.default_dof_pos;
+
     cmd_vel_subscriber_ = nh.subscribe<geometry_msgs::Twist>(
         "/cmd_vel", 10, &RL_Sim::cmdvelCallback, this);
 
-    timer = nh.createTimer(ros::Duration(0.005), &RL_Sim::runModel, this);
+    timer = nh.createTimer(ros::Duration(0.02), &RL_Sim::runModel, this);
 
     ros_namespace = "/a1_gazebo/";
 
@@ -115,11 +117,17 @@ void RL_Sim::runModel(const ros::TimerEvent &event)
 
     torch::Tensor actions = this->forward();
     torques = this->compute_torques(actions);
+    target_dof_pos = this->compute_pos(actions);
 
     for (int i = 0; i < 12; ++i)
     {
-        torque_commands[i].tau = torques[0][i].item<double>();
         torque_commands[i].mode = 0x0A;
+        // torque_commands[i].tau = torques[0][i].item<double>();
+        torque_commands[i].tau = 0;
+        torque_commands[i].q = target_dof_pos[0][i].item<double>();
+        torque_commands[i].dq = 0;
+        torque_commands[i].Kp = params.stiffness;
+        torque_commands[i].Kd = params.damping;
 
         torque_publishers[joint_names[i]].publish(torque_commands[i]);
     }
@@ -133,8 +141,8 @@ torch::Tensor RL_Sim::compute_observation()
                                     this->obs.commands * this->params.commands_scale,
                                     (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
                                     this->obs.dof_vel * this->params.dof_vel_scale,
-                                    this->obs.actions},
-                                   1);
+                                    this->obs.actions
+                                    },1);
     obs = torch::clamp(obs, -this->params.clip_obs, this->params.clip_obs);
     return obs;
 }
