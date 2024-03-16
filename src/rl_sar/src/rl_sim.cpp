@@ -1,7 +1,5 @@
 #include "../include/rl_sim.hpp"
 
-RL_Sim rl_sar;
-
 RL_Sim::RL_Sim()
 {
     ros::NodeHandle nh;
@@ -180,7 +178,9 @@ int main(int argc, char **argv)
     signal(SIGINT, signalHandler);
 
     ros::init(argc, argv, "rl_sar");
-    
+
+    RL_Sim rl_sar;
+
     ros::spin();
 
     return 0;
