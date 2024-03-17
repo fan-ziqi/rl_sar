@@ -1,5 +1,44 @@
 #include "../include/rl_sim.hpp"
 
+#define PLOT
+
+void RL_Sim::RobotControl()
+{
+    motiontime++;
+    for (int i = 0; i < 12; ++i)
+    {
+        motor_commands[i].mode = 0x0A;
+        // motor_commands[i].tau = torques[0][i].item<double>();
+        motor_commands[i].tau = 0;
+        motor_commands[i].q = target_dof_pos[0][i].item<double>();
+        motor_commands[i].dq = 0;
+        motor_commands[i].Kp = params.stiffness;
+        motor_commands[i].Kd = params.damping;
+
+        torque_publishers[joint_names[i]].publish(motor_commands[i]);
+    }
+}
+
+
+void RL_Sim::plot()
+{
+    int dof_mapping[13] = {1, 2, 0, 4, 5, 3, 7, 8, 6, 10, 11, 9};
+    _t.push_back(motiontime);
+    plt::cla();
+    plt::clf();
+    for(int i = 0; i < 12; ++i)
+    {
+        _real_joint_pos[i].push_back(joint_positions[dof_mapping[i]]);
+        _target_joint_pos[i].push_back(motor_commands[i].q);
+        plt::subplot(4, 3, i+1);
+        plt::named_plot("_real_joint_pos", _t, _real_joint_pos[i], "r");
+        plt::named_plot("_target_joint_pos", _t, _target_joint_pos[i], "b");
+        plt::xlim(motiontime-10000, motiontime);
+    }
+    // plt::legend();
+    plt::pause(0.0001);
+}
+
 RL_Sim::RL_Sim()
 {
     ros::NodeHandle nh;
@@ -50,10 +89,12 @@ RL_Sim::RL_Sim()
 
     torques = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
     target_dof_pos = params.default_dof_pos;
+    joint_positions = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    joint_velocities = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    _real_joint_pos.resize(12);
+    _target_joint_pos.resize(12);
 
     cmd_vel_subscriber_ = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Sim::cmdvelCallback, this);
-
-    timer = nh.createTimer(ros::Duration(0.02), &RL_Sim::runModel, this);
 
     std::string ros_namespace = "/a1_gazebo/";
 
@@ -75,6 +116,26 @@ RL_Sim::RL_Sim()
 
     joint_state_subscriber_ = nh.subscribe<sensor_msgs::JointState>(
         "/a1_gazebo/joint_states", 10, &RL_Sim::jointStatesCallback, this);
+
+    loop_control = std::make_shared<LoopFunc>("loop_control", 0.002,    boost::bind(&RL_Sim::RobotControl, this));
+    loop_rl      = std::make_shared<LoopFunc>("loop_rl"     , 0.02 ,    boost::bind(&RL_Sim::runModel,     this));
+
+    loop_control->start();
+    loop_rl->start();
+#ifdef PLOT
+    loop_plot    = std::make_shared<LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Sim::plot,         this));
+    loop_plot->start();
+#endif
+}
+
+RL_Sim::~RL_Sim()
+{
+    loop_control->shutdown();
+    loop_rl->shutdown();
+#ifdef PLOT
+    loop_plot->shutdown();
+#endif
+    printf("exit\n");
 }
 
 void RL_Sim::modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg)
@@ -95,11 +156,26 @@ void RL_Sim::jointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg)
     joint_velocities = msg->velocity;
 }
 
-void RL_Sim::runModel(const ros::TimerEvent &event)
+void RL_Sim::runModel()
 {
     // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
     // std::cout << "Execution time: " << duration << " microseconds" << std::endl;
     // start_time = std::chrono::high_resolution_clock::now();
+
+    // printf("%f, %f, %f\n", 
+    //     vel.angular.x, vel.angular.y, vel.angular.z);
+    // printf("%f, %f, %f, %f\n", 
+    //     pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
+    // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
+    //     joint_positions[1], joint_positions[2], joint_positions[0],
+    //     joint_positions[4], joint_positions[5], joint_positions[3],
+    //     joint_positions[7], joint_positions[8], joint_positions[6],
+    //     joint_positions[10], joint_positions[11], joint_positions[9]);
+    // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
+    //     joint_velocities[1], joint_velocities[2], joint_velocities[0],
+    //     joint_velocities[4], joint_velocities[5], joint_velocities[3],
+    //     joint_velocities[7], joint_velocities[8], joint_velocities[6],
+    //     joint_velocities[10], joint_velocities[11], joint_velocities[9]);
 
     this->obs.lin_vel = torch::tensor({{vel.linear.x, vel.linear.y, vel.linear.z}});
     this->obs.ang_vel = torch::tensor({{vel.angular.x, vel.angular.y, vel.angular.z}});
@@ -117,19 +193,6 @@ void RL_Sim::runModel(const ros::TimerEvent &event)
     torch::Tensor actions = this->forward();
     torques = this->compute_torques(actions);
     target_dof_pos = this->compute_pos(actions);
-
-    for (int i = 0; i < 12; ++i)
-    {
-        motor_commands[i].mode = 0x0A;
-        // motor_commands[i].tau = torques[0][i].item<double>();
-        motor_commands[i].tau = 0;
-        motor_commands[i].q = target_dof_pos[0][i].item<double>();
-        motor_commands[i].dq = 0;
-        motor_commands[i].Kp = params.stiffness;
-        motor_commands[i].Kd = params.damping;
-
-        torque_publishers[joint_names[i]].publish(motor_commands[i]);
-    }
 }
 
 torch::Tensor RL_Sim::compute_observation()

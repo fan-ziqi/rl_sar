@@ -9,7 +9,6 @@
 #include <unitree_legged_msgs/MotorState.h>
 #include "unitree_legged_sdk/unitree_legged_sdk.h"
 #include "unitree_legged_sdk/unitree_joystick.h"
-#include <pthread.h>
 #include <csignal>
 // #include <signal.h>
 
@@ -51,12 +50,16 @@ public:
     std::shared_ptr<LoopFunc> loop_udpSend;
     std::shared_ptr<LoopFunc> loop_udpRecv;
     std::shared_ptr<LoopFunc> loop_rl;
+    std::shared_ptr<LoopFunc> loop_plot;
 
     float _percent;
 	float _startPos[12];
 
-    int init_state = STATE_WAITING;
+    int robot_state = STATE_WAITING;
 
+    std::vector<double> _t;
+    std::vector<std::vector<double>> _real_joint_pos, _target_joint_pos;
+    void plot();
 private:
     std::vector<std::string> joint_names;
     std::vector<double> joint_positions;

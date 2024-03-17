@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(rl_sar)
 
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 add_definitions(-DCMAKE_CURRENT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
@@ -21,6 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(gazebo REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
 catkin_package(
     CATKIN_DEPENDS 
@@ -36,14 +40,20 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
     ${unitree_legged_sdk_INCLUDE_DIRS}
     ../unitree_controller/include
-
+    library/matplotlibcpp
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
 add_library(rl library/rl/rl.cpp library/rl/rl.hpp)
-target_link_libraries(rl "${TORCH_LIBRARIES}")
+target_link_libraries(rl "${TORCH_LIBRARIES}" Python3::Python Python3::Module)
 set_property(TARGET rl PROPERTY CXX_STANDARD 14)
+find_package(Python3 COMPONENTS NumPy)
+if(Python3_NumPy_FOUND)
+   target_link_libraries(rl Python3::NumPy)
+else()
+   target_compile_definitions(rl WITHOUT_NUMPY)
+endif()
 
 add_library(observation_buffer library/observation_buffer/observation_buffer.cpp library/observation_buffer/observation_buffer.hpp)
 target_link_libraries(observation_buffer "${TORCH_LIBRARIES}")

@@ -5,6 +5,9 @@
 #include <iostream>
 #include <string>
 
+#include "matplotlibcpp.h"
+namespace plt = matplotlibcpp;
+
 struct ModelParams
 {
     int num_observations;
