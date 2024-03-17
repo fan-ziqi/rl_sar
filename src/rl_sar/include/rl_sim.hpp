@@ -8,24 +8,38 @@
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Twist.h>
 #include "unitree_legged_msgs/MotorCmd.h"
+#include "unitree_legged_sdk/loop.h"
 #include <csignal>
+
+using namespace UNITREE_LEGGED_SDK;
 
 class RL_Sim : public RL
 {
 public:
     RL_Sim();
+    ~RL_Sim();
 
     void modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg);
     void jointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg);
     void cmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
     
-    void runModel(const ros::TimerEvent &event);
+    void runModel();
+    void RobotControl();
     torch::Tensor forward() override;
     torch::Tensor compute_observation() override;
 
     ObservationBuffer history_obs_buf;
     torch::Tensor history_obs;
 
+    int motiontime = 0;
+
+    std::shared_ptr<LoopFunc> loop_control;
+    std::shared_ptr<LoopFunc> loop_rl;
+    std::shared_ptr<LoopFunc> loop_plot;
+
+    std::vector<double> _t;
+    std::vector<std::vector<double>> _real_joint_pos, _target_joint_pos;
+    void plot();
 private:
     std::vector<std::string> torque_command_topics;
 
@@ -45,8 +59,6 @@ private:
     std::vector<double> joint_velocities;
 
     torch::Tensor torques;
-
-    ros::Timer timer;
 
     std::chrono::high_resolution_clock::time_point start_time;
 

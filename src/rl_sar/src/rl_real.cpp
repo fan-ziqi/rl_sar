@@ -1,6 +1,7 @@
 #include "../include/rl_real.hpp"
 
 // #define CONTROL_BY_TORQUE
+#define PLOT
 
 RL_Real rl_sar;
 
@@ -22,17 +23,17 @@ void RL_Real::RobotControl()
     memcpy(&_keyData, state.wirelessRemote, 40);
 
     // get joy button
-    if(init_state < STATE_POS_INIT && (int)_keyData.btn.components.R2 == 1)
+    if(robot_state < STATE_POS_INIT && (int)_keyData.btn.components.R2 == 1)
     {
-        init_state = STATE_POS_INIT;
+        robot_state = STATE_POS_INIT;
     }
-    else if(init_state < STATE_RL_INIT && (int)_keyData.btn.components.R1 == 1)
+    else if(robot_state < STATE_RL_INIT && (int)_keyData.btn.components.R1 == 1)
     {
-        init_state = STATE_RL_INIT;
+        robot_state = STATE_RL_INIT;
     }
 
     // wait for standup
-    if(init_state == STATE_WAITING)
+    if(robot_state == STATE_WAITING)
     {
         for(int i = 0; i < 12; ++i)
         {
@@ -41,10 +42,9 @@ void RL_Real::RobotControl()
         }
     }
     // standup (position control)
-    else if(init_state == STATE_POS_INIT && _percent != 1)
+    else if(robot_state == STATE_POS_INIT && _percent != 1)
     {
-        printf("initing %d%%\r", (int)(_percent*100));
-        _percent += (float) 1 / 1000;
+        _percent += 1 / 1000.0;
         _percent = _percent > 1 ? 1 : _percent;
         for(int i = 0; i < 12; ++i)
         {
@@ -55,47 +55,28 @@ void RL_Real::RobotControl()
             cmd.motorCmd[i].Kd = 3;
             cmd.motorCmd[i].tau = 0;
         }
+        printf("initing %.3f%%\r", _percent*100.0);
     }
     // init obs and start rl loop
-    else if(init_state == STATE_RL_INIT && _percent == 1)
+    else if(robot_state == STATE_RL_INIT && _percent == 1)
     {
-        init_state = STATE_RL_START;
-        motiontime = 0;
+        robot_state = STATE_RL_START;
         this->init_observations();
         printf("\nstart rl loop\n");
         loop_rl->start();
     }
     // rl loop
-    else if(init_state == STATE_RL_START)
+    else if(robot_state == STATE_RL_START)
     {
-        // wait for 500 times
-        if( motiontime < 500)
-        {
-            for(int i = 0; i < 12; ++i)
-            {
-                cmd.motorCmd[i].mode = 0x0A;
-                cmd.motorCmd[i].q = params.default_dof_pos[0][dof_mapping[i]].item<double>();
-                cmd.motorCmd[i].dq = 0;
-                cmd.motorCmd[i].Kp = 50;
-                cmd.motorCmd[i].Kd = 3;
-                cmd.motorCmd[i].tau = 0;
-                _startPos[i] = state.motorState[i].q;
-            }
-        }
-        if( motiontime >= 500)
-        {
 #ifdef CONTROL_BY_TORQUE
             for (int i = 0; i < 12; ++i)
             {
-                float torque = torques[0][dof_mapping[i]].item<double>();
-                // if(torque > 5.0f) torque = 5.0f;
-                // if(torque < -5.0f) torque = -5.0f;
                 cmd.motorCmd[i].mode = 0x0A;
                 cmd.motorCmd[i].q = 0;
                 cmd.motorCmd[i].dq = 0;
                 cmd.motorCmd[i].Kp = 0;
                 cmd.motorCmd[i].Kd = 0;
-                cmd.motorCmd[i].tau = torque;
+                cmd.motorCmd[i].tau = torques[0][dof_mapping[i]].item<double>();
             }
 #else
             for (int i = 0; i < 12; ++i)
@@ -108,7 +89,6 @@ void RL_Real::RobotControl()
                 cmd.motorCmd[i].tau = 0;
             }
 #endif
-        }
     }
 
     safe.PowerProtect(cmd, state, 7);
@@ -161,16 +141,22 @@ RL_Real::RL_Real() : safe(LeggedType::A1), udp(LOWLEVEL)
 
     torques = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
     target_dof_pos = params.default_dof_pos;
+    _real_joint_pos.resize(12);
+    _target_joint_pos.resize(12);
 
-    // InitEnvironment();
-    loop_control = std::make_shared<LoopFunc>("control_loop", 0.002,    boost::bind(&RL_Real::RobotControl, this));
-    loop_udpSend = std::make_shared<LoopFunc>("udp_send"    , 0.002, 3, boost::bind(&RL_Real::UDPSend,      this));
-    loop_udpRecv = std::make_shared<LoopFunc>("udp_recv"    , 0.002, 3, boost::bind(&RL_Real::UDPRecv,      this));
-    loop_rl      = std::make_shared<LoopFunc>("rl_loop"     , 0.02 ,    boost::bind(&RL_Real::runModel,     this));
+    loop_control = std::make_shared<LoopFunc>("loop_control", 0.002,    boost::bind(&RL_Real::RobotControl, this));
+    loop_udpSend = std::make_shared<LoopFunc>("loop_udpSend", 0.002, 3, boost::bind(&RL_Real::UDPSend,      this));
+    loop_udpRecv = std::make_shared<LoopFunc>("loop_udpRecv", 0.002, 3, boost::bind(&RL_Real::UDPRecv,      this));
+    loop_rl      = std::make_shared<LoopFunc>("loop_rl"     , 0.02 ,    boost::bind(&RL_Real::runModel,     this));
 
     loop_udpSend->start();
     loop_udpRecv->start();
     loop_control->start();
+    
+#ifdef PLOT
+    loop_plot    = std::make_shared<LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Real::plot,         this));
+    loop_plot->start();
+#endif
 }
 
 RL_Real::~RL_Real()
@@ -179,21 +165,52 @@ RL_Real::~RL_Real()
     loop_udpRecv->shutdown();
     loop_control->shutdown();
     loop_rl->shutdown();
-    printf("shutdown\n");
+#ifdef PLOT
+    loop_plot->shutdown();
+#endif
+    printf("exit\n");
+}
+
+void RL_Real::plot()
+{
+    _t.push_back(motiontime);
+    plt::cla();
+    plt::clf();
+    for(int i = 0; i < 12; ++i)
+    {
+        _real_joint_pos[i].push_back(state.motorState[i].q);
+        _target_joint_pos[i].push_back(cmd.motorCmd[i].q);
+        plt::subplot(4, 3, i+1);
+        plt::named_plot("_real_joint_pos", _t, _real_joint_pos[i], "r");
+        plt::named_plot("_target_joint_pos", _t, _target_joint_pos[i], "b");
+        plt::xlim(motiontime-10000, motiontime);
+    }
+    // plt::legend();
+    plt::pause(0.0001);
 }
 
 void RL_Real::runModel()
 {
-    if(init_state == STATE_RL_START)
+    if(robot_state == STATE_RL_START)
     {
         // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
         // std::cout << "Execution time: " << duration << " microseconds" << std::endl;
         // start_time = std::chrono::high_resolution_clock::now();
 
-        // printf("%f, %f, %f\n", state.imu.gyroscope[0], state.imu.gyroscope[1], state.imu.gyroscope[2]);
-        // printf("%f, %f, %f, %f\n", state.imu.quaternion[1], state.imu.quaternion[2], state.imu.quaternion[3], state.imu.quaternion[0]);
-        // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", state.motorState[FL_0].q, state.motorState[FL_1].q, state.motorState[FL_2].q, state.motorState[FR_0].q, state.motorState[FR_1].q, state.motorState[FR_2].q, state.motorState[RL_0].q, state.motorState[RL_1].q, state.motorState[RL_2].q, state.motorState[RR_0].q, state.motorState[RR_1].q, state.motorState[RR_2].q);
-        // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", state.motorState[FL_0].dq, state.motorState[FL_1].dq, state.motorState[FL_2].dq, state.motorState[FR_0].dq, state.motorState[FR_1].dq, state.motorState[FR_2].dq, state.motorState[RL_0].dq, state.motorState[RL_1].dq, state.motorState[RL_2].dq, state.motorState[RR_0].dq, state.motorState[RR_1].dq, state.motorState[RR_2].dq);
+        // printf("%f, %f, %f\n", 
+        //     state.imu.gyroscope[0], state.imu.gyroscope[1], state.imu.gyroscope[2]);
+        // printf("%f, %f, %f, %f\n", 
+        //     state.imu.quaternion[1], state.imu.quaternion[2], state.imu.quaternion[3], state.imu.quaternion[0]);
+        // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
+        //     state.motorState[FL_0].q, state.motorState[FL_1].q, state.motorState[FL_2].q, 
+        //     state.motorState[FR_0].q, state.motorState[FR_1].q, state.motorState[FR_2].q, 
+        //     state.motorState[RL_0].q, state.motorState[RL_1].q, state.motorState[RL_2].q, 
+        //     state.motorState[RR_0].q, state.motorState[RR_1].q, state.motorState[RR_2].q);
+        // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
+        //     state.motorState[FL_0].dq, state.motorState[FL_1].dq, state.motorState[FL_2].dq, 
+        //     state.motorState[FR_0].dq, state.motorState[FR_1].dq, state.motorState[FR_2].dq, 
+        //     state.motorState[RL_0].dq, state.motorState[RL_1].dq, state.motorState[RL_2].dq, 
+        //     state.motorState[RR_0].dq, state.motorState[RR_1].dq, state.motorState[RR_2].dq);
         
         this->obs.ang_vel = torch::tensor({{state.imu.gyroscope[0], state.imu.gyroscope[1], state.imu.gyroscope[2]}});
         this->obs.commands = torch::tensor({{_keyData.ly, -_keyData.rx, -_keyData.lx}});
