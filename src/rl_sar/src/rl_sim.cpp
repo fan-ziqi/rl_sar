@@ -1,6 +1,6 @@
 #include "../include/rl_sim.hpp"
 
-#define PLOT
+// #define PLOT
 
 void RL_Sim::RobotControl()
 {

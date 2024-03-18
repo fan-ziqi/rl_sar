@@ -1,7 +1,7 @@
 #include "../include/rl_real.hpp"
 
 // #define CONTROL_BY_TORQUE
-#define PLOT
+// #define PLOT
 
 RL_Real rl_sar;
 
