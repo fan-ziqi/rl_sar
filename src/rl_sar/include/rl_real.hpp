@@ -16,10 +16,10 @@ using namespace UNITREE_LEGGED_SDK;
 
 enum RobotState {
     STATE_WAITING = 0,
-    STATE_POS_START,
+    STATE_POS_GETUP,
     STATE_RL_INIT,
-    STATE_RL_START,
-    STATE_POS_STOP,
+    STATE_RL_RUNNING,
+    STATE_POS_GETDOWN,
 };
 
 class RL_Real : public RL
@@ -52,10 +52,10 @@ public:
     std::shared_ptr<LoopFunc> loop_rl;
     std::shared_ptr<LoopFunc> loop_plot;
 
-    float start_percent = 0.0;
-    float stop_percent = 0.0;
-	float start_pos[12];
-    float stop_pos[12];
+    float getup_percent = 0.0;
+    float getdown_percent = 0.0;
+    float start_pos[12];
+	float now_pos[12];
 
     int robot_state = STATE_WAITING;
 
@@ -68,6 +68,14 @@ private:
     std::vector<double> joint_velocities;
 
     int dof_mapping[13] = {3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8};
+    float Kp[13] = {20, 20, 20, //fr
+                    20, 20, 20, //fl
+                    20, 20, 20, //rr
+                    20, 20, 20};//rl
+    float Kd[13] = {0.5, 0.5, 0.5, 
+                    0.5, 0.5, 0.5, 
+                    0.5, 0.5, 0.5, 
+                    0.5, 0.5, 0.5};
 
     std::chrono::high_resolution_clock::time_point start_time;
 
