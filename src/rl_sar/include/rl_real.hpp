@@ -14,9 +14,9 @@
 
 using namespace UNITREE_LEGGED_SDK;
 
-enum InitState {
+enum RobotState {
     STATE_WAITING = 0,
-    STATE_POS_INIT,
+    STATE_POS_START,
     STATE_RL_INIT,
     STATE_RL_START,
     STATE_POS_STOP,
@@ -28,23 +28,23 @@ public:
     RL_Real();
     ~RL_Real();
     
-    void runModel();
-    torch::Tensor forward() override;
-    torch::Tensor compute_observation() override;
+    void RunModel();
+    torch::Tensor Forward() override;
+    torch::Tensor ComputeObservation() override;
 
     ObservationBuffer history_obs_buf;
     torch::Tensor history_obs;
+    int motiontime = 0;
 
     //udp
-    void UDPSend();
-    void UDPRecv();
+    void UDPSend(){udp.Send();}
+    void UDPRecv(){udp.Recv();}
     void RobotControl();
     Safety safe;
     UDP udp;
     LowCmd cmd = {0};
     LowState state = {0};
     xRockerBtnDataStruct _keyData;
-    int motiontime = 0;
 
     std::shared_ptr<LoopFunc> loop_control;
     std::shared_ptr<LoopFunc> loop_udpSend;
@@ -52,14 +52,16 @@ public:
     std::shared_ptr<LoopFunc> loop_rl;
     std::shared_ptr<LoopFunc> loop_plot;
 
-    float _percent;
-	float _startPos[12];
+    float start_percent = 0.0;
+    float stop_percent = 0.0;
+	float start_pos[12];
+    float stop_pos[12];
 
     int robot_state = STATE_WAITING;
 
-    std::vector<double> _t;
-    std::vector<std::vector<double>> _real_joint_pos, _target_joint_pos;
-    void plot();
+    std::vector<double> plot_t;
+    std::vector<std::vector<double>> plot_real_joint_pos, plot_target_joint_pos;
+    void Plot();
 private:
     std::vector<std::string> joint_names;
     std::vector<double> joint_positions;

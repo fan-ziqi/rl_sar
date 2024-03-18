@@ -131,7 +131,7 @@ namespace UNITREE_LEGGED_SDK
 		uint32_t SN;
 		uint8_t bandWidth;
 		uint8_t mode;                      // 0:idle, default stand      1:forced stand     2:walk continuously
-		float forwardSpeed;                // speed of move forward or backward, scale: -1~1
+		float forwardSpeed;                // speed of move Forward or backward, scale: -1~1
 		float sideSpeed;                   // speed of move left or right, scale: -1~1
 		float rotateSpeed;	               // speed of spin left or right, scale: -1~1
 		float bodyHeight;                  // body height, scale: -1~1
