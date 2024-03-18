@@ -1,6 +1,6 @@
 #include "rl.hpp"
 
-torch::Tensor RL::quat_rotate_inverse(torch::Tensor q, torch::Tensor v)
+torch::Tensor RL::QuatRotateInverse(torch::Tensor q, torch::Tensor v)
 {
     c10::IntArrayRef shape = q.sizes();
     torch::Tensor q_w = q.index({torch::indexing::Slice(), -1});
@@ -11,7 +11,7 @@ torch::Tensor RL::quat_rotate_inverse(torch::Tensor q, torch::Tensor v)
     return a - b + c;
 }
 
-void RL::init_observations()
+void RL::InitObservations()
 {
     this->obs.lin_vel = torch::tensor({{0.0, 0.0, 0.0}});
     this->obs.ang_vel = torch::tensor({{0.0, 0.0, 0.0}});
@@ -23,7 +23,7 @@ void RL::init_observations()
     this->obs.actions = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
 }
 
-torch::Tensor RL::compute_torques(torch::Tensor actions)
+torch::Tensor RL::ComputeTorques(torch::Tensor actions)
 {
     torch::Tensor actions_scaled = actions * this->params.action_scale;
     int indices[] = {0, 3, 6, 9};
@@ -32,12 +32,12 @@ torch::Tensor RL::compute_torques(torch::Tensor actions)
         actions_scaled[0][i] *= this->params.hip_scale_reduction;
     }
 
-    torch::Tensor torques = this->params.p_gains * (actions_scaled + this->params.default_dof_pos - this->obs.dof_pos) - this->params.d_gains * this->obs.dof_vel;
-    torch::Tensor clamped = torch::clamp(torques, -(this->params.torque_limits), this->params.torque_limits);
+    torch::Tensor output_torques = this->params.p_gains * (actions_scaled + this->params.default_dof_pos - this->obs.dof_pos) - this->params.d_gains * this->obs.dof_vel;
+    torch::Tensor clamped = torch::clamp(output_torques, -(this->params.torque_limits), this->params.torque_limits);
     return clamped;
 }
 
-torch::Tensor RL::compute_pos(torch::Tensor actions)
+torch::Tensor RL::ComputePosition(torch::Tensor actions)
 {
     torch::Tensor actions_scaled = actions * this->params.action_scale;
     int indices[] = {0, 3, 6, 9};
@@ -49,12 +49,12 @@ torch::Tensor RL::compute_pos(torch::Tensor actions)
     return actions_scaled + this->params.default_dof_pos;
 }
 
-/* You may need to override this compute_observation() function
-torch::Tensor RL::compute_observation()
+/* You may need to override this ComputeObservation() function
+torch::Tensor RL::ComputeObservation()
 {
-    torch::Tensor obs = torch::cat({(this->quat_rotate_inverse(this->base_quat, this->lin_vel)) * this->params.lin_vel_scale,
-                                    (this->quat_rotate_inverse(this->obs.base_quat, this->obs.ang_vel)) * this->params.ang_vel_scale,
-                                    this->quat_rotate_inverse(this->obs.base_quat, this->obs.gravity_vec),
+    torch::Tensor obs = torch::cat({(this->QuatRotateInverse(this->base_quat, this->lin_vel)) * this->params.lin_vel_scale,
+                                    (this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel)) * this->params.ang_vel_scale,
+                                    this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec),
                                     this->obs.commands * this->params.commands_scale,
                                     (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
                                     this->obs.dof_vel * this->params.dof_vel_scale,
@@ -69,10 +69,10 @@ torch::Tensor RL::compute_observation()
 }
 */
 
-/* You may need to override this forward() function
-torch::Tensor RL::forward()
+/* You may need to override this Forward() function
+torch::Tensor RL::Forward()
 {
-    torch::Tensor obs = this->compute_observation();
+    torch::Tensor obs = this->ComputeObservation();
 
     torch::Tensor actor_input = torch::cat({obs}, 1);
 

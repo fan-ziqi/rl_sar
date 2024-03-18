@@ -1,14 +1,16 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(rl_sar)
 
+add_definitions(-DCMAKE_CURRENT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
-
-add_definitions(-DCMAKE_CURRENT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-
 find_package(Torch REQUIRED)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
+find_package(gazebo REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
     controller_manager
@@ -23,7 +25,6 @@ find_package(catkin REQUIRED COMPONENTS
     unitree_legged_msgs
 )
 
-find_package(gazebo REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
 catkin_package(
@@ -42,8 +43,6 @@ include_directories(
     ../unitree_controller/include
     library/matplotlibcpp
 )
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
 add_library(rl library/rl/rl.cpp library/rl/rl.hpp)
 target_link_libraries(rl "${TORCH_LIBRARIES}" Python3::Python Python3::Module)

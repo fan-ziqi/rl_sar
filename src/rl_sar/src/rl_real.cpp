@@ -1,19 +1,8 @@
 #include "../include/rl_real.hpp"
 
-// #define CONTROL_BY_TORQUE
 // #define PLOT
 
 RL_Real rl_sar;
-
-void RL_Real::UDPRecv()
-{ 
-    udp.Recv();
-}
-
-void RL_Real::UDPSend()
-{  
-    udp.Send();
-}
 
 void RL_Real::RobotControl()
 {
@@ -23,13 +12,27 @@ void RL_Real::RobotControl()
     memcpy(&_keyData, state.wirelessRemote, 40);
 
     // get joy button
-    if(robot_state < STATE_POS_INIT && (int)_keyData.btn.components.R2 == 1)
+    if(robot_state < STATE_POS_START && (int)_keyData.btn.components.R2 == 1)
     {
-        robot_state = STATE_POS_INIT;
+        start_percent = 0.0;
+        for(int i = 0; i < 12; ++i)
+        {
+            start_pos[i] = state.motorState[i].q;
+        }
+        robot_state = STATE_POS_START;
     }
     else if(robot_state < STATE_RL_INIT && (int)_keyData.btn.components.R1 == 1)
     {
         robot_state = STATE_RL_INIT;
+    }
+    else if(robot_state == STATE_RL_START && (int)_keyData.btn.components.L2 == 1)
+    {
+        stop_percent = 0.0;
+        for(int i = 0; i < 12; ++i)
+        {
+            stop_pos[i] = state.motorState[i].q;
+        }
+        robot_state = STATE_POS_STOP;
     }
 
     // wait for standup
@@ -38,57 +41,68 @@ void RL_Real::RobotControl()
         for(int i = 0; i < 12; ++i)
         {
             cmd.motorCmd[i].q = state.motorState[i].q;
-            _startPos[i] = state.motorState[i].q;
         }
     }
     // standup (position control)
-    else if(robot_state == STATE_POS_INIT && _percent != 1)
+    else if(robot_state == STATE_POS_START && start_percent != 1)
     {
-        _percent += 1 / 1000.0;
-        _percent = _percent > 1 ? 1 : _percent;
+        start_percent += 1 / 1000.0;
+        start_percent = start_percent > 1 ? 1 : start_percent;
         for(int i = 0; i < 12; ++i)
         {
             cmd.motorCmd[i].mode = 0x0A;
-            cmd.motorCmd[i].q = (1 - _percent) * _startPos[i] + _percent * params.default_dof_pos[0][dof_mapping[i]].item<double>();
+            cmd.motorCmd[i].q = (1 - start_percent) * start_pos[i] + start_percent * params.default_dof_pos[0][dof_mapping[i]].item<double>();
             cmd.motorCmd[i].dq = 0;
             cmd.motorCmd[i].Kp = 50;
             cmd.motorCmd[i].Kd = 3;
             cmd.motorCmd[i].tau = 0;
         }
-        printf("initing %.3f%%\r", _percent*100.0);
+        printf("starting %.3f%%\r", start_percent*100.0);
     }
     // init obs and start rl loop
-    else if(robot_state == STATE_RL_INIT && _percent == 1)
+    else if(robot_state == STATE_RL_INIT && start_percent == 1)
     {
         robot_state = STATE_RL_START;
-        this->init_observations();
+        this->InitObservations();
         printf("\nstart rl loop\n");
         loop_rl->start();
     }
     // rl loop
     else if(robot_state == STATE_RL_START)
     {
-#ifdef CONTROL_BY_TORQUE
-            for (int i = 0; i < 12; ++i)
-            {
-                cmd.motorCmd[i].mode = 0x0A;
-                cmd.motorCmd[i].q = 0;
-                cmd.motorCmd[i].dq = 0;
-                cmd.motorCmd[i].Kp = 0;
-                cmd.motorCmd[i].Kd = 0;
-                cmd.motorCmd[i].tau = torques[0][dof_mapping[i]].item<double>();
-            }
-#else
-            for (int i = 0; i < 12; ++i)
-            {
-                cmd.motorCmd[i].mode = 0x0A;
-                cmd.motorCmd[i].q = target_dof_pos[0][dof_mapping[i]].item<double>();
-                cmd.motorCmd[i].dq = 0;
-                cmd.motorCmd[i].Kp = params.stiffness;
-                cmd.motorCmd[i].Kd = params.damping;
-                cmd.motorCmd[i].tau = 0;
-            }
-#endif
+        for (int i = 0; i < 12; ++i)
+        {
+            cmd.motorCmd[i].mode = 0x0A;
+            cmd.motorCmd[i].q = output_dof_pos[0][dof_mapping[i]].item<double>();
+            cmd.motorCmd[i].dq = 0;
+            cmd.motorCmd[i].Kp = params.stiffness;
+            cmd.motorCmd[i].Kd = params.damping;
+            // cmd.motorCmd[i].tau = output_torques[0][dof_mapping[i]].item<double>();
+            cmd.motorCmd[i].tau = 0;
+        }
+    }
+    // move to start pos
+    else if(robot_state == STATE_POS_STOP && stop_percent != 1)
+    {
+        stop_percent += 1 / 1000.0;
+        stop_percent = stop_percent > 1 ? 1 : stop_percent;
+        for(int i = 0; i < 12; ++i)
+        {
+            cmd.motorCmd[i].mode = 0x0A;
+            cmd.motorCmd[i].q = (1 - stop_percent) * stop_pos[i] + stop_percent * start_pos[i];
+            cmd.motorCmd[i].dq = 0;
+            cmd.motorCmd[i].Kp = 50;
+            cmd.motorCmd[i].Kd = 3;
+            cmd.motorCmd[i].tau = 0;
+        }
+        printf("stopping %.3f%%\r", stop_percent*100.0);
+    }
+    else if(robot_state == STATE_POS_STOP && stop_percent == 1)
+    {
+        robot_state = STATE_WAITING;
+        this->InitObservations();
+        printf("\nstop rl loop\n");
+        loop_rl->shutdown();
     }
 
     safe.PowerProtect(cmd, state, 7);
@@ -108,7 +122,7 @@ RL_Real::RL_Real() : safe(LeggedType::A1), udp(LOWLEVEL)
     this->actor = torch::jit::load(actor_path);
     this->encoder = torch::jit::load(encoder_path);
     this->vq = torch::jit::load(vq_path);
-    this->init_observations();
+    this->InitObservations();
     
     this->params.num_observations = 45;
     this->params.clip_obs = 100.0;
@@ -139,22 +153,22 @@ RL_Real::RL_Real() : safe(LeggedType::A1), udp(LOWLEVEL)
 
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
 
-    torques = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
-    target_dof_pos = params.default_dof_pos;
-    _real_joint_pos.resize(12);
-    _target_joint_pos.resize(12);
+    output_torques = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
+    output_dof_pos = params.default_dof_pos;
+    plot_real_joint_pos.resize(12);
+    plot_target_joint_pos.resize(12);
 
     loop_control = std::make_shared<LoopFunc>("loop_control", 0.002,    boost::bind(&RL_Real::RobotControl, this));
     loop_udpSend = std::make_shared<LoopFunc>("loop_udpSend", 0.002, 3, boost::bind(&RL_Real::UDPSend,      this));
     loop_udpRecv = std::make_shared<LoopFunc>("loop_udpRecv", 0.002, 3, boost::bind(&RL_Real::UDPRecv,      this));
-    loop_rl      = std::make_shared<LoopFunc>("loop_rl"     , 0.02 ,    boost::bind(&RL_Real::runModel,     this));
+    loop_rl      = std::make_shared<LoopFunc>("loop_rl"     , 0.02 ,    boost::bind(&RL_Real::RunModel,     this));
 
     loop_udpSend->start();
     loop_udpRecv->start();
     loop_control->start();
     
 #ifdef PLOT
-    loop_plot    = std::make_shared<LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Real::plot,         this));
+    loop_plot    = std::make_shared<LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Real::Plot,         this));
     loop_plot->start();
 #endif
 }
@@ -171,25 +185,25 @@ RL_Real::~RL_Real()
     printf("exit\n");
 }
 
-void RL_Real::plot()
+void RL_Real::Plot()
 {
-    _t.push_back(motiontime);
+    plot_t.push_back(motiontime);
     plt::cla();
     plt::clf();
     for(int i = 0; i < 12; ++i)
     {
-        _real_joint_pos[i].push_back(state.motorState[i].q);
-        _target_joint_pos[i].push_back(cmd.motorCmd[i].q);
+        plot_real_joint_pos[i].push_back(state.motorState[i].q);
+        plot_target_joint_pos[i].push_back(cmd.motorCmd[i].q);
         plt::subplot(4, 3, i+1);
-        plt::named_plot("_real_joint_pos", _t, _real_joint_pos[i], "r");
-        plt::named_plot("_target_joint_pos", _t, _target_joint_pos[i], "b");
+        plt::named_plot("_real_joint_pos", plot_t, plot_real_joint_pos[i], "r");
+        plt::named_plot("_target_joint_pos", plot_t, plot_target_joint_pos[i], "b");
         plt::xlim(motiontime-10000, motiontime);
     }
     // plt::legend();
     plt::pause(0.0001);
 }
 
-void RL_Real::runModel()
+void RL_Real::RunModel()
 {
     if(robot_state == STATE_RL_START)
     {
@@ -224,21 +238,19 @@ void RL_Real::runModel()
                                             state.motorState[RL_0].dq, state.motorState[RL_1].dq, state.motorState[RL_2].dq,
                                             state.motorState[RR_0].dq, state.motorState[RR_1].dq, state.motorState[RR_2].dq}});
         
-        torch::Tensor actions = this->forward();
-#ifdef CONTROL_BY_TORQUE
-        torques = this->compute_torques(actions);
-#else
-        target_dof_pos = this->compute_pos(actions);
-#endif
+        torch::Tensor actions = this->Forward();
+
+        output_torques = this->ComputeTorques(actions);
+        output_dof_pos = this->ComputePosition(actions);
     }
     
 }
 
-torch::Tensor RL_Real::compute_observation()
+torch::Tensor RL_Real::ComputeObservation()
 {
-    torch::Tensor obs = torch::cat({// (this->quat_rotate_inverse(this->base_quat, this->lin_vel)) * this->params.lin_vel_scale,
-                                    this->quat_rotate_inverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale,
-                                    this->quat_rotate_inverse(this->obs.base_quat, this->obs.gravity_vec),
+    torch::Tensor obs = torch::cat({// (this->QuatRotateInverse(this->base_quat, this->lin_vel)) * this->params.lin_vel_scale,
+                                    this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale,
+                                    this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec),
                                     this->obs.commands * this->params.commands_scale,
                                     (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
                                     this->obs.dof_vel * this->params.dof_vel_scale,
@@ -248,9 +260,9 @@ torch::Tensor RL_Real::compute_observation()
     return obs;
 }
 
-torch::Tensor RL_Real::forward()
+torch::Tensor RL_Real::Forward()
 {
-    torch::Tensor obs = this->compute_observation();
+    torch::Tensor obs = this->ComputeObservation();
 
     history_obs_buf.insert(obs);
     history_obs = history_obs_buf.get_obs_vec({0, 1, 2, 3, 4, 5});

@@ -49,12 +49,12 @@ public:
     ModelParams params;
     Observations obs;
 
-    virtual torch::Tensor forward() = 0;
-    virtual torch::Tensor compute_observation() = 0;
-    torch::Tensor compute_torques(torch::Tensor actions);
-    torch::Tensor compute_pos(torch::Tensor actions);
-    torch::Tensor quat_rotate_inverse(torch::Tensor q, torch::Tensor v);
-    void init_observations();
+    virtual torch::Tensor Forward() = 0;
+    virtual torch::Tensor ComputeObservation() = 0;
+    torch::Tensor ComputeTorques(torch::Tensor actions);
+    torch::Tensor ComputePosition(torch::Tensor actions);
+    torch::Tensor QuatRotateInverse(torch::Tensor q, torch::Tensor v);
+    void InitObservations();
 
 protected:
     // rl module
@@ -69,8 +69,8 @@ protected:
     torch::Tensor dof_vel;           
     torch::Tensor actions;
     // output buffer
-    torch::Tensor torques;
-    torch::Tensor target_dof_pos;
+    torch::Tensor output_torques;
+    torch::Tensor output_dof_pos;
 };
 
 #endif // RL_HPP

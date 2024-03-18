@@ -19,14 +19,14 @@ public:
     RL_Sim();
     ~RL_Sim();
 
-    void modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg);
-    void jointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg);
-    void cmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
+    void ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg);
+    void JointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg);
+    void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
     
-    void runModel();
+    void RunModel();
     void RobotControl();
-    torch::Tensor forward() override;
-    torch::Tensor compute_observation() override;
+    torch::Tensor Forward() override;
+    torch::Tensor ComputeObservation() override;
 
     ObservationBuffer history_obs_buf;
     torch::Tensor history_obs;
@@ -37,9 +37,9 @@ public:
     std::shared_ptr<LoopFunc> loop_rl;
     std::shared_ptr<LoopFunc> loop_plot;
 
-    std::vector<double> _t;
-    std::vector<std::vector<double>> _real_joint_pos, _target_joint_pos;
-    void plot();
+    std::vector<double> plot_t;
+    std::vector<std::vector<double>> plot_real_joint_pos, plot_target_joint_pos;
+    void Plot();
 private:
     std::vector<std::string> torque_command_topics;
 
@@ -57,8 +57,6 @@ private:
     std::vector<std::string> joint_names;
     std::vector<double> joint_positions;
     std::vector<double> joint_velocities;
-
-    torch::Tensor torques;
 
     std::chrono::high_resolution_clock::time_point start_time;
 
