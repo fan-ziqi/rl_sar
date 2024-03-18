@@ -78,11 +78,16 @@ rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 
 ### Physical Deployment
 
-Open a new terminal, run the control program
+The connection to the physical robot can be done in both wireless and wired forms.
+
+- Wireless: Connect to the WIFI starting with "Unitree" emitted by the robot **(Note: Wireless connection may experience packet loss, disconnection, or even loss of control, please pay attention to safety)**
+- Wired: Use an Ethernet cable to connect any port on the computer to the robot, configure the computer's IP as 192.168.123.162, and the gateway as 255.255.255.0.
+
+Create a new terminal and launch the control program.
 
 ```bash
 source devel/setup.bash
 rosrun rl_sar rl_real
 ```
 
-> Some code references: https://github.com/mertgungor/unitree_model_control
+Press the **R2** button on the remote control to switch the robot to the default standing posture, press **R1** to switch to RL control mode, and press **L2** in any state to switch back to the initial lying posture. The left joystick controls x-axis up and down, controls yaw left and right, and the right joystick controls y-axis left and right.
