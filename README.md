@@ -1,6 +1,6 @@
 # rl_sar
 
-[中文文档](README.md)
+[中文文档](README_CN.md)
 
 Gazebo simulation verification and UnitreeA1 physical deployment for reinforcement learning. "sar" stands for "simulation and real".
 
