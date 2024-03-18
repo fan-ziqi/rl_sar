@@ -1,6 +1,6 @@
 #include "../include/rl_real.hpp"
 
-// #define PLOT
+#define PLOT
 
 RL_Real rl_sar;
 
@@ -11,98 +11,117 @@ void RL_Real::RobotControl()
 
     memcpy(&_keyData, state.wirelessRemote, 40);
 
-    // get joy button
-    if(robot_state < STATE_POS_START && (int)_keyData.btn.components.R2 == 1)
-    {
-        start_percent = 0.0;
-        for(int i = 0; i < 12; ++i)
-        {
-            start_pos[i] = state.motorState[i].q;
-        }
-        robot_state = STATE_POS_START;
-    }
-    else if(robot_state < STATE_RL_INIT && (int)_keyData.btn.components.R1 == 1)
-    {
-        robot_state = STATE_RL_INIT;
-    }
-    else if(robot_state == STATE_RL_START && (int)_keyData.btn.components.L2 == 1)
-    {
-        stop_percent = 0.0;
-        for(int i = 0; i < 12; ++i)
-        {
-            stop_pos[i] = state.motorState[i].q;
-        }
-        robot_state = STATE_POS_STOP;
-    }
-
-    // wait for standup
+    // waiting
     if(robot_state == STATE_WAITING)
     {
         for(int i = 0; i < 12; ++i)
         {
             cmd.motorCmd[i].q = state.motorState[i].q;
         }
-    }
-    // standup (position control)
-    else if(robot_state == STATE_POS_START && start_percent != 1)
-    {
-        start_percent += 1 / 1000.0;
-        start_percent = start_percent > 1 ? 1 : start_percent;
-        for(int i = 0; i < 12; ++i)
+        if((int)_keyData.btn.components.R2 == 1)
         {
-            cmd.motorCmd[i].mode = 0x0A;
-            cmd.motorCmd[i].q = (1 - start_percent) * start_pos[i] + start_percent * params.default_dof_pos[0][dof_mapping[i]].item<double>();
-            cmd.motorCmd[i].dq = 0;
-            cmd.motorCmd[i].Kp = 50;
-            cmd.motorCmd[i].Kd = 3;
-            cmd.motorCmd[i].tau = 0;
+            getup_percent = 0.0;
+            for(int i = 0; i < 12; ++i)
+            {
+                now_pos[i] = state.motorState[i].q;
+                start_pos[i] = now_pos[i];
+            }
+            robot_state = STATE_POS_GETUP;
         }
-        printf("starting %.3f%%\r", start_percent*100.0);
+    }
+    // stand up (position control)
+    else if(robot_state == STATE_POS_GETUP)
+    {
+        if(getup_percent != 1)
+        {
+            getup_percent += 1 / 1000.0;
+            getup_percent = getup_percent > 1 ? 1 : getup_percent;
+            for(int i = 0; i < 12; ++i)
+            {
+                cmd.motorCmd[i].mode = 0x0A;
+                cmd.motorCmd[i].q = (1 - getup_percent) * now_pos[i] + getup_percent * params.default_dof_pos[0][dof_mapping[i]].item<double>();
+                cmd.motorCmd[i].dq = 0;
+                cmd.motorCmd[i].Kp = 50;
+                cmd.motorCmd[i].Kd = 3;
+                cmd.motorCmd[i].tau = 0;
+            }
+            printf("getting up %.3f%%\r", getup_percent*100.0);
+        }
+        if((int)_keyData.btn.components.R1 == 1)
+        {
+            robot_state = STATE_RL_INIT;
+        }
+        else if((int)_keyData.btn.components.L2 == 1)
+        {
+            getdown_percent = 0.0;
+            for(int i = 0; i < 12; ++i)
+            {
+                now_pos[i] = state.motorState[i].q;
+            }
+            robot_state = STATE_POS_GETDOWN;
+        }
     }
     // init obs and start rl loop
-    else if(robot_state == STATE_RL_INIT && start_percent == 1)
+    else if(robot_state == STATE_RL_INIT)
     {
-        robot_state = STATE_RL_START;
-        this->InitObservations();
-        printf("\nstart rl loop\n");
-        loop_rl->start();
+        if(getup_percent == 1)
+        {
+            robot_state = STATE_RL_RUNNING;
+            this->InitObservations();
+            printf("\nstart rl loop\n");
+            loop_rl->start();
+        }
     }
     // rl loop
-    else if(robot_state == STATE_RL_START)
+    else if(robot_state == STATE_RL_RUNNING)
     {
-        for (int i = 0; i < 12; ++i)
+        for(int i = 0; i < 12; ++i)
         {
             cmd.motorCmd[i].mode = 0x0A;
             cmd.motorCmd[i].q = output_dof_pos[0][dof_mapping[i]].item<double>();
             cmd.motorCmd[i].dq = 0;
+            // cmd.motorCmd[i].Kp = Kp[dof_mapping[i]];
+            // cmd.motorCmd[i].Kd = Kd[dof_mapping[i]];
             cmd.motorCmd[i].Kp = params.stiffness;
             cmd.motorCmd[i].Kd = params.damping;
             // cmd.motorCmd[i].tau = output_torques[0][dof_mapping[i]].item<double>();
             cmd.motorCmd[i].tau = 0;
         }
-    }
-    // move to start pos
-    else if(robot_state == STATE_POS_STOP && stop_percent != 1)
-    {
-        stop_percent += 1 / 1000.0;
-        stop_percent = stop_percent > 1 ? 1 : stop_percent;
-        for(int i = 0; i < 12; ++i)
+        if((int)_keyData.btn.components.L2 == 1)
         {
-            cmd.motorCmd[i].mode = 0x0A;
-            cmd.motorCmd[i].q = (1 - stop_percent) * stop_pos[i] + stop_percent * start_pos[i];
-            cmd.motorCmd[i].dq = 0;
-            cmd.motorCmd[i].Kp = 50;
-            cmd.motorCmd[i].Kd = 3;
-            cmd.motorCmd[i].tau = 0;
+            getdown_percent = 0.0;
+            for(int i = 0; i < 12; ++i)
+            {
+                now_pos[i] = state.motorState[i].q;
+            }
+            robot_state = STATE_POS_GETDOWN;
         }
-        printf("stopping %.3f%%\r", stop_percent*100.0);
     }
-    else if(robot_state == STATE_POS_STOP && stop_percent == 1)
+    // get down (position control)
+    else if(robot_state == STATE_POS_GETDOWN)
     {
-        robot_state = STATE_WAITING;
-        this->InitObservations();
-        printf("\nstop rl loop\n");
-        loop_rl->shutdown();
+        if(getdown_percent != 1)
+        {
+            getdown_percent += 1 / 1000.0;
+            getdown_percent = getdown_percent > 1 ? 1 : getdown_percent;
+            for(int i = 0; i < 12; ++i)
+            {
+                cmd.motorCmd[i].mode = 0x0A;
+                cmd.motorCmd[i].q = (1 - getdown_percent) * now_pos[i] + getdown_percent * start_pos[i];
+                cmd.motorCmd[i].dq = 0;
+                cmd.motorCmd[i].Kp = 50;
+                cmd.motorCmd[i].Kd = 3;
+                cmd.motorCmd[i].tau = 0;
+            }
+            printf("getting down %.3f%%\r", getdown_percent*100.0);
+        }
+        if(getdown_percent == 1)
+        {
+            robot_state = STATE_WAITING;
+            this->InitObservations();
+            printf("\nstop rl loop\n");
+            loop_rl->shutdown();
+        }
     }
 
     safe.PowerProtect(cmd, state, 7);
@@ -205,7 +224,7 @@ void RL_Real::Plot()
 
 void RL_Real::RunModel()
 {
-    if(robot_state == STATE_RL_START)
+    if(robot_state == STATE_RL_RUNNING)
     {
         // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
         // std::cout << "Execution time: " << duration << " microseconds" << std::endl;
