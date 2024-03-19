@@ -1,6 +1,6 @@
 #include "../include/rl_real.hpp"
 
-#define PLOT
+// #define PLOT
 
 RL_Real rl_sar;
 
@@ -78,6 +78,7 @@ void RL_Real::RobotControl()
         for(int i = 0; i < 12; ++i)
         {
             cmd.motorCmd[i].mode = 0x0A;
+            // cmd.motorCmd[i].q = 0;
             cmd.motorCmd[i].q = output_dof_pos[0][dof_mapping[i]].item<double>();
             cmd.motorCmd[i].dq = 0;
             // cmd.motorCmd[i].Kp = Kp[dof_mapping[i]];
@@ -165,10 +166,10 @@ RL_Real::RL_Real() : safe(LeggedType::A1), udp(LOWLEVEL)
                                                  20.0, 55.0, 55.0}});
 
     //                                              hip,    thigh,   calf
-    this->params.default_dof_pos = torch::tensor({{-0.1000, 0.8000, -1.5000,   // front right
-                                                    0.1000, 0.8000, -1.5000,   // front left
-                                                   -0.1000, 1.0000, -1.5000,   // rear  right
-                                                    0.1000, 1.0000, -1.5000}});// rear  left
+    this->params.default_dof_pos = torch::tensor({{ 0.1000, 0.8000, -1.5000,   // FL
+                                                   -0.1000, 0.8000, -1.5000,   // FR
+                                                    0.1000, 1.0000, -1.5000,   // RR
+                                                   -0.1000, 1.0000, -1.5000}});// RL
 
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
 
