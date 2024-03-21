@@ -2,7 +2,7 @@
 
 [中文文档](README_CN.md)
 
-Gazebo simulation verification and UnitreeA1 physical deployment for reinforcement learning. "sar" stands for "simulation and real".
+Simulation verification and physical deployment of the quadruped robot's reinforcement learning algorithm. "sar" stands for "simulation and real".
 
 ## Preparation
 
@@ -91,3 +91,16 @@ rosrun rl_sar rl_real
 ```
 
 Press the **R2** button on the remote control to switch the robot to the default standing posture, press **R1** to switch to RL control mode, and press **L2** in any state to switch back to the initial lying posture. The left joystick controls x-axis up and down, controls yaw left and right, and the right joystick controls y-axis left and right.
+
+## Citation
+
+Please cite the following if you use this code or parts of it:
+
+```
+@software{fan-ziqi2024rl_sar,
+  author = {fan-ziqi},
+  title = {{rl_sar: Simulation Verification and Physical Deployment of the Quadruped Robot's Reinforcement Learning Algorithm.}},
+  url = {https://github.com/fan-ziqi/rl_sar},
+  year = {2024}
+}
+```
