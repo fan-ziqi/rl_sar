@@ -2,7 +2,7 @@
 
 [English document](README.md)
 
-强化学习的Gazebo仿真验证与UnitreeA1实物部署。"sar"代表"simulation and real"
+四足机器人强化学习算法的仿真验证与实物部署。"sar"代表"simulation and real"
 
 ## 准备
 
@@ -91,3 +91,16 @@ rosrun rl_sar rl_real
 ```
 
 按下遥控器的**R2**键让机器人切换到默认站起姿态，按下**R1**键切换到RL控制模式，任意状态按下**L2**切换到最初的趴下姿态。左摇杆上下控制x左右控制yaw，右摇杆左右控制y。
+
+## 引用
+
+如果您使用此代码或其部分内容，请引用以下内容：
+
+```
+@software{fan-ziqi2024rl_sar,
+  author = {fan-ziqi},
+  title = {{rl_sar: Simulation Verification and Physical Deployment of the Quadruped Robot's Reinforcement Learning Algorithm.}},
+  url = {https://github.com/fan-ziqi/rl_sar},
+  year = {2024}
+}
+```
