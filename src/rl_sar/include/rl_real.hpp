@@ -2,7 +2,6 @@
 #define RL_REAL_HPP
 
 #include "../library/rl/rl.hpp"
-#include "../library/observation_buffer/observation_buffer.hpp"
 #include <unitree_legged_msgs/LowCmd.h>
 #include "unitree_legged_msgs/LowState.h"
 #include <unitree_legged_msgs/MotorCmd.h>
@@ -32,8 +31,6 @@ public:
     torch::Tensor Forward() override;
     torch::Tensor ComputeObservation() override;
 
-    ObservationBuffer history_obs_buf;
-    torch::Tensor history_obs;
     int motiontime = 0;
 
     //udp
@@ -68,20 +65,8 @@ private:
     std::vector<double> joint_velocities;
 
     int dof_mapping[13] = {3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8};
-    float Kp[13] = {20, 20, 20, //fr
-                    20, 20, 20, //fl
-                    20, 20, 20, //rr
-                    20, 20, 20};//rl
-    float Kd[13] = {0.5, 0.5, 0.5, 
-                    0.5, 0.5, 0.5, 
-                    0.5, 0.5, 0.5, 
-                    0.5, 0.5, 0.5};
 
     std::chrono::high_resolution_clock::time_point start_time;
-
-    // other rl module
-    torch::jit::script::Module encoder;
-    torch::jit::script::Module vq;
 };
 
 #endif

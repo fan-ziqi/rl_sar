@@ -10,7 +10,6 @@ namespace plt = matplotlibcpp;
 
 struct ModelParams
 {
-    int num_observations;
     float damping;
     float stiffness;
     float action_scale;

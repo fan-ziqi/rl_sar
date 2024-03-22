@@ -54,18 +54,14 @@ else()
    target_compile_definitions(rl WITHOUT_NUMPY)
 endif()
 
-add_library(observation_buffer library/observation_buffer/observation_buffer.cpp library/observation_buffer/observation_buffer.hpp)
-target_link_libraries(observation_buffer "${TORCH_LIBRARIES}")
-set_property(TARGET observation_buffer PROPERTY CXX_STANDARD 14)
-
-add_executable(rl_sim src/rl_sim.cpp )
+add_executable(rl_sim src/rl_sim.cpp)
 target_link_libraries(rl_sim
   ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
-  rl observation_buffer
+  rl
 )
 
-add_executable(rl_real src/rl_real.cpp )
+add_executable(rl_real src/rl_real.cpp)
 target_link_libraries(rl_real
   ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
-  rl observation_buffer
+  rl
 )

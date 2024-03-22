@@ -2,42 +2,6 @@
 
 // #define PLOT
 
-void RL_Sim::RobotControl()
-{
-    motiontime++;
-    for (int i = 0; i < 12; ++i)
-    {
-        motor_commands[i].mode = 0x0A;
-        motor_commands[i].q = output_dof_pos[0][i].item<double>();
-        motor_commands[i].dq = 0;
-        motor_commands[i].Kp = params.stiffness;
-        motor_commands[i].Kd = params.damping;
-        // motor_commands[i].tau = output_torques[0][i].item<double>();
-        motor_commands[i].tau = 0;
-
-        torque_publishers[joint_names[i]].publish(motor_commands[i]);
-    }
-}
-
-void RL_Sim::Plot()
-{
-    int dof_mapping[13] = {1, 2, 0, 4, 5, 3, 7, 8, 6, 10, 11, 9};
-    plot_t.push_back(motiontime);
-    plt::cla();
-    plt::clf();
-    for(int i = 0; i < 12; ++i)
-    {
-        plot_real_joint_pos[i].push_back(joint_positions[dof_mapping[i]]);
-        plot_target_joint_pos[i].push_back(motor_commands[i].q);
-        plt::subplot(4, 3, i+1);
-        plt::named_plot("_real_joint_pos", plot_t, plot_real_joint_pos[i], "r");
-        plt::named_plot("_target_joint_pos", plot_t, plot_target_joint_pos[i], "b");
-        plt::xlim(motiontime-10000, motiontime);
-    }
-    // plt::legend();
-    plt::pause(0.0001);
-}
-
 RL_Sim::RL_Sim()
 {
     ros::NodeHandle nh;
@@ -48,15 +12,10 @@ RL_Sim::RL_Sim()
     motor_commands.resize(12);
 
     std::string actor_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/actor.pt";
-    std::string encoder_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/encoder.pt";
-    std::string vq_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/vq_layer.pt";
 
     this->actor = torch::jit::load(actor_path);
-    this->encoder = torch::jit::load(encoder_path);
-    this->vq = torch::jit::load(vq_path);
     this->InitObservations();
     
-    this->params.num_observations = 45;
     this->params.clip_obs = 100.0;
     this->params.clip_actions = 100.0;
     this->params.damping = 0.5;
@@ -64,14 +23,12 @@ RL_Sim::RL_Sim()
     this->params.d_gains = torch::ones(12) * this->params.damping;
     this->params.p_gains = torch::ones(12) * this->params.stiffness;
     this->params.action_scale = 0.25;
-    this->params.hip_scale_reduction = 0.5;
     this->params.num_of_dofs = 12;
     this->params.lin_vel_scale = 2.0;
     this->params.ang_vel_scale = 0.25;
     this->params.dof_pos_scale = 1.0;
     this->params.dof_vel_scale = 0.05;
     this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale});
-
     
     this->params.torque_limits = torch::tensor({{20.0, 55.0, 55.0,    
                                                  20.0, 55.0, 55.0,
@@ -83,8 +40,6 @@ RL_Sim::RL_Sim()
                                                   -0.1000, 0.8000, -1.5000,   // front right
                                                    0.1000, 1.0000, -1.5000,   // rear  left
                                                   -0.1000, 1.0000, -1.5000}});// rear  right
-
-    this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
 
     output_torques = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
     output_dof_pos = params.default_dof_pos;
@@ -137,6 +92,23 @@ RL_Sim::~RL_Sim()
     printf("exit\n");
 }
 
+void RL_Sim::RobotControl()
+{
+    motiontime++;
+    for (int i = 0; i < 12; ++i)
+    {
+        motor_commands[i].mode = 0x0A;
+        motor_commands[i].q = output_dof_pos[0][i].item<double>();
+        motor_commands[i].dq = 0;
+        motor_commands[i].Kp = params.stiffness;
+        motor_commands[i].Kd = params.damping;
+        // motor_commands[i].tau = output_torques[0][i].item<double>();
+        motor_commands[i].tau = 0;
+
+        torque_publishers[joint_names[i]].publish(motor_commands[i]);
+    }
+}
+
 void RL_Sim::ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg)
 {
 
@@ -157,25 +129,6 @@ void RL_Sim::JointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg)
 
 void RL_Sim::RunModel()
 {
-    // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
-    // std::cout << "Execution time: " << duration << " microseconds" << std::endl;
-    // start_time = std::chrono::high_resolution_clock::now();
-
-    // printf("%f, %f, %f\n", 
-    //     vel.angular.x, vel.angular.y, vel.angular.z);
-    // printf("%f, %f, %f, %f\n", 
-    //     pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
-    // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
-    //     joint_positions[1], joint_positions[2], joint_positions[0],
-    //     joint_positions[4], joint_positions[5], joint_positions[3],
-    //     joint_positions[7], joint_positions[8], joint_positions[6],
-    //     joint_positions[10], joint_positions[11], joint_positions[9]);
-    // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
-    //     joint_velocities[1], joint_velocities[2], joint_velocities[0],
-    //     joint_velocities[4], joint_velocities[5], joint_velocities[3],
-    //     joint_velocities[7], joint_velocities[8], joint_velocities[6],
-    //     joint_velocities[10], joint_velocities[11], joint_velocities[9]);
-
     this->obs.lin_vel = torch::tensor({{vel.linear.x, vel.linear.y, vel.linear.z}});
     this->obs.ang_vel = torch::tensor({{vel.angular.x, vel.angular.y, vel.angular.z}});
     this->obs.commands = torch::tensor({{cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z}});
@@ -197,8 +150,8 @@ void RL_Sim::RunModel()
 
 torch::Tensor RL_Sim::ComputeObservation()
 {
-    torch::Tensor obs = torch::cat({// (this->QuatRotateInverse(this->base_quat, this->lin_vel)) * this->params.lin_vel_scale,
-                                    (this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel)) * this->params.ang_vel_scale,
+    torch::Tensor obs = torch::cat({this->QuatRotateInverse(this->obs.base_quat, this->obs.lin_vel) * this->params.lin_vel_scale,
+                                    this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale,
                                     this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec),
                                     this->obs.commands * this->params.commands_scale,
                                     (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
@@ -213,14 +166,7 @@ torch::Tensor RL_Sim::Forward()
 {
     torch::Tensor obs = this->ComputeObservation();
 
-    history_obs_buf.insert(obs);
-    history_obs = history_obs_buf.get_obs_vec({0, 1, 2, 3, 4, 5});
-
-    torch::Tensor encoding = this->encoder.forward({history_obs}).toTensor();
-
-    torch::Tensor z = this->vq.forward({encoding}).toTensor();
-
-    torch::Tensor actor_input = torch::cat({obs, z}, 1);
+    torch::Tensor actor_input = torch::cat({obs}, 1);
 
     torch::Tensor action = this->actor.forward({actor_input}).toTensor();
 
@@ -228,6 +174,25 @@ torch::Tensor RL_Sim::Forward()
     torch::Tensor clamped = torch::clamp(action, -this->params.clip_actions, this->params.clip_actions);
 
     return clamped;
+}
+
+void RL_Sim::Plot()
+{
+    int dof_mapping[13] = {1, 2, 0, 4, 5, 3, 7, 8, 6, 10, 11, 9};
+    plot_t.push_back(motiontime);
+    plt::cla();
+    plt::clf();
+    for(int i = 0; i < 12; ++i)
+    {
+        plot_real_joint_pos[i].push_back(joint_positions[dof_mapping[i]]);
+        plot_target_joint_pos[i].push_back(motor_commands[i].q);
+        plt::subplot(4, 3, i+1);
+        plt::named_plot("_real_joint_pos", plot_t, plot_real_joint_pos[i], "r");
+        plt::named_plot("_target_joint_pos", plot_t, plot_target_joint_pos[i], "b");
+        plt::xlim(motiontime-10000, motiontime);
+    }
+    // plt::legend();
+    plt::pause(0.0001);
 }
 
 void signalHandler(int signum)

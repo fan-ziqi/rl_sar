@@ -2,7 +2,6 @@
 #define RL_SIM_HPP
 
 #include "../library/rl/rl.hpp"
-#include "../library/observation_buffer/observation_buffer.hpp"
 #include <ros/ros.h>
 #include <gazebo_msgs/ModelStates.h>
 #include <sensor_msgs/JointState.h>
@@ -27,9 +26,6 @@ public:
     void RobotControl();
     torch::Tensor Forward() override;
     torch::Tensor ComputeObservation() override;
-
-    ObservationBuffer history_obs_buf;
-    torch::Tensor history_obs;
 
     int motiontime = 0;
 
@@ -59,10 +55,6 @@ private:
     std::vector<double> joint_velocities;
 
     std::chrono::high_resolution_clock::time_point start_time;
-
-    // other rl module
-    torch::jit::script::Module encoder;
-    torch::jit::script::Module vq;
 };
 
 #endif
