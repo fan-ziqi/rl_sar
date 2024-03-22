@@ -6,7 +6,7 @@ torch::Tensor RL::QuatRotateInverse(torch::Tensor q, torch::Tensor v)
     torch::Tensor q_w = q.index({torch::indexing::Slice(), -1});
     torch::Tensor q_vec = q.index({torch::indexing::Slice(), torch::indexing::Slice(0, 3)});
     torch::Tensor a = v * (2.0 * torch::pow(q_w, 2) - 1.0).unsqueeze(-1);
-    torch::Tensor b = torch::cross(q_vec, v, /*dim=*/-1) * q_w.unsqueeze(-1) * 2.0;
+    torch::Tensor b = torch::cross(q_vec, v, -1) * q_w.unsqueeze(-1) * 2.0;
     torch::Tensor c = q_vec * torch::bmm(q_vec.view({shape[0], 1, 3}), v.view({shape[0], 3, 1})).squeeze(-1) * 2.0;
     return a - b + c;
 }
@@ -26,12 +26,6 @@ void RL::InitObservations()
 torch::Tensor RL::ComputeTorques(torch::Tensor actions)
 {
     torch::Tensor actions_scaled = actions * this->params.action_scale;
-    int indices[] = {0, 3, 6, 9};
-    for (int i : indices)
-    {
-        actions_scaled[0][i] *= this->params.hip_scale_reduction;
-    }
-
     torch::Tensor output_torques = this->params.p_gains * (actions_scaled + this->params.default_dof_pos - this->obs.dof_pos) - this->params.d_gains * this->obs.dof_vel;
     torch::Tensor clamped = torch::clamp(output_torques, -(this->params.torque_limits), this->params.torque_limits);
     return clamped;
@@ -40,12 +34,6 @@ torch::Tensor RL::ComputeTorques(torch::Tensor actions)
 torch::Tensor RL::ComputePosition(torch::Tensor actions)
 {
     torch::Tensor actions_scaled = actions * this->params.action_scale;
-    int indices[] = {0, 3, 6, 9};
-    for (int i : indices)
-    {
-        actions_scaled[0][i] *= this->params.hip_scale_reduction;
-    }
-
     return actions_scaled + this->params.default_dof_pos;
 }
 

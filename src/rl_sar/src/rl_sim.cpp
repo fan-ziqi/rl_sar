@@ -2,42 +2,6 @@
 
 // #define PLOT
 
-void RL_Sim::RobotControl()
-{
-    motiontime++;
-    for (int i = 0; i < 12; ++i)
-    {
-        motor_commands[i].mode = 0x0A;
-        motor_commands[i].q = output_dof_pos[0][i].item<double>();
-        motor_commands[i].dq = 0;
-        motor_commands[i].Kp = params.stiffness;
-        motor_commands[i].Kd = params.damping;
-        // motor_commands[i].tau = output_torques[0][i].item<double>();
-        motor_commands[i].tau = 0;
-
-        torque_publishers[joint_names[i]].publish(motor_commands[i]);
-    }
-}
-
-void RL_Sim::Plot()
-{
-    int dof_mapping[13] = {1, 2, 0, 4, 5, 3, 7, 8, 6, 10, 11, 9};
-    plot_t.push_back(motiontime);
-    plt::cla();
-    plt::clf();
-    for(int i = 0; i < 12; ++i)
-    {
-        plot_real_joint_pos[i].push_back(joint_positions[dof_mapping[i]]);
-        plot_target_joint_pos[i].push_back(motor_commands[i].q);
-        plt::subplot(4, 3, i+1);
-        plt::named_plot("_real_joint_pos", plot_t, plot_real_joint_pos[i], "r");
-        plt::named_plot("_target_joint_pos", plot_t, plot_target_joint_pos[i], "b");
-        plt::xlim(motiontime-10000, motiontime);
-    }
-    // plt::legend();
-    plt::pause(0.0001);
-}
-
 RL_Sim::RL_Sim()
 {
     ros::NodeHandle nh;
@@ -71,7 +35,6 @@ RL_Sim::RL_Sim()
     this->params.dof_pos_scale = 1.0;
     this->params.dof_vel_scale = 0.05;
     this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale});
-
     
     this->params.torque_limits = torch::tensor({{20.0, 55.0, 55.0,    
                                                  20.0, 55.0, 55.0,
@@ -137,6 +100,23 @@ RL_Sim::~RL_Sim()
     printf("exit\n");
 }
 
+void RL_Sim::RobotControl()
+{
+    motiontime++;
+    for (int i = 0; i < 12; ++i)
+    {
+        motor_commands[i].mode = 0x0A;
+        motor_commands[i].q = output_dof_pos[0][i].item<double>();
+        motor_commands[i].dq = 0;
+        motor_commands[i].Kp = params.stiffness;
+        motor_commands[i].Kd = params.damping;
+        // motor_commands[i].tau = output_torques[0][i].item<double>();
+        motor_commands[i].tau = 0;
+
+        torque_publishers[joint_names[i]].publish(motor_commands[i]);
+    }
+}
+
 void RL_Sim::ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg)
 {
 
@@ -191,6 +171,11 @@ void RL_Sim::RunModel()
 
     torch::Tensor actions = this->Forward();
 
+    for (int i : hip_scale_reduction_indices)
+    {
+        actions[0][i] *= this->params.hip_scale_reduction;
+    }
+
     output_torques = this->ComputeTorques(actions);
     output_dof_pos = this->ComputePosition(actions);
 }
@@ -228,6 +213,25 @@ torch::Tensor RL_Sim::Forward()
     torch::Tensor clamped = torch::clamp(action, -this->params.clip_actions, this->params.clip_actions);
 
     return clamped;
+}
+
+void RL_Sim::Plot()
+{
+    int dof_mapping[13] = {1, 2, 0, 4, 5, 3, 7, 8, 6, 10, 11, 9};
+    plot_t.push_back(motiontime);
+    plt::cla();
+    plt::clf();
+    for(int i = 0; i < 12; ++i)
+    {
+        plot_real_joint_pos[i].push_back(joint_positions[dof_mapping[i]]);
+        plot_target_joint_pos[i].push_back(motor_commands[i].q);
+        plt::subplot(4, 3, i+1);
+        plt::named_plot("_real_joint_pos", plot_t, plot_real_joint_pos[i], "r");
+        plt::named_plot("_target_joint_pos", plot_t, plot_target_joint_pos[i], "b");
+        plt::xlim(motiontime-10000, motiontime);
+    }
+    // plt::legend();
+    plt::pause(0.0001);
 }
 
 void signalHandler(int signum)

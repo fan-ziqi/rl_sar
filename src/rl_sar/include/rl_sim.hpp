@@ -58,6 +58,8 @@ private:
     std::vector<double> joint_positions;
     std::vector<double> joint_velocities;
 
+    int hip_scale_reduction_indices[] = {0, 3, 6, 9};
+
     std::chrono::high_resolution_clock::time_point start_time;
 
     // other rl module

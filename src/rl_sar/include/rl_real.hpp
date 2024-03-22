@@ -68,14 +68,7 @@ private:
     std::vector<double> joint_velocities;
 
     int dof_mapping[13] = {3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8};
-    float Kp[13] = {20, 20, 20, //fr
-                    20, 20, 20, //fl
-                    20, 20, 20, //rr
-                    20, 20, 20};//rl
-    float Kd[13] = {0.5, 0.5, 0.5, 
-                    0.5, 0.5, 0.5, 
-                    0.5, 0.5, 0.5, 
-                    0.5, 0.5, 0.5};
+    int hip_scale_reduction_indices[] = {0, 3, 6, 9};
 
     std::chrono::high_resolution_clock::time_point start_time;
 
