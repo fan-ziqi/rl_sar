@@ -64,7 +64,7 @@ private:
     std::vector<double> joint_positions;
     std::vector<double> joint_velocities;
 
-    int dof_mapping[13] = {3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8};
+    int dof_mapping[12] = {3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8};
 
     std::chrono::high_resolution_clock::time_point start_time;
 };
