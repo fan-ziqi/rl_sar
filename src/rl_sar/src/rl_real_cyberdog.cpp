@@ -20,8 +20,8 @@ RL_Real::RL_Real() : CustomInterface(500)
     this->params.num_observations = 45;
     this->params.clip_obs = 100.0;
     this->params.clip_actions = 100.0;
-    this->params.damping = 0.5;
-    this->params.stiffness = 20;
+    this->params.damping = 2.0;
+    this->params.stiffness = 50;
     this->params.d_gains = torch::ones(12) * this->params.damping;
     this->params.p_gains = torch::ones(12) * this->params.stiffness;
     this->params.action_scale = 0.25;
@@ -110,8 +110,8 @@ void RL_Real::RobotControl()
             {
                 cyberdogCmd.q_des[i] = (1 - getup_percent) * now_pos[i] + getup_percent * params.default_dof_pos[0][dof_mapping[i]].item<double>();
                 cyberdogCmd.qd_des[i] = 0;
-                cyberdogCmd.kp_des[i] = 50;
-                cyberdogCmd.kd_des[i] = 3;
+                cyberdogCmd.kp_des[i] = 200;
+                cyberdogCmd.kd_des[i] = 10;
                 cyberdogCmd.tau_des[i] = 0;
             }
             printf("getting up %.3f%%\r", getup_percent*100.0);
@@ -178,8 +178,8 @@ void RL_Real::RobotControl()
             {
                 cyberdogCmd.q_des[i] = (1 - getdown_percent) * now_pos[i] + getdown_percent * start_pos[i];
                 cyberdogCmd.qd_des[i] = 0;
-                cyberdogCmd.kp_des[i] = 50;
-                cyberdogCmd.kd_des[i] = 3;
+                cyberdogCmd.kp_des[i] = 200;
+                cyberdogCmd.kd_des[i] = 10;
                 cyberdogCmd.tau_des[i] = 0;
             }
             printf("getting down %.3f%%\r", getdown_percent*100.0);
