@@ -69,3 +69,11 @@ target_link_libraries(rl_real
   ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
   rl observation_buffer
 )
+
+add_subdirectory(library/cyberdog_motor_sdk)
+include_directories(library/cyberdog_motor_sdk/include)
+add_executable(rl_real_cyberdog src/rl_real_cyberdog.cpp )
+target_link_libraries(rl_real_cyberdog
+  ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
+  rl observation_buffer cyberdog_motor_sdk
+)

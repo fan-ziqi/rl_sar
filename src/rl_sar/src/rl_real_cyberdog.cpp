@@ -1,18 +1,16 @@
-#include "../include/rl_real.hpp"
+#include "../include/rl_real_cyberdog.hpp"
 
 // #define PLOT
 
 RL_Real rl_sar;
 
-RL_Real::RL_Real() : safe(LeggedType::A1), udp(LOWLEVEL)
+RL_Real::RL_Real() : CustomInterface(500)
 {
-    udp.InitCmdData(cmd);
-
     start_time = std::chrono::high_resolution_clock::now();
 
-    std::string actor_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/base/actor.pt";
-    std::string encoder_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/base/encoder.pt";
-    std::string vq_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/base/vq_layer.pt";
+    std::string actor_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/cyberdog/actor.pt";
+    std::string encoder_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/cyberdog/encoder.pt";
+    std::string vq_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/cyberdog/vq_layer.pt";
 
     this->actor = torch::jit::load(actor_path);
     this->encoder = torch::jit::load(encoder_path);
@@ -54,24 +52,19 @@ RL_Real::RL_Real() : safe(LeggedType::A1), udp(LOWLEVEL)
     plot_target_joint_pos.resize(12);
 
     loop_control = std::make_shared<LoopFunc>("loop_control", 0.002,    boost::bind(&RL_Real::RobotControl, this));
-    loop_udpSend = std::make_shared<LoopFunc>("loop_udpSend", 0.002, 3, boost::bind(&RL_Real::UDPSend,      this));
-    loop_udpRecv = std::make_shared<LoopFunc>("loop_udpRecv", 0.002, 3, boost::bind(&RL_Real::UDPRecv,      this));
     loop_rl      = std::make_shared<LoopFunc>("loop_rl"     , 0.02 ,    boost::bind(&RL_Real::RunModel,     this));
 
-    loop_udpSend->start();
-    loop_udpRecv->start();
     loop_control->start();
     
 #ifdef PLOT
     loop_plot    = std::make_shared<LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Real::Plot,         this));
     loop_plot->start();
 #endif
+    _keyboardThread = std::thread(&RL_Real::run_keyboard, this);
 }
 
 RL_Real::~RL_Real()
 {
-    loop_udpSend->shutdown();
-    loop_udpRecv->shutdown();
     loop_control->shutdown();
     loop_rl->shutdown();
 #ifdef PLOT
@@ -82,24 +75,25 @@ RL_Real::~RL_Real()
 
 void RL_Real::RobotControl()
 {
+    std::cout << "robot_state" << keyboard.robot_state
+              << " x" << keyboard.x << " y" << keyboard.y << " yaw" << keyboard.yaw
+              << "\r";
     motiontime++;
-    udp.GetRecv(state);
-
-    memcpy(&_keyData, state.wirelessRemote, 40);
 
     // waiting
     if(robot_state == STATE_WAITING)
     {
         for(int i = 0; i < 12; ++i)
         {
-            cmd.motorCmd[i].q = state.motorState[i].q;
+            cyberdogCmd.q_des[i] = cyberdogData.q[i];
         }
-        if((int)_keyData.btn.components.R2 == 1)
+        if(keyboard.robot_state == STATE_POS_GETUP)
         {
+            keyboard.robot_state = STATE_WAITING;
             getup_percent = 0.0;
             for(int i = 0; i < 12; ++i)
             {
-                now_pos[i] = state.motorState[i].q;
+                now_pos[i] = cyberdogData.q[i];
                 start_pos[i] = now_pos[i];
             }
             robot_state = STATE_POS_GETUP;
@@ -114,25 +108,26 @@ void RL_Real::RobotControl()
             getup_percent = getup_percent > 1 ? 1 : getup_percent;
             for(int i = 0; i < 12; ++i)
             {
-                cmd.motorCmd[i].mode = 0x0A;
-                cmd.motorCmd[i].q = (1 - getup_percent) * now_pos[i] + getup_percent * params.default_dof_pos[0][dof_mapping[i]].item<double>();
-                cmd.motorCmd[i].dq = 0;
-                cmd.motorCmd[i].Kp = 50;
-                cmd.motorCmd[i].Kd = 3;
-                cmd.motorCmd[i].tau = 0;
+                cyberdogCmd.q_des[i] = (1 - getup_percent) * now_pos[i] + getup_percent * params.default_dof_pos[0][dof_mapping[i]].item<double>();
+                cyberdogCmd.qd_des[i] = 0;
+                cyberdogCmd.kp_des[i] = 50;
+                cyberdogCmd.kd_des[i] = 3;
+                cyberdogCmd.tau_des[i] = 0;
             }
             printf("getting up %.3f%%\r", getup_percent*100.0);
         }
-        if((int)_keyData.btn.components.R1 == 1)
+        if(keyboard.robot_state == STATE_RL_INIT)
         {
+            keyboard.robot_state = STATE_WAITING;
             robot_state = STATE_RL_INIT;
         }
-        else if((int)_keyData.btn.components.L2 == 1)
+        else if(keyboard.robot_state == STATE_POS_GETDOWN)
         {
+            keyboard.robot_state = STATE_WAITING;
             getdown_percent = 0.0;
             for(int i = 0; i < 12; ++i)
             {
-                now_pos[i] = state.motorState[i].q;
+                now_pos[i] = cyberdogData.q[i];
             }
             robot_state = STATE_POS_GETDOWN;
         }
@@ -153,21 +148,21 @@ void RL_Real::RobotControl()
     {
         for(int i = 0; i < 12; ++i)
         {
-            cmd.motorCmd[i].mode = 0x0A;
-            // cmd.motorCmd[i].q = 0;
-            cmd.motorCmd[i].q = output_dof_pos[0][dof_mapping[i]].item<double>();
-            cmd.motorCmd[i].dq = 0;
-            cmd.motorCmd[i].Kp = params.stiffness;
-            cmd.motorCmd[i].Kd = params.damping;
-            // cmd.motorCmd[i].tau = output_torques[0][dof_mapping[i]].item<double>();
-            cmd.motorCmd[i].tau = 0;
+            // cyberdogCmd.q_des[i] = 0;
+            cyberdogCmd.q_des[i] = output_dof_pos[0][dof_mapping[i]].item<double>();
+            cyberdogCmd.qd_des[i] = 0;
+            cyberdogCmd.kp_des[i] = params.stiffness;
+            cyberdogCmd.kd_des[i] = params.damping;
+            // cyberdogCmd.tau_des[i] = output_torques[0][dof_mapping[i]].item<double>();
+            cyberdogCmd.tau_des[i] = 0;
         }
-        if((int)_keyData.btn.components.L2 == 1)
+        if(keyboard.robot_state == STATE_POS_GETDOWN)
         {
+            keyboard.robot_state = STATE_WAITING;
             getdown_percent = 0.0;
             for(int i = 0; i < 12; ++i)
             {
-                now_pos[i] = state.motorState[i].q;
+                now_pos[i] = cyberdogData.q[i];
             }
             robot_state = STATE_POS_GETDOWN;
         }
@@ -181,12 +176,11 @@ void RL_Real::RobotControl()
             getdown_percent = getdown_percent > 1 ? 1 : getdown_percent;
             for(int i = 0; i < 12; ++i)
             {
-                cmd.motorCmd[i].mode = 0x0A;
-                cmd.motorCmd[i].q = (1 - getdown_percent) * now_pos[i] + getdown_percent * start_pos[i];
-                cmd.motorCmd[i].dq = 0;
-                cmd.motorCmd[i].Kp = 50;
-                cmd.motorCmd[i].Kd = 3;
-                cmd.motorCmd[i].tau = 0;
+                cyberdogCmd.q_des[i] = (1 - getdown_percent) * now_pos[i] + getdown_percent * start_pos[i];
+                cyberdogCmd.qd_des[i] = 0;
+                cyberdogCmd.kp_des[i] = 50;
+                cyberdogCmd.kd_des[i] = 3;
+                cyberdogCmd.tau_des[i] = 0;
             }
             printf("getting down %.3f%%\r", getdown_percent*100.0);
         }
@@ -198,9 +192,85 @@ void RL_Real::RobotControl()
             loop_rl->shutdown();
         }
     }
+}
 
-    safe.PowerProtect(cmd, state, 7);
-    udp.SetSend(cmd);
+void RL_Real::UserCode()
+{
+	cyberdogData = robot_data;
+	motor_cmd = cyberdogCmd;
+}
+
+static bool kbhit()
+{
+    termios term;
+    tcgetattr(0, &term);
+    
+    termios term2 = term;
+    term2.c_lflag &= ~ICANON;
+    tcsetattr(0, TCSANOW, &term2);
+    
+    int byteswaiting;
+    ioctl(0, FIONREAD, &byteswaiting);
+    
+    tcsetattr(0, TCSANOW, &term);
+    
+    return byteswaiting > 0;
+}
+void RL_Real::run_keyboard()
+{
+    int c;
+    // Check for keyboard input
+    while(true)
+    {
+        if(kbhit())
+        {
+            c = fgetc(stdin);
+            switch(c)
+            {
+                case '0':
+                    keyboard.robot_state = STATE_POS_GETUP;
+                    break;
+                case 'p':
+                    keyboard.robot_state = STATE_RL_INIT;
+                    break;
+                case '1':
+                    keyboard.robot_state = STATE_POS_GETDOWN;
+                    break;
+                case 'q':
+                    break;
+                case 'w':
+                    keyboard.x += 0.1;
+                    break;
+                case 's':
+                    keyboard.x -= 0.1;
+                    break;
+                case 'a':
+                    keyboard.yaw += 0.1;
+                    break;
+                case 'd':
+                    keyboard.yaw -= 0.1;
+                    break;
+                case 'i':
+                    break;
+                case 'k':
+                    break;
+                case 'j':
+                    keyboard.y += 0.1;
+                    break;
+                case 'l':
+                    keyboard.y -= 0.1;
+                    break;
+                case ' ':
+                    keyboard.x = 0;
+                    keyboard.y = 0;
+                    keyboard.yaw = 0;
+                    break;
+                default:
+                    break;
+            }
+        }
+        usleep(10000);
+    } 
 }
 
 void RL_Real::RunModel()
@@ -212,31 +282,31 @@ void RL_Real::RunModel()
         // start_time = std::chrono::high_resolution_clock::now();
 
         // printf("%f, %f, %f\n", 
-        //     state.imu.gyroscope[0], state.imu.gyroscope[1], state.imu.gyroscope[2]);
+        //     cyberdogData.omega[0], cyberdogData.omega[1], cyberdogData.omega[2]);
         // printf("%f, %f, %f, %f\n", 
-        //     state.imu.quaternion[1], state.imu.quaternion[2], state.imu.quaternion[3], state.imu.quaternion[0]);
+        //     cyberdogData.quat[1], cyberdogData.quat[2], cyberdogData.quat[3], cyberdogData.quat[0]);
         // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
-        //     state.motorState[FL_0].q, state.motorState[FL_1].q, state.motorState[FL_2].q, 
-        //     state.motorState[FR_0].q, state.motorState[FR_1].q, state.motorState[FR_2].q, 
-        //     state.motorState[RL_0].q, state.motorState[RL_1].q, state.motorState[RL_2].q, 
-        //     state.motorState[RR_0].q, state.motorState[RR_1].q, state.motorState[RR_2].q);
+        //     cyberdogData.q[3], cyberdogData.q[4], cyberdogData.q[5],
+        //     cyberdogData.q[0], cyberdogData.q[1], cyberdogData.q[2],
+        //     cyberdogData.q[9], cyberdogData.q[10], cyberdogData.q[11],
+        //     cyberdogData.q[6], cyberdogData.q[7], cyberdogData.q[8]);
         // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
-        //     state.motorState[FL_0].dq, state.motorState[FL_1].dq, state.motorState[FL_2].dq, 
-        //     state.motorState[FR_0].dq, state.motorState[FR_1].dq, state.motorState[FR_2].dq, 
-        //     state.motorState[RL_0].dq, state.motorState[RL_1].dq, state.motorState[RL_2].dq, 
-        //     state.motorState[RR_0].dq, state.motorState[RR_1].dq, state.motorState[RR_2].dq);
+        //     cyberdogData.qd[3], cyberdogData.qd[4], cyberdogData.qd[5],
+        //     cyberdogData.qd[0], cyberdogData.qd[1], cyberdogData.qd[2],
+        //     cyberdogData.qd[9], cyberdogData.qd[10], cyberdogData.qd[11],
+        //     cyberdogData.qd[6], cyberdogData.qd[7], cyberdogData.qd[8]);
         
-        this->obs.ang_vel = torch::tensor({{state.imu.gyroscope[0], state.imu.gyroscope[1], state.imu.gyroscope[2]}});
-        this->obs.commands = torch::tensor({{_keyData.ly, -_keyData.rx, -_keyData.lx}});
-        this->obs.base_quat = torch::tensor({{state.imu.quaternion[1], state.imu.quaternion[2], state.imu.quaternion[3], state.imu.quaternion[0]}});
-        this->obs.dof_pos = torch::tensor({{state.motorState[FL_0].q, state.motorState[FL_1].q, state.motorState[FL_2].q,
-                                            state.motorState[FR_0].q, state.motorState[FR_1].q, state.motorState[FR_2].q,
-                                            state.motorState[RL_0].q, state.motorState[RL_1].q, state.motorState[RL_2].q,
-                                            state.motorState[RR_0].q, state.motorState[RR_1].q, state.motorState[RR_2].q}});
-        this->obs.dof_vel = torch::tensor({{state.motorState[FL_0].dq, state.motorState[FL_1].dq, state.motorState[FL_2].dq,
-                                            state.motorState[FR_0].dq, state.motorState[FR_1].dq, state.motorState[FR_2].dq,
-                                            state.motorState[RL_0].dq, state.motorState[RL_1].dq, state.motorState[RL_2].dq,
-                                            state.motorState[RR_0].dq, state.motorState[RR_1].dq, state.motorState[RR_2].dq}});
+        this->obs.ang_vel = torch::tensor({{cyberdogData.omega[0], cyberdogData.omega[1], cyberdogData.omega[2]}});
+        this->obs.commands = torch::tensor({{keyboard.x, keyboard.y, keyboard.yaw}});
+        this->obs.base_quat = torch::tensor({{cyberdogData.quat[1], cyberdogData.quat[2], cyberdogData.quat[3], cyberdogData.quat[0]}});
+        this->obs.dof_pos = torch::tensor({{cyberdogData.q[3], cyberdogData.q[4], cyberdogData.q[5],
+                                            cyberdogData.q[0], cyberdogData.q[1], cyberdogData.q[2],
+                                            cyberdogData.q[9], cyberdogData.q[10], cyberdogData.q[11],
+                                            cyberdogData.q[6], cyberdogData.q[7], cyberdogData.q[8]}});
+        this->obs.dof_vel = torch::tensor({{cyberdogData.qd[3], cyberdogData.qd[4], cyberdogData.qd[5],
+                                            cyberdogData.qd[0], cyberdogData.qd[1], cyberdogData.qd[2],
+                                            cyberdogData.qd[9], cyberdogData.qd[10], cyberdogData.qd[11],
+                                            cyberdogData.qd[6], cyberdogData.qd[7], cyberdogData.qd[8]}});
         
         torch::Tensor actions = this->Forward();
 
@@ -293,8 +363,8 @@ void RL_Real::Plot()
     plt::clf();
     for(int i = 0; i < 12; ++i)
     {
-        plot_real_joint_pos[i].push_back(state.motorState[i].q);
-        plot_target_joint_pos[i].push_back(cmd.motorCmd[i].q);
+        plot_real_joint_pos[i].push_back(cyberdogData.q[i]);
+        plot_target_joint_pos[i].push_back(cyberdogCmd.q_des[i]);
         plt::subplot(4, 3, i+1);
         plt::named_plot("_real_joint_pos", plot_t, plot_real_joint_pos[i], "r");
         plt::named_plot("_target_joint_pos", plot_t, plot_target_joint_pos[i], "b");
