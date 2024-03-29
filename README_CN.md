@@ -104,9 +104,8 @@ rosrun rl_sar rl_real
       ping 192.168.55.100     #本地PC被分配的ip
       ssh mi@192.168.55.1     #登录nx应用板 ,密码123
       athena_version -v #核对当前版本>=1.0.0.94
-      ssh root@192.168.55.233 #登录运动控制板
       ```
-
+    
 2. 进入电机控制模式
 
     修改配置开关，激活用户控制模式，运行用户自己的控制器：
@@ -138,6 +137,17 @@ rosrun rl_sar rl_real
     ```
     
     按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P**键切换到RL控制模式，任意状态按下**1**键切换到最初的趴下姿态。WS控制x，AD控制yaw，JL控制y。
+4. 重启
+
+    ```bash
+    # 重启运控程序:
+    ssh root@192.168.55.233 "ps | grep -E 'Example_MotorCtrl' | grep -v grep | awk '{print \$1}' | xargs kill -9" #需先于主进程暂停，避免急停
+    ssh root@192.168.55.233 "ps | grep -E 'manager|ctrl|imu_online' | grep -v grep | awk '{print \$1}' | xargs kill -9"
+    ssh root@192.168.55.233 "export LD_LIBRARY_PATH=/mnt/UDISK/robot-software/build;/mnt/UDISK/manager /mnt/UDISK/ >> /mnt/UDISK/manager_log/manager.log 2>&1 &"
+    # 重启运控板系统:
+    ssh root@192.168.55.233 "reboot"
+    ```
+
     
 
 注：lcm通信若不成功，无法正常激活电机控制模式，log提示：Motor control mode has not been activated successfully
