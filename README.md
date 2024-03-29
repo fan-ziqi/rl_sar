@@ -60,7 +60,7 @@ Open a new terminal, launch the gazebo simulation environment
 
 ```bash
 source devel/setup.bash
-roslaunch rl_sar start_env.launch
+roslaunch rl_sar start_a1.launch
 ```
 
 Open a new terminal, run the control program

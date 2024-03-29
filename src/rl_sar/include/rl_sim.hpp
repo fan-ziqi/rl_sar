@@ -41,6 +41,8 @@ public:
     std::vector<std::vector<double>> plot_real_joint_pos, plot_target_joint_pos;
     void Plot();
 private:
+    std::string ros_namespace;
+
     std::vector<std::string> torque_command_topics;
 
     ros::Subscriber model_state_subscriber_;
