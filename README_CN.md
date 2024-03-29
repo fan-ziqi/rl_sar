@@ -60,7 +60,7 @@ catkin build
 
 ```bash
 source devel/setup.bash
-roslaunch rl_sar start_env.launch
+roslaunch rl_sar start_a1.launch
 ```
 
 新建终端，启动控制程序

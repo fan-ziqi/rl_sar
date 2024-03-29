@@ -58,7 +58,7 @@ RL_Sim::RL_Sim()
 
     cmd_vel_subscriber_ = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Sim::CmdvelCallback, this);
 
-    std::string ros_namespace = "/a1_gazebo/";
+    nh.param<std::string>("ros_namespace", ros_namespace, "");
 
     joint_names = {
         "FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
@@ -77,7 +77,7 @@ RL_Sim::RL_Sim()
         "/gazebo/model_states", 10, &RL_Sim::ModelStatesCallback, this);
 
     joint_state_subscriber_ = nh.subscribe<sensor_msgs::JointState>(
-        "/a1_gazebo/joint_states", 10, &RL_Sim::JointStatesCallback, this);
+        ros_namespace + "joint_states", 10, &RL_Sim::JointStatesCallback, this);
 
     loop_control = std::make_shared<LoopFunc>("loop_control", 0.002,    boost::bind(&RL_Sim::RobotControl, this));
     loop_rl      = std::make_shared<LoopFunc>("loop_rl"     , 0.02 ,    boost::bind(&RL_Sim::RunModel,     this));
