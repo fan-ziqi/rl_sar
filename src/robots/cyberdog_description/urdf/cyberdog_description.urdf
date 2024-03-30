@@ -300,7 +300,7 @@
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
-      <mass value="7.18" />
+      <mass value="7.18+1.6" />
       <inertia
         ixx="0.032051"
         ixy="-0.00023217"
