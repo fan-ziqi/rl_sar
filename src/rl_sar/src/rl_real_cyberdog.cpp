@@ -4,7 +4,7 @@
 
 RL_Real rl_sar;
 
-RL_Real::RL_Real() : CustomInterface(5000)
+RL_Real::RL_Real() : CustomInterface(500)
 {
     start_time = std::chrono::high_resolution_clock::now();
 
@@ -33,10 +33,10 @@ RL_Real::RL_Real() : CustomInterface(5000)
     this->params.dof_vel_scale = 0.05;
     this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale});
     
-    this->params.torque_limits = torch::tensor({{20.0, 55.0, 55.0,    
-                                                 20.0, 55.0, 55.0,
-                                                 20.0, 55.0, 55.0,
-                                                 20.0, 55.0, 55.0}});
+    this->params.torque_limits = torch::tensor({{17.0, 24.0, 24.0,    
+                                                 17.0, 24.0, 24.0,
+                                                 17.0, 24.0, 24.0,
+                                                 17.0, 24.0, 24.0}});
 
     //                                              hip,    thigh,   calf
     this->params.default_dof_pos = torch::tensor({{ 0.1000, 0.8000, -1.5000,   // FL
@@ -70,18 +70,30 @@ RL_Real::~RL_Real()
 #ifdef PLOT
     loop_plot->shutdown();
 #endif
-
-    system("ssh root@192.168.55.233 \"ps | grep -E 'manager|ctrl|imu_online' | grep -v grep | awk '{print \\$1}' | xargs kill -9\"");
-    system("ssh root@192.168.55.233 \"export LD_LIBRARY_PATH=/mnt/UDISK/robot-software/build;/mnt/UDISK/manager /mnt/UDISK/ >> /mnt/UDISK/manager_log/manager.log 2>&1 &\"");
-
     printf("exit\n");
 }
 
 void RL_Real::RobotControl()
 {
+    // printf("%f, %f, %f\n", 
+    //     cyberdogData.omega[0], cyberdogData.omega[1], cyberdogData.omega[2]);
+    // printf("%f, %f, %f, %f\n", 
+    //     cyberdogData.quat[1], cyberdogData.quat[2], cyberdogData.quat[3], cyberdogData.quat[0]);
+    // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
+    //     cyberdogData.q[3], cyberdogData.q[4], cyberdogData.q[5],
+    //     cyberdogData.q[0], cyberdogData.q[1], cyberdogData.q[2],
+    //     cyberdogData.q[9], cyberdogData.q[10], cyberdogData.q[11],
+    //     cyberdogData.q[6], cyberdogData.q[7], cyberdogData.q[8]);
+    // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
+    //     cyberdogData.qd[3], cyberdogData.qd[4], cyberdogData.qd[5],
+    //     cyberdogData.qd[0], cyberdogData.qd[1], cyberdogData.qd[2],
+    //     cyberdogData.qd[9], cyberdogData.qd[10], cyberdogData.qd[11],
+    //     cyberdogData.qd[6], cyberdogData.qd[7], cyberdogData.qd[8]);
+
     std::cout << "robot_state" << keyboard.robot_state
               << " x" << keyboard.x << " y" << keyboard.y << " yaw" << keyboard.yaw
               << "\r";
+
     motiontime++;
 
     // waiting
@@ -284,21 +296,6 @@ void RL_Real::RunModel()
         // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
         // std::cout << "Execution time: " << duration << " microseconds" << std::endl;
         // start_time = std::chrono::high_resolution_clock::now();
-
-        // printf("%f, %f, %f\n", 
-        //     cyberdogData.omega[0], cyberdogData.omega[1], cyberdogData.omega[2]);
-        // printf("%f, %f, %f, %f\n", 
-        //     cyberdogData.quat[1], cyberdogData.quat[2], cyberdogData.quat[3], cyberdogData.quat[0]);
-        // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
-        //     cyberdogData.q[3], cyberdogData.q[4], cyberdogData.q[5],
-        //     cyberdogData.q[0], cyberdogData.q[1], cyberdogData.q[2],
-        //     cyberdogData.q[9], cyberdogData.q[10], cyberdogData.q[11],
-        //     cyberdogData.q[6], cyberdogData.q[7], cyberdogData.q[8]);
-        // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
-        //     cyberdogData.qd[3], cyberdogData.qd[4], cyberdogData.qd[5],
-        //     cyberdogData.qd[0], cyberdogData.qd[1], cyberdogData.qd[2],
-        //     cyberdogData.qd[9], cyberdogData.qd[10], cyberdogData.qd[11],
-        //     cyberdogData.qd[6], cyberdogData.qd[7], cyberdogData.qd[8]);
         
         this->obs.ang_vel = torch::tensor({{cyberdogData.omega[0], cyberdogData.omega[1], cyberdogData.omega[2]}});
         this->obs.commands = torch::tensor({{keyboard.x, keyboard.y, keyboard.yaw}});
@@ -380,6 +377,9 @@ void RL_Real::Plot()
 
 void signalHandler(int signum)
 {
+    system("ssh root@192.168.55.233 \"ps | grep -E 'manager|ctrl|imu_online' | grep -v grep | awk '{print \\$1}' | xargs kill -9\"");
+    system("ssh root@192.168.55.233 \"export LD_LIBRARY_PATH=/mnt/UDISK/robot-software/build;/mnt/UDISK/manager /mnt/UDISK/ >> /mnt/UDISK/manager_log/manager.log 2>&1 &\"");
+
     exit(0);
 }
 
