@@ -1,10 +1,10 @@
 #include "../include/rl_real_cyberdog.hpp"
 
-// #define PLOT
+#define PLOT
 
 RL_Real rl_sar;
 
-RL_Real::RL_Real() : CustomInterface(500)
+RL_Real::RL_Real() : CustomInterface(5000)
 {
     start_time = std::chrono::high_resolution_clock::now();
 
@@ -20,8 +20,8 @@ RL_Real::RL_Real() : CustomInterface(500)
     this->params.num_observations = 45;
     this->params.clip_obs = 100.0;
     this->params.clip_actions = 100.0;
-    this->params.damping = 2.0;
-    this->params.stiffness = 50;
+    this->params.damping = 1.0;
+    this->params.stiffness = 30;
     this->params.d_gains = torch::ones(12) * this->params.damping;
     this->params.p_gains = torch::ones(12) * this->params.stiffness;
     this->params.action_scale = 0.25;
@@ -70,6 +70,10 @@ RL_Real::~RL_Real()
 #ifdef PLOT
     loop_plot->shutdown();
 #endif
+
+    system("ssh root@192.168.55.233 \"ps | grep -E 'manager|ctrl|imu_online' | grep -v grep | awk '{print \\$1}' | xargs kill -9\"");
+    system("ssh root@192.168.55.233 \"export LD_LIBRARY_PATH=/mnt/UDISK/robot-software/build;/mnt/UDISK/manager /mnt/UDISK/ >> /mnt/UDISK/manager_log/manager.log 2>&1 &\"");
+
     printf("exit\n");
 }
 

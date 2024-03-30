@@ -10,6 +10,7 @@
 // #include <signal.h>
 #include <termios.h>
 #include <sys/ioctl.h>
+#include <iostream>
 
 using namespace UNITREE_LEGGED_SDK;
 
