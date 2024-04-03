@@ -20,8 +20,8 @@ RL_Real::RL_Real() : CustomInterface(500)
     this->params.num_observations = 45;
     this->params.clip_obs = 100.0;
     this->params.clip_actions = 100.0;
-    this->params.damping = 1.0;
-    this->params.stiffness = 30;
+    this->params.damping = 0.5;
+    this->params.stiffness = 20;
     this->params.d_gains = torch::ones(12) * this->params.damping;
     this->params.p_gains = torch::ones(12) * this->params.stiffness;
     this->params.action_scale = 0.25;
@@ -167,8 +167,10 @@ void RL_Real::RobotControl()
             // cyberdogCmd.q_des[i] = 0;
             cyberdogCmd.q_des[i] = output_dof_pos[0][dof_mapping[i]].item<double>();
             cyberdogCmd.qd_des[i] = 0;
-            cyberdogCmd.kp_des[i] = params.stiffness;
-            cyberdogCmd.kd_des[i] = params.damping;
+            // cyberdogCmd.kp_des[i] = params.stiffness;
+            // cyberdogCmd.kd_des[i] = params.damping;
+            cyberdogCmd.kp_des[i] = Kp[dof_mapping[i]];
+            cyberdogCmd.kd_des[i] = Kd[dof_mapping[i]];
             // cyberdogCmd.tau_des[i] = output_torques[0][dof_mapping[i]].item<double>();
             cyberdogCmd.tau_des[i] = 0;
         }
@@ -243,46 +245,20 @@ void RL_Real::run_keyboard()
             c = fgetc(stdin);
             switch(c)
             {
-                case '0':
-                    keyboard.robot_state = STATE_POS_GETUP;
-                    break;
-                case 'p':
-                    keyboard.robot_state = STATE_RL_INIT;
-                    break;
-                case '1':
-                    keyboard.robot_state = STATE_POS_GETDOWN;
-                    break;
-                case 'q':
-                    break;
-                case 'w':
-                    keyboard.x += 0.1;
-                    break;
-                case 's':
-                    keyboard.x -= 0.1;
-                    break;
-                case 'a':
-                    keyboard.yaw += 0.1;
-                    break;
-                case 'd':
-                    keyboard.yaw -= 0.1;
-                    break;
-                case 'i':
-                    break;
-                case 'k':
-                    break;
-                case 'j':
-                    keyboard.y += 0.1;
-                    break;
-                case 'l':
-                    keyboard.y -= 0.1;
-                    break;
-                case ' ':
-                    keyboard.x = 0;
-                    keyboard.y = 0;
-                    keyboard.yaw = 0;
-                    break;
-                default:
-                    break;
+                case '0': keyboard.robot_state = STATE_POS_GETUP; break;
+                case 'p': keyboard.robot_state = STATE_RL_INIT; break;
+                case '1': keyboard.robot_state = STATE_POS_GETDOWN; break;
+                case 'q': break;
+                case 'w': keyboard.x += 0.1; break;
+                case 's': keyboard.x -= 0.1; break;
+                case 'a': keyboard.yaw += 0.1; break;
+                case 'd': keyboard.yaw -= 0.1; break;
+                case 'i': break;
+                case 'k': break;
+                case 'j': keyboard.y += 0.1; break;
+                case 'l': keyboard.y -= 0.1; break;
+                case ' ': keyboard.x = 0; keyboard.y = 0; keyboard.yaw = 0; break;
+                default: break;
             }
         }
         usleep(10000);
