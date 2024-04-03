@@ -41,11 +41,11 @@ RL_Sim::RL_Sim()
                                                  20.0, 55.0, 55.0,
                                                  20.0, 55.0, 55.0}});
 
-    //                                             hip,    thigh,   calf
-    this->params.default_dof_pos = torch::tensor({{0.1000, 0.8000, -1.5000,   // front left
-                                                  -0.1000, 0.8000, -1.5000,   // front right
-                                                   0.1000, 1.0000, -1.5000,   // rear  left
-                                                  -0.1000, 1.0000, -1.5000}});// rear  right
+    //                                              hip,    thigh,   calf
+    this->params.default_dof_pos = torch::tensor({{ 0.1000, 0.8000, -1.5000,   // FL
+                                                   -0.1000, 0.8000, -1.5000,   // FR
+                                                    0.1000, 1.0000, -1.5000,   // RR
+                                                   -0.1000, 1.0000, -1.5000}});// RL
 
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
 
@@ -156,7 +156,7 @@ void RL_Sim::RunModel()
     //     joint_velocities[7], joint_velocities[8], joint_velocities[6],
     //     joint_velocities[10], joint_velocities[11], joint_velocities[9]);
 
-    this->obs.lin_vel = torch::tensor({{vel.linear.x, vel.linear.y, vel.linear.z}});
+    // this->obs.lin_vel = torch::tensor({{vel.linear.x, vel.linear.y, vel.linear.z}});
     this->obs.ang_vel = torch::tensor({{vel.angular.x, vel.angular.y, vel.angular.z}});
     this->obs.commands = torch::tensor({{cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z}});
     this->obs.base_quat = torch::tensor({{pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w}});
@@ -182,8 +182,8 @@ void RL_Sim::RunModel()
 
 torch::Tensor RL_Sim::ComputeObservation()
 {
-    torch::Tensor obs = torch::cat({// (this->QuatRotateInverse(this->base_quat, this->lin_vel)) * this->params.lin_vel_scale,
-                                    (this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel)) * this->params.ang_vel_scale,
+    torch::Tensor obs = torch::cat({// this->QuatRotateInverse(this->obs.base_quat, this->obs.lin_vel) * this->params.lin_vel_scale,
+                                    this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale,
                                     this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec),
                                     this->obs.commands * this->params.commands_scale,
                                     (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
