@@ -4,3 +4,4 @@ logs
 .catkin_tools
 .vscode
 old
+*.pt
