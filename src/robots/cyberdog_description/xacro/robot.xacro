@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<robot name="cyberdog_description" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:arg name="ROBOT" default="cyberdog_description" />
+    <xacro:arg name="USE_LIDAR" default="false" />
+    <xacro:include filename="const.xacro" />
+    <xacro:include filename="leg.xacro" />
+    <xacro:include filename="gazebo.xacro" />
+
+    <material name="black">
+        <color rgba="0.0 0.0 0.0 1.0"/>
+    </material>
+    <material name="blue">
+        <color rgba="0.0 0.0 0.8 1.0"/>
+    </material>
+    <material name="green">
+        <color rgba="0.0 0.8 0.0 1.0"/>
+    </material>
+    <material name="grey">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+    </material>
+    <material name="silver">
+        <color rgba="0.913725490196 0.913725490196 0.847058823529 1.0"/>
+    </material>
+    <material name="orange">
+        <color rgba="0.12 0.15 0.2 1.0"/>
+    </material>
+    <material name="brown">
+        <color rgba="0.870588235294 0.811764705882 0.764705882353 1.0"/>
+    </material>
+    <material name="red">
+        <color rgba="0.8 0.0 0.0 1.0"/>
+    </material>
+    <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0"/>
+    </material>
+
+    <link name="base">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <box size="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="floating_base" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0" />
+        <parent link="base" />
+        <child link="trunk" />
+    </joint>
+
+    <link name="trunk">
+        <!-- <visual>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="package://cyberdog_new_description/meshes/body.dae" scale="1 1 1" />
+            </geometry>
+        </visual> -->
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <box size="${body_length} ${body_width} ${body_height}" />
+            </geometry>
+            <material name="silver" />
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <box size="${body_length} ${body_width} ${body_height}" />
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 0 0" xyz="${body_com_x} ${body_com_y} ${body_com_z}" />
+            <mass value="${body_mass}" />
+            <inertia ixx="${body_ixx}" ixy="${body_ixy}" ixz="${body_ixz}" iyy="${body_iyy}" iyz="${body_iyz}" izz="${body_izz}" />
+        </inertial>
+    </link>
+
+    <joint name="imu_joint" type="fixed">
+        <parent link="trunk" />
+        <child link="imu_link" />
+        <origin rpy="0 0 0" xyz="0 0 0" />
+    </joint>
+
+    <link name="imu_link">
+        <!-- <inertial>
+            <mass value="0.001" />
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <box size="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <box size=".001 .001 .001" />
+            </geometry>
+        </collision> -->
+    </link>
+
+    <xacro:leg name="FR" mirror="-1" mirror_dae="False" front_hind="1" front_hind_dae="True">
+        <origin rpy="0 0 0" xyz="${abad_offset_x} ${-abad_offset_y} 0" />
+    </xacro:leg>
+
+    <xacro:leg name="FL" mirror="1" mirror_dae="True" front_hind="1" front_hind_dae="True">
+        <origin rpy="0 0 0" xyz="${abad_offset_x} ${abad_offset_y} 0" />
+    </xacro:leg>
+
+    <xacro:leg name="RR" mirror="-1" mirror_dae="False" front_hind="-1" front_hind_dae="False">
+        <origin rpy="0 0 0" xyz="${-abad_offset_x} ${-abad_offset_y} 0" />
+    </xacro:leg>
+
+    <xacro:leg name="RL" mirror="1" mirror_dae="True" front_hind="-1" front_hind_dae="False">
+        <origin rpy="0 0 0" xyz="${-abad_offset_x} ${abad_offset_y} 0" />
+    </xacro:leg>
+
+</robot>
