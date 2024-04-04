@@ -21,7 +21,7 @@ RL_Real::RL_Real() : CustomInterface(500)
     this->params.clip_obs = 100.0;
     this->params.clip_actions = 100.0;
     this->params.damping = 0.5;
-    this->params.stiffness = 20;
+    this->params.stiffness = 25;
     this->params.d_gains = torch::ones(12) * this->params.damping;
     this->params.p_gains = torch::ones(12) * this->params.stiffness;
     this->params.action_scale = 0.25;
