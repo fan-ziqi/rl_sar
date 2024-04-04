@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:property name="PI" value="3.1415926535897931" />
+
+    <!-- dimension -->
+    <!-- body -->
+    <xacro:property name="body_width" value="0.23" />
+    <xacro:property name="body_length" value="0.36" />
+    <xacro:property name="body_height" value="0.15" />
+
+    <!-- abad -->
+    <xacro:property name="abad_radius" value="0.047" />
+    <xacro:property name="abad_length" value="0.052" />
+    <xacro:property name="abad_offset_x" value="0.23035" />
+    <xacro:property name="abad_offset_y" value="0.05" />
+    <xacro:property name="abad_rotor_offset" value="0.0832504" />
+    <xacro:property name="abad_max" value="0.76096355387" />
+    <xacro:property name="abad_min" value="-0.76096355387" />
+
+    <!-- hip -->
+    <xacro:property name="hip_shoulder_radius" value="0.047" />
+    <xacro:property name="hip_shoulder_length" value="0.052" />
+    <xacro:property name="hip_width" value="0.035" />
+    <xacro:property name="hip_height" value="0.050" />
+    <xacro:property name="hip_offset" value="0.105076" />
+    <xacro:property name="hip_length" value="0.2" />
+    <xacro:property name="hip_rotor_offset" value="-0.107226" />
+    <xacro:property name="hip_f_max" value="3.76991118431" />
+    <xacro:property name="hip_f_min" value="-1.88495559215" />
+    <xacro:property name="hip_h_max" value="3.76991118431" />
+    <xacro:property name="hip_h_min" value="-1.88495559215" />
+
+    <!-- knee -->
+    <xacro:property name="knee_width" value="0.016" />
+    <xacro:property name="knee_height" value="0.016" />
+    <xacro:property name="knee_length" value="0.209" />
+    <xacro:property name="knee_rotor_offset" value="-0.0426259" />
+    <xacro:property name="knee_max" value="-0.717155789644" />
+    <xacro:property name="knee_min" value="-2.49582083035" />
+    <xacro:property name="knee_rubber" value="0.025" />
+
+    <!-- foot -->
+    <xacro:property name="foot_radius" value="0.018" />
+
+    <!-- acuator atribute -->
+    <xacro:property name="abadGearRatio" value="1" />
+    <xacro:property name="hipGearRatio" value="1" />
+    <xacro:property name="kneeGearRatio" value="1" />
+    <xacro:property name="abad_motorTauMax" value="24" />
+    <xacro:property name="hip_motorTauMax" value="24" />
+    <xacro:property name="knee_motorTauMax" value="24" />
+    <xacro:property name="abad_motorVelMax" value="31" />
+    <xacro:property name="hip_motorVelMax" value="31" />
+    <xacro:property name="knee_motorVelMax" value="31" />
+    <xacro:property name="abad_damping" value="0" />
+    <xacro:property name="hip_damping" value="0" />
+    <xacro:property name="knee_damping" value="0" />
+    <xacro:property name="abad_friction" value="0" />
+    <xacro:property name="hip_friction" value="0" />
+    <xacro:property name="knee_friction" value="0" />
+
+    <!-- inertial&mass value -->
+    <!-- body -->
+    <xacro:property name="body_mass" value="6.248410872" />
+    <xacro:property name="body_com_x" value="0.018785003" />
+    <xacro:property name="body_com_y" value="0.003291012" />
+    <xacro:property name="body_com_z" value="-0.000925646" />
+    <xacro:property name="body_ixx" value="0.032143039" />
+    <xacro:property name="body_ixy" value="-0.000268204" />
+    <xacro:property name="body_ixz" value="-0.00241341" />
+    <xacro:property name="body_iyy" value="0.13578316" />
+    <xacro:property name="body_iyz" value="0.000080244" />
+    <xacro:property name="body_izz" value="0.14828095" />
+
+    <!-- abad -->
+    <xacro:property name="abad_mass" value="0.537806728" />
+    <xacro:property name="abad_com_x" value="-0.001597914" />
+    <xacro:property name="abad_com_y" value="0.001680938" />
+    <xacro:property name="abad_com_z" value="0.000002253" />
+    <xacro:property name="abad_ixx" value="0.000403612" />
+    <xacro:property name="abad_ixy" value="-0.000009337" />
+    <xacro:property name="abad_ixz" value="0.000000536" />
+    <xacro:property name="abad_iyy" value="0.000600779" />
+    <xacro:property name="abad_iyz" value="-0.000000063" />
+    <xacro:property name="abad_izz" value="0.000417249" />
+
+    <!-- hip -->
+    <xacro:property name="hip_mass" value="0.950266218" />
+    <xacro:property name="hip_com_x" value="-0.003205778" />
+    <xacro:property name="hip_com_y" value="-0.027811623" />
+    <xacro:property name="hip_com_z" value="-0.027767048" />
+    <xacro:property name="hip_ixx" value="0.004811898" />
+    <xacro:property name="hip_ixy" value="0.000093647" />
+    <xacro:property name="hip_ixz" value="-0.000208709" />
+    <xacro:property name="hip_iyy" value="0.004752366" />
+    <xacro:property name="hip_iyz" value="0.000813258" />
+    <xacro:property name="hip_izz" value="0.001079691" />
+
+    <!-- knee -->
+    <xacro:property name="knee_mass" value="0.1135916" />
+    <xacro:property name="knee_com_x" value="0.007372358" />
+    <xacro:property name="knee_com_y" value="0.000122423" />
+    <xacro:property name="knee_com_z" value="-0.10769301" />
+    <xacro:property name="knee_ixx" value="0.000667971" />
+    <xacro:property name="knee_ixy" value="-0.000000001" />
+    <xacro:property name="knee_ixz" value="0.000005356" />
+    <xacro:property name="knee_iyy" value="0.000674399" />
+    <xacro:property name="knee_iyz" value="-0.000000015" />
+    <xacro:property name="knee_izz" value="0.000014181" />
+
+    <!-- rotor -->
+    <xacro:property name="rotor_mass" value="0.076506382" />
+    <xacro:property name="rotor_com_x" value="0" />
+    <xacro:property name="rotor_com_y" value="0" />
+    <xacro:property name="rotor_com_z" value="0" />
+    <xacro:property name="rotor_ixx" value="0.000045843" />
+    <xacro:property name="rotor_ixy" value="0" />
+    <xacro:property name="rotor_ixz" value="0" />
+    <xacro:property name="rotor_iyy" value="0.000045871" />
+    <xacro:property name="rotor_iyz" value="0" />
+    <xacro:property name="rotor_izz" value="0.000089031" />
+</robot>

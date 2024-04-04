@@ -1,0 +1,252 @@
+<?xml version="1.0"?>
+<robot name="cyber_dog" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <gazebo>
+        <plugin name="gazebo_rt_control" filename="liblegged_plugin.so">
+        </plugin>
+        <plugin name="gazebo_rt_control" filename="libreal_time_control.so">
+            <robotName>$(arg ROBOT)</robotName>
+        </plugin>
+    </gazebo>
+  
+    <gazebo reference="imu_link">
+        <gravity>true</gravity>
+        <sensor name="imu_sensor" type="imu">
+            <always_on>true</always_on>
+            <update_rate>500</update_rate>
+            <visualize>true</visualize>
+            <topic>__default_topic__</topic>
+            <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+                <topicName>body_imu</topicName>
+                <bodyName>imu_link</bodyName>
+                <updateRateHZ>500.0</updateRateHZ>
+                <gaussianNoise>0.0</gaussianNoise>
+                <xyzOffset>0 0 0</xyzOffset>
+                <rpyOffset>0 0 0</rpyOffset>
+                <frameName>imu_link</frameName>
+                <ros>
+                    <remapping>~/out:=imu</remapping>
+                </ros>
+            </plugin>
+            <pose>0 0 0 0 0 0</pose>
+        </sensor>
+    </gazebo>
+
+
+    <xacro:if value="$(arg USE_LIDAR)">
+        <gazebo reference="lidar_link">
+        <sensor name="realsense" type="ray">
+            <always_on>true</always_on>
+            <visualize>true</visualize>
+            <pose>0.0 0 0.0 0 0 0</pose>
+            <update_rate>5</update_rate>
+            <ray>
+            <scan>
+                <horizontal>
+                <samples>180</samples>
+                <resolution>1.000000</resolution>
+                <min_angle>-1.5700</min_angle>
+                <max_angle>1.5700</max_angle>
+                </horizontal>
+            </scan>
+            <range>
+                <min>0.01</min>
+                <max>12.00</max>
+                <resolution>0.015000</resolution>
+            </range>
+            <noise>
+                <type>gaussian</type>
+                <mean>0.0</mean>
+                <stddev>0.01</stddev>
+            </noise>
+            </ray>
+            <plugin name="cyberdog_laserscan" filename="libgazebo_ros_ray_sensor.so">
+            <ros>
+                <remapping>~/out:=scan</remapping>
+            </ros>
+            <output_type>sensor_msgs/LaserScan</output_type>
+            <frame_name>lidar_link</frame_name>
+            </plugin>
+        </sensor>
+        </gazebo>
+    </xacro:if>
+
+    <!-- Foot contacts. -->
+    <gazebo reference="FR_knee">
+        <sensor name="FR_foot_contact" type="contact">
+        <update_rate>100</update_rate>
+        <plugin name="contactPlugin" filename="libfoot_contact_plugin.so"/>
+        <contact>
+            <collision>FR_knee_fixed_joint_lump__FR_foot_collision_2</collision>
+        </contact>
+        </sensor>
+    </gazebo>
+    <gazebo reference="FL_knee">
+        <sensor name="FL_foot_contact" type="contact">
+        <update_rate>100</update_rate>
+        <plugin name="contactPlugin" filename="libfoot_contact_plugin.so"/>
+        <contact>
+            <collision>FL_knee_fixed_joint_lump__FL_foot_collision_2</collision>
+        </contact>
+        </sensor>
+    </gazebo>
+    <gazebo reference="RR_knee">
+        <sensor name="RR_foot_contact" type="contact">
+        <update_rate>100</update_rate>
+        <plugin name="contactPlugin" filename="libfoot_contact_plugin.so"/>
+        <contact>
+            <collision>RR_knee_fixed_joint_lump__RR_foot_collision_2</collision>
+        </contact>
+        </sensor>
+    </gazebo>
+    <gazebo reference="RL_knee">
+        <sensor name="RL_foot_contact" type="contact">
+        <update_rate>100</update_rate>
+        <plugin name="contactPlugin" filename="libfoot_contact_plugin.so"/>
+        <contact>
+            <collision>RL_knee_fixed_joint_lump__RL_foot_collision_2</collision>
+        </contact>
+        </sensor>
+    </gazebo>
+
+
+    <gazebo reference="base">
+        <material>Gazebo/Green</material>
+        <turnGravityOff>false</turnGravityOff>
+    </gazebo>
+
+    <gazebo reference="body">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <kp  value="50000.0"/>
+        <kd  value="5000.0"/>
+    </gazebo>
+
+    <gazebo reference="stick_link">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <material>Gazebo/White</material>
+    </gazebo>
+
+    <gazebo reference="imu_link">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <material>Gazebo/Red</material>
+    </gazebo>
+
+    <!-- FL leg -->
+    <gazebo reference="FL_abad">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+    <gazebo reference="FL_hip">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+        <kp  value="50000.0"/>
+        <kd  value="5000.0"/>
+    </gazebo>
+    <gazebo reference="FL_knee">
+        <mu1>0.7</mu1>
+        <mu2>0.7</mu2>
+        <self_collide>1</self_collide>
+    </gazebo>
+    <gazebo reference="FL_foot">
+        <mu1>0.7</mu1>
+        <mu2>0.7</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+        <kp  value="50000.0"/>
+        <kd  value="5000.0"/>
+    </gazebo>
+
+    <!-- FR leg -->
+    <gazebo reference="FR_abad">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+    <gazebo reference="FR_hip">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+        <kp  value="50000.0"/>
+        <kd  value="5000.0"/>
+    </gazebo>
+    <gazebo reference="FR_knee">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <self_collide>1</self_collide>
+    </gazebo>
+    <gazebo reference="FR_foot">
+        <mu1>0.7</mu1>
+        <mu2>0.7</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+        <kp  value="50000.0"/>
+        <kd  value="5000.0"/>
+    </gazebo>
+
+    <!-- RL leg -->
+    <gazebo reference="RL_abad">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+    <gazebo reference="RL_hip">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+        <kp  value="50000.0"/>
+        <kd  value="5000.0"/>
+    </gazebo>
+    <gazebo reference="RL_knee">
+        <mu1>0.7</mu1>
+        <mu2>0.7</mu2>
+        <self_collide>1</self_collide>
+        <kp  value="5000000000.0"/>
+        <kd  value="50000.0"/>
+    </gazebo>
+    <gazebo reference="RL_foot">
+        <mu1>0.7</mu1>
+        <mu2>0.7</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+        <kp  value="50000.0"/>
+        <kd  value="5000.0"/>
+    </gazebo>
+
+    <!-- RR leg -->
+    <gazebo reference="RR_abad">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+    <gazebo reference="RR_hip">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+        <kp  value="50000.0"/>
+        <kd  value="5000.0"/>
+    </gazebo>
+    <gazebo reference="RR_knee">
+        <mu1>0.7</mu1>
+        <mu2>0.7</mu2>
+        <self_collide>1</self_collide>
+        <kp  value="5000000000.0"/>
+        <kd  value="50000.0"/>
+    </gazebo>
+    <gazebo reference="RR_foot">
+        <mu1>0.7</mu1>
+        <mu2>0.7</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+        <kp  value="50000.0"/>
+        <kd  value="5000.0"/>
+    </gazebo>
+
+</robot>
