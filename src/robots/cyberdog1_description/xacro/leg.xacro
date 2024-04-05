@@ -65,7 +65,7 @@
             </inertial>
         </link>
 
-        <joint name="${name}_hip_rotor_fix" type="fixed">
+        <joint name="${name}_hip_rotor_fix" type="fixed" dont_collapse="true">
             <origin rpy="0 0 0" xyz="${-abad_rotor_offset*front_hind} 0 0" />
             <parent link="${name}_hip" />
             <child link="${name}_hip_rotor" />
@@ -156,7 +156,7 @@
             </inertial>
         </link>
 
-        <joint name="${name}_thigh_rotor_fix" type="fixed">
+        <joint name="${name}_thigh_rotor_fix" type="fixed" dont_collapse="true">
             <origin rpy="0 0 0" xyz="0 ${hip_rotor_offset*mirror} 0" />
             <parent link="${name}_thigh" />
             <child link="${name}_thigh_rotor" />
@@ -171,7 +171,7 @@
             </inertial>
         </link>
 
-        <joint name="${name}_calf_rotor_fix" type="fixed">
+        <joint name="${name}_calf_rotor_fix" type="fixed" dont_collapse="true">
             <origin rpy="0 0 0" xyz="0 ${knee_rotor_offset*mirror} 0" />
             <parent link="${name}_thigh" />
             <child link="${name}_calf_rotor" />

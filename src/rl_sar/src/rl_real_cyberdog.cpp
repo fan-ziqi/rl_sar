@@ -21,7 +21,7 @@ RL_Real::RL_Real() : CustomInterface(500)
     this->params.clip_obs = 100.0;
     this->params.clip_actions = 100.0;
     this->params.damping = 0.5;
-    this->params.stiffness = 25;
+    this->params.stiffness = 20;
     this->params.d_gains = torch::ones(12) * this->params.damping;
     this->params.p_gains = torch::ones(12) * this->params.stiffness;
     this->params.action_scale = 0.25;
@@ -33,10 +33,10 @@ RL_Real::RL_Real() : CustomInterface(500)
     this->params.dof_vel_scale = 0.05;
     this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale});
     
-    this->params.torque_limits = torch::tensor({{17.0, 24.0, 24.0,    
-                                                 17.0, 24.0, 24.0,
-                                                 17.0, 24.0, 24.0,
-                                                 17.0, 24.0, 24.0}});
+    this->params.torque_limits = torch::tensor({{24.0, 24.0, 24.0,    
+                                                 24.0, 24.0, 24.0,
+                                                 24.0, 24.0, 24.0,
+                                                 24.0, 24.0, 24.0}});
 
     //                                              hip,    thigh,   calf
     this->params.default_dof_pos = torch::tensor({{ 0.1000, 0.8000, -1.5000,   // FL
@@ -167,10 +167,10 @@ void RL_Real::RobotControl()
             // cyberdogCmd.q_des[i] = 0;
             cyberdogCmd.q_des[i] = output_dof_pos[0][dof_mapping[i]].item<double>();
             cyberdogCmd.qd_des[i] = 0;
-            // cyberdogCmd.kp_des[i] = params.stiffness;
-            // cyberdogCmd.kd_des[i] = params.damping;
-            cyberdogCmd.kp_des[i] = Kp[dof_mapping[i]];
-            cyberdogCmd.kd_des[i] = Kd[dof_mapping[i]];
+            cyberdogCmd.kp_des[i] = params.stiffness;
+            cyberdogCmd.kd_des[i] = params.damping;
+            // cyberdogCmd.kp_des[i] = Kp[dof_mapping[i]];
+            // cyberdogCmd.kd_des[i] = Kd[dof_mapping[i]];
             // cyberdogCmd.tau_des[i] = output_torques[0][dof_mapping[i]].item<double>();
             cyberdogCmd.tau_des[i] = 0;
         }
