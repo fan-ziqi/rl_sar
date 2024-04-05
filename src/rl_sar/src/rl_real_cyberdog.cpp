@@ -1,53 +1,29 @@
 #include "../include/rl_real_cyberdog.hpp"
 
-#define PLOT
+#define ROBOT_NAME "cyberdog1"
+
+// #define PLOT
 
 RL_Real rl_sar;
 
 RL_Real::RL_Real() : CustomInterface(500)
 {
+    ReadYaml(ROBOT_NAME);
+
     start_time = std::chrono::high_resolution_clock::now();
 
-    std::string actor_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/cyberdog/actor.pt";
-    std::string encoder_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/cyberdog/encoder.pt";
-    std::string vq_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/cyberdog/vq_layer.pt";
-
+    std::string actor_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + ROBOT_NAME + "/actor.pt";
+    std::string encoder_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + ROBOT_NAME + "/encoder.pt";
+    std::string vq_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + ROBOT_NAME + "/vq_layer.pt";
+    
     this->actor = torch::jit::load(actor_path);
     this->encoder = torch::jit::load(encoder_path);
     this->vq = torch::jit::load(vq_path);
     this->InitObservations();
-    
-    this->params.num_observations = 45;
-    this->params.clip_obs = 100.0;
-    this->params.clip_actions = 100.0;
-    this->params.damping = 0.5;
-    this->params.stiffness = 20;
-    this->params.d_gains = torch::ones(12) * this->params.damping;
-    this->params.p_gains = torch::ones(12) * this->params.stiffness;
-    this->params.action_scale = 0.25;
-    this->params.hip_scale_reduction = 0.5;
-    this->params.num_of_dofs = 12;
-    this->params.lin_vel_scale = 2.0;
-    this->params.ang_vel_scale = 0.25;
-    this->params.dof_pos_scale = 1.0;
-    this->params.dof_vel_scale = 0.05;
-    this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale});
-    
-    this->params.torque_limits = torch::tensor({{24.0, 24.0, 24.0,    
-                                                 24.0, 24.0, 24.0,
-                                                 24.0, 24.0, 24.0,
-                                                 24.0, 24.0, 24.0}});
-
-    //                                              hip,    thigh,   calf
-    this->params.default_dof_pos = torch::tensor({{ 0.1000, 0.8000, -1.5000,   // FL
-                                                   -0.1000, 0.8000, -1.5000,   // FR
-                                                    0.1000, 1.0000, -1.5000,   // RR
-                                                   -0.1000, 1.0000, -1.5000}});// RL
+    this->InitOutputs();
 
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
 
-    output_torques = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
-    output_dof_pos = params.default_dof_pos;
     plot_real_joint_pos.resize(12);
     plot_target_joint_pos.resize(12);
 

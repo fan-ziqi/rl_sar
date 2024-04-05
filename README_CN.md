@@ -34,6 +34,20 @@ echo 'export Torch_DIR=/path/to/your/torchlib' >> ~/.bashrc
 sudo apt install ros-noetic-teleop-twist-keyboard
 ```
 
+## 依赖
+
+安装yaml-cpp
+
+```bash
+git clone https://github.com/jbeder/yaml-cpp.git
+cd yaml-cpp && mkdir build && cd build
+cmake -DYAML_BUILD_SHARED_LIBS=on .. && make
+sudo make install
+sudo ldconfig
+```
+
+头文件在/usr/local/include，库文件在/usr/local/lib
+
 ## 编译
 
 自定义代码中的以下两个函数，以适配不同的模型：

@@ -1,5 +1,45 @@
 #include "rl.hpp"
 
+void RL::ReadYaml(std::string robot_name)
+{
+	YAML::Node config;
+	try
+	{
+		config = YAML::LoadFile(CONFIG_PATH)[robot_name];
+	} catch(YAML::BadFile &e)
+	{
+
+		std::cout << "The file '" << CONFIG_PATH << "' does not exist" << std::endl;
+		return;
+	}
+
+    this->params.num_observations = config["num_observations"].as<int>();
+    this->params.clip_obs = config["clip_obs"].as<float>();
+    this->params.clip_actions = config["clip_actions"].as<float>();
+    this->params.damping = config["damping"].as<float>();
+    this->params.stiffness = config["stiffness"].as<float>();
+    this->params.d_gains = torch::ones(12) * this->params.damping;
+    this->params.p_gains = torch::ones(12) * this->params.stiffness;
+    this->params.action_scale = config["action_scale"].as<float>();
+    this->params.hip_scale_reduction = config["hip_scale_reduction"].as<float>();
+    this->params.num_of_dofs = config["num_of_dofs"].as<int>();
+    this->params.lin_vel_scale = config["lin_vel_scale"].as<float>();
+    this->params.ang_vel_scale = config["ang_vel_scale"].as<float>();
+    this->params.dof_pos_scale = config["dof_pos_scale"].as<float>();
+    this->params.dof_vel_scale =config["dof_vel_scale"].as<float>();
+    this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale});
+    
+    this->params.torque_limits = torch::tensor({{config["torque_limits"][0].as<float>(), config["torque_limits"][1].as<float>(), config["torque_limits"][2].as<float>(),    
+                                                 config["torque_limits"][3].as<float>(), config["torque_limits"][4].as<float>(), config["torque_limits"][5].as<float>(), 
+                                                 config["torque_limits"][6].as<float>(), config["torque_limits"][7].as<float>(), config["torque_limits"][8].as<float>(), 
+                                                 config["torque_limits"][9].as<float>(), config["torque_limits"][10].as<float>(), config["torque_limits"][11].as<float>()}});
+
+    this->params.default_dof_pos = torch::tensor({{config["default_dof_pos"][0].as<float>(), config["default_dof_pos"][1].as<float>(), config["default_dof_pos"][2].as<float>(),    
+                                                  config["default_dof_pos"][3].as<float>(), config["default_dof_pos"][4].as<float>(), config["default_dof_pos"][5].as<float>(), 
+                                                  config["default_dof_pos"][6].as<float>(), config["default_dof_pos"][7].as<float>(), config["default_dof_pos"][8].as<float>(), 
+                                                  config["default_dof_pos"][9].as<float>(), config["default_dof_pos"][10].as<float>(), config["default_dof_pos"][11].as<float>()}});
+}
+
 torch::Tensor RL::QuatRotateInverse(torch::Tensor q, torch::Tensor v)
 {
     c10::IntArrayRef shape = q.sizes();
@@ -21,6 +61,12 @@ void RL::InitObservations()
     this->obs.dof_pos = this->params.default_dof_pos;
     this->obs.dof_vel = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
     this->obs.actions = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
+}
+
+void RL::InitOutputs()
+{
+    output_torques = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
+    output_dof_pos = params.default_dof_pos;
 }
 
 torch::Tensor RL::ComputeTorques(torch::Tensor actions)
