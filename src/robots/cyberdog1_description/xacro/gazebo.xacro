@@ -9,7 +9,7 @@
     </gazebo>
 
     <!-- Show the trajectory of trunk center. -->
-    <gazebo>
+    <!-- <gazebo>
         <plugin name="3dplot" filename="libLinkPlot3DPlugin.so">
             <frequency>10</frequency>
             <plot>
@@ -18,7 +18,7 @@
                 <material>Gazebo/Yellow</material>
             </plot>
         </plugin>
-    </gazebo>
+    </gazebo> -->
 
     <!-- Show the trajectory of foot. You can add another trajectory about another foot. -->
     <!-- <gazebo>
