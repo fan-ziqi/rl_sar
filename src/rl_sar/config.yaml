@@ -1,0 +1,45 @@
+a1:
+  num_observations: 45
+  clip_obs: 100.0
+  clip_actions: 100.0
+  damping: 0.5
+  stiffness: 20.0
+  action_scale: 0.25
+  hip_scale_reduction: 0.5
+  num_of_dofs: 12
+  lin_vel_scale: 2.0
+  ang_vel_scale: 0.25
+  dof_pos_scale: 1.0
+  dof_vel_scale: 0.05
+  torque_limits: [20.0, 55.0, 55.0,    
+                  20.0, 55.0, 55.0,
+                  20.0, 55.0, 55.0,
+                  20.0, 55.0, 55.0]
+  #                  hip,    thigh,   calf
+  default_dof_pos: [ 0.1000, 0.8000, -1.5000, # FL
+                    -0.1000, 0.8000, -1.5000, # FR
+                     0.1000, 1.0000, -1.5000, # RR
+                    -0.1000, 1.0000, -1.5000] # RL
+
+cyberdog1:
+  num_observations: 45
+  clip_obs: 100.0
+  clip_actions: 100.0
+  damping: 0.5
+  stiffness: 20.0
+  action_scale: 0.25
+  hip_scale_reduction: 0.5
+  num_of_dofs: 12
+  lin_vel_scale: 2.0
+  ang_vel_scale: 0.25
+  dof_pos_scale: 1.0
+  dof_vel_scale: 0.05
+  torque_limits: [24.0, 24.0, 24.0,    
+                  24.0, 24.0, 24.0,
+                  24.0, 24.0, 24.0,
+                  24.0, 24.0, 24.0]
+  #                  hip,    thigh,   calf
+  default_dof_pos: [ 0.1000, 0.8000, -1.5000, # FL
+                    -0.1000, 0.8000, -1.5000, # FR
+                     0.1000, 1.0000, -1.5000, # RR
+                    -0.1000, 1.0000, -1.5000] # RL

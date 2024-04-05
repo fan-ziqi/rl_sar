@@ -8,6 +8,9 @@
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
 
+#include <yaml-cpp/yaml.h>
+#define CONFIG_PATH CMAKE_CURRENT_SOURCE_DIR "/config.yaml"
+
 struct ModelParams
 {
     int num_observations;
@@ -15,7 +18,7 @@ struct ModelParams
     float stiffness;
     float action_scale;
     float hip_scale_reduction;
-    float num_of_dofs;
+    int num_of_dofs;
     float lin_vel_scale;
     float ang_vel_scale;
     float dof_pos_scale;
@@ -55,6 +58,8 @@ public:
     torch::Tensor ComputePosition(torch::Tensor actions);
     torch::Tensor QuatRotateInverse(torch::Tensor q, torch::Tensor v);
     void InitObservations();
+    void InitOutputs();
+    void ReadYaml(std::string robot_name);
 
 protected:
     // rl module
