@@ -19,6 +19,8 @@ git pull
 git submodule update --remote --recursive
 ```
 
+## 依赖
+
 在任意位置下载并部署`libtorch`
 
 ```bash
@@ -34,8 +36,6 @@ echo 'export Torch_DIR=/path/to/your/torchlib' >> ~/.bashrc
 sudo apt install ros-noetic-teleop-twist-keyboard
 ```
 
-## 依赖
-
 安装yaml-cpp
 
 ```bash
@@ -45,8 +45,6 @@ cmake -DYAML_BUILD_SHARED_LIBS=on .. && make
 sudo make install
 sudo ldconfig
 ```
-
-头文件在/usr/local/include，库文件在/usr/local/lib
 
 ## 编译
 
@@ -66,7 +64,7 @@ catkin build
 
 ## 运行
 
-运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/models`中
+运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/models/YOUR_ROBOT_NAME`中，并配置`config.yaml`中的参数。
 
 ### 仿真
 
