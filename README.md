@@ -19,6 +19,8 @@ git pull
 git submodule update --remote --recursive
 ```
 
+## Dependency
+
 Download and deploy `libtorch` at any location
 
 ```bash
@@ -32,6 +34,16 @@ Install `teleop-twist-keyboard`
 
 ```bash
 sudo apt install ros-noetic-teleop-twist-keyboard
+```
+
+Install yaml-cpp
+
+```bash
+git clone https://github.com/jbeder/yaml-cpp.git
+cd yaml-cpp && mkdir build && cd build
+cmake -DYAML_BUILD_SHARED_LIBS=on .. && make
+sudo make install
+sudo ldconfig
 ```
 
 ## Compilation
@@ -52,7 +64,7 @@ catkin build
 
 ## Running
 
-Before running, copy the trained pt model file to `rl_sar/src/rl_sar/models`
+Before running, copy the trained pt model file to `rl_sar/src/rl_sar/models/YOUR_ROBOT_NAME`, and configure the parameters in `config.yaml`.
 
 ### Simulation
 
