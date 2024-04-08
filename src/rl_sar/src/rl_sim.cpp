@@ -84,8 +84,10 @@ void RL_Sim::RobotControl()
         motor_commands[i].mode = 0x0A;
         motor_commands[i].q = output_dof_pos[0][i].item<double>();
         motor_commands[i].dq = 0;
-        motor_commands[i].Kp = params.stiffness;
-        motor_commands[i].Kd = params.damping;
+        // motor_commands[i].Kp = params.stiffness;
+        // motor_commands[i].Kd = params.damping;
+        motor_commands[i].Kp = params.p_gains[0][i].item<double>();
+        motor_commands[i].Kd = params.d_gains[0][i].item<double>();
         // motor_commands[i].tau = output_torques[0][i].item<double>();
         motor_commands[i].tau = 0;
 

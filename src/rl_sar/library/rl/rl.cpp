@@ -16,10 +16,18 @@ void RL::ReadYaml(std::string robot_name)
     this->params.num_observations = config["num_observations"].as<int>();
     this->params.clip_obs = config["clip_obs"].as<float>();
     this->params.clip_actions = config["clip_actions"].as<float>();
-    this->params.damping = config["damping"].as<float>();
-    this->params.stiffness = config["stiffness"].as<float>();
-    this->params.d_gains = torch::ones(12) * this->params.damping;
-    this->params.p_gains = torch::ones(12) * this->params.stiffness;
+    // this->params.damping = config["damping"].as<float>();
+    // this->params.stiffness = config["stiffness"].as<float>();
+    // this->params.d_gains = torch::ones(12) * this->params.damping;
+    // this->params.p_gains = torch::ones(12) * this->params.stiffness;
+    this->params.p_gains = torch::tensor({{config["p_gains"][0].as<float>(), config["p_gains"][1].as<float>(), config["p_gains"][2].as<float>(),    
+                                           config["p_gains"][3].as<float>(), config["p_gains"][4].as<float>(), config["p_gains"][5].as<float>(), 
+                                           config["p_gains"][6].as<float>(), config["p_gains"][7].as<float>(), config["p_gains"][8].as<float>(), 
+                                           config["p_gains"][9].as<float>(), config["p_gains"][10].as<float>(), config["p_gains"][11].as<float>()}});
+    this->params.d_gains = torch::tensor({{config["d_gains"][0].as<float>(), config["d_gains"][1].as<float>(), config["d_gains"][2].as<float>(),    
+                                           config["d_gains"][3].as<float>(), config["d_gains"][4].as<float>(), config["d_gains"][5].as<float>(), 
+                                           config["d_gains"][6].as<float>(), config["d_gains"][7].as<float>(), config["d_gains"][8].as<float>(), 
+                                           config["d_gains"][9].as<float>(), config["d_gains"][10].as<float>(), config["d_gains"][11].as<float>()}});
     this->params.action_scale = config["action_scale"].as<float>();
     this->params.hip_scale_reduction = config["hip_scale_reduction"].as<float>();
     this->params.num_of_dofs = config["num_of_dofs"].as<int>();

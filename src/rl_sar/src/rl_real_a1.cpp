@@ -120,6 +120,7 @@ void RL_Real::RobotControl()
         {
             robot_state = STATE_RL_RUNNING;
             this->InitObservations();
+            this->InitOutputs();
             printf("\nstart rl loop\n");
             loop_rl->start();
         }
@@ -133,8 +134,10 @@ void RL_Real::RobotControl()
             // cmd.motorCmd[i].q = 0;
             cmd.motorCmd[i].q = output_dof_pos[0][dof_mapping[i]].item<double>();
             cmd.motorCmd[i].dq = 0;
-            cmd.motorCmd[i].Kp = params.stiffness;
-            cmd.motorCmd[i].Kd = params.damping;
+            // cmd.motorCmd[i].Kp = params.stiffness;
+            // cmd.motorCmd[i].Kd = params.damping;
+            cmd.motorCmd[i].Kp = params.p_gains[0][dof_mapping[i]].item<double>();
+            cmd.motorCmd[i].Kd = params.d_gains[0][dof_mapping[i]].item<double>();
             // cmd.motorCmd[i].tau = output_torques[0][dof_mapping[i]].item<double>();
             cmd.motorCmd[i].tau = 0;
         }
@@ -170,6 +173,7 @@ void RL_Real::RobotControl()
         {
             robot_state = STATE_WAITING;
             this->InitObservations();
+            this->InitOutputs();
             printf("\nstop rl loop\n");
             loop_rl->shutdown();
         }

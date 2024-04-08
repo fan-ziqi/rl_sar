@@ -2,7 +2,7 @@
 
 #define ROBOT_NAME "cyberdog1"
 
-// #define PLOT
+#define PLOT
 
 RL_Real rl_sar;
 
@@ -15,7 +15,7 @@ RL_Real::RL_Real() : CustomInterface(500)
     std::string actor_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + ROBOT_NAME + "/actor.pt";
     std::string encoder_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + ROBOT_NAME + "/encoder.pt";
     std::string vq_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + ROBOT_NAME + "/vq_layer.pt";
-    
+
     this->actor = torch::jit::load(actor_path);
     this->encoder = torch::jit::load(encoder_path);
     this->vq = torch::jit::load(vq_path);
@@ -131,6 +131,7 @@ void RL_Real::RobotControl()
         {
             robot_state = STATE_RL_RUNNING;
             this->InitObservations();
+            this->InitOutputs();
             printf("\nstart rl loop\n");
             loop_rl->start();
         }
@@ -143,10 +144,10 @@ void RL_Real::RobotControl()
             // cyberdogCmd.q_des[i] = 0;
             cyberdogCmd.q_des[i] = output_dof_pos[0][dof_mapping[i]].item<double>();
             cyberdogCmd.qd_des[i] = 0;
-            cyberdogCmd.kp_des[i] = params.stiffness;
-            cyberdogCmd.kd_des[i] = params.damping;
-            // cyberdogCmd.kp_des[i] = Kp[dof_mapping[i]];
-            // cyberdogCmd.kd_des[i] = Kd[dof_mapping[i]];
+            // cyberdogCmd.kp_des[i] = params.stiffness;
+            // cyberdogCmd.kd_des[i] = params.damping;
+            cyberdogCmd.kp_des[i] = params.p_gains[0][dof_mapping[i]].item<double>();
+            cyberdogCmd.kd_des[i] = params.d_gains[0][dof_mapping[i]].item<double>();
             // cyberdogCmd.tau_des[i] = output_torques[0][dof_mapping[i]].item<double>();
             cyberdogCmd.tau_des[i] = 0;
         }
@@ -182,6 +183,7 @@ void RL_Real::RobotControl()
         {
             robot_state = STATE_WAITING;
             this->InitObservations();
+            this->InitOutputs();
             printf("\nstop rl loop\n");
             loop_rl->shutdown();
         }
