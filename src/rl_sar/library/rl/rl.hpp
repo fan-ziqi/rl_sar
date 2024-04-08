@@ -60,6 +60,9 @@ public:
     void InitObservations();
     void InitOutputs();
     void ReadYaml(std::string robot_name);
+    std::string csv_filename;
+    void CSVInit(std::string robot_name);
+    void CSVLogger(torch::Tensor torque, torch::Tensor tau_est, torch::Tensor joint_pos, torch::Tensor joint_pos_target, torch::Tensor joint_vel);
 
 protected:
     // rl module
