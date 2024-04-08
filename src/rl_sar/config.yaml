@@ -34,10 +34,10 @@ cyberdog1:
   clip_actions: 100.0
   # damping: 0.5
   # stiffness: 20.0
-  p_gains: [30, 40, 50, # FL
-            30, 40, 50, # FR
-            30, 40, 50, # RL
-            30, 40, 50] # RR
+  p_gains: [20, 20, 20, # FL
+            20, 20, 20, # FR
+            20, 20, 20, # RL
+            20, 20, 20] # RR
   d_gains: [0.5, 0.5, 0.5, # FL
             0.5, 0.5, 0.5, # FR
             0.5, 0.5, 0.5, # RL
