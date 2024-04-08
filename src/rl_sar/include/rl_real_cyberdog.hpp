@@ -79,14 +79,6 @@ private:
 
     int dof_mapping[12] = {3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8};
     int hip_scale_reduction_indices[4] = {0, 3, 6, 9};
-    float Kp[13] = {25, 40, 30, //FL
-                    25, 40, 30, //FR
-                    25, 40, 30, //RL
-                    25, 40, 30};//RR
-    float Kd[13] = {0.8, 1.5, 1.0, 
-                    0.8, 1.5, 1.0, 
-                    0.8, 1.5, 1.0, 
-                    0.8, 1.5, 1.0};
 
     std::chrono::high_resolution_clock::time_point start_time;
 

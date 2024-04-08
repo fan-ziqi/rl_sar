@@ -2,8 +2,16 @@ a1:
   num_observations: 45
   clip_obs: 100.0
   clip_actions: 100.0
-  damping: 0.5
-  stiffness: 20.0
+  # damping: 0.5
+  # stiffness: 20.0
+  p_gains: [20, 20, 20, # FL
+            20, 20, 20, # FR
+            20, 20, 20, # RL
+            20, 20, 20] # RR
+  d_gains: [0.5, 0.5, 0.5, # FL
+            0.5, 0.5, 0.5, # FR
+            0.5, 0.5, 0.5, # RL
+            0.5, 0.5, 0.5] # RR
   action_scale: 0.25
   hip_scale_reduction: 0.5
   num_of_dofs: 12
@@ -11,22 +19,29 @@ a1:
   ang_vel_scale: 0.25
   dof_pos_scale: 1.0
   dof_vel_scale: 0.05
-  torque_limits: [20.0, 55.0, 55.0,    
-                  20.0, 55.0, 55.0,
-                  20.0, 55.0, 55.0,
-                  20.0, 55.0, 55.0]
-  #                  hip,    thigh,   calf
+  torque_limits: [20.0, 55.0, 55.0, # FL
+                  20.0, 55.0, 55.0, # FR
+                  20.0, 55.0, 55.0, # RL
+                  20.0, 55.0, 55.0] # RR
   default_dof_pos: [ 0.1000, 0.8000, -1.5000, # FL
                     -0.1000, 0.8000, -1.5000, # FR
-                     0.1000, 1.0000, -1.5000, # RR
-                    -0.1000, 1.0000, -1.5000] # RL
+                     0.1000, 1.0000, -1.5000, # RL
+                    -0.1000, 1.0000, -1.5000] # RR
 
 cyberdog1:
   num_observations: 45
   clip_obs: 100.0
   clip_actions: 100.0
-  damping: 0.5
-  stiffness: 20.0
+  # damping: 0.5
+  # stiffness: 20.0
+  p_gains: [30, 40, 50, # FL
+            30, 40, 50, # FR
+            30, 40, 50, # RL
+            30, 40, 50] # RR
+  d_gains: [0.5, 0.5, 0.5, # FL
+            0.5, 0.5, 0.5, # FR
+            0.5, 0.5, 0.5, # RL
+            0.5, 0.5, 0.5] # RR
   action_scale: 0.25
   hip_scale_reduction: 0.5
   num_of_dofs: 12
@@ -34,12 +49,11 @@ cyberdog1:
   ang_vel_scale: 0.25
   dof_pos_scale: 1.0
   dof_vel_scale: 0.05
-  torque_limits: [24.0, 24.0, 24.0,    
-                  24.0, 24.0, 24.0,
-                  24.0, 24.0, 24.0,
-                  24.0, 24.0, 24.0]
-  #                  hip,    thigh,   calf
+  torque_limits: [24.0, 24.0, 24.0, # FL 
+                  24.0, 24.0, 24.0, # FR
+                  24.0, 24.0, 24.0, # RL
+                  24.0, 24.0, 24.0] # RR
   default_dof_pos: [ 0.1000, 0.8000, -1.5000, # FL
                     -0.1000, 0.8000, -1.5000, # FR
-                     0.1000, 1.0000, -1.5000, # RR
-                    -0.1000, 1.0000, -1.5000] # RL
+                     0.1000, 1.0000, -1.5000, # RL
+                    -0.1000, 1.0000, -1.5000] # RR
