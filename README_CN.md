@@ -92,7 +92,7 @@ rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 
 #### Unitree A1
 
-与实物的连接可分为无线与有线形式
+与Unitree A1连接可以使用无线与有线两种方式
 
 * 无线：连接机器人发出的Unitree开头的WIFI **（注意：无线连接可能会出现丢包断联甚至失控，请注意安全）**
 * 有线：用网线连接计算机和机器人的任意网口，配置计算机ip为192.168.123.162，网关255.255.255.0
@@ -101,68 +101,66 @@ rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 
 ```bash
 source devel/setup.bash
-rosrun rl_sar rl_real
+rosrun rl_sar rl_real_a1
 ```
 
 按下遥控器的**R2**键让机器人切换到默认站起姿态，按下**R1**键切换到RL控制模式，任意状态按下**L2**切换到最初的趴下姿态。左摇杆上下控制x左右控制yaw，右摇杆左右控制y。
 
 #### Cyberdog1
 
-1. 连接机器人
+1. 连接机器人(只需执行一次此步骤)
 
     将本地PC连接至铁蛋的USB download type-c 接口(位于中间)，等待出现”L4T-README” 弹窗
 
-      ```bash
-      ping 192.168.55.100     #本地PC被分配的ip
-      ssh mi@192.168.55.1     #登录nx应用板 ,密码123
-      athena_version -v #核对当前版本>=1.0.0.94
-      ```
+    ```bash
+    ping 192.168.55.100     #本地PC被分配的ip
+    ssh mi@192.168.55.1     #登录nx应用板 ,密码123
+    athena_version -v #核对当前版本>=1.0.0.94
+    ```
     
-2. 进入电机控制模式
+2. 进入电机控制模式(只需执行一次此步骤)
 
     修改配置开关，激活用户控制模式，运行用户自己的控制器：
 
-      ```bash
-      ssh root@192.168.55.233 #登录运动控制板
-      cd /robot
-      ./initialize.sh #拷贝出厂代码到可读写的开发区（/mnt/UDISK/robot-software），切换到开发者模式，仅需执行一次
-      vi /mnt/UDISK/robot-software/config/user_code_ctrl_mode.txt #切换mode:1(0:默认模式，1用户代码控制电机模式),重启机器人生效
-      ```
+    ```bash
+    ssh root@192.168.55.233 #登录运动控制板
+    cd /robot
+    ./initialize.sh #拷贝出厂代码到可读写的开发区（/mnt/UDISK/robot-software），切换到开发者模式，仅需执行一次
+    vi /mnt/UDISK/robot-software/config/user_code_ctrl_mode.txt #切换mode:1(0:默认模式，1用户代码控制电机模式),重启机器人生效
+    ```
 
+3. 使用网线连接电脑和运动控制板
 
-3. 用户电脑侧部署
+    由于使用Type-C连接时调试碰撞易损坏接口，而且通信延迟较高，故推荐使用网线进行连接。需要将机器人拆开，断开断开主控和运动控制板的网线，将电脑和运动控制板使用网线直接连接。推荐拆掉头部并将网线从头部的开口引出。拆装时候注意不要损坏排线。
 
-    运行在用户pc侧(linux)难以保证实时lcm通信，仅推荐编译验证和简单的位控测试  
+    初始化机器人的连接(每次重新连接机器人都要执行此步骤)
 
-      ```bash
-      ping 192.168.55.233 #通过type c线连接Cyberdog的Download接口后，确认通信正常
-      ifconfig | grep -B 1 192.168.55.100 | grep "flags"| cut -d ':' -f1 #获取该ip对应网络设备，一般为usb0
-      sudo ifconfig usb0 multicast #usb0替换为上文获取的168.55.100对应网络设备,并配为多播
-      sudo route add -net 224.0.0.0 netmask 240.0.0.0 dev usb0 #添加路由表，usb0对应替换
-      ```
+    ```bash
+    cd src/rl_sar/scripts
+    bash init_cyberdog.sh
+    ```
     
     启动控制程序
     
     ```bash
     source devel/setup.bash
-    rosrun rl_sar rl_real
+    rosrun rl_sar rl_real_cyberdog
     ```
     
     按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P**键切换到RL控制模式，任意状态按下**1**键切换到最初的趴下姿态。WS控制x，AD控制yaw，JL控制y。
-4. 重启
+
+4. 使用Type-C线连接电脑与机器人
+
+    若不方便拆卸机器人，可以暂时使用Type-C线调试。接入Type-C线后运行方法同上。
+
+5. 程序在使用Ctrl+C结束后会自动重置机器人的运控程序，如程序失控也可手动重启运控程序。
+   
+   注：运控程序重启后大概有5-10秒的启动时间，在这段时间内运行程序会报`Motor control mode has not been activated successfully`，需等待不报错再运行控制程序。
 
     ```bash
-    # 重启运控程序:
-    ssh root@192.168.55.233 "ps | grep -E 'Example_MotorCtrl' | grep -v grep | awk '{print \$1}' | xargs kill -9" #需先于主进程暂停，避免急停
-    ssh root@192.168.55.233 "ps | grep -E 'manager|ctrl|imu_online' | grep -v grep | awk '{print \$1}' | xargs kill -9"
-    ssh root@192.168.55.233 "export LD_LIBRARY_PATH=/mnt/UDISK/robot-software/build;/mnt/UDISK/manager /mnt/UDISK/ >> /mnt/UDISK/manager_log/manager.log 2>&1 &"
-    # 重启运控板系统:
-    ssh root@192.168.55.233 "reboot"
+    cd src/rl_sar/scripts
+    bash kill_cyberdog.sh
     ```
-
-    
-
-注：lcm通信若不成功，无法正常激活电机控制模式，log提示：Motor control mode has not been activated successfully
 
 ## 引用
 
