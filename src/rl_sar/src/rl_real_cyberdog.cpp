@@ -71,9 +71,9 @@ void RL_Real::RobotControl()
     //     cyberdogData.qd[9], cyberdogData.qd[10], cyberdogData.qd[11],
     //     cyberdogData.qd[6], cyberdogData.qd[7], cyberdogData.qd[8]);
 
-    // std::cout << "robot_state" << keyboard.robot_state
-    //           << " x" << keyboard.x << " y" << keyboard.y << " yaw" << keyboard.yaw
-    //           << "\r";
+    std::cout << "robot_state" << keyboard.robot_state
+              << " x" << keyboard.x << " y" << keyboard.y << " yaw" << keyboard.yaw
+              << "\r";
 
     motiontime++;
 
