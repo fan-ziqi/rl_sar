@@ -2,7 +2,8 @@
 
 #define ROBOT_NAME "cyberdog1"
 
-#define PLOT
+// #define PLOT
+#define CSV_LOGGER
 
 RL_Real rl_sar;
 
@@ -37,6 +38,10 @@ RL_Real::RL_Real() : CustomInterface(500)
     loop_plot->start();
 #endif
     _keyboardThread = std::thread(&RL_Real::run_keyboard, this);
+
+#ifdef CSV_LOGGER
+    CSVInit(ROBOT_NAME);
+#endif
 }
 
 RL_Real::~RL_Real()
@@ -66,9 +71,9 @@ void RL_Real::RobotControl()
     //     cyberdogData.qd[9], cyberdogData.qd[10], cyberdogData.qd[11],
     //     cyberdogData.qd[6], cyberdogData.qd[7], cyberdogData.qd[8]);
 
-    std::cout << "robot_state" << keyboard.robot_state
-              << " x" << keyboard.x << " y" << keyboard.y << " yaw" << keyboard.yaw
-              << "\r";
+    // std::cout << "robot_state" << keyboard.robot_state
+    //           << " x" << keyboard.x << " y" << keyboard.y << " yaw" << keyboard.yaw
+    //           << "\r";
 
     motiontime++;
 
@@ -272,6 +277,14 @@ void RL_Real::RunModel()
 
         output_torques = this->ComputeTorques(actions);
         output_dof_pos = this->ComputePosition(actions);
+
+#ifdef CSV_LOGGER
+        torch::Tensor tau_est = torch::tensor({{cyberdogData.tau[3], cyberdogData.tau[4], cyberdogData.tau[5],
+                                                cyberdogData.tau[0], cyberdogData.tau[1], cyberdogData.tau[2],
+                                                cyberdogData.tau[9], cyberdogData.tau[10], cyberdogData.tau[11],
+                                                cyberdogData.tau[6], cyberdogData.tau[7], cyberdogData.tau[8]}});
+        CSVLogger(output_torques, tau_est, this->obs.dof_pos, output_dof_pos, this->obs.dof_vel);
+#endif
     }
     
 }
