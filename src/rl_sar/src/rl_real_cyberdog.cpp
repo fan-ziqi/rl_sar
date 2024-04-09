@@ -232,14 +232,14 @@ void RL_Real::run_keyboard()
                 case 'p': keyboard.robot_state = STATE_RL_INIT; break;
                 case '1': keyboard.robot_state = STATE_POS_GETDOWN; break;
                 case 'q': break;
-                case 'w': keyboard.x += 0.1; break;
-                case 's': keyboard.x -= 0.1; break;
-                case 'a': keyboard.yaw += 0.1; break;
-                case 'd': keyboard.yaw -= 0.1; break;
+                case 'w': keyboard.x += 0.5; break;
+                case 's': keyboard.x -= 0.5; break;
+                case 'a': keyboard.yaw += 0.5; break;
+                case 'd': keyboard.yaw -= 0.5; break;
                 case 'i': break;
                 case 'k': break;
-                case 'j': keyboard.y += 0.1; break;
-                case 'l': keyboard.y -= 0.1; break;
+                case 'j': keyboard.y += 0.5; break;
+                case 'l': keyboard.y -= 0.5; break;
                 case ' ': keyboard.x = 0; keyboard.y = 0; keyboard.yaw = 0; break;
                 default: break;
             }

@@ -3,6 +3,7 @@
 #define ROBOT_NAME "cyberdog1"
 
 // #define PLOT
+// #define CSV_LOGGER
 
 RL_Sim::RL_Sim()
 {
@@ -29,6 +30,7 @@ RL_Sim::RL_Sim()
 
     joint_positions = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     joint_velocities = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    joint_efforts = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     plot_real_joint_pos.resize(12);
     plot_target_joint_pos.resize(12);
 
@@ -63,6 +65,10 @@ RL_Sim::RL_Sim()
 #ifdef PLOT
     loop_plot    = std::make_shared<LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Sim::Plot,         this));
     loop_plot->start();
+#endif
+
+#ifdef CSV_LOGGER
+    CSVInit(ROBOT_NAME);
 #endif
 }
 
@@ -111,6 +117,7 @@ void RL_Sim::JointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg)
 {
     joint_positions = msg->position;
     joint_velocities = msg->velocity;
+    joint_efforts = msg->effort;
 }
 
 void RL_Sim::RunModel()
@@ -156,6 +163,14 @@ void RL_Sim::RunModel()
 
     output_torques = this->ComputeTorques(actions);
     output_dof_pos = this->ComputePosition(actions);
+
+#ifdef CSV_LOGGER
+    torch::Tensor tau_est = torch::tensor({{joint_efforts[1], joint_efforts[2], joint_efforts[0],
+                                            joint_efforts[4], joint_efforts[5], joint_efforts[3],
+                                            joint_efforts[7], joint_efforts[8], joint_efforts[6],
+                                            joint_efforts[10], joint_efforts[11], joint_efforts[9]}});
+    CSVLogger(output_torques, tau_est, this->obs.dof_pos, output_dof_pos, this->obs.dof_vel);
+#endif
 }
 
 torch::Tensor RL_Sim::ComputeObservation()
