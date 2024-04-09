@@ -131,7 +131,7 @@ Press the **R2** button on the controller to switch the robot to the default sta
 
 3. Use Ethernet cable to connect the computer and the motion control board
 
-    Due to the risk of damaging the interface and higher communication latency when using a Type-C connection, it is recommended to use an Ethernet cable for connection. Disconnect the cables between the main control and motion control board of the robot, and connect the computer and the motion control board directly with an Ethernet cable. It is recommended to remove the head and lead the cable out of the head opening. Be careful not to damage the cables during disassembly and assembly.
+    Due to the risk of damaging the interface and higher communication latency when using a Type-C connection, it is recommended to use an Ethernet cable for connection. Disconnect the cables between the main control and motion control board of the robot, and connect the computer and the motion control board directly with an Ethernet cable, then set the wired connection IPv4 of the computer to manual ` 192.168.55.100`. It is recommended to remove the head and lead the cable out of the head opening. Be careful not to damage the cables during disassembly and assembly.
 
     Initialize the robot's connection (this step needs to be done every time the robot is reconnected)
 

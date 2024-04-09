@@ -59,6 +59,7 @@ private:
     std::vector<std::string> joint_names;
     std::vector<double> joint_positions;
     std::vector<double> joint_velocities;
+    std::vector<double> joint_efforts;
 
     int hip_scale_reduction_indices[4] = {0, 3, 6, 9};
 
