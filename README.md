@@ -30,10 +30,10 @@ unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
 echo 'export Torch_DIR=/path/to/your/torchlib' >> ~/.bashrc
 ```
 
-Install `teleop-twist-keyboard`
+Install dependency packages
 
 ```bash
-sudo apt install ros-noetic-teleop-twist-keyboard
+sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface  ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller
 ```
 
 Install yaml-cpp
@@ -42,6 +42,16 @@ Install yaml-cpp
 git clone https://github.com/jbeder/yaml-cpp.git
 cd yaml-cpp && mkdir build && cd build
 cmake -DYAML_BUILD_SHARED_LIBS=on .. && make
+sudo make install
+sudo ldconfig
+```
+
+Install lcm
+
+```bash
+git clone https://github.com/lcm-proj/lcm.git 
+cd lcm && mkdir build && cd build
+cmake .. && make
 sudo make install
 sudo ldconfig
 ```

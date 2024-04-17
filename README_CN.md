@@ -30,10 +30,10 @@ unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
 echo 'export Torch_DIR=/path/to/your/torchlib' >> ~/.bashrc
 ```
 
-安装 `teleop-twist-keyboard` 
+安装依赖库
 
 ```bash
-sudo apt install ros-noetic-teleop-twist-keyboard
+sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface  ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller
 ```
 
 安装yaml-cpp
@@ -42,6 +42,16 @@ sudo apt install ros-noetic-teleop-twist-keyboard
 git clone https://github.com/jbeder/yaml-cpp.git
 cd yaml-cpp && mkdir build && cd build
 cmake -DYAML_BUILD_SHARED_LIBS=on .. && make
+sudo make install
+sudo ldconfig
+```
+
+安装lcm
+
+```bash
+git clone https://github.com/lcm-proj/lcm.git 
+cd lcm && mkdir build && cd build
+cmake .. && make
 sudo make install
 sudo ldconfig
 ```
@@ -132,8 +142,6 @@ rosrun rl_sar rl_real_a1
 3. 使用网线连接电脑和运动控制板
 
     由于使用Type-C连接时调试碰撞易损坏接口，而且通信延迟较高，故推荐使用网线进行连接。需要将机器人拆开，断开断开主控和运动控制板的网线，将电脑和运动控制板使用网线直接连接，并设置电脑的有线连接IPv4为手动`192.168.55.100`。推荐拆掉头部并将网线从头部的开口引出。拆装时候注意不要损坏排线。
-
-    
 
     初始化机器人的连接(每次重新连接机器人都要执行此步骤)
 
