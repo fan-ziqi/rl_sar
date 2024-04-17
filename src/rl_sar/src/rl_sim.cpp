@@ -1,6 +1,6 @@
 #include "../include/rl_sim.hpp"
 
-#define ROBOT_NAME "cyberdog1"
+#define ROBOT_NAME "a1"
 
 // #define PLOT
 // #define CSV_LOGGER

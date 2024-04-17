@@ -1,6 +1,7 @@
 <launch>
     <arg name="wname" default="stairs"/>
     <arg name="rname" default="a1"/>
+    <param name="ros_namespace" type="str" value="/$(arg rname)_gazebo/"/>
     <arg name="robot_path" value="(find $(arg rname)_description)"/>
     <arg name="dollar" value="$"/>
 
