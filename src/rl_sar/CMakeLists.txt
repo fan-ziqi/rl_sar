@@ -27,7 +27,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
-find_package(yaml-cpp REQUIRED)
+# find_package(yaml-cpp REQUIRED)
+link_directories(/usr/local/lib)
 include_directories(${YAML_CPP_INCLUDE_DIR})
 
 catkin_package(
