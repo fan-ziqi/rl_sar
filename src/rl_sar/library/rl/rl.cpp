@@ -13,6 +13,7 @@ void RL::ReadYaml(std::string robot_name)
 		return;
 	}
 
+    this->params.model_name = config["model_name"].as<std::string>();
     this->params.num_observations = config["num_observations"].as<int>();
     this->params.clip_obs = config["clip_obs"].as<float>();
     this->params.clip_actions = config["clip_actions"].as<float>();

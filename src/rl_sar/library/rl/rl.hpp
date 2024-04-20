@@ -13,6 +13,7 @@ namespace plt = matplotlibcpp;
 
 struct ModelParams
 {
+    std::string model_name;
     int num_observations;
     float damping;
     float stiffness;
@@ -66,7 +67,7 @@ public:
 
 protected:
     // rl module
-    torch::jit::script::Module actor;
+    torch::jit::script::Module model;
     // observation buffer
     torch::Tensor lin_vel;           
     torch::Tensor ang_vel;      
