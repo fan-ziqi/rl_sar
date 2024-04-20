@@ -16,13 +16,9 @@ RL_Sim::RL_Sim()
 
     motor_commands.resize(12);
 
-    std::string actor_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + ROBOT_NAME + "/actor.pt";
-    std::string encoder_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + ROBOT_NAME + "/encoder.pt";
-    std::string vq_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + ROBOT_NAME + "/vq_layer.pt";
+    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + ROBOT_NAME + "/" + this->params.model_name;
+    this->model = torch::jit::load(model_path);
 
-    this->actor = torch::jit::load(actor_path);
-    this->encoder = torch::jit::load(encoder_path);
-    this->vq = torch::jit::load(vq_path);
     this->InitObservations();
     this->InitOutputs();
 
@@ -194,13 +190,7 @@ torch::Tensor RL_Sim::Forward()
     history_obs_buf.insert(obs);
     history_obs = history_obs_buf.get_obs_vec({0, 1, 2, 3, 4, 5});
 
-    torch::Tensor encoding = this->encoder.forward({history_obs}).toTensor();
-
-    torch::Tensor z = this->vq.forward({encoding}).toTensor();
-
-    torch::Tensor actor_input = torch::cat({obs, z}, 1);
-
-    torch::Tensor action = this->actor.forward({actor_input}).toTensor();
+    torch::Tensor action = this->model.forward({history_obs}).toTensor();
 
     this->obs.actions = action;
     torch::Tensor clamped = torch::clamp(action, -this->params.clip_actions, this->params.clip_actions);

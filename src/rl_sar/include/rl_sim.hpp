@@ -64,10 +64,6 @@ private:
     int hip_scale_reduction_indices[4] = {0, 3, 6, 9};
 
     std::chrono::high_resolution_clock::time_point start_time;
-
-    // other rl module
-    torch::jit::script::Module encoder;
-    torch::jit::script::Module vq;
 };
 
 #endif
