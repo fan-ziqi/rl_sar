@@ -1,5 +1,15 @@
 #include "rl.hpp"
 
+torch::Tensor ReadTensorFromYaml(const YAML::Node& node)
+{
+    std::vector<float> values;
+    for(const auto& val : node)
+    {
+        values.push_back(val.as<float>());
+    }
+    return torch::tensor(values).view({1, -1});
+}
+
 void RL::ReadYaml(std::string robot_name)
 {
 	YAML::Node config;
@@ -17,18 +27,6 @@ void RL::ReadYaml(std::string robot_name)
     this->params.num_observations = config["num_observations"].as<int>();
     this->params.clip_obs = config["clip_obs"].as<float>();
     this->params.clip_actions = config["clip_actions"].as<float>();
-    // this->params.damping = config["damping"].as<float>();
-    // this->params.stiffness = config["stiffness"].as<float>();
-    // this->params.d_gains = torch::ones(12) * this->params.damping;
-    // this->params.p_gains = torch::ones(12) * this->params.stiffness;
-    this->params.p_gains = torch::tensor({{config["p_gains"][0].as<float>(), config["p_gains"][1].as<float>(), config["p_gains"][2].as<float>(),    
-                                           config["p_gains"][3].as<float>(), config["p_gains"][4].as<float>(), config["p_gains"][5].as<float>(), 
-                                           config["p_gains"][6].as<float>(), config["p_gains"][7].as<float>(), config["p_gains"][8].as<float>(), 
-                                           config["p_gains"][9].as<float>(), config["p_gains"][10].as<float>(), config["p_gains"][11].as<float>()}});
-    this->params.d_gains = torch::tensor({{config["d_gains"][0].as<float>(), config["d_gains"][1].as<float>(), config["d_gains"][2].as<float>(),    
-                                           config["d_gains"][3].as<float>(), config["d_gains"][4].as<float>(), config["d_gains"][5].as<float>(), 
-                                           config["d_gains"][6].as<float>(), config["d_gains"][7].as<float>(), config["d_gains"][8].as<float>(), 
-                                           config["d_gains"][9].as<float>(), config["d_gains"][10].as<float>(), config["d_gains"][11].as<float>()}});
     this->params.action_scale = config["action_scale"].as<float>();
     this->params.hip_scale_reduction = config["hip_scale_reduction"].as<float>();
     this->params.num_of_dofs = config["num_of_dofs"].as<int>();
@@ -36,17 +34,20 @@ void RL::ReadYaml(std::string robot_name)
     this->params.ang_vel_scale = config["ang_vel_scale"].as<float>();
     this->params.dof_pos_scale = config["dof_pos_scale"].as<float>();
     this->params.dof_vel_scale =config["dof_vel_scale"].as<float>();
-    this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale});
-    
-    this->params.torque_limits = torch::tensor({{config["torque_limits"][0].as<float>(), config["torque_limits"][1].as<float>(), config["torque_limits"][2].as<float>(),    
-                                                 config["torque_limits"][3].as<float>(), config["torque_limits"][4].as<float>(), config["torque_limits"][5].as<float>(), 
-                                                 config["torque_limits"][6].as<float>(), config["torque_limits"][7].as<float>(), config["torque_limits"][8].as<float>(), 
-                                                 config["torque_limits"][9].as<float>(), config["torque_limits"][10].as<float>(), config["torque_limits"][11].as<float>()}});
-
-    this->params.default_dof_pos = torch::tensor({{config["default_dof_pos"][0].as<float>(), config["default_dof_pos"][1].as<float>(), config["default_dof_pos"][2].as<float>(),    
-                                                  config["default_dof_pos"][3].as<float>(), config["default_dof_pos"][4].as<float>(), config["default_dof_pos"][5].as<float>(), 
-                                                  config["default_dof_pos"][6].as<float>(), config["default_dof_pos"][7].as<float>(), config["default_dof_pos"][8].as<float>(), 
-                                                  config["default_dof_pos"][9].as<float>(), config["default_dof_pos"][10].as<float>(), config["default_dof_pos"][11].as<float>()}});
+    this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale * 2});
+    // this->params.damping = config["damping"].as<float>();
+    // this->params.stiffness = config["stiffness"].as<float>();
+    // this->params.d_gains = torch::ones(12) * this->params.damping;
+    // this->params.p_gains = torch::ones(12) * this->params.stiffness;
+    this->params.p_gains = ReadTensorFromYaml(config["p_gains"]);
+    this->params.d_gains = ReadTensorFromYaml(config["d_gains"]);
+    this->params.torque_limits = ReadTensorFromYaml(config["torque_limits"]);
+    this->params.default_dof_pos = ReadTensorFromYaml(config["default_dof_pos"]);
+    const YAML::Node& joint_names_node = config["joint_names"];
+    for(const auto& name : joint_names_node)
+    {
+        this->params.joint_names.push_back(name.as<std::string>());
+    }
 }
 
 void RL::CSVInit(std::string robot_name)

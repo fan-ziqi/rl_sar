@@ -9,6 +9,15 @@ RL_Sim::RL_Sim()
 {
     ReadYaml(ROBOT_NAME);
 
+    // Due to the fact that the robot_state_publisher sorts the joint names alphabetically,
+    // the mapping table is established according to the order defined in the YAML file
+    std::vector<std::string> sorted_joint_names = params.joint_names;
+    std::sort(sorted_joint_names.begin(), sorted_joint_names.end());
+    for(size_t i = 0; i < params.joint_names.size(); ++i)
+    {
+        sorted_to_original_index[sorted_joint_names[i]] = i;
+    }
+
     ros::NodeHandle nh;
     start_time = std::chrono::high_resolution_clock::now();
 
@@ -34,17 +43,10 @@ RL_Sim::RL_Sim()
 
     nh.param<std::string>("ros_namespace", ros_namespace, "");
 
-    joint_names = {
-        "FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
-        "FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
-        "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint",
-        "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint",
-    };
-
     for (int i = 0; i < 12; ++i)
     {
-        torque_publishers[joint_names[i]] = nh.advertise<unitree_legged_msgs::MotorCmd>(
-            ros_namespace + joint_names[i].substr(0, joint_names[i].size() - 6) + "_controller/command", 10);
+        torque_publishers[params.joint_names[i]] = nh.advertise<unitree_legged_msgs::MotorCmd>(
+            ros_namespace + params.joint_names[i].substr(0, params.joint_names[i].size() - 6) + "_controller/command", 10);
     }
 
     model_state_subscriber_ = nh.subscribe<gazebo_msgs::ModelStates>(
@@ -93,7 +95,7 @@ void RL_Sim::RobotControl()
         // motor_commands[i].tau = output_torques[0][i].item<double>();
         motor_commands[i].tau = 0;
 
-        torque_publishers[joint_names[i]].publish(motor_commands[i]);
+        torque_publishers[params.joint_names[i]].publish(motor_commands[i]);
     }
 }
 
@@ -109,46 +111,35 @@ void RL_Sim::CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg)
     cmd_vel = *msg;
 }
 
+void RL_Sim::MapData(const std::vector<double>& source_data, std::vector<double>& target_data)
+{
+    for(size_t i = 0; i < source_data.size(); ++i)
+    {
+        target_data[i] = source_data[sorted_to_original_index[params.joint_names[i]]];
+    }
+}
+
 void RL_Sim::JointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg)
 {
-    joint_positions = msg->position;
-    joint_velocities = msg->velocity;
-    joint_efforts = msg->effort;
+    MapData(msg->position, joint_positions);
+    MapData(msg->velocity, joint_velocities);
+    MapData(msg->effort, joint_efforts);
 }
 
 void RL_Sim::RunModel()
 {
-    // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
-    // std::cout << "Execution time: " << duration << " microseconds" << std::endl;
-    // start_time = std::chrono::high_resolution_clock::now();
-
-    // printf("%f, %f, %f\n", 
-    //     vel.angular.x, vel.angular.y, vel.angular.z);
-    // printf("%f, %f, %f, %f\n", 
-    //     pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
-    // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
-    //     joint_positions[1], joint_positions[2], joint_positions[0],
-    //     joint_positions[4], joint_positions[5], joint_positions[3],
-    //     joint_positions[7], joint_positions[8], joint_positions[6],
-    //     joint_positions[10], joint_positions[11], joint_positions[9]);
-    // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
-    //     joint_velocities[1], joint_velocities[2], joint_velocities[0],
-    //     joint_velocities[4], joint_velocities[5], joint_velocities[3],
-    //     joint_velocities[7], joint_velocities[8], joint_velocities[6],
-    //     joint_velocities[10], joint_velocities[11], joint_velocities[9]);
-
     // this->obs.lin_vel = torch::tensor({{vel.linear.x, vel.linear.y, vel.linear.z}});
     this->obs.ang_vel = torch::tensor({{vel.angular.x, vel.angular.y, vel.angular.z}});
     this->obs.commands = torch::tensor({{cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z}});
     this->obs.base_quat = torch::tensor({{pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w}});
-    this->obs.dof_pos = torch::tensor({{joint_positions[1], joint_positions[2], joint_positions[0],
-                                        joint_positions[4], joint_positions[5], joint_positions[3],
-                                        joint_positions[7], joint_positions[8], joint_positions[6],
-                                        joint_positions[10], joint_positions[11], joint_positions[9]}});
-    this->obs.dof_vel = torch::tensor({{joint_velocities[1], joint_velocities[2], joint_velocities[0],
-                                        joint_velocities[4], joint_velocities[5], joint_velocities[3],
-                                        joint_velocities[7], joint_velocities[8], joint_velocities[6],
-                                        joint_velocities[10], joint_velocities[11], joint_velocities[9]}});
+    this->obs.dof_pos = torch::tensor({{joint_positions[0], joint_positions[1], joint_positions[2],
+                                        joint_positions[3], joint_positions[4], joint_positions[5],
+                                        joint_positions[6], joint_positions[7], joint_positions[8],
+                                        joint_positions[9], joint_positions[10], joint_positions[11]}});
+    this->obs.dof_vel = torch::tensor({{joint_velocities[0], joint_velocities[1], joint_velocities[2],
+                                        joint_velocities[3], joint_velocities[4], joint_velocities[5],
+                                        joint_velocities[6], joint_velocities[7], joint_velocities[8],
+                                        joint_velocities[9], joint_velocities[10], joint_velocities[11]}});
 
     torch::Tensor actions = this->Forward();
 

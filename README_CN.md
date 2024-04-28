@@ -172,6 +172,24 @@ rosrun rl_sar rl_real_a1
     bash kill_cyberdog.sh
     ```
 
+
+## 添加你的机器人
+
+下文中将ROBOT代表机器人名称
+
+1. 在robots文件夹中创建名为ROBOT_description的模型包，将模型的urdf放到文件夹中的urdf路径下并命名为ROBOT.urdf，在模型文件中的config文件夹中创建命名空间为ROBOT_gazebo的关节配置文件
+2. 将模型文件放到models/ROBOT中
+3. 在rl_sar/config.yaml中添加一个新的字段，命名为ROBOT，更改其中参数，如将model_name改为上一步的模型文件名
+4. 在rl_sar/launch文件夹中添加一个新的launch文件，请参考其他launch文件自行修改
+5. 修改rl_xxx.cpp中的ROBOT_NAME为ROBOT
+6. 编译运行
+7. 若您的机器人关节力矩大于50Nm，则需要修改`rl_sar/src/unitree_ros/unitree_legged_control/src/joint_controller.cpp`中180行为：
+   ```cpp
+   // calcTorque = computeTorque(currentPos, currentVel, servoCmd);      
+   calcTorque = servoCmd.posStiffness * (servoCmd.pos - currentPos) + servoCmd.velStiffness * (servoCmd.vel - currentVel) + servoCmd.torque;
+   ```
+   这样会解除50Nm的限制
+
 ## 引用
 
 如果您使用此代码或其部分内容，请引用以下内容：

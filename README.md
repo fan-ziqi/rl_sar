@@ -172,6 +172,23 @@ Press the **R2** button on the controller to switch the robot to the default sta
     bash kill_cyberdog.sh
     ```
 
+## Add Your Robot
+
+In the following, let ROBOT represent the name of your robot.
+
+1. Create a model package named ROBOT_description in the robots folder. Place the URDF model in the urdf path within the folder and name it ROBOT.urdf. Create a namespace named ROBOT_gazebo in the config folder within the model file for joint configuration.
+2. Place the model file in models/ROBOT.
+3. Add a new field in rl_sar/config.yaml named ROBOT and adjust the parameters, such as changing the model_name to the model file name from the previous step.
+4. Add a new launch file in the rl_sar/launch folder. Refer to other launch files for guidance on modification.
+5. Change ROBOT_NAME to ROBOT in rl_xxx.cpp.
+6. Compile and run.
+7. If the torque of your robot's joints exceeds 50Nm, you need to modify line 180 in `rl_sar/src/unitree_ros/unitree_legged_control/src/joint_controller.cpp` to:
+   ```cpp
+   // calcTorque = computeTorque(currentPos, currentVel, servoCmd);      
+   calcTorque = servoCmd.posStiffness * (servoCmd.pos - currentPos) + servoCmd.velStiffness * (servoCmd.vel - currentVel) + servoCmd.torque;
+   ```
+   This will remove the 50Nm limit.
+
 ## Citation
 
 Please cite the following if you use this code or parts of it:
