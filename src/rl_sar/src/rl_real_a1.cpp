@@ -9,6 +9,8 @@ RL_Real rl_sar;
 
 RL_Real::RL_Real() : safe(LeggedType::A1), udp(LOWLEVEL)
 {
+    torch::autograd::GradMode::set_enabled(false);
+
     ReadYaml(ROBOT_NAME);
 
     udp.InitCmdData(cmd);
