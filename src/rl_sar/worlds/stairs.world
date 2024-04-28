@@ -9,15 +9,15 @@
         <gravity>0 0 -9.81</gravity>
             <ode>
                 <solver>
-                <type>quick</type>  
-                <iters>50</iters> 
-                <sor>1.3</sor>
+                    <type>quick</type>  
+                    <iters>50</iters> 
+                    <sor>1.3</sor>
                 </solver>  
                 <constraints>
-                <cfm>0.0</cfm>
-                <erp>0.2</erp>
-                <contact_max_correcting_vel>10.0</contact_max_correcting_vel>
-                <contact_surface_layer>0.001</contact_surface_layer>
+                    <cfm>0.0</cfm>
+                    <erp>0.2</erp>
+                    <contact_max_correcting_vel>10.0</contact_max_correcting_vel>
+                    <contact_surface_layer>0.001</contact_surface_layer>
                 </constraints>  
             </ode>
         </physics>

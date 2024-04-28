@@ -31,6 +31,7 @@ struct ModelParams
     torch::Tensor p_gains;
     torch::Tensor commands_scale;
     torch::Tensor default_dof_pos;
+    std::vector<std::string> joint_names;
 };
 
 struct Observations

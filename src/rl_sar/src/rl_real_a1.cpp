@@ -3,7 +3,7 @@
 #define ROBOT_NAME "a1"
 
 // #define PLOT
-#define CSV_LOGGER
+// #define CSV_LOGGER
 
 RL_Real rl_sar;
 
@@ -180,7 +180,7 @@ void RL_Real::RobotControl()
         }
     }
 
-    safe.PowerProtect(cmd, state, 7);
+    // safe.PowerProtect(cmd, state, 7);
     udp.SetSend(cmd);
 }
 
