@@ -7,6 +7,8 @@
 
 RL_Sim::RL_Sim()
 {
+    torch::autograd::GradMode::set_enabled(false);
+
     ReadYaml(ROBOT_NAME);
 
     // Due to the fact that the robot_state_publisher sorts the joint names alphabetically,

@@ -9,6 +9,8 @@ RL_Real rl_sar;
 
 RL_Real::RL_Real() : CustomInterface(500)
 {
+    torch::autograd::GradMode::set_enabled(false);
+
     ReadYaml(ROBOT_NAME);
 
     start_time = std::chrono::high_resolution_clock::now();
