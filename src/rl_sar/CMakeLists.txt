@@ -49,37 +49,39 @@ include_directories(
     ${unitree_legged_sdk_INCLUDE_DIRS}
     ../unitree_controller/include
     library/matplotlibcpp
+    library/observation_buffer
+    library/rl_sdk
 )
 
-add_library(rl library/rl/rl.cpp library/rl/rl.hpp)
-target_link_libraries(rl "${TORCH_LIBRARIES}" Python3::Python Python3::Module)
-set_property(TARGET rl PROPERTY CXX_STANDARD 14)
+add_library(rl_sdk library/rl_sdk/rl_sdk.cpp)
+target_link_libraries(rl_sdk "${TORCH_LIBRARIES}" Python3::Python Python3::Module)
+set_property(TARGET rl_sdk PROPERTY CXX_STANDARD 14)
 find_package(Python3 COMPONENTS NumPy)
 if(Python3_NumPy_FOUND)
-   target_link_libraries(rl Python3::NumPy)
+   target_link_libraries(rl_sdk Python3::NumPy)
 else()
-   target_compile_definitions(rl WITHOUT_NUMPY)
+   target_compile_definitions(rl_sdk WITHOUT_NUMPY)
 endif()
 
-add_library(observation_buffer library/observation_buffer/observation_buffer.cpp library/observation_buffer/observation_buffer.hpp)
+add_library(observation_buffer library/observation_buffer/observation_buffer.cpp)
 target_link_libraries(observation_buffer "${TORCH_LIBRARIES}")
 set_property(TARGET observation_buffer PROPERTY CXX_STANDARD 14)
 
 add_executable(rl_sim src/rl_sim.cpp )
 target_link_libraries(rl_sim
   ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
-  rl observation_buffer yaml-cpp
+  rl_sdk observation_buffer yaml-cpp
 )
 
 add_executable(rl_real_a1 src/rl_real_a1.cpp )
 target_link_libraries(rl_real_a1
   ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
-  rl observation_buffer yaml-cpp
+  rl_sdk observation_buffer yaml-cpp
 )
 
 
 add_executable(rl_real_cyberdog src/rl_real_cyberdog.cpp )
 target_link_libraries(rl_real_cyberdog
   ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
-  rl observation_buffer cyberdog_motor_sdk yaml-cpp
+  rl_sdk observation_buffer cyberdog_motor_sdk yaml-cpp
 )

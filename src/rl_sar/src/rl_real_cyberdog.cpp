@@ -23,8 +23,11 @@ RL_Real::RL_Real() : CustomInterface(500)
 
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
 
+    plot_t = std::vector<int>(plot_size, 0);
     plot_real_joint_pos.resize(12);
     plot_target_joint_pos.resize(12);
+    for(auto& vector : plot_real_joint_pos) { vector = std::vector<double>(plot_size, 0); }
+    for(auto& vector : plot_target_joint_pos) { vector = std::vector<double>(plot_size, 0); }
 
     loop_control = std::make_shared<LoopFunc>("loop_control", 0.002,    boost::bind(&RL_Real::RobotControl, this));
     loop_rl      = std::make_shared<LoopFunc>("loop_rl"     , 0.02 ,    boost::bind(&RL_Real::RunModel,     this));
@@ -318,17 +321,20 @@ torch::Tensor RL_Real::Forward()
 
 void RL_Real::Plot()
 {
+    plot_t.erase(plot_t.begin());
     plot_t.push_back(motiontime);
     plt::cla();
     plt::clf();
     for(int i = 0; i < 12; ++i)
     {
+        plot_real_joint_pos[i].erase(plot_real_joint_pos[i].begin());
+        plot_target_joint_pos[i].erase(plot_target_joint_pos[i].begin());
         plot_real_joint_pos[i].push_back(cyberdogData.q[i]);
         plot_target_joint_pos[i].push_back(cyberdogCmd.q_des[i]);
         plt::subplot(4, 3, i+1);
         plt::named_plot("_real_joint_pos", plot_t, plot_real_joint_pos[i], "r");
         plt::named_plot("_target_joint_pos", plot_t, plot_target_joint_pos[i], "b");
-        plt::xlim(motiontime-10000, motiontime);
+        plt::xlim(plot_t.front(), plot_t.back());
     }
     // plt::legend();
     plt::pause(0.0001);

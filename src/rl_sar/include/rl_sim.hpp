@@ -1,8 +1,8 @@
 #ifndef RL_SIM_HPP
 #define RL_SIM_HPP
 
-#include "../library/rl/rl.hpp"
-#include "../library/observation_buffer/observation_buffer.hpp"
+#include "rl_sdk.hpp"
+#include "observation_buffer.hpp"
 #include <ros/ros.h>
 #include <gazebo_msgs/ModelStates.h>
 #include <sensor_msgs/JointState.h>
@@ -37,7 +37,8 @@ public:
     std::shared_ptr<LoopFunc> loop_rl;
     std::shared_ptr<LoopFunc> loop_plot;
 
-    std::vector<double> plot_t;
+    const int plot_size = 100;
+    std::vector<int> plot_t;
     std::vector<std::vector<double>> plot_real_joint_pos, plot_target_joint_pos;
     void Plot();
 private:

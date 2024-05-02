@@ -1,8 +1,8 @@
 #ifndef RL_REAL_HPP
 #define RL_REAL_HPP
 
-#include "../library/rl/rl.hpp"
-#include "../library/observation_buffer/observation_buffer.hpp"
+#include "rl_sdk.hpp"
+#include "observation_buffer.hpp"
 #include "unitree_legged_sdk/loop.h"
 #include <boost/bind.hpp>
 #include <CustomInterface.h>
@@ -65,7 +65,8 @@ public:
 
     int robot_state = STATE_WAITING;
 
-    std::vector<double> plot_t;
+    const int plot_size = 100;
+    std::vector<int> plot_t;
     std::vector<std::vector<double>> plot_real_joint_pos, plot_target_joint_pos;
     void Plot();
 

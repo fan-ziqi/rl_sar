@@ -1,5 +1,5 @@
-#ifndef RL_HPP
-#define RL_HPP
+#ifndef RL_SDK_HPP
+#define RL_SDK_HPP
 
 #include <torch/script.h>
 #include <iostream>
@@ -83,4 +83,4 @@ protected:
     torch::Tensor output_dof_pos;
 };
 
-#endif // RL_HPP
+#endif // RL_SDK_HPP
