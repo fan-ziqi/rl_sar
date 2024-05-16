@@ -185,7 +185,8 @@ void RL_Real::RobotControl()
         }
     }
 
-    // safe.PowerProtect(cmd, state, 7);
+    safe.PowerProtect(cmd, state, 7);
+    safe.PositionProtect(cmd, state);
     udp.SetSend(cmd);
 }
 

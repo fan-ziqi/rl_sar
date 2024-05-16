@@ -1,5 +1,5 @@
 a1:
-  model_name: "model.pt"
+  model_name: "model_0501.pt"
   num_observations: 45
   clip_obs: 100.0
   clip_actions: 100.0
