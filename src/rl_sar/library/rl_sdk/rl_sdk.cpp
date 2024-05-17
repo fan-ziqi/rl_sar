@@ -1,13 +1,14 @@
 #include "rl_sdk.hpp"
 
-torch::Tensor ReadTensorFromYaml(const YAML::Node& node)
+template<typename T>
+std::vector<T> ReadVectorFromYaml(const YAML::Node& node)
 {
-    std::vector<float> values;
+    std::vector<T> values;
     for(const auto& val : node)
     {
-        values.push_back(val.as<float>());
+        values.push_back(val.as<T>());
     }
-    return torch::tensor(values).view({1, -1});
+    return values;
 }
 
 void RL::ReadYaml(std::string robot_name)
@@ -33,21 +34,17 @@ void RL::ReadYaml(std::string robot_name)
     this->params.lin_vel_scale = config["lin_vel_scale"].as<float>();
     this->params.ang_vel_scale = config["ang_vel_scale"].as<float>();
     this->params.dof_pos_scale = config["dof_pos_scale"].as<float>();
-    this->params.dof_vel_scale =config["dof_vel_scale"].as<float>();
-    this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale * 2});
+    this->params.dof_vel_scale = config["dof_vel_scale"].as<float>();
+    this->params.commands_scale = torch::tensor(ReadVectorFromYaml<float>(config["commands_scale"])).view({1, -1})
     // this->params.damping = config["damping"].as<float>();
     // this->params.stiffness = config["stiffness"].as<float>();
     // this->params.d_gains = torch::ones(12) * this->params.damping;
     // this->params.p_gains = torch::ones(12) * this->params.stiffness;
-    this->params.p_gains = ReadTensorFromYaml(config["p_gains"]);
-    this->params.d_gains = ReadTensorFromYaml(config["d_gains"]);
-    this->params.torque_limits = ReadTensorFromYaml(config["torque_limits"]);
-    this->params.default_dof_pos = ReadTensorFromYaml(config["default_dof_pos"]);
-    const YAML::Node& joint_names_node = config["joint_names"];
-    for(const auto& name : joint_names_node)
-    {
-        this->params.joint_names.push_back(name.as<std::string>());
-    }
+    this->params.p_gains = torch::tensor(ReadVectorFromYaml<float>(config["p_gains"])).view({1, -1})
+    this->params.d_gains = torch::tensor(ReadVectorFromYaml<float>(config["d_gains"])).view({1, -1});
+    this->params.torque_limits = torch::tensor(ReadVectorFromYaml<float>(config["torque_limits"])).view({1, -1});
+    this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<float>(config["default_dof_pos"])).view({1, -1});
+    this->params.joint_names = ReadVectorFromYaml<std::string>(config["joint_names"]);
 }
 
 void RL::CSVInit(std::string robot_name)
