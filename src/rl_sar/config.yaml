@@ -104,39 +104,3 @@ lite3_wheel:
                 "FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
                 "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint",
                 "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint"]
-
-fldlar:
-  model_name: "model_0514.pt"
-  num_observations: 45
-  clip_obs: 100.0
-  clip_actions: 100.0
-  # damping: 0.5
-  # stiffness: 20.0
-  p_gains: [200, 200, 200, # FL
-            200, 200, 200, # FR
-            200, 200, 200, # RL
-            200, 200, 200] # RR
-  d_gains: [11, 11, 11, # FL
-            11, 11, 11, # FR
-            11, 11, 11, # RL
-            11, 11, 11] # RR
-  action_scale: 0.25
-  hip_scale_reduction: 0.5
-  num_of_dofs: 12
-  lin_vel_scale: 2.0
-  ang_vel_scale: 0.25
-  dof_pos_scale: 1.0
-  dof_vel_scale: 0.05
-  commands_scale: [1.0, 1.0, 1.0]
-  torque_limits: [151.0, 151.0, 151.0, # FL
-                  151.0, 151.0, 151.0, # FR
-                  151.0, 151.0, 151.0, # RL
-                  151.0, 151.0, 151.0] # RR
-  default_dof_pos: [0.0, 0.0, 0.0, # FL
-                    0.0, 0.0, 0.0, # FR
-                    0.0, 0.0, 0.0, # RL
-                    0.0, 0.0, 0.0] # RR
-  joint_names: ["ip1x_hip_roll_joint", "ip1x_hip_pitch_joint", "ip1x_knee_joint",
-                "ip3x_hip_roll_joint", "ip3x_hip_pitch_joint", "ip3x_knee_joint",
-                "ip5x_hip_roll_joint", "ip5x_hip_pitch_joint", "ip5x_knee_joint",
-                "ip7x_hip_roll_joint", "ip7x_hip_pitch_joint", "ip7x_knee_joint"]
