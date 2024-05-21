@@ -35,12 +35,12 @@ void RL::ReadYaml(std::string robot_name)
     this->params.ang_vel_scale = config["ang_vel_scale"].as<float>();
     this->params.dof_pos_scale = config["dof_pos_scale"].as<float>();
     this->params.dof_vel_scale = config["dof_vel_scale"].as<float>();
-    this->params.commands_scale = torch::tensor(ReadVectorFromYaml<float>(config["commands_scale"])).view({1, -1})
+    this->params.commands_scale = torch::tensor(ReadVectorFromYaml<float>(config["commands_scale"])).view({1, -1});
     // this->params.damping = config["damping"].as<float>();
     // this->params.stiffness = config["stiffness"].as<float>();
     // this->params.d_gains = torch::ones(12) * this->params.damping;
     // this->params.p_gains = torch::ones(12) * this->params.stiffness;
-    this->params.p_gains = torch::tensor(ReadVectorFromYaml<float>(config["p_gains"])).view({1, -1})
+    this->params.p_gains = torch::tensor(ReadVectorFromYaml<float>(config["p_gains"])).view({1, -1});
     this->params.d_gains = torch::tensor(ReadVectorFromYaml<float>(config["d_gains"])).view({1, -1});
     this->params.torque_limits = torch::tensor(ReadVectorFromYaml<float>(config["torque_limits"])).view({1, -1});
     this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<float>(config["default_dof_pos"])).view({1, -1});
