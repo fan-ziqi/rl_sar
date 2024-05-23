@@ -15,6 +15,7 @@ a1:
             0.5, 0.5, 0.5] # RR
   action_scale: 0.25
   hip_scale_reduction: 0.5
+  hip_scale_reduction_indices: [0, 3, 6, 9]
   num_of_dofs: 12
   lin_vel_scale: 2.0
   ang_vel_scale: 0.25
@@ -51,6 +52,7 @@ cyberdog1:
             0.5, 0.5, 0.5] # RR
   action_scale: 0.25
   hip_scale_reduction: 0.5
+  hip_scale_reduction_indices: [0, 3, 6, 9]
   num_of_dofs: 12
   lin_vel_scale: 2.0
   ang_vel_scale: 0.25
@@ -86,6 +88,7 @@ lite3_wheel:
             0.5, 0.5, 0.5, 0.5] # RR
   action_scale: 0.25
   hip_scale_reduction: 1.0
+  hip_scale_reduction_indices: [0, 3, 6, 9]
   num_of_dofs: 16
   lin_vel_scale: 2.0
   ang_vel_scale: 0.25

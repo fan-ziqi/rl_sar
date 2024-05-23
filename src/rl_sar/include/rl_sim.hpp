@@ -61,8 +61,6 @@ private:
     std::vector<double> joint_velocities;
     std::vector<double> joint_efforts;
 
-    int hip_scale_reduction_indices[4] = {0, 3, 6, 9};
-
     std::chrono::high_resolution_clock::time_point start_time;
 
     void MapData(const std::vector<double>& source_data, std::vector<double>& target_data);

@@ -30,6 +30,7 @@ void RL::ReadYaml(std::string robot_name)
     this->params.clip_actions = config["clip_actions"].as<float>();
     this->params.action_scale = config["action_scale"].as<float>();
     this->params.hip_scale_reduction = config["hip_scale_reduction"].as<float>();
+    this->params.hip_scale_reduction_indices = ReadVectorFromYaml<int>(config["hip_scale_reduction_indices"]);
     this->params.num_of_dofs = config["num_of_dofs"].as<int>();
     this->params.lin_vel_scale = config["lin_vel_scale"].as<float>();
     this->params.ang_vel_scale = config["ang_vel_scale"].as<float>();

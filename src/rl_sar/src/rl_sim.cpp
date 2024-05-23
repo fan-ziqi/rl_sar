@@ -35,9 +35,9 @@ RL_Sim::RL_Sim()
 
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
 
-    joint_positions = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    joint_velocities = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    joint_efforts = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    joint_positions = std::vector<double>(params.num_of_dofs, 0.0);
+    joint_velocities = std::vector<double>(params.num_of_dofs, 0.0);
+    joint_efforts = std::vector<double>(params.num_of_dofs, 0.0);
     
     plot_t = std::vector<int>(plot_size, 0);
     plot_real_joint_pos.resize(params.num_of_dofs);
@@ -138,18 +138,12 @@ void RL_Sim::RunModel()
     this->obs.ang_vel = torch::tensor({{vel.angular.x, vel.angular.y, vel.angular.z}});
     this->obs.commands = torch::tensor({{cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z}});
     this->obs.base_quat = torch::tensor({{pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w}});
-    this->obs.dof_pos = torch::tensor({{joint_positions[0], joint_positions[1], joint_positions[2],
-                                        joint_positions[3], joint_positions[4], joint_positions[5],
-                                        joint_positions[6], joint_positions[7], joint_positions[8],
-                                        joint_positions[9], joint_positions[10], joint_positions[11]}});
-    this->obs.dof_vel = torch::tensor({{joint_velocities[0], joint_velocities[1], joint_velocities[2],
-                                        joint_velocities[3], joint_velocities[4], joint_velocities[5],
-                                        joint_velocities[6], joint_velocities[7], joint_velocities[8],
-                                        joint_velocities[9], joint_velocities[10], joint_velocities[11]}});
+    this->obs.dof_pos = torch::tensor(joint_positions).unsqueeze(0);
+    this->obs.dof_vel = torch::tensor(joint_velocities).unsqueeze(0);
 
     torch::Tensor actions = this->Forward();
 
-    for (int i : hip_scale_reduction_indices)
+    for (int i : this->params.hip_scale_reduction_indices)
     {
         actions[0][i] *= this->params.hip_scale_reduction;
     }
@@ -158,10 +152,7 @@ void RL_Sim::RunModel()
     output_dof_pos = this->ComputePosition(actions);
 
 #ifdef CSV_LOGGER
-    torch::Tensor tau_est = torch::tensor({{joint_efforts[0], joint_efforts[1], joint_efforts[2],
-                                            joint_efforts[3], joint_efforts[4], joint_efforts[5],
-                                            joint_efforts[6], joint_efforts[7], joint_efforts[8],
-                                            joint_efforts[9], joint_efforts[10], joint_efforts[11]}});
+    torch::Tensor tau_est = torch::tensor(joint_efforts).unsqueeze(0);
     CSVLogger(output_torques, tau_est, this->obs.dof_pos, output_dof_pos, this->obs.dof_vel);
 #endif
 }
