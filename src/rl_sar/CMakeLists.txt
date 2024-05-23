@@ -24,6 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
     std_msgs
     tf
     geometry_msgs
+    robot_msgs
     unitree_legged_msgs
 )
 

@@ -11,7 +11,9 @@
 #include "unitree_legged_sdk/loop.h"
 #include <csignal>
 
-using namespace UNITREE_LEGGED_SDK;
+// #include "robot_msgs/MotorCommand.h"
+// #include "robot_msgs/RobotState.h"
+// #include "robot_msgs/RobotCommand.h"
 
 class RL_Sim : public RL
 {
@@ -33,9 +35,9 @@ public:
 
     int motiontime = 0;
 
-    std::shared_ptr<LoopFunc> loop_control;
-    std::shared_ptr<LoopFunc> loop_rl;
-    std::shared_ptr<LoopFunc> loop_plot;
+    std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_control;
+    std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_rl;
+    std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_plot;
 
     const int plot_size = 100;
     std::vector<int> plot_t;
@@ -52,6 +54,10 @@ private:
 
     std::map<std::string, ros::Publisher> torque_publishers;
     std::vector<unitree_legged_msgs::MotorCmd> motor_commands;
+
+    // std::vector<robot_msgs::MotorCommand> motor_commands;
+    // robot_msgs::RobotState robot_state;
+    // robot_msgs::RobotCommand robot_command;
 
     geometry_msgs::Twist vel;
     geometry_msgs::Pose pose;

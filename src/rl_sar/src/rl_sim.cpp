@@ -64,13 +64,13 @@ RL_Sim::RL_Sim()
     joint_state_subscriber_ = nh.subscribe<sensor_msgs::JointState>(
         ros_namespace + "joint_states", 10, &RL_Sim::JointStatesCallback, this);
 
-    loop_control = std::make_shared<LoopFunc>("loop_control", 0.002,    boost::bind(&RL_Sim::RobotControl, this));
-    loop_rl      = std::make_shared<LoopFunc>("loop_rl"     , 0.02 ,    boost::bind(&RL_Sim::RunModel,     this));
+    loop_control = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_control", 0.002,    boost::bind(&RL_Sim::RobotControl, this));
+    loop_rl      = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_rl"     , 0.02 ,    boost::bind(&RL_Sim::RunModel,     this));
 
     loop_control->start();
     loop_rl->start();
 #ifdef PLOT
-    loop_plot    = std::make_shared<LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Sim::Plot,         this));
+    loop_plot    = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Sim::Plot,         this));
     loop_plot->start();
 #endif
 
@@ -110,7 +110,6 @@ void RL_Sim::RobotControl()
 
 void RL_Sim::ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg)
 {
-
     vel = msg->twist[2];
     pose = msg->pose[2];
 }
