@@ -26,7 +26,7 @@
     <exec_depend>roscpp</exec_depend>
     <exec_depend>std_msgs</exec_depend>
     <depend>robot_msgs</depend>
-    <depend>unitree_legged_msgs</depend>  
+    <depend>robot_joint_controller</depend>
 
     <export>
 

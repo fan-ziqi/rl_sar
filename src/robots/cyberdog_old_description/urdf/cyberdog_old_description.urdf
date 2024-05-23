@@ -84,7 +84,7 @@
     </sensor>
   </gazebo>
   <!-- Foot contacts. -->
-  <gazebo reference="FR_calf">
+  <!-- <gazebo reference="FR_calf">
     <sensor name="FR_foot_contact" type="contact">
       <update_rate>100</update_rate>
       <plugin filename="libunitreeFootContactPlugin.so" name="contactPlugin"/>
@@ -119,9 +119,9 @@
         <collision>RL_calf_fixed_joint_lump__RL_foot_collision_1</collision>
       </contact>
     </sensor>
-  </gazebo>
+  </gazebo> -->
   <!-- Visualization of Foot contacts. -->
-  <gazebo reference="FR_foot">
+  <!-- <gazebo reference="FR_foot">
     <visual>
       <plugin filename="libunitreeDrawForcePlugin.so" name="drawForcePlugin">
         <topicName>FR_foot_contact</topicName>
@@ -148,7 +148,7 @@
         <topicName>RL_foot_contact</topicName>
       </plugin>
     </visual>
-  </gazebo>
+  </gazebo> -->
   <gazebo reference="base">
     <material>Gazebo/Green</material>
     <turnGravityOff>false</turnGravityOff>

@@ -54,7 +54,7 @@ RL_Sim::RL_Sim()
 
     for (int i = 0; i < params.num_of_dofs; ++i)
     {
-        torque_publishers[params.joint_names[i]] = nh.advertise<unitree_legged_msgs::MotorCmd>(
+        torque_publishers[params.joint_names[i]] = nh.advertise<robot_msgs::MotorCommand>(
             ros_namespace + params.joint_names[i].substr(0, params.joint_names[i].size() - 6) + "_controller/command", 10);
     }
 
@@ -94,13 +94,12 @@ void RL_Sim::RobotControl()
     motiontime++;
     for (int i = 0; i < params.num_of_dofs; ++i)
     {
-        motor_commands[i].mode = 0x0A;
         motor_commands[i].q = output_dof_pos[0][i].item<double>();
         motor_commands[i].dq = 0;
         // motor_commands[i].Kp = params.stiffness;
         // motor_commands[i].Kd = params.damping;
-        motor_commands[i].Kp = params.p_gains[0][i].item<double>();
-        motor_commands[i].Kd = params.d_gains[0][i].item<double>();
+        motor_commands[i].kp = params.p_gains[0][i].item<double>();
+        motor_commands[i].kd = params.d_gains[0][i].item<double>();
         // motor_commands[i].tau = output_torques[0][i].item<double>();
         motor_commands[i].tau = 0;
 
