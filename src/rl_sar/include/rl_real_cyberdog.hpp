@@ -12,8 +12,6 @@
 #include <sys/ioctl.h>
 #include <iostream>
 
-using namespace UNITREE_LEGGED_SDK;
-
 using CyberdogData = Robot_Data;
 using CyberdogCmd = Motor_Cmd;
 
@@ -54,9 +52,9 @@ public:
     
     void RobotControl();
 
-    std::shared_ptr<LoopFunc> loop_control;
-    std::shared_ptr<LoopFunc> loop_rl;
-    std::shared_ptr<LoopFunc> loop_plot;
+    std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_control;
+    std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_rl;
+    std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_plot;
 
     float getup_percent = 0.0;
     float getdown_percent = 0.0;

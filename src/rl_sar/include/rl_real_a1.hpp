@@ -8,8 +8,6 @@
 #include <csignal>
 // #include <signal.h>
 
-using namespace UNITREE_LEGGED_SDK;
-
 enum RobotState {
     STATE_WAITING = 0,
     STATE_POS_GETUP,
@@ -36,17 +34,17 @@ public:
     void UDPSend(){udp.Send();}
     void UDPRecv(){udp.Recv();}
     void RobotControl();
-    Safety safe;
-    UDP udp;
-    LowCmd cmd = {0};
-    LowState state = {0};
+    UNITREE_LEGGED_SDK::Safety safe;
+    UNITREE_LEGGED_SDK::UDP udp;
+    UNITREE_LEGGED_SDK::LowCmd cmd = {0};
+    UNITREE_LEGGED_SDK::LowState state = {0};
     xRockerBtnDataStruct _keyData;
 
-    std::shared_ptr<LoopFunc> loop_control;
-    std::shared_ptr<LoopFunc> loop_udpSend;
-    std::shared_ptr<LoopFunc> loop_udpRecv;
-    std::shared_ptr<LoopFunc> loop_rl;
-    std::shared_ptr<LoopFunc> loop_plot;
+    std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_control;
+    std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_udpSend;
+    std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_udpRecv;
+    std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_rl;
+    std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_plot;
 
     float getup_percent = 0.0;
     float getdown_percent = 0.0;
