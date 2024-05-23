@@ -7,11 +7,10 @@
 #include <gazebo_msgs/ModelStates.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Twist.h>
-#include "unitree_legged_msgs/MotorCmd.h"
 #include "unitree_legged_sdk/loop.h"
 #include <csignal>
 
-// #include "robot_msgs/MotorCommand.h"
+#include "robot_msgs/MotorCommand.h"
 // #include "robot_msgs/RobotState.h"
 // #include "robot_msgs/RobotCommand.h"
 
@@ -53,9 +52,8 @@ private:
     ros::Subscriber cmd_vel_subscriber_;
 
     std::map<std::string, ros::Publisher> torque_publishers;
-    std::vector<unitree_legged_msgs::MotorCmd> motor_commands;
+    std::vector<robot_msgs::MotorCommand> motor_commands;
 
-    // std::vector<robot_msgs::MotorCommand> motor_commands;
     // robot_msgs::RobotState robot_state;
     // robot_msgs::RobotCommand robot_command;
 

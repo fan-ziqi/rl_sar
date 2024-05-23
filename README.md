@@ -6,17 +6,10 @@ Simulation verification and physical deployment of the quadruped robot's reinfor
 
 ## Preparation
 
-Clone the code (sync submodules)
+Clone the code
 
 ```bash
-git clone --recursive https://github.com/fan-ziqi/rl_sar.git
-```
-
-If there are updates:
-
-```bash
-git pull
-git submodule update --remote --recursive
+git clone https://github.com/fan-ziqi/rl_sar.git
 ```
 
 ## Dependency
@@ -182,12 +175,10 @@ In the following, let ROBOT represent the name of your robot.
 4. Add a new launch file in the rl_sar/launch folder. Refer to other launch files for guidance on modification.
 5. Change ROBOT_NAME to ROBOT in rl_xxx.cpp.
 6. Compile and run.
-7. If the torque of your robot's joints exceeds 50Nm, you need to modify line 180 in `rl_sar/src/unitree_ros/unitree_legged_control/src/joint_controller.cpp` to:
-   ```cpp
-   // calcTorque = computeTorque(currentPos, currentVel, servoCmd);      
-   calcTorque = servoCmd.posStiffness * (servoCmd.pos - currentPos) + servoCmd.velStiffness * (servoCmd.vel - currentVel) + servoCmd.torque;
-   ```
-   This will remove the 50Nm limit.
+
+## Reference
+
+[unitree_ros](https://github.com/unitreerobotics/unitree_ros)
 
 ## Citation
 

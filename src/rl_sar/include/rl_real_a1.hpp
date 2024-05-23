@@ -1,13 +1,8 @@
 #ifndef RL_REAL_HPP
 #define RL_REAL_HPP
 
-// #include "../library/rl_sdk/rl_sdk.hpp"
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
-#include <unitree_legged_msgs/LowCmd.h>
-#include "unitree_legged_msgs/LowState.h"
-#include <unitree_legged_msgs/MotorCmd.h>
-#include <unitree_legged_msgs/MotorState.h>
 #include "unitree_legged_sdk/unitree_legged_sdk.h"
 #include "unitree_legged_sdk/unitree_joystick.h"
 #include <csignal>

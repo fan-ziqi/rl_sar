@@ -25,7 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
     tf
     geometry_msgs
     robot_msgs
-    unitree_legged_msgs
+    robot_joint_controller
 )
 
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
@@ -36,7 +36,7 @@ include_directories(${YAML_CPP_INCLUDE_DIR})
 
 catkin_package(
     CATKIN_DEPENDS 
-    unitree_legged_msgs 
+    robot_joint_controller
 )
 
 include_directories(library/unitree_legged_sdk_3.2/include)
@@ -50,7 +50,6 @@ include_directories(
     include
     ${catkin_INCLUDE_DIRS}
     ${unitree_legged_sdk_INCLUDE_DIRS}
-    ../unitree_controller/include
     library/matplotlibcpp
     library/observation_buffer
     library/rl_sdk

@@ -51,11 +51,4 @@
         <remap from="/joint_states" to="/$(arg rname)_gazebo/joint_states"/>
     </node>
 
-    <!-- <node pkg="unitree_gazebo" type="servo" name="servo" required="true" output="screen"/> -->
-
-    <!-- load the parameter unitree_controller -->
-    <include file="$(find unitree_controller)/launch/set_ctrl.launch">
-        <arg name="rname" value="$(arg rname)"/>
-    </include>
-
 </launch>
