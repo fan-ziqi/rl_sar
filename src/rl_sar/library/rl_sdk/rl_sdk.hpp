@@ -19,6 +19,7 @@ struct ModelParams
     float stiffness;
     float action_scale;
     float hip_scale_reduction;
+    std::vector<int> hip_scale_reduction_indices;
     int num_of_dofs;
     float lin_vel_scale;
     float ang_vel_scale;
