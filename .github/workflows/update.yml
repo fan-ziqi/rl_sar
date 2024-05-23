@@ -3,7 +3,7 @@ name: Send submodule updates to parent repo
 on:
   push:
     branches: 
-      - BlindDog
+      - main
 
 jobs:
   update:
