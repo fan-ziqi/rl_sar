@@ -25,7 +25,7 @@ RL_Sim::RL_Sim()
 
     cmd_vel = geometry_msgs::Twist();
 
-    motor_commands.resize(12);
+    motor_commands.resize(params.num_of_dofs);
 
     std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + ROBOT_NAME + "/" + this->params.model_name;
     this->model = torch::jit::load(model_path);
@@ -40,8 +40,8 @@ RL_Sim::RL_Sim()
     joint_efforts = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     
     plot_t = std::vector<int>(plot_size, 0);
-    plot_real_joint_pos.resize(12);
-    plot_target_joint_pos.resize(12);
+    plot_real_joint_pos.resize(params.num_of_dofs);
+    plot_target_joint_pos.resize(params.num_of_dofs);
     for(auto& vector : plot_real_joint_pos) { vector = std::vector<double>(plot_size, 0); }
     for(auto& vector : plot_target_joint_pos) { vector = std::vector<double>(plot_size, 0); }
 
@@ -49,7 +49,7 @@ RL_Sim::RL_Sim()
 
     nh.param<std::string>("ros_namespace", ros_namespace, "");
 
-    for (int i = 0; i < 12; ++i)
+    for (int i = 0; i < params.num_of_dofs; ++i)
     {
         torque_publishers[params.joint_names[i]] = nh.advertise<unitree_legged_msgs::MotorCmd>(
             ros_namespace + params.joint_names[i].substr(0, params.joint_names[i].size() - 6) + "_controller/command", 10);
@@ -89,7 +89,7 @@ RL_Sim::~RL_Sim()
 void RL_Sim::RobotControl()
 {
     motiontime++;
-    for (int i = 0; i < 12; ++i)
+    for (int i = 0; i < params.num_of_dofs; ++i)
     {
         motor_commands[i].mode = 0x0A;
         motor_commands[i].q = output_dof_pos[0][i].item<double>();
@@ -158,10 +158,10 @@ void RL_Sim::RunModel()
     output_dof_pos = this->ComputePosition(actions);
 
 #ifdef CSV_LOGGER
-    torch::Tensor tau_est = torch::tensor({{joint_efforts[1], joint_efforts[2], joint_efforts[0],
-                                            joint_efforts[4], joint_efforts[5], joint_efforts[3],
-                                            joint_efforts[7], joint_efforts[8], joint_efforts[6],
-                                            joint_efforts[10], joint_efforts[11], joint_efforts[9]}});
+    torch::Tensor tau_est = torch::tensor({{joint_efforts[0], joint_efforts[1], joint_efforts[2],
+                                            joint_efforts[3], joint_efforts[4], joint_efforts[5],
+                                            joint_efforts[6], joint_efforts[7], joint_efforts[8],
+                                            joint_efforts[9], joint_efforts[10], joint_efforts[11]}});
     CSVLogger(output_torques, tau_est, this->obs.dof_pos, output_dof_pos, this->obs.dof_vel);
 #endif
 }
@@ -197,16 +197,15 @@ torch::Tensor RL_Sim::Forward()
 
 void RL_Sim::Plot()
 {
-    int dof_mapping[13] = {1, 2, 0, 4, 5, 3, 7, 8, 6, 10, 11, 9};
     plot_t.erase(plot_t.begin());
     plot_t.push_back(motiontime);
     plt::cla();
     plt::clf();
-    for(int i = 0; i < 12; ++i)
+    for(int i = 0; i < params.num_of_dofs; ++i)
     {
         plot_real_joint_pos[i].erase(plot_real_joint_pos[i].begin());
         plot_target_joint_pos[i].erase(plot_target_joint_pos[i].begin());
-        plot_real_joint_pos[i].push_back(joint_positions[dof_mapping[i]]);
+        plot_real_joint_pos[i].push_back(joint_positions[i]);
         plot_target_joint_pos[i].push_back(motor_commands[i].q);
         plt::subplot(4, 3, i+1);
         plt::named_plot("_real_joint_pos", plot_t, plot_real_joint_pos[i], "r");

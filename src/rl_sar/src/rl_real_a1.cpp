@@ -26,8 +26,8 @@ RL_Real::RL_Real() : safe(LeggedType::A1), udp(LOWLEVEL)
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
 
     plot_t = std::vector<int>(plot_size, 0);
-    plot_real_joint_pos.resize(12);
-    plot_target_joint_pos.resize(12);
+    plot_real_joint_pos.resize(params.num_of_dofs);
+    plot_target_joint_pos.resize(params.num_of_dofs);
     for(auto& vector : plot_real_joint_pos) { vector = std::vector<double>(plot_size, 0); }
     for(auto& vector : plot_target_joint_pos) { vector = std::vector<double>(plot_size, 0); }
 
@@ -72,14 +72,14 @@ void RL_Real::RobotControl()
     // waiting
     if(robot_state == STATE_WAITING)
     {
-        for(int i = 0; i < 12; ++i)
+        for(int i = 0; i < params.num_of_dofs; ++i)
         {
             cmd.motorCmd[i].q = state.motorState[i].q;
         }
         if((int)_keyData.btn.components.R2 == 1)
         {
             getup_percent = 0.0;
-            for(int i = 0; i < 12; ++i)
+            for(int i = 0; i < params.num_of_dofs; ++i)
             {
                 now_pos[i] = state.motorState[i].q;
                 start_pos[i] = now_pos[i];
@@ -94,12 +94,12 @@ void RL_Real::RobotControl()
         {
             getup_percent += 1 / 1000.0;
             getup_percent = getup_percent > 1 ? 1 : getup_percent;
-            for(int i = 0; i < 12; ++i)
+            for(int i = 0; i < params.num_of_dofs; ++i)
             {
                 cmd.motorCmd[i].mode = 0x0A;
                 cmd.motorCmd[i].q = (1 - getup_percent) * now_pos[i] + getup_percent * params.default_dof_pos[0][dof_mapping[i]].item<double>();
                 cmd.motorCmd[i].dq = 0;
-                cmd.motorCmd[i].Kp = 50;
+                cmd.motorCmd[i].Kp = 80;
                 cmd.motorCmd[i].Kd = 3;
                 cmd.motorCmd[i].tau = 0;
             }
@@ -112,7 +112,7 @@ void RL_Real::RobotControl()
         else if((int)_keyData.btn.components.L2 == 1)
         {
             getdown_percent = 0.0;
-            for(int i = 0; i < 12; ++i)
+            for(int i = 0; i < params.num_of_dofs; ++i)
             {
                 now_pos[i] = state.motorState[i].q;
             }
@@ -134,7 +134,7 @@ void RL_Real::RobotControl()
     // rl loop
     else if(robot_state == STATE_RL_RUNNING)
     {
-        for(int i = 0; i < 12; ++i)
+        for(int i = 0; i < params.num_of_dofs; ++i)
         {
             cmd.motorCmd[i].mode = 0x0A;
             // cmd.motorCmd[i].q = 0;
@@ -150,7 +150,7 @@ void RL_Real::RobotControl()
         if((int)_keyData.btn.components.L2 == 1)
         {
             getdown_percent = 0.0;
-            for(int i = 0; i < 12; ++i)
+            for(int i = 0; i < params.num_of_dofs; ++i)
             {
                 now_pos[i] = state.motorState[i].q;
             }
@@ -164,12 +164,12 @@ void RL_Real::RobotControl()
         {
             getdown_percent += 1 / 1000.0;
             getdown_percent = getdown_percent > 1 ? 1 : getdown_percent;
-            for(int i = 0; i < 12; ++i)
+            for(int i = 0; i < params.num_of_dofs; ++i)
             {
                 cmd.motorCmd[i].mode = 0x0A;
                 cmd.motorCmd[i].q = (1 - getdown_percent) * now_pos[i] + getdown_percent * start_pos[i];
                 cmd.motorCmd[i].dq = 0;
-                cmd.motorCmd[i].Kp = 50;
+                cmd.motorCmd[i].Kp = 80;
                 cmd.motorCmd[i].Kd = 3;
                 cmd.motorCmd[i].tau = 0;
             }
@@ -185,8 +185,8 @@ void RL_Real::RobotControl()
         }
     }
 
-    safe.PowerProtect(cmd, state, 7);
-    safe.PositionProtect(cmd, state);
+    safe.PowerProtect(cmd, state, 8);
+    // safe.PositionProtect(cmd, state);
     udp.SetSend(cmd);
 }
 
@@ -279,7 +279,7 @@ void RL_Real::Plot()
     plot_t.push_back(motiontime);
     plt::cla();
     plt::clf();
-    for(int i = 0; i < 12; ++i)
+    for(int i = 0; i < params.num_of_dofs; ++i)
     {
         plot_real_joint_pos[i].erase(plot_real_joint_pos[i].begin());
         plot_target_joint_pos[i].erase(plot_target_joint_pos[i].begin());

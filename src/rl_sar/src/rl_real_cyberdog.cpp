@@ -24,8 +24,8 @@ RL_Real::RL_Real() : CustomInterface(500)
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
 
     plot_t = std::vector<int>(plot_size, 0);
-    plot_real_joint_pos.resize(12);
-    plot_target_joint_pos.resize(12);
+    plot_real_joint_pos.resize(params.num_of_dofs);
+    plot_target_joint_pos.resize(params.num_of_dofs);
     for(auto& vector : plot_real_joint_pos) { vector = std::vector<double>(plot_size, 0); }
     for(auto& vector : plot_target_joint_pos) { vector = std::vector<double>(plot_size, 0); }
 
@@ -81,7 +81,7 @@ void RL_Real::RobotControl()
     // waiting
     if(robot_state == STATE_WAITING)
     {
-        for(int i = 0; i < 12; ++i)
+        for(int i = 0; i < params.num_of_dofs; ++i)
         {
             cyberdogCmd.q_des[i] = cyberdogData.q[i];
         }
@@ -89,7 +89,7 @@ void RL_Real::RobotControl()
         {
             keyboard.robot_state = STATE_WAITING;
             getup_percent = 0.0;
-            for(int i = 0; i < 12; ++i)
+            for(int i = 0; i < params.num_of_dofs; ++i)
             {
                 now_pos[i] = cyberdogData.q[i];
                 start_pos[i] = now_pos[i];
@@ -104,7 +104,7 @@ void RL_Real::RobotControl()
         {
             getup_percent += 1 / 1000.0;
             getup_percent = getup_percent > 1 ? 1 : getup_percent;
-            for(int i = 0; i < 12; ++i)
+            for(int i = 0; i < params.num_of_dofs; ++i)
             {
                 cyberdogCmd.q_des[i] = (1 - getup_percent) * now_pos[i] + getup_percent * params.default_dof_pos[0][dof_mapping[i]].item<double>();
                 cyberdogCmd.qd_des[i] = 0;
@@ -123,7 +123,7 @@ void RL_Real::RobotControl()
         {
             keyboard.robot_state = STATE_WAITING;
             getdown_percent = 0.0;
-            for(int i = 0; i < 12; ++i)
+            for(int i = 0; i < params.num_of_dofs; ++i)
             {
                 now_pos[i] = cyberdogData.q[i];
             }
@@ -145,7 +145,7 @@ void RL_Real::RobotControl()
     // rl loop
     else if(robot_state == STATE_RL_RUNNING)
     {
-        for(int i = 0; i < 12; ++i)
+        for(int i = 0; i < params.num_of_dofs; ++i)
         {
             // cyberdogCmd.q_des[i] = 0;
             cyberdogCmd.q_des[i] = output_dof_pos[0][dof_mapping[i]].item<double>();
@@ -161,7 +161,7 @@ void RL_Real::RobotControl()
         {
             keyboard.robot_state = STATE_WAITING;
             getdown_percent = 0.0;
-            for(int i = 0; i < 12; ++i)
+            for(int i = 0; i < params.num_of_dofs; ++i)
             {
                 now_pos[i] = cyberdogData.q[i];
             }
@@ -175,7 +175,7 @@ void RL_Real::RobotControl()
         {
             getdown_percent += 1 / 1000.0;
             getdown_percent = getdown_percent > 1 ? 1 : getdown_percent;
-            for(int i = 0; i < 12; ++i)
+            for(int i = 0; i < params.num_of_dofs; ++i)
             {
                 cyberdogCmd.q_des[i] = (1 - getdown_percent) * now_pos[i] + getdown_percent * start_pos[i];
                 cyberdogCmd.qd_des[i] = 0;
@@ -325,7 +325,7 @@ void RL_Real::Plot()
     plot_t.push_back(motiontime);
     plt::cla();
     plt::clf();
-    for(int i = 0; i < 12; ++i)
+    for(int i = 0; i < params.num_of_dofs; ++i)
     {
         plot_real_joint_pos[i].erase(plot_real_joint_pos[i].begin());
         plot_target_joint_pos[i].erase(plot_target_joint_pos[i].begin());

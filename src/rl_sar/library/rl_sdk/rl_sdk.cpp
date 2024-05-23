@@ -35,7 +35,8 @@ void RL::ReadYaml(std::string robot_name)
     this->params.ang_vel_scale = config["ang_vel_scale"].as<float>();
     this->params.dof_pos_scale = config["dof_pos_scale"].as<float>();
     this->params.dof_vel_scale = config["dof_vel_scale"].as<float>();
-    this->params.commands_scale = torch::tensor(ReadVectorFromYaml<float>(config["commands_scale"])).view({1, -1});
+    // this->params.commands_scale = torch::tensor(ReadVectorFromYaml<float>(config["commands_scale"])).view({1, -1});
+    this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale});
     // this->params.damping = config["damping"].as<float>();
     // this->params.stiffness = config["stiffness"].as<float>();
     // this->params.d_gains = torch::ones(12) * this->params.damping;
