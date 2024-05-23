@@ -7,7 +7,7 @@
 
 RL_Real rl_sar;
 
-RL_Real::RL_Real() : safe(LeggedType::A1), udp(LOWLEVEL)
+RL_Real::RL_Real() : safe(UNITREE_LEGGED_SDK::LeggedType::A1), udp(UNITREE_LEGGED_SDK::LOWLEVEL)
 {
     torch::autograd::GradMode::set_enabled(false);
 
@@ -31,17 +31,17 @@ RL_Real::RL_Real() : safe(LeggedType::A1), udp(LOWLEVEL)
     for(auto& vector : plot_real_joint_pos) { vector = std::vector<double>(plot_size, 0); }
     for(auto& vector : plot_target_joint_pos) { vector = std::vector<double>(plot_size, 0); }
 
-    loop_control = std::make_shared<LoopFunc>("loop_control", 0.002,    boost::bind(&RL_Real::RobotControl, this));
-    loop_udpSend = std::make_shared<LoopFunc>("loop_udpSend", 0.002, 3, boost::bind(&RL_Real::UDPSend,      this));
-    loop_udpRecv = std::make_shared<LoopFunc>("loop_udpRecv", 0.002, 3, boost::bind(&RL_Real::UDPRecv,      this));
-    loop_rl      = std::make_shared<LoopFunc>("loop_rl"     , 0.02 ,    boost::bind(&RL_Real::RunModel,     this));
+    loop_control = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_control", 0.002,    boost::bind(&RL_Real::RobotControl, this));
+    loop_udpSend = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_udpSend", 0.002, 3, boost::bind(&RL_Real::UDPSend,      this));
+    loop_udpRecv = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_udpRecv", 0.002, 3, boost::bind(&RL_Real::UDPRecv,      this));
+    loop_rl      = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_rl"     , 0.02 ,    boost::bind(&RL_Real::RunModel,     this));
 
     loop_udpSend->start();
     loop_udpRecv->start();
     loop_control->start();
 
 #ifdef PLOT
-    loop_plot    = std::make_shared<LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Real::Plot,         this));
+    loop_plot    = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Real::Plot,         this));
     loop_plot->start();
 #endif
 
@@ -216,14 +216,14 @@ void RL_Real::RunModel()
         this->obs.ang_vel = torch::tensor({{state.imu.gyroscope[0], state.imu.gyroscope[1], state.imu.gyroscope[2]}});
         this->obs.commands = torch::tensor({{_keyData.ly, -_keyData.rx, -_keyData.lx}});
         this->obs.base_quat = torch::tensor({{state.imu.quaternion[1], state.imu.quaternion[2], state.imu.quaternion[3], state.imu.quaternion[0]}});
-        this->obs.dof_pos = torch::tensor({{state.motorState[FL_0].q, state.motorState[FL_1].q, state.motorState[FL_2].q,
-                                            state.motorState[FR_0].q, state.motorState[FR_1].q, state.motorState[FR_2].q,
-                                            state.motorState[RL_0].q, state.motorState[RL_1].q, state.motorState[RL_2].q,
-                                            state.motorState[RR_0].q, state.motorState[RR_1].q, state.motorState[RR_2].q}});
-        this->obs.dof_vel = torch::tensor({{state.motorState[FL_0].dq, state.motorState[FL_1].dq, state.motorState[FL_2].dq,
-                                            state.motorState[FR_0].dq, state.motorState[FR_1].dq, state.motorState[FR_2].dq,
-                                            state.motorState[RL_0].dq, state.motorState[RL_1].dq, state.motorState[RL_2].dq,
-                                            state.motorState[RR_0].dq, state.motorState[RR_1].dq, state.motorState[RR_2].dq}});
+        this->obs.dof_pos = torch::tensor({{state.motorState[3].q, state.motorState[4].q, state.motorState[5].q,
+                                            state.motorState[0].q, state.motorState[1].q, state.motorState[2].q,
+                                            state.motorState[9].q, state.motorState[10].q, state.motorState[11].q,
+                                            state.motorState[6].q, state.motorState[7].q, state.motorState[8].q}});
+        this->obs.dof_vel = torch::tensor({{state.motorState[3].dq, state.motorState[4].dq, state.motorState[5].dq,
+                                            state.motorState[0].dq, state.motorState[1].dq, state.motorState[2].dq,
+                                            state.motorState[9].dq, state.motorState[10].dq, state.motorState[11].dq,
+                                            state.motorState[6].dq, state.motorState[7].dq, state.motorState[8].dq}});
 
         torch::Tensor actions = this->Forward();
 
@@ -235,10 +235,10 @@ void RL_Real::RunModel()
         output_torques = this->ComputeTorques(actions);
         output_dof_pos = this->ComputePosition(actions);
 #ifdef CSV_LOGGER
-        torch::Tensor tau_est = torch::tensor({{state.motorState[FL_0].tauEst, state.motorState[FL_1].tauEst, state.motorState[FL_2].tauEst,
-                                                state.motorState[FR_0].tauEst, state.motorState[FR_1].tauEst, state.motorState[FR_2].tauEst,
-                                                state.motorState[RL_0].tauEst, state.motorState[RL_1].tauEst, state.motorState[RL_2].tauEst,
-                                                state.motorState[RR_0].tauEst, state.motorState[RR_1].tauEst, state.motorState[RR_2].tauEst}});
+        torch::Tensor tau_est = torch::tensor({{state.motorState[3].tauEst, state.motorState[4].tauEst, state.motorState[5].tauEst,
+                                                state.motorState[0].tauEst, state.motorState[1].tauEst, state.motorState[2].tauEst,
+                                                state.motorState[9].tauEst, state.motorState[10].tauEst, state.motorState[11].tauEst,
+                                                state.motorState[6].tauEst, state.motorState[7].tauEst, state.motorState[8].tauEst}});
         CSVLogger(output_torques, tau_est, this->obs.dof_pos, output_dof_pos, this->obs.dof_vel);
 #endif
     }

@@ -29,13 +29,13 @@ RL_Real::RL_Real() : CustomInterface(500)
     for(auto& vector : plot_real_joint_pos) { vector = std::vector<double>(plot_size, 0); }
     for(auto& vector : plot_target_joint_pos) { vector = std::vector<double>(plot_size, 0); }
 
-    loop_control = std::make_shared<LoopFunc>("loop_control", 0.002,    boost::bind(&RL_Real::RobotControl, this));
-    loop_rl      = std::make_shared<LoopFunc>("loop_rl"     , 0.02 ,    boost::bind(&RL_Real::RunModel,     this));
+    loop_control = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_control", 0.002,    boost::bind(&RL_Real::RobotControl, this));
+    loop_rl      = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_rl"     , 0.02 ,    boost::bind(&RL_Real::RunModel,     this));
 
     loop_control->start();
     
 #ifdef PLOT
-    loop_plot    = std::make_shared<LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Real::Plot,         this));
+    loop_plot    = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Real::Plot,         this));
     loop_plot->start();
 #endif
     _keyboardThread = std::thread(&RL_Real::run_keyboard, this);
