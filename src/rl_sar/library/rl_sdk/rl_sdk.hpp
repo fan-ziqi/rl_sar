@@ -4,9 +4,7 @@
 #include <torch/script.h>
 #include <iostream>
 #include <string>
-
-#include "matplotlibcpp.h"
-namespace plt = matplotlibcpp;
+#include <unistd.h>
 
 #include <yaml-cpp/yaml.h>
 #define CONFIG_PATH CMAKE_CURRENT_SOURCE_DIR "/config.yaml"

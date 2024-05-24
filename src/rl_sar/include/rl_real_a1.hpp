@@ -8,6 +8,9 @@
 #include <csignal>
 // #include <signal.h>
 
+#include "matplotlibcpp.h"
+namespace plt = matplotlibcpp;
+
 class RL_Real : public RL
 {
 public:
