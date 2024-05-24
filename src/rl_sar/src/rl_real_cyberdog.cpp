@@ -3,7 +3,7 @@
 #define ROBOT_NAME "cyberdog1"
 
 // #define PLOT
-#define CSV_LOGGER
+// #define CSV_LOGGER
 
 RL_Real rl_sar;
 
@@ -200,53 +200,6 @@ void RL_Real::UserCode()
 {
 	cyberdogData = robot_data;
 	motor_cmd = cyberdogCmd;
-}
-
-static bool kbhit()
-{
-    termios term;
-    tcgetattr(0, &term);
-    
-    termios term2 = term;
-    term2.c_lflag &= ~ICANON;
-    tcsetattr(0, TCSANOW, &term2);
-    
-    int byteswaiting;
-    ioctl(0, FIONREAD, &byteswaiting);
-    
-    tcsetattr(0, TCSANOW, &term);
-    
-    return byteswaiting > 0;
-}
-void RL_Real::run_keyboard()
-{
-    int c;
-    // Check for keyboard input
-    while(true)
-    {
-        if(kbhit())
-        {
-            c = fgetc(stdin);
-            switch(c)
-            {
-                case '0': keyboard.robot_state = STATE_POS_GETUP; break;
-                case 'p': keyboard.robot_state = STATE_RL_INIT; break;
-                case '1': keyboard.robot_state = STATE_POS_GETDOWN; break;
-                case 'q': break;
-                case 'w': keyboard.x += 0.5; break;
-                case 's': keyboard.x -= 0.5; break;
-                case 'a': keyboard.yaw += 0.5; break;
-                case 'd': keyboard.yaw -= 0.5; break;
-                case 'i': break;
-                case 'k': break;
-                case 'j': keyboard.y += 0.5; break;
-                case 'l': keyboard.y -= 0.5; break;
-                case ' ': keyboard.x = 0; keyboard.y = 0; keyboard.yaw = 0; break;
-                default: break;
-            }
-        }
-        usleep(10000);
-    } 
 }
 
 void RL_Real::RunModel()
