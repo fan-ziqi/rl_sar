@@ -9,6 +9,9 @@
 #include <csignal>
 // #include <signal.h>
 
+#include "matplotlibcpp.h"
+namespace plt = matplotlibcpp;
+
 using CyberdogData = Robot_Data;
 using CyberdogCmd = Motor_Cmd;
 

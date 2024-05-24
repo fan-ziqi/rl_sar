@@ -14,6 +14,9 @@
 // #include "robot_msgs/RobotState.h"
 // #include "robot_msgs/RobotCommand.h"
 
+#include "matplotlibcpp.h"
+namespace plt = matplotlibcpp;
+
 class RL_Sim : public RL
 {
 public:
