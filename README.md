@@ -2,7 +2,7 @@
 
 [中文文档](README_CN.md)
 
-Simulation verification and physical deployment of the quadruped robot's reinforcement learning algorithm. "sar" stands for "simulation and real".
+Simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "Sar" stands for "simulation and real"
 
 ## Preparation
 
