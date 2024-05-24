@@ -75,21 +75,10 @@ catkin build
 
 ```bash
 source devel/setup.bash
-roslaunch rl_sar start_a1.launch
+roslaunch rl_sar gazebo_a1.launch
 ```
 
-新建终端，启动控制程序
-
-```bash
-source devel/setup.bash
-rosrun rl_sar rl_sim
-```
-
-新建终端，键盘控制程序
-
-```bash
-rosrun teleop_twist_keyboard teleop_twist_keyboard.py
-```
+按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P**键切换到RL控制模式，任意状态按下**1**键切换到最初的趴下姿态。WS控制x，AD控制yaw，JL控制y。
 
 ### 实物
 
@@ -109,61 +98,7 @@ rosrun rl_sar rl_real_a1
 
 按下遥控器的**R2**键让机器人切换到默认站起姿态，按下**R1**键切换到RL控制模式，任意状态按下**L2**切换到最初的趴下姿态。左摇杆上下控制x左右控制yaw，右摇杆左右控制y。
 
-#### Cyberdog1
-
-1. 连接机器人(只需执行一次此步骤)
-
-    将本地PC连接至铁蛋的USB download type-c 接口(位于中间)，等待出现”L4T-README” 弹窗
-
-    ```bash
-    ping 192.168.55.100     #本地PC被分配的ip
-    ssh mi@192.168.55.1     #登录nx应用板 ,密码123
-    athena_version -v #核对当前版本>=1.0.0.94
-    ```
-    
-2. 进入电机控制模式(只需执行一次此步骤)
-
-    修改配置开关，激活用户控制模式，运行用户自己的控制器：
-
-    ```bash
-    ssh root@192.168.55.233 #登录运动控制板
-    cd /robot
-    ./initialize.sh #拷贝出厂代码到可读写的开发区（/mnt/UDISK/robot-software），切换到开发者模式，仅需执行一次
-    vi /mnt/UDISK/robot-software/config/user_code_ctrl_mode.txt #切换mode:1(0:默认模式，1用户代码控制电机模式),重启机器人生效
-    ```
-
-3. 使用网线连接电脑和运动控制板
-
-    由于使用Type-C连接时调试碰撞易损坏接口，而且通信延迟较高，故推荐使用网线进行连接。需要将机器人拆开，断开断开主控和运动控制板的网线，将电脑和运动控制板使用网线直接连接，并设置电脑的有线连接IPv4为手动`192.168.55.100`。推荐拆掉头部并将网线从头部的开口引出。拆装时候注意不要损坏排线。
-
-    初始化机器人的连接(每次重新连接机器人都要执行此步骤)
-
-    ```bash
-    cd src/rl_sar/scripts
-    bash init_cyberdog.sh
-    ```
-    
-    启动控制程序
-    
-    ```bash
-    source devel/setup.bash
-    rosrun rl_sar rl_real_cyberdog
-    ```
-    
-    按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P**键切换到RL控制模式，任意状态按下**1**键切换到最初的趴下姿态。WS控制x，AD控制yaw，JL控制y。
-
-4. 使用Type-C线连接电脑与机器人
-
-    若不方便拆卸机器人，可以暂时使用Type-C线调试。接入Type-C线后运行方法同上。
-
-5. 程序在使用Ctrl+C结束后会自动重置机器人的运控程序，如程序失控也可手动重启运控程序。
-   
-   注：运控程序重启后大概有5-10秒的启动时间，在这段时间内运行程序会报`Motor control mode has not been activated successfully`，需等待不报错再运行控制程序。
-
-    ```bash
-    cd src/rl_sar/scripts
-    bash kill_cyberdog.sh
-    ```
+OR 按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P**键切换到RL控制模式，任意状态按下**1**键切换到最初的趴下姿态。WS控制x，AD控制yaw，JL控制y。
 
 ## 添加你的机器人
 
