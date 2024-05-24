@@ -1,10 +1,11 @@
 #include "../include/rl_sim.hpp"
 
-#define ROBOT_NAME "a1"
+// #define ROBOT_NAME "a1"
+#define ROBOT_NAME "gr1t1"
 
 // #define PLOT
 // #define CSV_LOGGER
-#define USE_HISTORY
+// #define USE_HISTORY
 
 RL_Sim::RL_Sim()
 {
@@ -27,12 +28,15 @@ RL_Sim::RL_Sim()
     cmd_vel = geometry_msgs::Twist();
 
     motor_commands.resize(params.num_of_dofs);
+    start_pos.resize(params.num_of_dofs);
+    now_pos.resize(params.num_of_dofs);
 
     std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + ROBOT_NAME + "/" + this->params.model_name;
     this->model = torch::jit::load(model_path);
 
     this->InitObservations();
     this->InitOutputs();
+    this->InitKeyboard();
 
 #ifdef USE_HISTORY
     this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
@@ -73,6 +77,7 @@ RL_Sim::RL_Sim()
     loop_plot    = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Sim::Plot,         this));
     loop_plot->start();
 #endif
+    _keyboardThread = std::thread(&RL_Sim::run_keyboard, this);
 
 #ifdef CSV_LOGGER
     CSVInit(ROBOT_NAME);
@@ -89,22 +94,55 @@ RL_Sim::~RL_Sim()
     printf("exit\n");
 }
 
-void RL_Sim::RobotControl()
+void RL_Sim::GetState(RobotState<double> *state)
 {
-    motiontime++;
-    for (int i = 0; i < params.num_of_dofs; ++i)
-    {
-        motor_commands[i].q = output_dof_pos[0][i].item<double>();
-        motor_commands[i].dq = 0;
-        // motor_commands[i].Kp = params.stiffness;
-        // motor_commands[i].Kd = params.damping;
-        motor_commands[i].kp = params.p_gains[0][i].item<double>();
-        motor_commands[i].kd = params.d_gains[0][i].item<double>();
-        // motor_commands[i].tau = output_torques[0][i].item<double>();
-        motor_commands[i].tau = 0;
+    state->imu.quaternion[0] = pose.orientation.w;
+    state->imu.quaternion[1] = pose.orientation.x;
+    state->imu.quaternion[2] = pose.orientation.y;
+    state->imu.quaternion[3] = pose.orientation.z;
 
+    state->imu.gyroscope[0] = vel.angular.x;
+    state->imu.gyroscope[1] = vel.angular.y;
+    state->imu.gyroscope[2] = vel.angular.z;
+
+    // state->imu.accelerometer
+
+    for(int i = 0; i < params.num_of_dofs; ++i)
+    {
+        state->motor_state.q[i] = joint_positions[i];
+        state->motor_state.dq[i] = joint_velocities[i];
+        state->motor_state.tauEst[i] = joint_efforts[i];
+    }
+}
+
+void RL_Sim::SetCommand(const RobotCommand<double> *command)
+{
+    for(int i = 0; i < params.num_of_dofs; ++i)
+    {
+        motor_commands[i].q = command->motor_command.q[i];
+        motor_commands[i].dq = command->motor_command.dq[i];
+        motor_commands[i].kp = command->motor_command.kp[i];
+        motor_commands[i].kd = command->motor_command.kd[i];
+        motor_commands[i].tau = command->motor_command.tau[i];
+    }
+    
+    for(int i = 0; i < params.num_of_dofs; ++i)
+    {
         torque_publishers[params.joint_names[i]].publish(motor_commands[i]);
     }
+}
+
+void RL_Sim::RobotControl()
+{
+    std::cout << "running_state " << keyboard.keyboard_state
+              << " x" << keyboard.x << " y" << keyboard.y << " yaw" << keyboard.yaw
+              << "                        \r";
+
+    motiontime++;
+
+    GetState(&robot_state);
+    StateController(&robot_state, &robot_command);
+    SetCommand(&robot_command);
 }
 
 void RL_Sim::ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg)
@@ -135,27 +173,31 @@ void RL_Sim::JointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg)
 
 void RL_Sim::RunModel()
 {
-    // this->obs.lin_vel = torch::tensor({{vel.linear.x, vel.linear.y, vel.linear.z}});
-    this->obs.ang_vel = torch::tensor({{vel.angular.x, vel.angular.y, vel.angular.z}});
-    this->obs.commands = torch::tensor({{cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z}});
-    this->obs.base_quat = torch::tensor({{pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w}});
-    this->obs.dof_pos = torch::tensor(joint_positions).unsqueeze(0);
-    this->obs.dof_vel = torch::tensor(joint_velocities).unsqueeze(0);
-
-    torch::Tensor actions = this->Forward();
-
-    for (int i : this->params.hip_scale_reduction_indices)
+    if(running_state == STATE_RL_RUNNING)
     {
-        actions[0][i] *= this->params.hip_scale_reduction;
-    }
+        // this->obs.lin_vel = torch::tensor({{vel.linear.x, vel.linear.y, vel.linear.z}});
+        this->obs.ang_vel = torch::tensor({{vel.angular.x, vel.angular.y, vel.angular.z}});
+        // this->obs.commands = torch::tensor({{cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z}});
+        this->obs.commands = torch::tensor({{keyboard.x, keyboard.y, keyboard.yaw}});
+        this->obs.base_quat = torch::tensor({{pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w}});
+        this->obs.dof_pos = torch::tensor(joint_positions).unsqueeze(0);
+        this->obs.dof_vel = torch::tensor(joint_velocities).unsqueeze(0);
 
-    output_torques = this->ComputeTorques(actions);
-    output_dof_pos = this->ComputePosition(actions);
+        torch::Tensor clamped_actions = this->Forward();
+
+        for (int i : this->params.hip_scale_reduction_indices)
+        {
+            clamped_actions[0][i] *= this->params.hip_scale_reduction;
+        }
+
+        output_torques = this->ComputeTorques(clamped_actions);
+        output_dof_pos = this->ComputePosition(clamped_actions);
 
 #ifdef CSV_LOGGER
-    torch::Tensor tau_est = torch::tensor(joint_efforts).unsqueeze(0);
-    CSVLogger(output_torques, tau_est, this->obs.dof_pos, output_dof_pos, this->obs.dof_vel);
+        torch::Tensor tau_est = torch::tensor(joint_efforts).unsqueeze(0);
+        CSVLogger(output_torques, tau_est, this->obs.dof_pos, output_dof_pos, this->obs.dof_vel);
 #endif
+    }
 }
 
 torch::Tensor RL_Sim::ComputeObservation()
@@ -181,13 +223,13 @@ torch::Tensor RL_Sim::Forward()
     history_obs = history_obs_buf.get_obs_vec({0, 1, 2, 3, 4, 5});
     torch::Tensor action = this->model.forward({history_obs}).toTensor();
 #else
-    torch::Tensor action = this->model.forward({obs}).toTensor();
+    torch::Tensor actions = this->model.forward({obs}).toTensor();
 #endif
 
-    this->obs.actions = action;
-    torch::Tensor clamped = torch::clamp(action, -this->params.clip_actions, this->params.clip_actions);
+    this->obs.actions = actions;
+    torch::Tensor clamped_actions = torch::clamp(actions, -this->params.clip_actions, this->params.clip_actions);
 
-    return clamped;
+    return clamped_actions;
 }
 
 void RL_Sim::Plot()

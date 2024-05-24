@@ -51,4 +51,6 @@
         <remap from="/joint_states" to="/$(arg rname)_gazebo/joint_states"/>
     </node>
 
+    <node pkg="rl_sar" type="rl_sim" name="rl_sim" output="screen"/>
+
 </launch>

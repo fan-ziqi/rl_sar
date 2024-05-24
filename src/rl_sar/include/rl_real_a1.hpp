@@ -8,14 +8,6 @@
 #include <csignal>
 // #include <signal.h>
 
-enum RobotState {
-    STATE_WAITING = 0,
-    STATE_POS_GETUP,
-    STATE_RL_INIT,
-    STATE_RL_RUNNING,
-    STATE_POS_GETDOWN,
-};
-
 class RL_Real : public RL
 {
 public:

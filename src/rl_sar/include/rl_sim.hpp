@@ -29,6 +29,9 @@ public:
     torch::Tensor Forward() override;
     torch::Tensor ComputeObservation() override;
 
+    void GetState(RobotState<double> *state) override;
+    void SetCommand(const RobotCommand<double> *command) override;
+
     ObservationBuffer history_obs_buf;
     torch::Tensor history_obs;
 
@@ -42,6 +45,8 @@ public:
     std::vector<int> plot_t;
     std::vector<std::vector<double>> plot_real_joint_pos, plot_target_joint_pos;
     void Plot();
+
+    std::thread _keyboardThread;
 private:
     std::string ros_namespace;
 

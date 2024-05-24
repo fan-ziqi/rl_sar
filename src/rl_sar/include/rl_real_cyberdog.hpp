@@ -8,28 +8,9 @@
 #include <CustomInterface.h>
 #include <csignal>
 // #include <signal.h>
-#include <termios.h>
-#include <sys/ioctl.h>
-#include <iostream>
 
 using CyberdogData = Robot_Data;
 using CyberdogCmd = Motor_Cmd;
-
-enum RobotState {
-    STATE_WAITING = 0,
-    STATE_POS_GETUP,
-    STATE_RL_INIT,
-    STATE_RL_RUNNING,
-    STATE_POS_GETDOWN,
-};
-
-struct KeyBoard
-{
-    RobotState robot_state;
-    float x = 0;
-    float y = 0;
-    float yaw = 0;
-};
 
 class RL_Real : public RL, public CustomInterface
 {
@@ -56,20 +37,11 @@ public:
     std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_rl;
     std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_plot;
 
-    float getup_percent = 0.0;
-    float getdown_percent = 0.0;
-    float start_pos[12];
-	float now_pos[12];
-
-    int robot_state = STATE_WAITING;
-
     const int plot_size = 100;
     std::vector<int> plot_t;
     std::vector<std::vector<double>> plot_real_joint_pos, plot_target_joint_pos;
     void Plot();
 
-    void run_keyboard();
-    KeyBoard keyboard;
     std::thread _keyboardThread;
 private:
     std::vector<std::string> joint_names;
