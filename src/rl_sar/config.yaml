@@ -3,16 +3,22 @@ a1:
   num_observations: 45
   clip_obs: 100.0
   clip_actions: 100.0
-  # damping: 0.5
-  # stiffness: 20.0
-  p_gains: [20, 20, 20, # FL
-            20, 20, 20, # FR
-            20, 20, 20, # RL
-            20, 20, 20] # RR
-  d_gains: [0.5, 0.5, 0.5, # FL
-            0.5, 0.5, 0.5, # FR
-            0.5, 0.5, 0.5, # RL
-            0.5, 0.5, 0.5] # RR
+  rl_kp: [20, 20, 20, # FL
+          20, 20, 20, # FR
+          20, 20, 20, # RL
+          20, 20, 20] # RR
+  rl_kd: [0.5, 0.5, 0.5, # FL
+          0.5, 0.5, 0.5, # FR
+          0.5, 0.5, 0.5, # RL
+          0.5, 0.5, 0.5] # RR
+  fixed_kp: [80, 80, 80, # FL
+             80, 80, 80, # FR
+             80, 80, 80, # RL
+             80, 80, 80] # RR
+  fixed_kd: [3, 3, 3, # FL
+             3, 3, 3, # FR
+             3, 3, 3, # RL
+             3, 3, 3] # RR
   action_scale: 0.25
   hip_scale_reduction: 0.5
   hip_scale_reduction_indices: [0, 3, 6, 9]
@@ -40,16 +46,22 @@ cyberdog1:
   num_observations: 45
   clip_obs: 100.0
   clip_actions: 100.0
-  # damping: 0.5
-  # stiffness: 20.0
-  p_gains: [20, 20, 20, # FL
-            20, 20, 20, # FR
-            20, 20, 20, # RL
-            20, 20, 20] # RR
-  d_gains: [0.5, 0.5, 0.5, # FL
-            0.5, 0.5, 0.5, # FR
-            0.5, 0.5, 0.5, # RL
-            0.5, 0.5, 0.5] # RR
+  rl_kp: [20, 20, 20, # FL
+          20, 20, 20, # FR
+          20, 20, 20, # RL
+          20, 20, 20] # RR
+  rl_kd: [0.5, 0.5, 0.5, # FL
+          0.5, 0.5, 0.5, # FR
+          0.5, 0.5, 0.5, # RL
+          0.5, 0.5, 0.5] # RR
+  fixed_kp: [80, 80, 80, # FL
+             80, 80, 80, # FR
+             80, 80, 80, # RL
+             80, 80, 80] # RR
+  fixed_kd: [3, 3, 3, # FL
+             3, 3, 3, # FR
+             3, 3, 3, # RL
+             3, 3, 3] # RR
   action_scale: 0.25
   hip_scale_reduction: 0.5
   hip_scale_reduction_indices: [0, 3, 6, 9]
@@ -76,16 +88,22 @@ lite3_wheel:
   num_observations: 45
   clip_obs: 100.0
   clip_actions: 100.0
-  # damping: 0.5
-  # stiffness: 20.0
-  p_gains: [20, 20, 20, 0, # FL
-            20, 20, 20, 0, # FR
-            20, 20, 20, 0, # RL
-            20, 20, 20, 0] # RR
-  d_gains: [0.5, 0.5, 0.5, 0.5, # FL
-            0.5, 0.5, 0.5, 0.5, # FR
-            0.5, 0.5, 0.5, 0.5, # RL
-            0.5, 0.5, 0.5, 0.5] # RR
+  rl_kp: [20, 20, 20, 0, # FL
+          20, 20, 20, 0, # FR
+          20, 20, 20, 0, # RL
+          20, 20, 20, 0] # RR
+  rl_kd: [0.5, 0.5, 0.5, 0.5, # FL
+          0.5, 0.5, 0.5, 0.5, # FR
+          0.5, 0.5, 0.5, 0.5, # RL
+          0.5, 0.5, 0.5, 0.5] # RR
+  fixed_kp: [80, 80, 80, # FL
+             80, 80, 80, # FR
+             80, 80, 80, # RL
+             80, 80, 80] # RR
+  fixed_kd: [3, 3, 3, # FL
+             3, 3, 3, # FR
+             3, 3, 3, # RL
+             3, 3, 3] # RR
   action_scale: 0.25
   hip_scale_reduction: 1.0
   hip_scale_reduction_indices: [0, 3, 6, 9]
@@ -113,12 +131,14 @@ gr1t1:
   num_observations: 39
   clip_obs: 100.0
   clip_actions: 100.0
-  # damping: 0.5
-  # stiffness: 20.0
-  p_gains: [57.0, 43.0, 114.0, 114.0, 15.3, 
-            57.0, 43.0, 114.0, 114.0, 15.3]
-  d_gains: [5.7, 4.3, 11.4, 11.4, 1.5, 
-            5.7, 4.3, 11.4, 11.4, 1.5]
+  rl_kp: [57.0, 43.0, 114.0, 114.0, 15.3, 
+          57.0, 43.0, 114.0, 114.0, 15.3]
+  rl_kd: [5.7, 4.3, 11.4, 11.4, 1.5, 
+          5.7, 4.3, 11.4, 11.4, 1.5]
+  fixed_kp: [57.0, 43.0, 114.0, 114.0, 15.3, 
+             57.0, 43.0, 114.0, 114.0, 15.3]
+  fixed_kd: [5.7, 4.3, 11.4, 11.4, 1.5, 
+             5.7, 4.3, 11.4, 11.4, 1.5]
   action_scale: 1.0
   hip_scale_reduction: 1.0
   hip_scale_reduction_indices: []

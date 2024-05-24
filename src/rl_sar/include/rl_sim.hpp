@@ -3,16 +3,13 @@
 
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
+#include "loop.hpp"
 #include <ros/ros.h>
 #include <gazebo_msgs/ModelStates.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Twist.h>
-#include "unitree_legged_sdk/loop.h"
-#include <csignal>
-
 #include "robot_msgs/MotorCommand.h"
-// #include "robot_msgs/RobotState.h"
-// #include "robot_msgs/RobotCommand.h"
+#include <csignal>
 
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
@@ -22,61 +19,54 @@ class RL_Sim : public RL
 public:
     RL_Sim();
     ~RL_Sim();
-
-    void ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg);
-    void JointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg);
-    void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
-    
-    void RunModel();
-    void RobotControl();
+private:
+    // rl functions
     torch::Tensor Forward() override;
     torch::Tensor ComputeObservation() override;
-
     void GetState(RobotState<double> *state) override;
     void SetCommand(const RobotCommand<double> *command) override;
+    void RunModel();
+    void RobotControl();
 
+    // history buffer
+    bool use_history = true;
     ObservationBuffer history_obs_buf;
     torch::Tensor history_obs;
 
-    int motiontime = 0;
+    // loop
+    std::shared_ptr<LoopFunc> loop_keyboard;
+    std::shared_ptr<LoopFunc> loop_control;
+    std::shared_ptr<LoopFunc> loop_rl;
+    std::shared_ptr<LoopFunc> loop_plot;
 
-    std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_control;
-    std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_rl;
-    std::shared_ptr<UNITREE_LEGGED_SDK::LoopFunc> loop_plot;
-
+    // plot
     const int plot_size = 100;
     std::vector<int> plot_t;
     std::vector<std::vector<double>> plot_real_joint_pos, plot_target_joint_pos;
     void Plot();
 
-    std::thread _keyboardThread;
-private:
+    // ros interface
     std::string ros_namespace;
-
-    std::vector<std::string> torque_command_topics;
-
-    ros::Subscriber model_state_subscriber_;
-    ros::Subscriber joint_state_subscriber_;
-    ros::Subscriber cmd_vel_subscriber_;
-
-    std::map<std::string, ros::Publisher> torque_publishers;
-    std::vector<robot_msgs::MotorCommand> motor_commands;
-
-    // robot_msgs::RobotState robot_state;
-    // robot_msgs::RobotCommand robot_command;
-
     geometry_msgs::Twist vel;
     geometry_msgs::Pose pose;
     geometry_msgs::Twist cmd_vel;
+    std::vector<std::string> torque_command_topics;
+    ros::Subscriber model_state_subscriber;
+    ros::Subscriber joint_state_subscriber;
+    ros::Subscriber cmd_vel_subscriber;
+    std::map<std::string, ros::Publisher> torque_publishers;
+    void ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg);
+    void JointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg);
+    void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
 
-    std::vector<double> joint_positions;
-    std::vector<double> joint_velocities;
-    std::vector<double> joint_efforts;
-
-    std::chrono::high_resolution_clock::time_point start_time;
-
-    void MapData(const std::vector<double>& source_data, std::vector<double>& target_data);
+    // others
+    int motiontime = 0;
     std::map<std::string, size_t> sorted_to_original_index;
+    std::vector<robot_msgs::MotorCommand> motor_commands;
+    std::vector<double> mapped_joint_positions;
+    std::vector<double> mapped_joint_velocities;
+    std::vector<double> mapped_joint_efforts;
+    void MapData(const std::vector<double>& source_data, std::vector<double>& target_data);
 };
 
 #endif

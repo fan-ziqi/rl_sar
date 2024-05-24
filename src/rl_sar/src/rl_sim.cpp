@@ -1,17 +1,22 @@
 #include "../include/rl_sim.hpp"
 
-// #define ROBOT_NAME "a1"
-#define ROBOT_NAME "gr1t1"
-
 // #define PLOT
 // #define CSV_LOGGER
-// #define USE_HISTORY
 
 RL_Sim::RL_Sim()
 {
-    torch::autograd::GradMode::set_enabled(false);
+    ros::NodeHandle nh;
 
-    ReadYaml(ROBOT_NAME);
+    // read params from yaml
+    nh.param<std::string>("robot_name", robot_name, "");
+    ReadYaml(robot_name);
+
+    // history
+    nh.param<bool>("use_history", use_history, "");
+    if(use_history)
+    {
+        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
+    }
 
     // Due to the fact that the robot_state_publisher sorts the joint names alphabetically,
     // the mapping table is established according to the order defined in the YAML file
@@ -21,66 +26,56 @@ RL_Sim::RL_Sim()
     {
         sorted_to_original_index[sorted_joint_names[i]] = i;
     }
+    mapped_joint_positions = std::vector<double>(params.num_of_dofs, 0.0);
+    mapped_joint_velocities = std::vector<double>(params.num_of_dofs, 0.0);
+    mapped_joint_efforts = std::vector<double>(params.num_of_dofs, 0.0);
 
-    ros::NodeHandle nh;
-    start_time = std::chrono::high_resolution_clock::now();
-
-    cmd_vel = geometry_msgs::Twist();
-
+    // init
+    torch::autograd::GradMode::set_enabled(false);
     motor_commands.resize(params.num_of_dofs);
     start_pos.resize(params.num_of_dofs);
     now_pos.resize(params.num_of_dofs);
-
-    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + ROBOT_NAME + "/" + this->params.model_name;
-    this->model = torch::jit::load(model_path);
-
     this->InitObservations();
     this->InitOutputs();
     this->InitKeyboard();
 
-#ifdef USE_HISTORY
-    this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
-#endif
+    // model
+    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_name + "/" + this->params.model_name;
+    this->model = torch::jit::load(model_path);
 
-    joint_positions = std::vector<double>(params.num_of_dofs, 0.0);
-    joint_velocities = std::vector<double>(params.num_of_dofs, 0.0);
-    joint_efforts = std::vector<double>(params.num_of_dofs, 0.0);
-    
+    // publisher
+    nh.param<std::string>("ros_namespace", ros_namespace, "");
+    for (int i = 0; i < params.num_of_dofs; ++i)
+    {
+        // joint need to rename as xxx_joint
+        torque_publishers[params.joint_names[i]] = nh.advertise<robot_msgs::MotorCommand>(
+            ros_namespace + params.joint_names[i].substr(0, params.joint_names[i].size() - 6) + "_controller/command", 10);
+    }
+
+    // subscriber
+    cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Sim::CmdvelCallback, this);
+    model_state_subscriber = nh.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 10, &RL_Sim::ModelStatesCallback, this);
+    joint_state_subscriber = nh.subscribe<sensor_msgs::JointState>(ros_namespace + "joint_states", 10, &RL_Sim::JointStatesCallback, this);
+
+    // loop
+    loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05 ,    boost::bind(&RL_Sim::RunKeyboard,  this));
+    loop_control  = std::make_shared<LoopFunc>("loop_control" , 0.002,    boost::bind(&RL_Sim::RobotControl, this));
+    loop_rl       = std::make_shared<LoopFunc>("loop_rl"      , 0.02 ,    boost::bind(&RL_Sim::RunModel,     this));
+    loop_keyboard->start();
+    loop_control->start();
+    loop_rl->start();
+
+#ifdef PLOT
     plot_t = std::vector<int>(plot_size, 0);
     plot_real_joint_pos.resize(params.num_of_dofs);
     plot_target_joint_pos.resize(params.num_of_dofs);
     for(auto& vector : plot_real_joint_pos) { vector = std::vector<double>(plot_size, 0); }
     for(auto& vector : plot_target_joint_pos) { vector = std::vector<double>(plot_size, 0); }
-
-    cmd_vel_subscriber_ = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Sim::CmdvelCallback, this);
-
-    nh.param<std::string>("ros_namespace", ros_namespace, "");
-
-    for (int i = 0; i < params.num_of_dofs; ++i)
-    {
-        torque_publishers[params.joint_names[i]] = nh.advertise<robot_msgs::MotorCommand>(
-            ros_namespace + params.joint_names[i].substr(0, params.joint_names[i].size() - 6) + "_controller/command", 10);
-    }
-
-    model_state_subscriber_ = nh.subscribe<gazebo_msgs::ModelStates>(
-        "/gazebo/model_states", 10, &RL_Sim::ModelStatesCallback, this);
-
-    joint_state_subscriber_ = nh.subscribe<sensor_msgs::JointState>(
-        ros_namespace + "joint_states", 10, &RL_Sim::JointStatesCallback, this);
-
-    loop_control = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_control", 0.002,    boost::bind(&RL_Sim::RobotControl, this));
-    loop_rl      = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_rl"     , 0.02 ,    boost::bind(&RL_Sim::RunModel,     this));
-
-    loop_control->start();
-    loop_rl->start();
-#ifdef PLOT
-    loop_plot    = std::make_shared<UNITREE_LEGGED_SDK::LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Sim::Plot,         this));
+    loop_plot    = std::make_shared<LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Sim::Plot,         this));
     loop_plot->start();
 #endif
-    _keyboardThread = std::thread(&RL_Sim::run_keyboard, this);
-
 #ifdef CSV_LOGGER
-    CSVInit(ROBOT_NAME);
+    CSVInit(robot_name);
 #endif
 }
 
@@ -109,9 +104,9 @@ void RL_Sim::GetState(RobotState<double> *state)
 
     for(int i = 0; i < params.num_of_dofs; ++i)
     {
-        state->motor_state.q[i] = joint_positions[i];
-        state->motor_state.dq[i] = joint_velocities[i];
-        state->motor_state.tauEst[i] = joint_efforts[i];
+        state->motor_state.q[i] = mapped_joint_positions[i];
+        state->motor_state.dq[i] = mapped_joint_velocities[i];
+        state->motor_state.tauEst[i] = mapped_joint_efforts[i];
     }
 }
 
@@ -136,7 +131,7 @@ void RL_Sim::RobotControl()
 {
     std::cout << "running_state " << keyboard.keyboard_state
               << " x" << keyboard.x << " y" << keyboard.y << " yaw" << keyboard.yaw
-              << "                        \r";
+              << "      \r";
 
     motiontime++;
 
@@ -166,9 +161,9 @@ void RL_Sim::MapData(const std::vector<double>& source_data, std::vector<double>
 
 void RL_Sim::JointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg)
 {
-    MapData(msg->position, joint_positions);
-    MapData(msg->velocity, joint_velocities);
-    MapData(msg->effort, joint_efforts);
+    MapData(msg->position, mapped_joint_positions);
+    MapData(msg->velocity, mapped_joint_velocities);
+    MapData(msg->effort, mapped_joint_efforts);
 }
 
 void RL_Sim::RunModel()
@@ -180,8 +175,8 @@ void RL_Sim::RunModel()
         // this->obs.commands = torch::tensor({{cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z}});
         this->obs.commands = torch::tensor({{keyboard.x, keyboard.y, keyboard.yaw}});
         this->obs.base_quat = torch::tensor({{pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w}});
-        this->obs.dof_pos = torch::tensor(joint_positions).unsqueeze(0);
-        this->obs.dof_vel = torch::tensor(joint_velocities).unsqueeze(0);
+        this->obs.dof_pos = torch::tensor(mapped_joint_positions).unsqueeze(0);
+        this->obs.dof_vel = torch::tensor(mapped_joint_velocities).unsqueeze(0);
 
         torch::Tensor clamped_actions = this->Forward();
 
@@ -194,7 +189,7 @@ void RL_Sim::RunModel()
         output_dof_pos = this->ComputePosition(clamped_actions);
 
 #ifdef CSV_LOGGER
-        torch::Tensor tau_est = torch::tensor(joint_efforts).unsqueeze(0);
+        torch::Tensor tau_est = torch::tensor(mapped_joint_efforts).unsqueeze(0);
         CSVLogger(output_torques, tau_est, this->obs.dof_pos, output_dof_pos, this->obs.dof_vel);
 #endif
     }
@@ -216,15 +211,22 @@ torch::Tensor RL_Sim::ComputeObservation()
 
 torch::Tensor RL_Sim::Forward()
 {
+    torch::autograd::GradMode::set_enabled(false);
+
     torch::Tensor obs = this->ComputeObservation();
 
-#ifdef USE_HISTORY
-    history_obs_buf.insert(obs);
-    history_obs = history_obs_buf.get_obs_vec({0, 1, 2, 3, 4, 5});
-    torch::Tensor action = this->model.forward({history_obs}).toTensor();
-#else
-    torch::Tensor actions = this->model.forward({obs}).toTensor();
-#endif
+    torch::Tensor actions;
+
+    if(use_history)
+    {
+        history_obs_buf.insert(obs);
+        history_obs = history_obs_buf.get_obs_vec({0, 1, 2, 3, 4, 5});
+        actions = this->model.forward({history_obs}).toTensor();
+    }
+    else
+    {
+        actions = this->model.forward({obs}).toTensor();
+    }  
 
     this->obs.actions = actions;
     torch::Tensor clamped_actions = torch::clamp(actions, -this->params.clip_actions, this->params.clip_actions);
@@ -242,7 +244,7 @@ void RL_Sim::Plot()
     {
         plot_real_joint_pos[i].erase(plot_real_joint_pos[i].begin());
         plot_target_joint_pos[i].erase(plot_target_joint_pos[i].begin());
-        plot_real_joint_pos[i].push_back(joint_positions[i]);
+        plot_real_joint_pos[i].push_back(mapped_joint_positions[i]);
         plot_target_joint_pos[i].push_back(motor_commands[i].q);
         plt::subplot(4, 3, i+1);
         plt::named_plot("_real_joint_pos", plot_t, plot_real_joint_pos[i], "r");

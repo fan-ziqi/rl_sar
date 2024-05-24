@@ -75,8 +75,10 @@ struct ModelParams
     double clip_obs;
     double clip_actions;
     torch::Tensor torque_limits;
-    torch::Tensor d_gains;
-    torch::Tensor p_gains;
+    torch::Tensor rl_kd;
+    torch::Tensor rl_kp;
+    torch::Tensor fixed_kp;
+    torch::Tensor fixed_kd;
     torch::Tensor commands_scale;
     torch::Tensor default_dof_pos;
     std::vector<std::string> joint_names;
@@ -102,51 +104,51 @@ public:
     ModelParams params;
     Observations obs;
 
-    virtual torch::Tensor Forward() = 0;
-    virtual torch::Tensor ComputeObservation() = 0;
-    torch::Tensor ComputeTorques(torch::Tensor actions);
-    torch::Tensor ComputePosition(torch::Tensor actions);
-    torch::Tensor QuatRotateInverse(torch::Tensor q, torch::Tensor v);
-    void InitObservations();
-    void InitOutputs();
-    void InitKeyboard();
-    void ReadYaml(std::string robot_name);
-    std::string csv_filename;
-    void CSVInit(std::string robot_name);
-    void CSVLogger(torch::Tensor torque, torch::Tensor tau_est, torch::Tensor joint_pos, torch::Tensor joint_pos_target, torch::Tensor joint_vel);
-    void run_keyboard();
-
-    float getup_percent = 0.0;
-    float getdown_percent = 0.0;
-    std::vector<double> start_pos;
-    std::vector<double> now_pos;
-
-    int running_state = STATE_WAITING;
-
     RobotState<double> robot_state;
     RobotCommand<double> robot_command;
 
+    // init
+    void InitObservations();
+    void InitOutputs();
+    void InitKeyboard();
+
+    // rl functions
+    virtual torch::Tensor Forward() = 0;
+    virtual torch::Tensor ComputeObservation() = 0;
     virtual void GetState(RobotState<double> *state) = 0;
     virtual void SetCommand(const RobotCommand<double> *command) = 0;
     void StateController(const RobotState<double> *state, RobotCommand<double> *command);
+    torch::Tensor ComputeTorques(torch::Tensor actions);
+    torch::Tensor ComputePosition(torch::Tensor actions);
+    torch::Tensor QuatRotateInverse(torch::Tensor q, torch::Tensor v);
+
+    // yaml params
+    void ReadYaml(std::string robot_name);
+
+    // csv logger
+    std::string csv_filename;
+    void CSVInit(std::string robot_name);
+    void CSVLogger(torch::Tensor torque, torch::Tensor tau_est, torch::Tensor joint_pos, torch::Tensor joint_pos_target, torch::Tensor joint_vel);
+
+    // keyboard
+    KeyBoard keyboard;
+    void RunKeyboard();
+
+    // others
+    std::string robot_name;
+    STATE running_state = STATE_WAITING;
 
 protected:
     // rl module
     torch::jit::script::Module model;
-    // observation buffer
-    torch::Tensor lin_vel;           
-    torch::Tensor ang_vel;      
-    torch::Tensor gravity_vec;      
-    torch::Tensor commands;        
-    torch::Tensor base_quat;   
-    torch::Tensor dof_pos;           
-    torch::Tensor dof_vel;           
-    torch::Tensor actions;
     // output buffer
     torch::Tensor output_torques;
     torch::Tensor output_dof_pos;
-    // keyboard
-    KeyBoard keyboard;
+    // getup getdown buffer
+    float getup_percent = 0.0;
+    float getdown_percent = 0.0;
+    std::vector<double> start_pos;
+    std::vector<double> now_pos;
 };
 
-#endif // RL_SDK_HPP
+#endif
