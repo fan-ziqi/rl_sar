@@ -2,7 +2,7 @@
 
 [English document](README.md)
 
-四足机器人强化学习算法的仿真验证与实物部署。"sar"代表"simulation and real"
+机器人强化学习算法的仿真验证与实物部署，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
 
 ## 准备
 
