@@ -75,15 +75,14 @@ target_link_libraries(rl_sim
   rl_sdk observation_buffer yaml-cpp
 )
 
-add_executable(rl_real_a1 src/rl_real_a1.cpp )
-target_link_libraries(rl_real_a1
-  ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
-  rl_sdk observation_buffer yaml-cpp
-)
+# add_executable(rl_real_a1 src/rl_real_a1.cpp )
+# target_link_libraries(rl_real_a1
+#   ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
+#   rl_sdk observation_buffer yaml-cpp
+# )
 
-
-add_executable(rl_real_cyberdog src/rl_real_cyberdog.cpp )
-target_link_libraries(rl_real_cyberdog
-  ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
-  rl_sdk observation_buffer cyberdog_motor_sdk yaml-cpp
-)
+# add_executable(rl_real_cyberdog src/rl_real_cyberdog.cpp )
+# target_link_libraries(rl_real_cyberdog
+#   ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
+#   rl_sdk observation_buffer cyberdog_motor_sdk yaml-cpp
+# )

@@ -1,5 +1,8 @@
 #include "rl_sdk.hpp"
 
+#include <termios.h>
+#include <sys/ioctl.h>
+
 template<typename T>
 std::vector<T> ReadVectorFromYaml(const YAML::Node& node)
 {
@@ -26,26 +29,26 @@ void RL::ReadYaml(std::string robot_name)
 
     this->params.model_name = config["model_name"].as<std::string>();
     this->params.num_observations = config["num_observations"].as<int>();
-    this->params.clip_obs = config["clip_obs"].as<float>();
-    this->params.clip_actions = config["clip_actions"].as<float>();
-    this->params.action_scale = config["action_scale"].as<float>();
-    this->params.hip_scale_reduction = config["hip_scale_reduction"].as<float>();
+    this->params.clip_obs = config["clip_obs"].as<double>();
+    this->params.clip_actions = config["clip_actions"].as<double>();
+    this->params.action_scale = config["action_scale"].as<double>();
+    this->params.hip_scale_reduction = config["hip_scale_reduction"].as<double>();
     this->params.hip_scale_reduction_indices = ReadVectorFromYaml<int>(config["hip_scale_reduction_indices"]);
     this->params.num_of_dofs = config["num_of_dofs"].as<int>();
-    this->params.lin_vel_scale = config["lin_vel_scale"].as<float>();
-    this->params.ang_vel_scale = config["ang_vel_scale"].as<float>();
-    this->params.dof_pos_scale = config["dof_pos_scale"].as<float>();
-    this->params.dof_vel_scale = config["dof_vel_scale"].as<float>();
-    // this->params.commands_scale = torch::tensor(ReadVectorFromYaml<float>(config["commands_scale"])).view({1, -1});
+    this->params.lin_vel_scale = config["lin_vel_scale"].as<double>();
+    this->params.ang_vel_scale = config["ang_vel_scale"].as<double>();
+    this->params.dof_pos_scale = config["dof_pos_scale"].as<double>();
+    this->params.dof_vel_scale = config["dof_vel_scale"].as<double>();
+    // this->params.commands_scale = torch::tensor(ReadVectorFromYaml<double>(config["commands_scale"])).view({1, -1});
     this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale});
-    // this->params.damping = config["damping"].as<float>();
-    // this->params.stiffness = config["stiffness"].as<float>();
+    // this->params.damping = config["damping"].as<double>();
+    // this->params.stiffness = config["stiffness"].as<double>();
     // this->params.d_gains = torch::ones(12) * this->params.damping;
     // this->params.p_gains = torch::ones(12) * this->params.stiffness;
-    this->params.p_gains = torch::tensor(ReadVectorFromYaml<float>(config["p_gains"])).view({1, -1});
-    this->params.d_gains = torch::tensor(ReadVectorFromYaml<float>(config["d_gains"])).view({1, -1});
-    this->params.torque_limits = torch::tensor(ReadVectorFromYaml<float>(config["torque_limits"])).view({1, -1});
-    this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<float>(config["default_dof_pos"])).view({1, -1});
+    this->params.p_gains = torch::tensor(ReadVectorFromYaml<double>(config["p_gains"])).view({1, -1});
+    this->params.d_gains = torch::tensor(ReadVectorFromYaml<double>(config["d_gains"])).view({1, -1});
+    this->params.torque_limits = torch::tensor(ReadVectorFromYaml<double>(config["torque_limits"])).view({1, -1});
+    this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<double>(config["default_dof_pos"])).view({1, -1});
     this->params.joint_names = ReadVectorFromYaml<std::string>(config["joint_names"]);
 }
 
@@ -110,14 +113,22 @@ void RL::InitObservations()
     this->obs.commands = torch::tensor({{0.0, 0.0, 0.0}});
     this->obs.base_quat = torch::tensor({{0.0, 0.0, 0.0, 1.0}});
     this->obs.dof_pos = this->params.default_dof_pos;
-    this->obs.dof_vel = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
-    this->obs.actions = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
+    this->obs.dof_vel = torch::zeros({1, params.num_of_dofs});
+    this->obs.actions = torch::zeros({1, params.num_of_dofs});
 }
 
 void RL::InitOutputs()
 {
-    output_torques = torch::tensor({{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
-    output_dof_pos = params.default_dof_pos;
+    this->output_torques = torch::zeros({1, params.num_of_dofs});
+    this->output_dof_pos = params.default_dof_pos;
+}
+
+void RL::InitKeyboard()
+{
+    this->keyboard.keyboard_state = STATE_WAITING;
+    this->keyboard.x = 0.0;
+    this->keyboard.y = 0.0;
+    this->keyboard.yaw = 0.0;
 }
 
 torch::Tensor RL::ComputeTorques(torch::Tensor actions)
@@ -169,3 +180,172 @@ torch::Tensor RL::Forward()
     return clamped;
 }
 */
+
+static bool kbhit()
+{
+    termios term;
+    tcgetattr(0, &term);
+    
+    termios term2 = term;
+    term2.c_lflag &= ~ICANON;
+    tcsetattr(0, TCSANOW, &term2);
+    
+    int byteswaiting;
+    ioctl(0, FIONREAD, &byteswaiting);
+    
+    tcsetattr(0, TCSANOW, &term);
+    
+    return byteswaiting > 0;
+}
+
+void RL::run_keyboard()
+{
+    int c;
+    // Check for keyboard input
+    while(true)
+    {
+        if(kbhit())
+        {
+            c = fgetc(stdin);
+            switch(c)
+            {
+                case '0': keyboard.keyboard_state = STATE_POS_GETUP; break;
+                case 'p': keyboard.keyboard_state = STATE_RL_INIT; break;
+                case '1': keyboard.keyboard_state = STATE_POS_GETDOWN; break;
+                case 'q': break;
+                case 'w': keyboard.x += 0.1; break;
+                case 's': keyboard.x -= 0.1; break;
+                case 'a': keyboard.yaw += 0.1; break;
+                case 'd': keyboard.yaw -= 0.1; break;
+                case 'i': break;
+                case 'k': break;
+                case 'j': keyboard.y += 0.1; break;
+                case 'l': keyboard.y -= 0.1; break;
+                case ' ': keyboard.x = 0; keyboard.y = 0; keyboard.yaw = 0; break;
+                default: break;
+            }
+        }
+        usleep(10000);
+    } 
+}
+
+void RL::StateController(const RobotState<double> *state, RobotCommand<double> *command)
+{
+    // waiting
+    if(running_state == STATE_WAITING)
+    {
+        for(int i = 0; i < params.num_of_dofs; ++i)
+        {
+            command->motor_command.q[i] = state->motor_state.q[i];
+        }
+        if(keyboard.keyboard_state == STATE_POS_GETUP)
+        {
+            keyboard.keyboard_state = STATE_WAITING;
+            getup_percent = 0.0;
+            for(int i = 0; i < params.num_of_dofs; ++i)
+            {
+                now_pos[i] = state->motor_state.q[i];
+                start_pos[i] = now_pos[i];
+            }
+            running_state = STATE_POS_GETUP;
+        }
+    }
+    // stand up (position control)
+    else if(running_state == STATE_POS_GETUP)
+    {
+        if(getup_percent != 1)
+        {
+            getup_percent += 1 / 1000.0;
+            getup_percent = getup_percent > 1 ? 1 : getup_percent;
+            for(int i = 0; i < params.num_of_dofs; ++i)
+            {
+                command->motor_command.q[i] = (1 - getup_percent) * now_pos[i] + getup_percent * params.default_dof_pos[0][i].item<double>();
+                command->motor_command.dq[i] = 0;
+                command->motor_command.kp[i] = 200;
+                command->motor_command.kd[i] = 10;
+                command->motor_command.tau[i] = 0;
+            }
+            printf("getting up %.3f%%\r", getup_percent*100.0);
+        }
+        if(keyboard.keyboard_state == STATE_RL_INIT)
+        {
+            keyboard.keyboard_state = STATE_WAITING;
+            running_state = STATE_RL_INIT;
+        }
+        else if(keyboard.keyboard_state == STATE_POS_GETDOWN)
+        {
+            keyboard.keyboard_state = STATE_WAITING;
+            getdown_percent = 0.0;
+            for(int i = 0; i < params.num_of_dofs; ++i)
+            {
+                now_pos[i] = state->motor_state.q[i];
+            }
+            running_state = STATE_POS_GETDOWN;
+        }
+    }
+    // init obs and start rl loop
+    else if(running_state == STATE_RL_INIT)
+    {
+        if(getup_percent == 1)
+        {
+            running_state = STATE_RL_RUNNING;
+            this->InitObservations();
+            this->InitOutputs();
+            this->InitKeyboard();
+            // printf("\nstart rl loop\n");
+            // loop_rl->start();
+        }
+    }
+    // rl loop
+    else if(running_state == STATE_RL_RUNNING)
+    {
+        for(int i = 0; i < params.num_of_dofs; ++i)
+        {
+            command->motor_command.q[i] = output_dof_pos[0][i].item<double>();
+            command->motor_command.dq[i] = 0;
+            // command->motor_command.kp[i] = params.stiffness;
+            // command->motor_command.kd[i] = params.damping;
+            command->motor_command.kp[i] = params.p_gains[0][i].item<double>();
+            command->motor_command.kd[i] = params.d_gains[0][i].item<double>();
+            // command->motor_command.tau[i] = output_torques[0][i].item<double>();
+            command->motor_command.tau[i] = 0;
+        }
+        if(keyboard.keyboard_state == STATE_POS_GETDOWN)
+        {
+            keyboard.keyboard_state = STATE_WAITING;
+            getdown_percent = 0.0;
+            for(int i = 0; i < params.num_of_dofs; ++i)
+            {
+                now_pos[i] = state->motor_state.q[i];
+            }
+            running_state = STATE_POS_GETDOWN;
+        }
+    }
+    // get down (position control)
+    else if(running_state == STATE_POS_GETDOWN)
+    {
+        if(getdown_percent != 1)
+        {
+            getdown_percent += 1 / 1000.0;
+            getdown_percent = getdown_percent > 1 ? 1 : getdown_percent;
+            for(int i = 0; i < params.num_of_dofs; ++i)
+            {
+                command->motor_command.q[i] = (1 - getdown_percent) * now_pos[i] + getdown_percent * start_pos[i];
+                command->motor_command.dq[i] = 0;
+                command->motor_command.kp[i] = 200;
+                command->motor_command.kd[i] = 10;
+                command->motor_command.tau[i] = 0;
+            }
+            printf("getting down %.3f%%\r", getdown_percent*100.0);
+        }
+        if(getdown_percent == 1)
+        {
+            running_state = STATE_WAITING;
+            this->InitObservations();
+            this->InitOutputs();
+            this->InitKeyboard();
+            // printf("\nstop rl loop\n");
+            // loop_rl->shutdown();
+        }
+    }
+}
