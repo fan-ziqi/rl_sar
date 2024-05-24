@@ -260,16 +260,16 @@ std::vector<T> ReadVectorFromYaml(const YAML::Node& node)
 
 void RL::ReadYaml(std::string robot_name)
 {
-	YAML::Node config;
-	try
-	{
-		config = YAML::LoadFile(CONFIG_PATH)[robot_name];
-	} catch(YAML::BadFile &e)
-	{
+    YAML::Node config;
+    try
+    {
+        config = YAML::LoadFile(CONFIG_PATH)[robot_name];
+    } catch(YAML::BadFile &e)
+    {
 
-		std::cout << "The file '" << CONFIG_PATH << "' does not exist" << std::endl;
-		return;
-	}
+        std::cout << "The file '" << CONFIG_PATH << "' does not exist" << std::endl;
+        return;
+    }
 
     this->params.model_name = config["model_name"].as<std::string>();
     this->params.num_observations = config["num_observations"].as<int>();
