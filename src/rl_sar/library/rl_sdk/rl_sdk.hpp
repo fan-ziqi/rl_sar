@@ -74,7 +74,8 @@ struct ModelParams
     double dof_pos_scale;
     double dof_vel_scale;
     double clip_obs;
-    double clip_actions;
+    torch::Tensor clip_actions_upper;
+    torch::Tensor clip_actions_lower;
     torch::Tensor torque_limits;
     torch::Tensor rl_kd;
     torch::Tensor rl_kp;
