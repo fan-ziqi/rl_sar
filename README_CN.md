@@ -84,6 +84,8 @@ roslaunch rl_sar gazebo_<ROBOT>.launch
 
 按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P**键切换到RL控制模式，任意状态按下**1**键切换到最初的趴下姿态。WS控制x，AD控制yaw，JL控制y。
 
+按**R**重置Gazebo仿真环境。
+
 ### 实物
 
 #### Unitree A1
