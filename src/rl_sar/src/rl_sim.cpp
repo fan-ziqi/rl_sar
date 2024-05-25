@@ -20,11 +20,11 @@ RL_Sim::RL_Sim()
 
     // Due to the fact that the robot_state_publisher sorts the joint names alphabetically,
     // the mapping table is established according to the order defined in the YAML file
-    std::vector<std::string> sorted_joint_names = params.joint_names;
-    std::sort(sorted_joint_names.begin(), sorted_joint_names.end());
-    for(size_t i = 0; i < params.joint_names.size(); ++i)
+    std::vector<std::string> sorted_joint_controller_names = params.joint_controller_names;
+    std::sort(sorted_joint_controller_names.begin(), sorted_joint_controller_names.end());
+    for(size_t i = 0; i < params.joint_controller_names.size(); ++i)
     {
-        sorted_to_original_index[sorted_joint_names[i]] = i;
+        sorted_to_original_index[sorted_joint_controller_names[i]] = i;
     }
     mapped_joint_positions = std::vector<double>(params.num_of_dofs, 0.0);
     mapped_joint_velocities = std::vector<double>(params.num_of_dofs, 0.0);
@@ -48,8 +48,8 @@ RL_Sim::RL_Sim()
     for (int i = 0; i < params.num_of_dofs; ++i)
     {
         // joint need to rename as xxx_joint
-        torque_publishers[params.joint_names[i]] = nh.advertise<robot_msgs::MotorCommand>(
-            ros_namespace + params.joint_names[i].substr(0, params.joint_names[i].size() - 6) + "_controller/command", 10);
+        torque_publishers[params.joint_controller_names[i]] = nh.advertise<robot_msgs::MotorCommand>(
+            ros_namespace + params.joint_controller_names[i] + "/command", 10);
     }
 
     // subscriber
@@ -127,7 +127,7 @@ void RL_Sim::SetCommand(const RobotCommand<double> *command)
     
     for(int i = 0; i < params.num_of_dofs; ++i)
     {
-        torque_publishers[params.joint_names[i]].publish(motor_commands[i]);
+        torque_publishers[params.joint_controller_names[i]].publish(motor_commands[i]);
     }
 }
 
@@ -166,7 +166,7 @@ void RL_Sim::MapData(const std::vector<double>& source_data, std::vector<double>
 {
     for(size_t i = 0; i < source_data.size(); ++i)
     {
-        target_data[i] = source_data[sorted_to_original_index[params.joint_names[i]]];
+        target_data[i] = source_data[sorted_to_original_index[params.joint_controller_names[i]]];
     }
 }
 
