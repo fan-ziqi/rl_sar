@@ -56,6 +56,7 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
 
 RL_Real::~RL_Real()
 {
+    loop_keyboard->shutdown();
     loop_udpSend->shutdown();
     loop_udpRecv->shutdown();
     loop_control->shutdown();
@@ -145,15 +146,17 @@ void RL_Real::RunModel()
                                             unitree_low_state.motorState[9].dq, unitree_low_state.motorState[10].dq, unitree_low_state.motorState[11].dq,
                                             unitree_low_state.motorState[6].dq, unitree_low_state.motorState[7].dq, unitree_low_state.motorState[8].dq}});
 
-        torch::Tensor actions = this->Forward();
+        torch::Tensor clamped_actions = this->Forward();
 
         for (int i : hip_scale_reduction_indices)
         {
-            actions[0][i] *= this->params.hip_scale_reduction;
+            clamped_actions[0][i] *= this->params.hip_scale_reduction;
         }
 
-        output_torques = this->ComputeTorques(actions);
-        output_dof_pos = this->ComputePosition(actions);
+        this->obs.actions = clamped_actions;
+
+        output_torques = this->ComputeTorques(clamped_actions);
+        output_dof_pos = this->ComputePosition(clamped_actions);
 #ifdef CSV_LOGGER
         torch::Tensor tau_est = torch::tensor({{unitree_low_state.motorState[3].tauEst, unitree_low_state.motorState[4].tauEst, unitree_low_state.motorState[5].tauEst,
                                                 unitree_low_state.motorState[0].tauEst, unitree_low_state.motorState[1].tauEst, unitree_low_state.motorState[2].tauEst,
@@ -187,8 +190,7 @@ torch::Tensor RL_Real::Forward()
 
     torch::Tensor action = this->model.forward({history_obs}).toTensor();
 
-    this->obs.actions = action;
-    torch::Tensor clamped = torch::clamp(action, -this->params.clip_actions, this->params.clip_actions);
+    torch::Tensor clamped = torch::clamp(action, this->params.clip_actions_upper, this->params.clip_actions_lower);
 
     return clamped;
 }

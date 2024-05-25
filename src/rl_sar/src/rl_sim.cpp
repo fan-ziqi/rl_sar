@@ -84,6 +84,7 @@ RL_Sim::RL_Sim()
 
 RL_Sim::~RL_Sim()
 {
+    loop_keyboard->shutdown();
     loop_control->shutdown();
     loop_rl->shutdown();
 #ifdef PLOT
@@ -195,7 +196,9 @@ void RL_Sim::RunModel()
             clamped_actions[0][i] *= this->params.hip_scale_reduction;
         }
 
-        output_torques = this->ComputeTorques(clamped_actions);
+        this->obs.actions = clamped_actions;
+
+        // output_torques = this->ComputeTorques(clamped_actions);
         output_dof_pos = this->ComputePosition(clamped_actions);
 
 #ifdef CSV_LOGGER
@@ -207,8 +210,8 @@ void RL_Sim::RunModel()
 
 torch::Tensor RL_Sim::ComputeObservation()
 {
-    torch::Tensor obs = torch::cat({// this->QuatRotateInverse(this->obs.base_quat, this->obs.lin_vel) * this->params.lin_vel_scale,
-                                    this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale,
+    torch::Tensor obs = torch::cat({// this->obs.lin_vel * this->params.lin_vel_scale,
+                                    this->obs.ang_vel * this->params.ang_vel_scale,
                                     this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec),
                                     this->obs.commands * this->params.commands_scale,
                                     (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
@@ -238,8 +241,7 @@ torch::Tensor RL_Sim::Forward()
         actions = this->model.forward({obs}).toTensor();
     }  
 
-    this->obs.actions = actions;
-    torch::Tensor clamped_actions = torch::clamp(actions, -this->params.clip_actions, this->params.clip_actions);
+    torch::Tensor clamped_actions = torch::clamp(actions, this->params.clip_actions_lower, this->params.clip_actions_upper);
 
     return clamped_actions;
 }

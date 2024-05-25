@@ -275,7 +275,8 @@ void RL::ReadYaml(std::string robot_name)
     this->params.model_name = config["model_name"].as<std::string>();
     this->params.num_observations = config["num_observations"].as<int>();
     this->params.clip_obs = config["clip_obs"].as<double>();
-    this->params.clip_actions = config["clip_actions"].as<double>();
+    this->params.clip_actions_upper = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_upper"])).view({1, -1});
+    this->params.clip_actions_lower = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_lower"])).view({1, -1});
     this->params.action_scale = config["action_scale"].as<double>();
     this->params.hip_scale_reduction = config["hip_scale_reduction"].as<double>();
     this->params.hip_scale_reduction_indices = ReadVectorFromYaml<int>(config["hip_scale_reduction_indices"]);
