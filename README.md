@@ -2,7 +2,7 @@
 
 [中文文档](README_CN.md)
 
-Simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "Sar" stands for "simulation and real"
+Simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
 
 ## Preparation
 
@@ -14,6 +14,14 @@ git clone https://github.com/fan-ziqi/rl_sar.git
 
 ## Dependency
 
+This project relies on ROS Noetic (Ubuntu 20.04)
+
+After installing ROS, install the dependency library
+
+```bash
+sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface  ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller
+```
+
 Download and deploy `libtorch` at any location
 
 ```bash
@@ -21,12 +29,6 @@ cd /path/to/your/torchlib
 wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip
 unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
 echo 'export Torch_DIR=/path/to/your/torchlib' >> ~/.bashrc
-```
-
-Install dependency packages
-
-```bash
-sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface  ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller
 ```
 
 Install yaml-cpp
@@ -122,7 +124,7 @@ Please cite the following if you use this code or parts of it:
 ```
 @software{fan-ziqi2024rl_sar,
   author = {fan-ziqi},
-  title = {{rl_sar: Simulation Verification and Physical Deployment of the Quadruped Robot's Reinforcement Learning Algorithm.}},
+  title = {{rl_sar: Simulation Verification and Physical Deployment of Robot Reinforcement Learning Algorithm.}},
   url = {https://github.com/fan-ziqi/rl_sar},
   year = {2024}
 }
