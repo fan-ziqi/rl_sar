@@ -14,6 +14,14 @@ git clone https://github.com/fan-ziqi/rl_sar.git
 
 ## 依赖
 
+本项目依赖ROS-Noetic(Ubuntu20.04)
+
+安装好ros之后安装依赖库
+
+```bash
+sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface  ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller
+```
+
 在任意位置下载并部署`libtorch`
 
 ```bash
@@ -21,12 +29,6 @@ cd /path/to/your/torchlib
 wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip
 unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
 echo 'export Torch_DIR=/path/to/your/torchlib' >> ~/.bashrc
-```
-
-安装依赖库
-
-```bash
-sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface  ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller
 ```
 
 安装yaml-cpp
@@ -122,7 +124,7 @@ OR 按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P
 ```
 @software{fan-ziqi2024rl_sar,
   author = {fan-ziqi},
-  title = {{rl_sar: Simulation Verification and Physical Deployment of the Quadruped Robot's Reinforcement Learning Algorithm.}},
+  title = {{rl_sar: Simulation Verification and Physical Deployment of Robot Reinforcement Learning Algorithm.}},
   url = {https://github.com/fan-ziqi/rl_sar},
   year = {2024}
 }
