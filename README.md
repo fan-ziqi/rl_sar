@@ -77,8 +77,10 @@ Open a new terminal, launch the gazebo simulation environment
 
 ```bash
 source devel/setup.bash
-roslaunch rl_sar gazebo_a1.launch
+roslaunch rl_sar gazebo_<ROBOT>.launch
 ```
+
+Where \<ROBOT\> can be `a1` or `gr1t1`.
 
 Press **0** on the keyboard to switch the robot to the default standing position, press **P** to switch to RL control mode, and press **1** in any state to switch to the initial lying position. WS controls x-axis, AD controls yaw, and JL controls y-axis.
 

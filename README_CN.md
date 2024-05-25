@@ -77,8 +77,10 @@ catkin build
 
 ```bash
 source devel/setup.bash
-roslaunch rl_sar gazebo_a1.launch
+roslaunch rl_sar gazebo_<ROBOT>.launch
 ```
+
+其中 \<ROBOT\> 可以是 `a1` 或 `gr1t1`.
 
 按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P**键切换到RL控制模式，任意状态按下**1**键切换到最初的趴下姿态。WS控制x，AD控制yaw，JL控制y。
 
