@@ -7,6 +7,7 @@
 #include <ros/ros.h>
 #include <gazebo_msgs/ModelStates.h>
 #include <sensor_msgs/JointState.h>
+#include "std_srvs/Empty.h"
 #include <geometry_msgs/Twist.h>
 #include "robot_msgs/MotorCommand.h"
 #include <csignal>
@@ -55,6 +56,7 @@ private:
     ros::Subscriber joint_state_subscriber;
     ros::Subscriber cmd_vel_subscriber;
     std::map<std::string, ros::Publisher> torque_publishers;
+    ros::ServiceClient gazebo_reset_client;
     void ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg);
     void JointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg);
     void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);

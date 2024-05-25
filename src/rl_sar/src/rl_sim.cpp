@@ -57,6 +57,9 @@ RL_Sim::RL_Sim()
     model_state_subscriber = nh.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 10, &RL_Sim::ModelStatesCallback, this);
     joint_state_subscriber = nh.subscribe<sensor_msgs::JointState>(ros_namespace + "joint_states", 10, &RL_Sim::JointStatesCallback, this);
 
+    // service
+    gazebo_reset_client = nh.serviceClient<std_srvs::Empty>("/gazebo/reset_simulation");
+    
     // loop
     loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05 ,    boost::bind(&RL_Sim::RunKeyboard,  this));
     loop_control  = std::make_shared<LoopFunc>("loop_control" , 0.002,    boost::bind(&RL_Sim::RobotControl, this));
@@ -134,6 +137,13 @@ void RL_Sim::RobotControl()
               << "      \r";
 
     motiontime++;
+
+    if(keyboard.keyboard_state == STATE_RESET_SIMULATION)
+    {
+        keyboard.keyboard_state = STATE_WAITING;
+        std_srvs::Empty srv;
+        gazebo_reset_client.call(srv);
+    }
 
     GetState(&robot_state);
     StateController(&robot_state, &robot_command);

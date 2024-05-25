@@ -48,6 +48,7 @@ enum STATE {
     STATE_RL_INIT,
     STATE_RL_RUNNING,
     STATE_POS_GETDOWN,
+    STATE_RESET_SIMULATION,
 };
 
 struct KeyBoard

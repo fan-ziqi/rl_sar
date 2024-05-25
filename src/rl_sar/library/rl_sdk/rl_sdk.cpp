@@ -242,6 +242,7 @@ void RL::RunKeyboard()
             case 'j': keyboard.y += 0.1; break;
             case 'l': keyboard.y -= 0.1; break;
             case ' ': keyboard.x = 0; keyboard.y = 0; keyboard.yaw = 0; break;
+            case 'r': keyboard.keyboard_state = STATE_RESET_SIMULATION; break;
             default: break;
         }
     }
