@@ -85,17 +85,14 @@ void RL_Real::GetState(RobotState<double> *state)
         keyboard.keyboard_state = STATE_POS_GETDOWN;
     }
 
-    for(int i = 0; i < 4; ++i)
-    {
-        state->imu.quaternion[i] = unitree_low_state.imu.quaternion[i];
-    }
+    state->imu.quaternion[3] = unitree_low_state.imu.quaternion[0]; // w
+    state->imu.quaternion[0] = unitree_low_state.imu.quaternion[1]; // x
+    state->imu.quaternion[1] = unitree_low_state.imu.quaternion[2]; // y
+    state->imu.quaternion[2] = unitree_low_state.imu.quaternion[3]; // z
     for(int i = 0; i < 3; ++i)
     {
         state->imu.gyroscope[i] = unitree_low_state.imu.gyroscope[i];
     }
-
-    // state->imu.accelerometer
-
     for(int i = 0; i < params.num_of_dofs; ++i)
     {
         state->motor_state.q[i] = unitree_low_state.motorState[state_mapping[i]].q;
@@ -116,8 +113,8 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
         unitree_low_command.motorCmd[i].tau = command->motor_command.tau[command_mapping[i]];
     }
 
-    unitree_safe.PowerProtect(unitree_low_command, unitree_low_state, 8);
-    // safe.PositionProtect(unitree_low_command, unitree_low_state);
+    unitree_safe.PowerProtect(unitree_low_command, unitree_low_state, 6);
+    // unitree_safe.PositionProtect(unitree_low_command, unitree_low_state);
     unitree_udp.SetSend(unitree_low_command);
 }
 
@@ -134,34 +131,27 @@ void RL_Real::RunModel()
 {
     if(running_state == STATE_RL_RUNNING)
     {
-        this->obs.ang_vel = torch::tensor({{unitree_low_state.imu.gyroscope[0], unitree_low_state.imu.gyroscope[1], unitree_low_state.imu.gyroscope[2]}});
+        this->obs.ang_vel = torch::tensor(robot_state.imu.gyroscope).unsqueeze(0);
         this->obs.commands = torch::tensor({{unitree_joy.ly, -unitree_joy.rx, -unitree_joy.lx}});
-        this->obs.base_quat = torch::tensor({{unitree_low_state.imu.quaternion[1], unitree_low_state.imu.quaternion[2], unitree_low_state.imu.quaternion[3], unitree_low_state.imu.quaternion[0]}});
-        this->obs.dof_pos = torch::tensor({{unitree_low_state.motorState[3].q, unitree_low_state.motorState[4].q, unitree_low_state.motorState[5].q,
-                                            unitree_low_state.motorState[0].q, unitree_low_state.motorState[1].q, unitree_low_state.motorState[2].q,
-                                            unitree_low_state.motorState[9].q, unitree_low_state.motorState[10].q, unitree_low_state.motorState[11].q,
-                                            unitree_low_state.motorState[6].q, unitree_low_state.motorState[7].q, unitree_low_state.motorState[8].q}});
-        this->obs.dof_vel = torch::tensor({{unitree_low_state.motorState[3].dq, unitree_low_state.motorState[4].dq, unitree_low_state.motorState[5].dq,
-                                            unitree_low_state.motorState[0].dq, unitree_low_state.motorState[1].dq, unitree_low_state.motorState[2].dq,
-                                            unitree_low_state.motorState[9].dq, unitree_low_state.motorState[10].dq, unitree_low_state.motorState[11].dq,
-                                            unitree_low_state.motorState[6].dq, unitree_low_state.motorState[7].dq, unitree_low_state.motorState[8].dq}});
+        this->obs.base_quat = torch::tensor(robot_state.imu.quaternion).unsqueeze(0);
+        this->obs.dof_pos = torch::tensor(robot_state.motor_state.q).narrow(0, 0, params.num_of_dofs).unsqueeze(0);
+        this->obs.dof_vel = torch::tensor(robot_state.motor_state.dq).narrow(0, 0, params.num_of_dofs).unsqueeze(0);
 
         torch::Tensor clamped_actions = this->Forward();
 
-        for (int i : hip_scale_reduction_indices)
+        for (int i : this->params.hip_scale_reduction_indices)
         {
             clamped_actions[0][i] *= this->params.hip_scale_reduction;
         }
 
         this->obs.actions = clamped_actions;
 
-        output_torques = this->ComputeTorques(clamped_actions);
-        output_dof_pos = this->ComputePosition(clamped_actions);
+        // torch::Tensor origin_output_torques = this->ComputeTorques(this->obs.actions);
+        // output_torques = torch::clamp(origin_output_torques, -(this->params.torque_limits), this->params.torque_limits);
+        output_dof_pos = this->ComputePosition(this->obs.actions);
+
 #ifdef CSV_LOGGER
-        torch::Tensor tau_est = torch::tensor({{unitree_low_state.motorState[3].tauEst, unitree_low_state.motorState[4].tauEst, unitree_low_state.motorState[5].tauEst,
-                                                unitree_low_state.motorState[0].tauEst, unitree_low_state.motorState[1].tauEst, unitree_low_state.motorState[2].tauEst,
-                                                unitree_low_state.motorState[9].tauEst, unitree_low_state.motorState[10].tauEst, unitree_low_state.motorState[11].tauEst,
-                                                unitree_low_state.motorState[6].tauEst, unitree_low_state.motorState[7].tauEst, unitree_low_state.motorState[8].tauEst}});
+        torch::Tensor tau_est = torch::tensor(robot_state.motor_state.tauEst).unsqueeze(0);
         CSVLogger(output_torques, tau_est, this->obs.dof_pos, output_dof_pos, this->obs.dof_vel);
 #endif
     }
@@ -177,22 +167,24 @@ torch::Tensor RL_Real::ComputeObservation()
                                     this->obs.dof_vel * this->params.dof_vel_scale,
                                     this->obs.actions
                                     },1);
-    obs = torch::clamp(obs, -this->params.clip_obs, this->params.clip_obs);
-    return obs;
+    torch::Tensor clamped_obs = torch::clamp(obs, -this->params.clip_obs, this->params.clip_obs);
+    return clamped_obs;
 }
 
 torch::Tensor RL_Real::Forward()
 {
-    torch::Tensor obs = this->ComputeObservation();
+    torch::autograd::GradMode::set_enabled(false);
 
-    history_obs_buf.insert(obs);
+    torch::Tensor clamped_obs = this->ComputeObservation();
+
+    history_obs_buf.insert(clamped_obs);
     history_obs = history_obs_buf.get_obs_vec({0, 1, 2, 3, 4, 5});
 
-    torch::Tensor action = this->model.forward({history_obs}).toTensor();
+    torch::Tensor actions = this->model.forward({history_obs}).toTensor();
 
-    torch::Tensor clamped = torch::clamp(action, this->params.clip_actions_upper, this->params.clip_actions_lower);
+    torch::Tensor clamped_actions = torch::clamp(actions, this->params.clip_actions_lower, this->params.clip_actions_upper);
 
-    return clamped;
+    return clamped_actions;
 }
 
 void RL_Real::Plot()

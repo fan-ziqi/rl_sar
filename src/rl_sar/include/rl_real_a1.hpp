@@ -58,7 +58,6 @@ private:
     std::vector<double> mapped_joint_velocities;
     int command_mapping[12] = {3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8};
     int state_mapping[12] = {3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8};
-    int hip_scale_reduction_indices[4] = {0, 3, 6, 9};
 };
 
 #endif

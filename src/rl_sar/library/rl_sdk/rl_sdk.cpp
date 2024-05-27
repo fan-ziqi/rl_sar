@@ -36,8 +36,6 @@ torch::Tensor RL::Forward()
 }
 */
 
-
-
 void RL::InitObservations()
 {
     this->obs.lin_vel = torch::tensor({{0.0, 0.0, 0.0}});
@@ -68,8 +66,7 @@ torch::Tensor RL::ComputeTorques(torch::Tensor actions)
 {
     torch::Tensor actions_scaled = actions * this->params.action_scale;
     torch::Tensor output_torques = this->params.rl_kp * (actions_scaled + this->params.default_dof_pos - this->obs.dof_pos) - this->params.rl_kd * this->obs.dof_vel;
-    torch::Tensor clamped = torch::clamp(output_torques, -(this->params.torque_limits), this->params.torque_limits);
-    return clamped;
+    return output_torques;
 }
 
 torch::Tensor RL::ComputePosition(torch::Tensor actions)
