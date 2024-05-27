@@ -69,12 +69,12 @@ set_property(TARGET observation_buffer PROPERTY CXX_STANDARD 14)
 
 add_executable(rl_sim src/rl_sim.cpp )
 target_link_libraries(rl_sim
-  ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
+  ${catkin_LIBRARIES} ${EXTRA_LIBS} 
   rl_sdk observation_buffer yaml-cpp
 )
 
 add_executable(rl_real_a1 src/rl_real_a1.cpp )
 target_link_libraries(rl_real_a1
-  ${catkin_LIBRARIES} ${EXTRA_LIBS} "${TORCH_LIBRARIES}"
+  ${catkin_LIBRARIES} ${EXTRA_LIBS} 
   rl_sdk observation_buffer yaml-cpp
 )

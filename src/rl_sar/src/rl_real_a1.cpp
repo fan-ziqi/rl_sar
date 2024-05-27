@@ -64,7 +64,7 @@ RL_Real::~RL_Real()
 #ifdef PLOT
     loop_plot->shutdown();
 #endif
-    printf("exit\n");
+    std::cout << LOGGER::INFO << "RL_Real exit" << std::endl;
 }
 
 void RL_Real::GetState(RobotState<double> *state)

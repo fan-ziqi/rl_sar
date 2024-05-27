@@ -9,6 +9,13 @@
 #include <yaml-cpp/yaml.h>
 #define CONFIG_PATH CMAKE_CURRENT_SOURCE_DIR "/config.yaml"
 
+namespace LOGGER {
+    const char* const INFO    = "\033[0;37m[INFO]\033[0m ";
+    const char* const WARNING = "\033[0;33m[WARNING]\033[0m ";
+    const char* const ERROR   = "\033[0;31m[ERROR]\033[0m ";
+    const char* const DEBUG   = "\033[0;32m[DEBUG]\033[0m ";
+}
+
 template<typename T>
 struct RobotCommand
 {
@@ -102,6 +109,7 @@ class RL
 {
 public:
     RL(){};
+    ~RL(){};
 
     ModelParams params;
     Observations obs;
