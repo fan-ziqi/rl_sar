@@ -110,10 +110,10 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
     // stand up (position control)
     else if(running_state == STATE_POS_GETUP)
     {
-        if(getup_percent != 1)
+        if(getup_percent < 1.0)
         {
             getup_percent += 1 / 1000.0;
-            getup_percent = getup_percent > 1 ? 1 : getup_percent;
+            getup_percent = getup_percent > 1.0 ? 1.0 : getup_percent;
             for(int i = 0; i < params.num_of_dofs; ++i)
             {
                 command->motor_command.q[i] = (1 - getup_percent) * now_pos[i] + getup_percent * params.default_dof_pos[0][i].item<double>();
@@ -122,10 +122,11 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
                 command->motor_command.kd[i] = params.fixed_kd[0][i].item<double>();
                 command->motor_command.tau[i] = 0;
             }
-            printf("getting up %.3f%%\r", getup_percent*100.0);
+            printf("Getting up %.3f%%\r", getup_percent*100.0);
         }
         if(keyboard.keyboard_state == STATE_RL_INIT)
         {
+            std::cout << std::endl;
             keyboard.keyboard_state = STATE_WAITING;
             running_state = STATE_RL_INIT;
         }
@@ -154,6 +155,8 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
     // rl loop
     else if(running_state == STATE_RL_RUNNING)
     {
+        std::cout << "[RL Controller] x:" << keyboard.x << " y:" << keyboard.y << " yaw:" << keyboard.yaw << "          \r";
+
         for(int i = 0; i < params.num_of_dofs; ++i)
         {
             command->motor_command.q[i] = output_dof_pos[0][i].item<double>();
@@ -176,10 +179,10 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
     // get down (position control)
     else if(running_state == STATE_POS_GETDOWN)
     {
-        if(getdown_percent != 1)
+        if(getdown_percent < 1.0)
         {
             getdown_percent += 1 / 1000.0;
-            getdown_percent = getdown_percent > 1 ? 1 : getdown_percent;
+            getdown_percent = getdown_percent > 1.0 ? 1.0 : getdown_percent;
             for(int i = 0; i < params.num_of_dofs; ++i)
             {
                 command->motor_command.q[i] = (1 - getdown_percent) * now_pos[i] + getdown_percent * start_pos[i];
@@ -188,15 +191,48 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
                 command->motor_command.kd[i] = params.fixed_kd[0][i].item<double>();
                 command->motor_command.tau[i] = 0;
             }
-            printf("getting down %.3f%%\r", getdown_percent*100.0);
+            printf("Getting down %.3f%%\r", getdown_percent*100.0);
         }
         if(getdown_percent == 1)
         {
+            std::cout << std::endl;
             running_state = STATE_WAITING;
             this->InitObservations();
             this->InitOutputs();
             this->InitKeyboard();
         }
+    }
+}
+
+void RL::TorqueProtect(torch::Tensor origin_output_torques)
+{
+    std::vector<int> out_of_range_indices;
+    std::vector<double> out_of_range_values;
+    for(int i = 0; i < origin_output_torques.size(1); ++i)
+    {
+        double torque_value = origin_output_torques[0][i].item<double>();
+        double limit_lower = -this->params.torque_limits[0][i].item<double>();
+        double limit_upper = this->params.torque_limits[0][i].item<double>();
+
+        if(torque_value < limit_lower || torque_value > limit_upper)
+        {
+            out_of_range_indices.push_back(i);
+            out_of_range_values.push_back(torque_value);
+        }
+    }
+    if(!out_of_range_indices.empty())
+    {
+        std::cout << "Error: origin_output_torques is out of range at indices: ";
+        for(int i = 0; i < out_of_range_indices.size(); ++i)
+        {
+            std::cout << out_of_range_indices[i] << " (value: " << out_of_range_values[i] << ")";
+            if(i < out_of_range_indices.size() - 1)
+            {
+                std::cout << ", ";
+            }
+        }
+        std::cout << std::endl;
+        keyboard.keyboard_state = STATE_POS_GETDOWN;
     }
 }
 

@@ -140,6 +140,9 @@ public:
     std::string robot_name;
     STATE running_state = STATE_WAITING;
 
+    // protect func
+    void TorqueProtect(torch::Tensor origin_output_torques);
+
 protected:
     // rl module
     torch::jit::script::Module model;

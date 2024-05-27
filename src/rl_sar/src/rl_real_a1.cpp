@@ -146,8 +146,11 @@ void RL_Real::RunModel()
 
         this->obs.actions = clamped_actions;
 
-        // torch::Tensor origin_output_torques = this->ComputeTorques(this->obs.actions);
-        // output_torques = torch::clamp(origin_output_torques, -(this->params.torque_limits), this->params.torque_limits);
+        torch::Tensor origin_output_torques = this->ComputeTorques(this->obs.actions);
+
+        TorqueProtect(origin_output_torques);
+
+        output_torques = torch::clamp(origin_output_torques, -(this->params.torque_limits), this->params.torque_limits);
         output_dof_pos = this->ComputePosition(this->obs.actions);
 
 #ifdef CSV_LOGGER
