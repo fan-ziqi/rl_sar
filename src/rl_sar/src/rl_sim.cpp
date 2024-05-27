@@ -90,7 +90,7 @@ RL_Sim::~RL_Sim()
 #ifdef PLOT
     loop_plot->shutdown();
 #endif
-    printf("exit\n");
+    std::cout << LOGGER::INFO << "RL_Sim exit" << std::endl;
 }
 
 void RL_Sim::GetState(RobotState<double> *state)
