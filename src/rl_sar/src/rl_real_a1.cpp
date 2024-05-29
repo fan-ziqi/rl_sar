@@ -18,8 +18,6 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
 
     // init
     torch::autograd::GradMode::set_enabled(false);
-    start_pos.resize(params.num_of_dofs);
-    now_pos.resize(params.num_of_dofs);
     this->InitObservations();
     this->InitOutputs();
     this->InitControl();

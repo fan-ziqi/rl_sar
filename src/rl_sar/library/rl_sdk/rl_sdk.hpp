@@ -157,11 +157,6 @@ protected:
     // output buffer
     torch::Tensor output_torques;
     torch::Tensor output_dof_pos;
-    // getup getdown buffer
-    float getup_percent = 0.0;
-    float getdown_percent = 0.0;
-    std::vector<double> start_pos;
-    std::vector<double> now_pos;
 };
 
 #endif
