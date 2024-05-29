@@ -14,6 +14,5 @@ catkin_package(
 
 include_directories(
     # include
-    ${Boost_INCLUDE_DIR}
     ${catkin_INCLUDE_DIRS}
 )

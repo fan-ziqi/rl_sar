@@ -4,8 +4,6 @@
 #include <ros/node_handle.h>
 #include <urdf/model.h>
 #include <control_toolbox/pid.h>
-#include <boost/scoped_ptr.hpp>
-#include <boost/thread/condition.hpp>
 #include <realtime_tools/realtime_publisher.h>
 #include <hardware_interface/joint_command_interface.h>
 #include <controller_interface/controller.h>
@@ -43,7 +41,7 @@ private:
         hardware_interface::JointHandle joint;
         ros::Subscriber sub_command, sub_ft;
         control_toolbox::Pid pid_controller_;
-        boost::scoped_ptr<realtime_tools::RealtimePublisher<robot_msgs::MotorState> > controller_state_publisher_ ;
+        std::unique_ptr<realtime_tools::RealtimePublisher<robot_msgs::MotorState> > controller_state_publisher_ ;
 
 public:
         std::string name_space;
