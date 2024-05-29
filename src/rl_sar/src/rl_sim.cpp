@@ -33,8 +33,6 @@ RL_Sim::RL_Sim()
     // init
     torch::autograd::GradMode::set_enabled(false);
     motor_commands.resize(params.num_of_dofs);
-    start_pos.resize(params.num_of_dofs);
-    now_pos.resize(params.num_of_dofs);
     this->InitObservations();
     this->InitOutputs();
     this->InitControl();
