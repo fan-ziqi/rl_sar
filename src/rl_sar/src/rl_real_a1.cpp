@@ -22,18 +22,18 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
     now_pos.resize(params.num_of_dofs);
     this->InitObservations();
     this->InitOutputs();
-    this->InitKeyboard();
+    this->InitControl();
 
     // model
     std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_name + "/" + this->params.model_name;
     this->model = torch::jit::load(model_path);
 
     // loop
-    loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05 ,    boost::bind(&RL_Real::RunKeyboard,  this));
-    loop_control  = std::make_shared<LoopFunc>("loop_control" , 0.002,    boost::bind(&RL_Real::RobotControl, this));
-    loop_udpSend  = std::make_shared<LoopFunc>("loop_udpSend" , 0.002, 3, boost::bind(&RL_Real::UDPSend,      this));
-    loop_udpRecv  = std::make_shared<LoopFunc>("loop_udpRecv" , 0.002, 3, boost::bind(&RL_Real::UDPRecv,      this));
-    loop_rl       = std::make_shared<LoopFunc>("loop_rl"      , 0.02 ,    boost::bind(&RL_Real::RunModel,     this));
+    loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05 ,    boost::bind(&RL_Real::KeyboardInterface, this));
+    loop_control  = std::make_shared<LoopFunc>("loop_control" , 0.002,    boost::bind(&RL_Real::RobotControl     , this));
+    loop_udpSend  = std::make_shared<LoopFunc>("loop_udpSend" , 0.002, 3, boost::bind(&RL_Real::UDPSend          , this));
+    loop_udpRecv  = std::make_shared<LoopFunc>("loop_udpRecv" , 0.002, 3, boost::bind(&RL_Real::UDPRecv          , this));
+    loop_rl       = std::make_shared<LoopFunc>("loop_rl"      , 0.02 ,    boost::bind(&RL_Real::RunModel         , this));
     loop_keyboard->start();
     loop_udpSend->start();
     loop_udpRecv->start();
@@ -74,15 +74,15 @@ void RL_Real::GetState(RobotState<double> *state)
 
     if((int)unitree_joy.btn.components.R2 == 1)
     {
-        keyboard.keyboard_state = STATE_POS_GETUP;
+        control.control_state = STATE_POS_GETUP;
     }
     else if((int)unitree_joy.btn.components.R1 == 1)
     {
-        keyboard.keyboard_state = STATE_RL_INIT;
+        control.control_state = STATE_RL_INIT;
     }
     else if((int)unitree_joy.btn.components.L2 == 1)
     {
-        keyboard.keyboard_state = STATE_POS_GETDOWN;
+        control.control_state = STATE_POS_GETDOWN;
     }
 
     state->imu.quaternion[3] = unitree_low_state.imu.quaternion[0]; // w

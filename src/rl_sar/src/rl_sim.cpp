@@ -37,7 +37,7 @@ RL_Sim::RL_Sim()
     now_pos.resize(params.num_of_dofs);
     this->InitObservations();
     this->InitOutputs();
-    this->InitKeyboard();
+    this->InitControl();
 
     // model
     std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_name + "/" + this->params.model_name;
@@ -61,9 +61,9 @@ RL_Sim::RL_Sim()
     gazebo_reset_client = nh.serviceClient<std_srvs::Empty>("/gazebo/reset_simulation");
     
     // loop
-    loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05 ,    boost::bind(&RL_Sim::RunKeyboard,  this));
-    loop_control  = std::make_shared<LoopFunc>("loop_control" , 0.002,    boost::bind(&RL_Sim::RobotControl, this));
-    loop_rl       = std::make_shared<LoopFunc>("loop_rl"      , 0.02 ,    boost::bind(&RL_Sim::RunModel,     this));
+    loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05 ,    boost::bind(&RL_Sim::KeyboardInterface, this));
+    loop_control  = std::make_shared<LoopFunc>("loop_control" , 0.002,    boost::bind(&RL_Sim::RobotControl     , this));
+    loop_rl       = std::make_shared<LoopFunc>("loop_rl"      , 0.02 ,    boost::bind(&RL_Sim::RunModel         , this));
     loop_keyboard->start();
     loop_control->start();
     loop_rl->start();
@@ -135,9 +135,9 @@ void RL_Sim::RobotControl()
 {
     motiontime++;
 
-    if(keyboard.keyboard_state == STATE_RESET_SIMULATION)
+    if(control.control_state == STATE_RESET_SIMULATION)
     {
-        keyboard.keyboard_state = STATE_WAITING;
+        control.control_state = STATE_WAITING;
         std_srvs::Empty srv;
         gazebo_reset_client.call(srv);
     }
@@ -180,7 +180,7 @@ void RL_Sim::RunModel()
         // this->obs.lin_vel = torch::tensor({{vel.linear.x, vel.linear.y, vel.linear.z}});
         this->obs.ang_vel = torch::tensor(robot_state.imu.gyroscope).unsqueeze(0);
         // this->obs.commands = torch::tensor({{cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z}});
-        this->obs.commands = torch::tensor({{keyboard.x, keyboard.y, keyboard.yaw}});
+        this->obs.commands = torch::tensor({{control.x, control.y, control.yaw}});
         this->obs.base_quat = torch::tensor(robot_state.imu.quaternion).unsqueeze(0);
         this->obs.dof_pos = torch::tensor(robot_state.motor_state.q).narrow(0, 0, params.num_of_dofs).unsqueeze(0);
         this->obs.dof_vel = torch::tensor(robot_state.motor_state.dq).narrow(0, 0, params.num_of_dofs).unsqueeze(0);

@@ -58,9 +58,9 @@ enum STATE {
     STATE_RESET_SIMULATION,
 };
 
-struct KeyBoard
+struct Control
 {
-    STATE keyboard_state;
+    STATE control_state;
     double x = 0.0;
     double y = 0.0;
     double yaw = 0.0;
@@ -120,7 +120,7 @@ public:
     // init
     void InitObservations();
     void InitOutputs();
-    void InitKeyboard();
+    void InitControl();
 
     // rl functions
     virtual torch::Tensor Forward() = 0;
@@ -140,9 +140,9 @@ public:
     void CSVInit(std::string robot_name);
     void CSVLogger(torch::Tensor torque, torch::Tensor tau_est, torch::Tensor joint_pos, torch::Tensor joint_pos_target, torch::Tensor joint_vel);
 
-    // keyboard
-    KeyBoard keyboard;
-    void RunKeyboard();
+    // control
+    Control control;
+    void KeyboardInterface();
 
     // others
     std::string robot_name;
