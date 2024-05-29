@@ -59,9 +59,9 @@ RL_Sim::RL_Sim()
     this->gazebo_reset_client = nh.serviceClient<std_srvs::Empty>("/gazebo/reset_simulation");
     
     // loop
-    this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05 ,    boost::bind(&RL_Sim::KeyboardInterface, this));
-    this->loop_control  = std::make_shared<LoopFunc>("loop_control" , 0.002,    boost::bind(&RL_Sim::RobotControl     , this));
-    this->loop_rl       = std::make_shared<LoopFunc>("loop_rl"      , 0.02 ,    boost::bind(&RL_Sim::RunModel         , this));
+    this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05 ,    std::bind(&RL_Sim::KeyboardInterface, this));
+    this->loop_control  = std::make_shared<LoopFunc>("loop_control" , 0.002,    std::bind(&RL_Sim::RobotControl     , this));
+    this->loop_rl       = std::make_shared<LoopFunc>("loop_rl"      , 0.02 ,    std::bind(&RL_Sim::RunModel         , this));
     this->loop_keyboard->start();
     this->loop_control->start();
     this->loop_rl->start();
@@ -72,7 +72,7 @@ RL_Sim::RL_Sim()
     this->plot_target_joint_pos.resize(this->params.num_of_dofs);
     for(auto& vector : this->plot_real_joint_pos) { vector = std::vector<double>(this->plot_size, 0); }
     for(auto& vector : this->plot_target_joint_pos) { vector = std::vector<double>(this->plot_size, 0); }
-    this->loop_plot    = std::make_shared<LoopFunc>("loop_plot"   , 0.002,    boost::bind(&RL_Sim::Plot,         this));
+    this->loop_plot    = std::make_shared<LoopFunc>("loop_plot"   , 0.002,    std::bind(&RL_Sim::Plot,         this));
     this->loop_plot->start();
 #endif
 #ifdef CSV_LOGGER
