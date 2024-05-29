@@ -51,12 +51,12 @@ private:
     geometry_msgs::Twist vel;
     geometry_msgs::Pose pose;
     geometry_msgs::Twist cmd_vel;
-    std::vector<std::string> torque_command_topics;
     ros::Subscriber model_state_subscriber;
     ros::Subscriber joint_state_subscriber;
     ros::Subscriber cmd_vel_subscriber;
-    std::map<std::string, ros::Publisher> torque_publishers;
     ros::ServiceClient gazebo_reset_client;
+    std::map<std::string, ros::Publisher> joint_publishers;
+    std::vector<robot_msgs::MotorCommand> joint_publishers_commands;
     void ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg);
     void JointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg);
     void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
@@ -64,7 +64,6 @@ private:
     // others
     int motiontime = 0;
     std::map<std::string, size_t> sorted_to_original_index;
-    std::vector<robot_msgs::MotorCommand> motor_commands;
     std::vector<double> mapped_joint_positions;
     std::vector<double> mapped_joint_velocities;
     std::vector<double> mapped_joint_efforts;
