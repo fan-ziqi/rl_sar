@@ -27,16 +27,17 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
     this->model = torch::jit::load(model_path);
 
     // loop
-    this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05 ,    std::bind(&RL_Real::KeyboardInterface, this));
-    this->loop_control  = std::make_shared<LoopFunc>("loop_control" , 0.002,    std::bind(&RL_Real::RobotControl     , this));
-    this->loop_udpSend  = std::make_shared<LoopFunc>("loop_udpSend" , 0.002, 3, std::bind(&RL_Real::UDPSend          , this));
-    this->loop_udpRecv  = std::make_shared<LoopFunc>("loop_udpRecv" , 0.002, 3, std::bind(&RL_Real::UDPRecv          , this));
-    this->loop_rl       = std::make_shared<LoopFunc>("loop_rl"      , 0.02 ,    std::bind(&RL_Real::RunModel         , this));
-    this->loop_keyboard->start();
+    this->loop_udpSend  = std::make_shared<LoopFunc>("loop_udpSend" , 0.002, std::bind(&RL_Real::UDPSend, this), 3);
+    this->loop_udpRecv  = std::make_shared<LoopFunc>("loop_udpRecv" , 0.002, std::bind(&RL_Real::UDPRecv, this), 3);
+    this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05, std::bind(&RL_Real::KeyboardInterface, this));
+    this->loop_control  = std::make_shared<LoopFunc>("loop_control", this->params.dt, std::bind(&RL_Real::RobotControl, this));
+    this->loop_rl = std::make_shared<LoopFunc>("loop_rl", this->params.dt * this->params.decimation, std::bind(&RL_Real::RunModel, this));
     this->loop_udpSend->start();
     this->loop_udpRecv->start();
+    this->loop_keyboard->start();
     this->loop_control->start();
     this->loop_rl->start();
+    
 
 #ifdef PLOT
     this->plot_t = std::vector<int>(this->plot_size, 0);
@@ -54,9 +55,9 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
 
 RL_Real::~RL_Real()
 {
-    this->loop_keyboard->shutdown();
     this->loop_udpSend->shutdown();
     this->loop_udpRecv->shutdown();
+    this->loop_keyboard->shutdown();
     this->loop_control->shutdown();
     this->loop_rl->shutdown();
 #ifdef PLOT
