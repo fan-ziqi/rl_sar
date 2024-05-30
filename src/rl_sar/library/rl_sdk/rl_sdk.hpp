@@ -69,6 +69,8 @@ struct Control
 struct ModelParams
 {
     std::string model_name;
+    double dt;
+    int decimation;
     int num_observations;
     double damping;
     double stiffness;

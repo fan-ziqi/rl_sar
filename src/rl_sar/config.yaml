@@ -1,5 +1,7 @@
 a1:
   model_name: "model_0526.pt"
+  dt: 0.005
+  decimation: 4
   num_observations: 45
   clip_obs: 100.0
   clip_actions_lower: [-100, -100, -100, 
@@ -50,6 +52,8 @@ a1:
 
 gr1t1:
   model_name: "model_4000_jit.pt"
+  dt: 0.001
+  decimation: 20
   num_observations: 39
   clip_obs: 100.0
   clip_actions_lower: [-0.4391, -1.0491, -2.0991, -0.4391, -1.3991,
@@ -64,8 +68,8 @@ gr1t1:
              57.0, 43.0, 114.0, 114.0, 15.3]
   fixed_kd: [5.7, 4.3, 11.4, 11.4, 1.5, 
              5.7, 4.3, 11.4, 11.4, 1.5]
-  hip_scale_reduction: 0.5
-  hip_scale_reduction_indices: [0, 3, 6, 9]
+  hip_scale_reduction: 1.0
+  hip_scale_reduction_indices: []
   num_of_dofs: 10
   action_scale: 1.0
   lin_vel_scale: 1.0
