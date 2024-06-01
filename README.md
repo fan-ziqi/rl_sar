@@ -4,7 +4,7 @@
 
 Simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
 
-[Click to discuss on Discord](https://discord.gg/MC9KguQHtt)
+[Click to discuss on Discord](https://discord.gg/vmVjkhVugU)
 
 ## Preparation
 
