@@ -4,6 +4,8 @@
 
 机器人强化学习算法的仿真验证与实物部署，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
 
+[点击在Discord上讨论](https://discord.gg/MC9KguQHtt)
+
 ## 准备
 
 拉取代码
