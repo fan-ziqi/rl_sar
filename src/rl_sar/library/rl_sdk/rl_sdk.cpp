@@ -122,7 +122,7 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
                 command->motor_command.kd[i] = this->params.fixed_kd[0][i].item<double>();
                 command->motor_command.tau[i] = 0;
             }
-            std::cout << LOGGER::INFO << "Getting up " << std::fixed << std::setprecision(2) << getup_percent * 100.0 << "%\r";
+            std::cout << "\r" << std::flush << LOGGER::INFO << "Getting up " << std::fixed << std::setprecision(2) << getup_percent * 100.0 << std::flush;
         }
         if(this->control.control_state == STATE_RL_INIT)
         {
@@ -157,8 +157,7 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
     // rl loop
     else if(this->running_state == STATE_RL_RUNNING)
     {
-        std::cout << LOGGER::INFO << "RL Controller x:" << this->control.x << " y:" << this->control.y << " yaw:" << this->control.yaw << "          \r";
-
+        std::cout << "\r" << std::flush << LOGGER::INFO << "RL Controller x:" << this->control.x << " y:" << this->control.y << " yaw:" << this->control.yaw << std::flush;
         for(int i = 0; i < this->params.num_of_dofs; ++i)
         {
             command->motor_command.q[i] = this->output_dof_pos[0][i].item<double>();
@@ -205,7 +204,7 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
                 command->motor_command.kd[i] = this->params.fixed_kd[0][i].item<double>();
                 command->motor_command.tau[i] = 0;
             }
-            std::cout << LOGGER::INFO << "Getting down " << std::fixed << std::setprecision(2) << getdown_percent * 100.0 << "%\r";
+            std::cout << "\r" << std::flush << LOGGER::INFO << "Getting down " << std::fixed << std::setprecision(2) << getdown_percent * 100.0 << std::flush;
         }
         if(getdown_percent == 1)
         {
@@ -291,6 +290,7 @@ void RL::KeyboardInterface()
             case 'l': this->control.y -= 0.1; break;
             case ' ': this->control.x = 0; this->control.y = 0; this->control.yaw = 0; break;
             case 'r': this->control.control_state = STATE_RESET_SIMULATION; break;
+            case '\n': this->control.control_state = STATE_TOGGLE_SIMULATION; break;
             default: break;
         }
     }

@@ -84,9 +84,11 @@ roslaunch rl_sar gazebo_<ROBOT>.launch
 
 Where \<ROBOT\> can be `a1` or `gr1t1`.
 
-Press **0** on the keyboard to switch the robot to the default standing position, press **P** to switch to RL control mode, and press **1** in any state to switch to the initial lying position. WS controls x-axis, AD controls yaw, and JL controls y-axis.
-
-Press **R** to reset Gazebo environment.
+Control:
+* Press **\<Enter\>** to toggle simulation start/stop.
+* **W** and **S** controls x-axis, **A** and **D** controls yaw, and **J** and **L** controls y-axis.
+* Press **\<Space\>** to sets all control commands to zero.
+* If robot falls down, press **R** to reset Gazebo environment.
 
 ### Physical Robots
 
