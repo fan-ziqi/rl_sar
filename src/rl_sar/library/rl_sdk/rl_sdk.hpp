@@ -56,6 +56,7 @@ enum STATE {
     STATE_RL_RUNNING,
     STATE_POS_GETDOWN,
     STATE_RESET_SIMULATION,
+    STATE_TOGGLE_SIMULATION,
 };
 
 struct Control
@@ -148,7 +149,8 @@ public:
 
     // others
     std::string robot_name;
-    STATE running_state = STATE_WAITING;
+    STATE running_state = STATE_RL_RUNNING; // default running_state set to STATE_RL_RUNNING
+    bool simulation_running = false;
 
     // protect func
     void TorqueProtect(torch::Tensor origin_output_torques);
