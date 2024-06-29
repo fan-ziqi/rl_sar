@@ -1,7 +1,7 @@
 <launch>
     <arg name="wname" default="stairs"/>
     <arg name="rname" default="gr1t1"/>
-    <param name="robot_name" type="str" value="gr1t1"/>
+    <param name="robot_name" type="str" value="$(arg rname)"/>
     <param name="use_history" type="bool" value="false"/>
     <param name="ros_namespace" type="str" value="/$(arg rname)_gazebo/"/>
     <arg name="robot_path" value="(find $(arg rname)_description)"/>
@@ -33,8 +33,6 @@
     <!-- Load joint controller configurations from YAML file to parameter server -->
     <rosparam file="$(arg dollar)$(arg robot_path)/config/robot_control.yaml" command="load"/>
 
-    <!-- <rosparam param="/gr1t1_gazebo/joint_state_controller/publish_rate">5000</rosparam> -->
-
     <!-- load the controllers -->
     <node pkg="controller_manager" type="spawner" name="controller_spawner" respawn="false"
           output="screen" ns="/$(arg rname)_gazebo" args="joint_state_controller
@@ -46,7 +44,5 @@
           respawn="false" output="screen">
         <remap from="/joint_states" to="/$(arg rname)_gazebo/joint_states"/>
     </node>
-
-    <node pkg="rl_sar" type="rl_sim" name="rl_sim" output="screen"/>
 
 </launch>

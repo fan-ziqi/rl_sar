@@ -8,4 +8,4 @@ logs
 *fldlar*
 .cache
 *.json
-# *gr1t1*
+__pycache__

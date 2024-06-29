@@ -25,6 +25,8 @@
     <exec_depend>robot_state_publisher</exec_depend>
     <exec_depend>roscpp</exec_depend>
     <exec_depend>std_msgs</exec_depend>
+    <build_depend>rospy</build_depend>
+    <exec_depend>rospy</exec_depend>
     <depend>robot_msgs</depend>
     <depend>robot_joint_controller</depend>
 

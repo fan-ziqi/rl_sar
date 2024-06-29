@@ -75,14 +75,22 @@ catkin build
 
 ### 仿真
 
-新建终端，启动gazebo仿真环境
+打开一个终端，启动gazebo仿真环境
 
 ```bash
 source devel/setup.bash
 roslaunch rl_sar gazebo_<ROBOT>.launch
 ```
 
-其中 \<ROBOT\> 可以是 `a1` 或 `gr1t1`.
+打开一个新终端，启动控制程序
+
+```bash
+source devel/setup.bash
+(for cpp version)    rosrun rl_sar rl_sim
+(for python version) rosrun rl_sar rl_sim.py
+```
+
+其中 \<ROBOT\> 可以是 `a1` 或 `gr1t1` 或 `gr1t2`.
 
 控制：
 

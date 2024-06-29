@@ -26,6 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
     geometry_msgs
     robot_msgs
     robot_joint_controller
+    rospy
 )
 
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
@@ -37,6 +38,7 @@ include_directories(${YAML_CPP_INCLUDE_DIR})
 catkin_package(
     CATKIN_DEPENDS 
     robot_joint_controller
+    rospy
 )
 
 include_directories(library/unitree_legged_sdk_3.2/include)
@@ -77,4 +79,10 @@ add_executable(rl_real_a1 src/rl_real_a1.cpp )
 target_link_libraries(rl_real_a1
   ${catkin_LIBRARIES} ${EXTRA_LIBS} 
   rl_sdk observation_buffer yaml-cpp
+)
+
+catkin_install_python(PROGRAMS
+  scripts/rl_sim.py
+  scripts/rl_sdk.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

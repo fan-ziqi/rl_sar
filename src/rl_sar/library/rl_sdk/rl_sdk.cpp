@@ -1,31 +1,28 @@
 #include "rl_sdk.hpp"
 
 /* You may need to override this ComputeObservation() function
-torch::Tensor RL::ComputeObservation()
+torch::Tensor RL_XXX::ComputeObservation()
 {
-    torch::Tensor obs = torch::cat({this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale,
-                                    this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec),
-                                    this->obs.commands * this->params.commands_scale,
-                                    (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
-                                    this->obs.dof_vel * this->params.dof_vel_scale,
-                                    this->obs.actions
-                                    },1);
+    torch::Tensor obs = torch::cat({
+        this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale,
+        this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec),
+        this->obs.commands * this->params.commands_scale,
+        (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
+        this->obs.dof_vel * this->params.dof_vel_scale,
+        this->obs.actions
+        },1);
     torch::Tensor clamped_obs = torch::clamp(obs, -this->params.clip_obs, this->params.clip_obs);
     return clamped_obs;
 }
 */
 
 /* You may need to override this Forward() function
-torch::Tensor RL::Forward()
+torch::Tensor RL_XXX::Forward()
 {
     torch::autograd::GradMode::set_enabled(false);
-
     torch::Tensor clamped_obs = this->ComputeObservation();
-
     torch::Tensor actions = this->model.forward({clamped_obs}).toTensor();
-
     torch::Tensor clamped_actions = torch::clamp(actions, this->params.clip_actions_lower, this->params.clip_actions_upper);
-
     return clamped_actions;
 }
 */
