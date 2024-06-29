@@ -61,12 +61,14 @@ RL_Sim::RL_Sim()
     this->gazebo_unpause_physics_client = nh.serviceClient<std_srvs::Empty>("/gazebo/unpause_physics");
 
     // loop
-    this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05, std::bind(&RL_Sim::KeyboardInterface, this));
     this->loop_control  = std::make_shared<LoopFunc>("loop_control", this->params.dt, std::bind(&RL_Sim::RobotControl, this));
     this->loop_rl = std::make_shared<LoopFunc>("loop_rl", this->params.dt * this->params.decimation, std::bind(&RL_Sim::RunModel, this));
-    this->loop_keyboard->start();
     this->loop_control->start();
     this->loop_rl->start();
+
+    // keyboard
+    this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05, std::bind(&RL_Sim::KeyboardInterface, this));
+    this->loop_keyboard->start();
 
 #ifdef PLOT
     this->plot_t = std::vector<int>(this->plot_size, 0);
@@ -80,6 +82,8 @@ RL_Sim::RL_Sim()
 #ifdef CSV_LOGGER
     this->CSVInit(this->robot_name);
 #endif
+
+    std::cout << LOGGER::INFO << "RL_Sim start" << std::endl;
 }
 
 RL_Sim::~RL_Sim()
@@ -150,10 +154,12 @@ void RL_Sim::RobotControl()
         if(simulation_running)
         {
             this->gazebo_pause_physics_client.call(empty);
+            std::cout << std::endl << LOGGER::INFO << "Simulation Stop" << std::endl;
         }
         else
         {
             this->gazebo_unpause_physics_client.call(empty);
+            std::cout << std::endl << LOGGER::INFO << "Simulation Start" << std::endl;
         }
         simulation_running = !simulation_running;
         this->control.control_state = STATE_WAITING;
@@ -230,15 +236,16 @@ void RL_Sim::RunModel()
 
 torch::Tensor RL_Sim::ComputeObservation()
 {
-    torch::Tensor obs = torch::cat({// this->obs.lin_vel * this->params.lin_vel_scale,
-                                    this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale,
-                                    // this->obs.ang_vel * this->params.ang_vel_scale, // TODO
-                                    this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec),
-                                    this->obs.commands * this->params.commands_scale,
-                                    (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
-                                    this->obs.dof_vel * this->params.dof_vel_scale,
-                                    this->obs.actions
-                                    },1);
+    torch::Tensor obs = torch::cat({
+        // this->obs.lin_vel * this->params.lin_vel_scale,
+        // this->obs.ang_vel * this->params.ang_vel_scale, // TODO is QuatRotateInverse necessery?
+        this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale,
+        this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec),
+        this->obs.commands * this->params.commands_scale,
+        (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
+        this->obs.dof_vel * this->params.dof_vel_scale,
+        this->obs.actions
+        },1);
     torch::Tensor clamped_obs = torch::clamp(obs, -this->params.clip_obs, this->params.clip_obs);
     return clamped_obs;
 }
@@ -246,11 +253,8 @@ torch::Tensor RL_Sim::ComputeObservation()
 torch::Tensor RL_Sim::Forward()
 {
     torch::autograd::GradMode::set_enabled(false);
-
     torch::Tensor clamped_obs = this->ComputeObservation();
-
     torch::Tensor actions;
-
     if(this->use_history)
     {
         this->history_obs_buf.insert(clamped_obs);
@@ -260,10 +264,9 @@ torch::Tensor RL_Sim::Forward()
     else
     {
         actions = this->model.forward({clamped_obs}).toTensor();
-    }  
+    }
 
     torch::Tensor clamped_actions = torch::clamp(actions, this->params.clip_actions_lower, this->params.clip_actions_upper);
-
     return clamped_actions;
 }
 
@@ -297,12 +300,8 @@ void signalHandler(int signum)
 int main(int argc, char **argv)
 {
     signal(SIGINT, signalHandler);
-
     ros::init(argc, argv, "rl_sar");
-
     RL_Sim rl_sar;
-
     ros::spin();
-
     return 0;
 }

@@ -75,14 +75,22 @@ Before running, copy the trained pt model file to `rl_sar/src/rl_sar/models/YOUR
 
 ### Simulation
 
-Open a new terminal, launch the gazebo simulation environment
+Open a terminal, launch the gazebo simulation environment
 
 ```bash
 source devel/setup.bash
 roslaunch rl_sar gazebo_<ROBOT>.launch
 ```
 
-Where \<ROBOT\> can be `a1` or `gr1t1`.
+Open a new terminal, launch the control program
+
+```bash
+source devel/setup.bash
+(for cpp version)    rosrun rl_sar rl_sim
+(for python version) rosrun rl_sar rl_sim.py
+```
+
+Where \<ROBOT\> can be `a1` or `gr1t1` or `gr1t2`.
 
 Control:
 * Press **\<Enter\>** to toggle simulation start/stop.
