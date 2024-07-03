@@ -1,5 +1,5 @@
 a1:
-  model_name: "model_0526.pt"
+  model_name: "model_0702.pt"
   dt: 0.005
   decimation: 4
   num_observations: 45
