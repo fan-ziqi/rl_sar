@@ -93,10 +93,16 @@ class RL_Sim(RL):
         print(LOGGER.INFO + "RL_Sim exit")
 
     def GetState(self, state):
-        state.imu.quaternion[3] = self.pose.orientation.w
-        state.imu.quaternion[0] = self.pose.orientation.x
-        state.imu.quaternion[1] = self.pose.orientation.y
-        state.imu.quaternion[2] = self.pose.orientation.z
+        if self.params.framework == "isaacgym":
+            state.imu.quaternion[3] = self.pose.orientation.w
+            state.imu.quaternion[0] = self.pose.orientation.x
+            state.imu.quaternion[1] = self.pose.orientation.y
+            state.imu.quaternion[2] = self.pose.orientation.z
+        elif self.params.framework == "isaacsim":
+            state.imu.quaternion[0] = self.pose.orientation.w
+            state.imu.quaternion[1] = self.pose.orientation.x
+            state.imu.quaternion[2] = self.pose.orientation.y
+            state.imu.quaternion[3] = self.pose.orientation.z
 
         state.imu.gyroscope[0] = self.vel.angular.x
         state.imu.gyroscope[1] = self.vel.angular.y
@@ -188,8 +194,8 @@ class RL_Sim(RL):
         obs = torch.cat([
             # self.obs.lin_vel * self.params.lin_vel_scale,
             # self.obs.ang_vel * self.params.ang_vel_scale, # TODO is QuatRotateInverse necessery?
-            self.QuatRotateInverse(self.obs.base_quat, self.obs.ang_vel) * self.params.ang_vel_scale,
-            self.QuatRotateInverse(self.obs.base_quat, self.obs.gravity_vec),
+            self.QuatRotateInverse(self.obs.base_quat, self.obs.ang_vel, self.params.framework) * self.params.ang_vel_scale,
+            self.QuatRotateInverse(self.obs.base_quat, self.obs.gravity_vec, self.params.framework),
             self.obs.commands * self.params.commands_scale,
             (self.obs.dof_pos - self.params.default_dof_pos) * self.params.dof_pos_scale,
             self.obs.dof_vel * self.params.dof_vel_scale,

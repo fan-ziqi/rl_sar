@@ -4,8 +4,8 @@
 torch::Tensor RL_XXX::ComputeObservation()
 {
     torch::Tensor obs = torch::cat({
-        this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale,
-        this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec),
+        this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel, this->params.framework) * this->params.ang_vel_scale,
+        this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec, this->params.framework),
         this->obs.commands * this->params.commands_scale,
         (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
         this->obs.dof_vel * this->params.dof_vel_scale,
@@ -66,11 +66,22 @@ torch::Tensor RL::ComputePosition(torch::Tensor actions)
     return actions_scaled + this->params.default_dof_pos;
 }
 
-torch::Tensor RL::QuatRotateInverse(torch::Tensor q, torch::Tensor v)
+torch::Tensor RL::QuatRotateInverse(torch::Tensor q, torch::Tensor v, const std::string& framework)
 {
+    torch::Tensor q_w;
+    torch::Tensor q_vec;
+    if(framework == "isaacsim")
+    {
+        q_w = q.index({torch::indexing::Slice(), 0});
+        q_vec = q.index({torch::indexing::Slice(), torch::indexing::Slice(1, 4)});
+    }
+    else if(framework == "isaacgym")
+    {
+        q_w = q.index({torch::indexing::Slice(), 3});
+        q_vec = q.index({torch::indexing::Slice(), torch::indexing::Slice(0, 3)});
+    }
     c10::IntArrayRef shape = q.sizes();
-    torch::Tensor q_w = q.index({torch::indexing::Slice(), -1});
-    torch::Tensor q_vec = q.index({torch::indexing::Slice(), torch::indexing::Slice(0, 3)});
+    
     torch::Tensor a = v * (2.0 * torch::pow(q_w, 2) - 1.0).unsqueeze(-1);
     torch::Tensor b = torch::cross(q_vec, v, -1) * q_w.unsqueeze(-1) * 2.0;
     torch::Tensor c = q_vec * torch::bmm(q_vec.view({shape[0], 1, 3}), v.view({shape[0], 3, 1})).squeeze(-1) * 2.0;
@@ -304,6 +315,33 @@ std::vector<T> ReadVectorFromYaml(const YAML::Node& node)
     return values;
 }
 
+template<typename T>
+std::vector<T> ReadVectorFromYaml(const YAML::Node& node, const std::string& framework, const int& rows, const int& cols)
+{
+    std::vector<T> values;
+    for(const auto& val : node)
+    {
+        values.push_back(val.as<T>());
+    }
+
+    if(framework == "isaacsim")
+    {
+        std::vector<T> transposed_values(cols * rows);
+        for(int r = 0; r < rows; ++r)
+        {
+            for(int c = 0; c < cols; ++c)
+            {
+                transposed_values[c * rows + r] = values[r * cols + c];
+            }
+        }
+        return transposed_values;
+    }
+    else if(framework == "isaacgym")
+    {
+        return values;
+    }
+}
+
 void RL::ReadYaml(std::string robot_name)
 {
     YAML::Node config;
@@ -318,12 +356,15 @@ void RL::ReadYaml(std::string robot_name)
     }
 
     this->params.model_name = config["model_name"].as<std::string>();
+    this->params.framework = config["framework"].as<std::string>();
+    int rows = config["rows"].as<int>();
+    int cols = config["cols"].as<int>();
     this->params.dt = config["dt"].as<double>();
     this->params.decimation = config["decimation"].as<int>();
     this->params.num_observations = config["num_observations"].as<int>();
     this->params.clip_obs = config["clip_obs"].as<double>();
-    this->params.clip_actions_upper = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_upper"])).view({1, -1});
-    this->params.clip_actions_lower = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_lower"])).view({1, -1});
+    this->params.clip_actions_upper = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_upper"], this->params.framework, rows, cols)).view({1, -1});
+    this->params.clip_actions_lower = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_lower"], this->params.framework, rows, cols)).view({1, -1});
     this->params.action_scale = config["action_scale"].as<double>();
     this->params.hip_scale_reduction = config["hip_scale_reduction"].as<double>();
     this->params.hip_scale_reduction_indices = ReadVectorFromYaml<int>(config["hip_scale_reduction_indices"]);
@@ -334,13 +375,13 @@ void RL::ReadYaml(std::string robot_name)
     this->params.dof_vel_scale = config["dof_vel_scale"].as<double>();
     // this->params.commands_scale = torch::tensor(ReadVectorFromYaml<double>(config["commands_scale"])).view({1, -1});
     this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale});
-    this->params.rl_kp = torch::tensor(ReadVectorFromYaml<double>(config["rl_kp"])).view({1, -1});
-    this->params.rl_kd = torch::tensor(ReadVectorFromYaml<double>(config["rl_kd"])).view({1, -1});
-    this->params.fixed_kp = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kp"])).view({1, -1});
-    this->params.fixed_kd = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kd"])).view({1, -1});
-    this->params.torque_limits = torch::tensor(ReadVectorFromYaml<double>(config["torque_limits"])).view({1, -1});
-    this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<double>(config["default_dof_pos"])).view({1, -1});
-    this->params.joint_controller_names = ReadVectorFromYaml<std::string>(config["joint_controller_names"]);
+    this->params.rl_kp = torch::tensor(ReadVectorFromYaml<double>(config["rl_kp"], this->params.framework, rows, cols)).view({1, -1});
+    this->params.rl_kd = torch::tensor(ReadVectorFromYaml<double>(config["rl_kd"], this->params.framework, rows, cols)).view({1, -1});
+    this->params.fixed_kp = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kp"], this->params.framework, rows, cols)).view({1, -1});
+    this->params.fixed_kd = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kd"], this->params.framework, rows, cols)).view({1, -1});
+    this->params.torque_limits = torch::tensor(ReadVectorFromYaml<double>(config["torque_limits"], this->params.framework, rows, cols)).view({1, -1});
+    this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<double>(config["default_dof_pos"], this->params.framework, rows, cols)).view({1, -1});
+    this->params.joint_controller_names = ReadVectorFromYaml<std::string>(config["joint_controller_names"], this->params.framework, rows, cols);
 }
 
 void RL::CSVInit(std::string robot_name)

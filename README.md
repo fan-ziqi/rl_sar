@@ -4,6 +4,8 @@
 
 Simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
 
+This framework supports legged_gym based on IaacGym and IsaacLab based on IsaacSim. Use `framework` to distinguish them when using them.
+
 [Click to discuss on Discord](https://discord.gg/vmVjkhVugU)
 
 ## Preparation
@@ -90,7 +92,7 @@ source devel/setup.bash
 (for python version) rosrun rl_sar rl_sim.py
 ```
 
-Where \<ROBOT\> can be `a1` or `gr1t1` or `gr1t2`.
+Where \<ROBOT\> can be `a1` or `a1_isaaclab` or `gr1t1` or `gr1t2`.
 
 Control:
 * Press **\<Enter\>** to toggle simulation start/stop.
