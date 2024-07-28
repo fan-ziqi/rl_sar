@@ -1,10 +1,12 @@
 import torch
 import yaml
 import os
+import csv
 from pynput import keyboard
 from enum import Enum, auto
 
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../config.yaml")
+BASE_PATH = os.path.join(os.path.dirname(__file__), "../../")
+CONFIG_PATH = os.path.join(BASE_PATH, "config.yaml")
 
 class LOGGER:
     INFO = "\033[0;37m[INFO]\033[0m "
@@ -354,3 +356,37 @@ class RL:
         self.params.default_dof_pos = torch.tensor(config["default_dof_pos"]).view(1, -1)
         self.params.joint_controller_names = config["joint_controller_names"]
 
+    def CSVInit(self, robot_name):
+        self.csv_filename = os.path.join(BASE_PATH, "models", robot_name, 'motor')
+        
+        # Uncomment these lines if need timestamp for file name
+        # now = datetime.now()
+        # timestamp = now.strftime("%Y%m%d%H%M%S")
+        # self.csv_filename += f"_{timestamp}"
+        
+        self.csv_filename += ".csv"
+        
+        with open(self.csv_filename, 'w', newline='') as file:
+            writer = csv.writer(file)
+            
+            header = []
+            header += [f"tau_cal_{i}" for i in range(12)]
+            header += [f"tau_est_{i}" for i in range(12)]
+            header += [f"joint_pos_{i}" for i in range(12)]
+            header += [f"joint_pos_target_{i}" for i in range(12)]
+            header += [f"joint_vel_{i}" for i in range(12)]
+            
+            writer.writerow(header)
+
+    def CSVLogger(self, torque, tau_est, joint_pos, joint_pos_target, joint_vel):
+        with open(self.csv_filename, 'a', newline='') as file:
+            writer = csv.writer(file)
+            
+            row = []
+            row += [torque[0][i].item() for i in range(12)]
+            row += [tau_est[0][i].item() for i in range(12)]
+            row += [joint_pos[0][i].item() for i in range(12)]
+            row += [joint_pos_target[0][i].item() for i in range(12)]
+            row += [joint_vel[0][i].item() for i in range(12)]
+            
+            writer.writerow(row)

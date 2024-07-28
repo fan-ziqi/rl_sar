@@ -13,9 +13,11 @@ from gazebo_msgs.srv import SetModelState, SetModelStateRequest
 from std_srvs.srv import Empty
 
 path = os.path.abspath(".")
-sys.path.insert(0, path + "/src/rl_sar/scripts")
-from rl_sdk import *
-from observation_buffer import *
+sys.path.insert(0, path + "/src/rl_sar")
+from library.rl_sdk.rl_sdk import *
+from library.observation_buffer.observation_buffer import *
+
+CSV_LOGGER = False
 
 class RL_Sim(RL):
     def __init__(self):
@@ -86,6 +88,10 @@ class RL_Sim(RL):
         # keyboard
         self.listener_keyboard = keyboard.Listener(on_press=self.KeyboardInterface)
         self.listener_keyboard.start()
+
+        # others
+        if CSV_LOGGER:
+            self.CSVInit(self.robot_name)
 
         print(LOGGER.INFO + "RL_Sim start")
 
@@ -183,6 +189,10 @@ class RL_Sim(RL):
 
             self.output_torques = torch.clamp(origin_output_torques, -(self.params.torque_limits), self.params.torque_limits)
             self.output_dof_pos = self.ComputePosition(self.obs.actions)
+
+            if CSV_LOGGER:
+                tau_est = torch.tensor(self.mapped_joint_efforts).unsqueeze(0)
+                self.CSVLogger(self.output_torques, tau_est, self.obs.dof_pos, self.output_dof_pos, self.obs.dof_vel)
 
     def ComputeObservation(self):
         obs = torch.cat([

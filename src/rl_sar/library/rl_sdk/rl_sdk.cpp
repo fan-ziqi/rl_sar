@@ -347,7 +347,7 @@ void RL::CSVInit(std::string robot_name)
 {
     csv_filename = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_name + "/motor";
 
-    // // Uncomment these lines if need timestamp for file name 
+    // Uncomment these lines if need timestamp for file name
     // auto now = std::chrono::system_clock::now();
     // std::time_t now_c = std::chrono::system_clock::to_time_t(now);
     // std::stringstream ss;
@@ -358,7 +358,7 @@ void RL::CSVInit(std::string robot_name)
     csv_filename += ".csv";
     std::ofstream file(csv_filename.c_str());
 
-    for(int i = 0; i < 12; ++i) {file << "torque_" << i << ",";}
+    for(int i = 0; i < 12; ++i) {file << "tau_cal_" << i << ",";}
     for(int i = 0; i < 12; ++i) {file << "tau_est_" << i << ",";}
     for(int i = 0; i < 12; ++i) {file << "joint_pos_" << i << ",";}
     for(int i = 0; i < 12; ++i) {file << "joint_pos_target_" << i << ",";}
