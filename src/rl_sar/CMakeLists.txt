@@ -83,6 +83,6 @@ target_link_libraries(rl_real_a1
 
 catkin_install_python(PROGRAMS
   scripts/rl_sim.py
-  scripts/rl_sdk.py
+  scripts/actuator_net.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
