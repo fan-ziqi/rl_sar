@@ -4,7 +4,7 @@
 
 机器人强化学习算法的仿真验证与实物部署，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
 
-本框架支持基于IaacGym的legged_gym，也支持基于IsaacSim的IsaacLab，使用时用`framework`加以区分。
+本框架支持基于IaacGym的legged_gym，也支持基于IsaacSim的IsaacLab，用`framework`加以区分。
 
 [点击在Discord上讨论](https://discord.gg/MC9KguQHtt)
 
