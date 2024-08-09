@@ -13,9 +13,9 @@ from gazebo_msgs.srv import SetModelState, SetModelStateRequest
 from std_srvs.srv import Empty
 
 path = os.path.abspath(".")
-sys.path.insert(0, path + "/src/rl_sar")
-from library.rl_sdk.rl_sdk import *
-from library.observation_buffer.observation_buffer import *
+sys.path.insert(0, path + "/src/rl_sar/scripts")
+from rl_sdk import *
+from observation_buffer import *
 
 CSV_LOGGER = False
 

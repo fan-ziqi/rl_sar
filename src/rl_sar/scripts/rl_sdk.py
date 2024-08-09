@@ -5,7 +5,7 @@ import csv
 from pynput import keyboard
 from enum import Enum, auto
 
-BASE_PATH = os.path.join(os.path.dirname(__file__), "../../")
+BASE_PATH = os.path.join(os.path.dirname(__file__), "../")
 CONFIG_PATH = os.path.join(BASE_PATH, "config.yaml")
 
 class LOGGER:
