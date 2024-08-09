@@ -118,7 +118,20 @@ rosrun rl_sar rl_real_a1
 
 Press the **R2** button on the controller to switch the robot to the default standing position, press **R1** to switch to RL control mode, and press **L2** in any state to switch to the initial lying position. The left stick controls x-axis up and down, controls yaw left and right, and the right stick controls y-axis left and right.
 
-OR Press **0** on the keyboard to switch the robot to the default standing position, press **P** to switch to RL control mode, and press **1** in any state to switch to the initial lying position. WS controls x-axis, AD controls yaw, and JL controls y-axis.
+Or press **0** on the keyboard to switch the robot to the default standing position, press **P** to switch to RL control mode, and press **1** in any state to switch to the initial lying position. WS controls x-axis, AD controls yaw, and JL controls y-axis.
+
+### Train the actuator network
+
+1. Uncomment `#define CSV_LOGGER` in the top of `rl_real.cpp`. You can also modify the corresponding part in the simulation program to collect simulation data for testing the training process.
+2. Run the control program, and the program will log all data after execution.
+3. Stop the control program and start training the actuator network. Note that `rl_sar/src/rl_sar/models/` is omitted before the following paths.
+    ```bash
+    rosrun rl_sar actuator_net.py --mode train --data a1/motor.csv --output a1/motor.pt
+    ```
+4. Verify the trained actuator network.
+    ```bash
+    rosrun rl_sar actuator_net.py --mode play --data a1/motor.csv --output a1/motor.pt
+    ```
 
 ## Add Your Robot
 

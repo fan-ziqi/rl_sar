@@ -119,7 +119,20 @@ rosrun rl_sar rl_real_a1
 
 按下遥控器的**R2**键让机器人切换到默认站起姿态，按下**R1**键切换到RL控制模式，任意状态按下**L2**切换到最初的趴下姿态。左摇杆上下控制x左右控制yaw，右摇杆左右控制y。
 
-OR 按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P**键切换到RL控制模式，任意状态按下**1**键切换到最初的趴下姿态。WS控制x，AD控制yaw，JL控制y。
+或者按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P**键切换到RL控制模式，任意状态按下**1**键切换到最初的趴下姿态。WS控制x，AD控制yaw，JL控制y。
+
+### 训练执行器网络
+
+1. 取消注释`rl_real.cpp`中最上面的`#define CSV_LOGGER`，你也可以在仿真程序中修改对应部分采集仿真数据用来测试训练过程。
+2. 运行控制程序，程序会在执行后记录所有数据。
+3. 停止控制程序，开始训练执行器网络。注意，下面的路径前均省略了`rl_sar/src/rl_sar/models/`。
+    ```bash
+    rosrun rl_sar actuator_net.py --mode train --data a1/motor.csv --output a1/motor.pt
+    ```
+4. 验证已经训练好的训练执行器网络。
+    ```bash
+    rosrun rl_sar actuator_net.py --mode play --data a1/motor.csv --output a1/motor.pt
+    ```
 
 ## 添加你的机器人
 
