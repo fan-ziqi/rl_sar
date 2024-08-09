@@ -64,6 +64,7 @@ class Control:
 class ModelParams:
     def __init__(self):
         self.model_name = None
+        self.framework = None
         self.dt = None
         self.decimation = None
         self.num_observations = None
@@ -162,10 +163,14 @@ class RL:
         actions_scaled = actions * self.params.action_scale
         return actions_scaled + self.params.default_dof_pos
 
-    def QuatRotateInverse(self, q, v):
+    def QuatRotateInverse(self, q, v, framework):
+        if framework == "isaacsim":
+            q_w = q[:, 0]
+            q_vec = q[:, 1:4]
+        elif framework == "isaacgym":
+            q_w = q[:, 3]
+            q_vec = q[:, 0:3]
         shape = q.shape
-        q_w = q[:, -1]
-        q_vec = q[:, :3]
         a = v * (2.0 * q_w ** 2 - 1.0).unsqueeze(-1)
         b = torch.cross(q_vec, v, dim=-1) * q_w.unsqueeze(-1) * 2.0
         c = q_vec * torch.bmm(q_vec.view(shape[0], 1, 3), v.view(shape[0], 3, 1)).squeeze(-1) * 2.0
@@ -324,6 +329,16 @@ class RL:
         except AttributeError:
             pass
 
+    def ReadVectorFromYaml(self, values, framework, rows, cols):
+        if framework == "isaacsim":
+            transposed_values = [0] * cols * rows
+            for r in range(rows):
+                for c in range(cols):
+                    transposed_values[c * rows + r] = values[r * cols + c]
+            return transposed_values
+        elif framework == "isaacgym":
+            return values
+
     def ReadYaml(self, robot_name):
         try:
             with open(CONFIG_PATH, 'r') as f:
@@ -333,6 +348,9 @@ class RL:
             return
 
         self.params.model_name = config["model_name"]
+        self.params.framework = config["framework"]
+        rows = config["rows"]
+        cols = config["cols"]
         self.params.dt = config["dt"]
         self.params.decimation = config["decimation"]
         self.params.num_observations = config["num_observations"]
@@ -340,21 +358,21 @@ class RL:
         self.params.action_scale = config["action_scale"]
         self.params.hip_scale_reduction = config["hip_scale_reduction"]
         self.params.hip_scale_reduction_indices = config["hip_scale_reduction_indices"]
-        self.params.clip_actions_upper = torch.tensor(config["clip_actions_upper"]).view(1, -1)
-        self.params.clip_actions_lower = torch.tensor(config["clip_actions_lower"]).view(1, -1)
+        self.params.clip_actions_upper = torch.tensor(self.ReadVectorFromYaml(config["clip_actions_upper"], self.params.framework, rows, cols)).view(1, -1)
+        self.params.clip_actions_lower = torch.tensor(self.ReadVectorFromYaml(config["clip_actions_lower"], self.params.framework, rows, cols)).view(1, -1)
         self.params.num_of_dofs = config["num_of_dofs"]
         self.params.lin_vel_scale = config["lin_vel_scale"]
         self.params.ang_vel_scale = config["ang_vel_scale"]
         self.params.dof_pos_scale = config["dof_pos_scale"]
         self.params.dof_vel_scale = config["dof_vel_scale"]
         self.params.commands_scale = torch.tensor([self.params.lin_vel_scale, self.params.lin_vel_scale, self.params.ang_vel_scale])
-        self.params.rl_kp = torch.tensor(config["rl_kp"]).view(1, -1)
-        self.params.rl_kd = torch.tensor(config["rl_kd"]).view(1, -1)
-        self.params.fixed_kp = torch.tensor(config["fixed_kp"]).view(1, -1)
-        self.params.fixed_kd = torch.tensor(config["fixed_kd"]).view(1, -1)
-        self.params.torque_limits = torch.tensor(config["torque_limits"]).view(1, -1)
-        self.params.default_dof_pos = torch.tensor(config["default_dof_pos"]).view(1, -1)
-        self.params.joint_controller_names = config["joint_controller_names"]
+        self.params.rl_kp = torch.tensor(self.ReadVectorFromYaml(config["rl_kp"], self.params.framework, rows, cols)).view(1, -1)
+        self.params.rl_kd = torch.tensor(self.ReadVectorFromYaml(config["rl_kd"], self.params.framework, rows, cols)).view(1, -1)
+        self.params.fixed_kp = torch.tensor(self.ReadVectorFromYaml(config["fixed_kp"], self.params.framework, rows, cols)).view(1, -1)
+        self.params.fixed_kd = torch.tensor(self.ReadVectorFromYaml(config["fixed_kd"], self.params.framework, rows, cols)).view(1, -1)
+        self.params.torque_limits = torch.tensor(self.ReadVectorFromYaml(config["torque_limits"], self.params.framework, rows, cols)).view(1, -1)
+        self.params.default_dof_pos = torch.tensor(self.ReadVectorFromYaml(config["default_dof_pos"], self.params.framework, rows, cols)).view(1, -1)
+        self.params.joint_controller_names = self.ReadVectorFromYaml(config["joint_controller_names"], self.params.framework, rows, cols)
 
     def CSVInit(self, robot_name):
         self.csv_filename = os.path.join(BASE_PATH, "models", robot_name, 'motor')

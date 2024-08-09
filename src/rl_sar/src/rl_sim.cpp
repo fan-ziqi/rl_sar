@@ -99,10 +99,20 @@ RL_Sim::~RL_Sim()
 
 void RL_Sim::GetState(RobotState<double> *state)
 {
-    state->imu.quaternion[3] = this->pose.orientation.w;
-    state->imu.quaternion[0] = this->pose.orientation.x;
-    state->imu.quaternion[1] = this->pose.orientation.y;
-    state->imu.quaternion[2] = this->pose.orientation.z;
+    if(this->params.framework == "isaacgym")
+    {
+        state->imu.quaternion[3] = this->pose.orientation.w;
+        state->imu.quaternion[0] = this->pose.orientation.x;
+        state->imu.quaternion[1] = this->pose.orientation.y;
+        state->imu.quaternion[2] = this->pose.orientation.z;
+    }
+    else if(this->params.framework == "isaacsim")
+    {
+        state->imu.quaternion[0] = this->pose.orientation.w;
+        state->imu.quaternion[1] = this->pose.orientation.x;
+        state->imu.quaternion[2] = this->pose.orientation.y;
+        state->imu.quaternion[3] = this->pose.orientation.z;
+    }
 
     state->imu.gyroscope[0] = this->vel.angular.x;
     state->imu.gyroscope[1] = this->vel.angular.y;
@@ -239,8 +249,8 @@ torch::Tensor RL_Sim::ComputeObservation()
     torch::Tensor obs = torch::cat({
         // this->obs.lin_vel * this->params.lin_vel_scale,
         // this->obs.ang_vel * this->params.ang_vel_scale, // TODO is QuatRotateInverse necessery?
-        this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale,
-        this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec),
+        this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel, this->params.framework) * this->params.ang_vel_scale,
+        this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec, this->params.framework),
         this->obs.commands * this->params.commands_scale,
         (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
         this->obs.dof_vel * this->params.dof_vel_scale,
