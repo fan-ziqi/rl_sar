@@ -4,7 +4,7 @@
 
 Simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
 
-This framework supports legged_gym based on IaacGym and IsaacLab based on IsaacSim. Use `framework` to distinguish them when using them.
+This framework supports legged_gym based on IaacGym and IsaacLab based on IsaacSim. Use `framework` to distinguish.
 
 [Click to discuss on Discord](https://discord.gg/vmVjkhVugU)
 
