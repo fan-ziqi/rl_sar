@@ -36,8 +36,7 @@ class RL_Sim(RL):
         self.ReadYaml(self.robot_name)
 
         # history
-        self.use_history = rospy.get_param("use_history", "")
-        if self.use_history:
+        if self.params.use_history:
             self.history_obs_buf = ObservationBuffer(1, self.params.num_observations, 6)
 
         # Due to the fact that the robot_state_publisher sorts the joint names alphabetically,
@@ -75,6 +74,7 @@ class RL_Sim(RL):
         self.joint_state_subscriber = rospy.Subscriber(joint_states_topic, JointState, self.JointStatesCallback, queue_size=10)
 
         # service
+        self.gazebo_model_name = rospy.get_param("gazebo_model_name", "")
         self.gazebo_set_model_state_client = rospy.ServiceProxy("/gazebo/set_model_state", SetModelState)
         self.gazebo_pause_physics_client = rospy.ServiceProxy("/gazebo/pause_physics", Empty)
         self.gazebo_unpause_physics_client = rospy.ServiceProxy("/gazebo/unpause_physics", Empty)
@@ -135,8 +135,7 @@ class RL_Sim(RL):
     def RobotControl(self):
         if self.control.control_state == STATE.STATE_RESET_SIMULATION:
             set_model_state = SetModelStateRequest().model_state
-            gazebo_model_name = f"{self.robot_name}_gazebo"
-            set_model_state.model_name = gazebo_model_name
+            set_model_state.model_name = self.gazebo_model_name
             set_model_state.pose.position.z = 1.0
             set_model_state.reference_frame = "world"
             self.gazebo_set_model_state_client(set_model_state)
@@ -217,7 +216,7 @@ class RL_Sim(RL):
     def Forward(self):
         torch.set_grad_enabled(False)
         clamped_obs = self.ComputeObservation()
-        if self.use_history:
+        if self.params.use_history:
             self.history_obs_buf.insert(clamped_obs)
             history_obs = self.history_obs_buf.get_obs_vec(np.arange(6))
             actions = self.model.forward(history_obs)

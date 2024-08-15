@@ -7,7 +7,6 @@
 #include <unistd.h>
 
 #include <yaml-cpp/yaml.h>
-#define CONFIG_PATH CMAKE_CURRENT_SOURCE_DIR "/config.yaml"
 
 namespace LOGGER {
     const char* const INFO    = "\033[0;37m[INFO]\033[0m ";
@@ -71,6 +70,7 @@ struct ModelParams
 {
     std::string model_name;
     std::string framework;
+    bool use_history;
     double dt;
     int decimation;
     int num_observations;
