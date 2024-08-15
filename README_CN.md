@@ -71,6 +71,8 @@ cd ..
 catkin build
 ```
 
+如果 catkin build 报错: `Unable to find either executable 'empy' or Python module 'em'`, 在`catkin build` 之前执行 `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3`
+
 ## 运行
 
 运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/models/YOUR_ROBOT_NAME`中，并配置`config.yaml`中的参数。
@@ -101,9 +103,9 @@ source devel/setup.bash
 * 按 **\<Space\>** 将所有控制指令设置为零。
 * 如果机器人摔倒，按 **R** 重置Gazebo环境。
 
-### 实物
+### 真实机器人
 
-#### Unitree A1
+**示例：Unitree A1**
 
 与Unitree A1连接可以使用无线与有线两种方式
 
@@ -136,14 +138,13 @@ rosrun rl_sar rl_real_a1
 
 ## 添加你的机器人
 
-下文中将ROBOT代表机器人名称
+下文中将`<ROBOT>`代表机器人名称
 
-1. 在robots文件夹中创建名为ROBOT_description的模型包，将模型的urdf放到文件夹中的urdf路径下并命名为ROBOT.urdf，在模型文件中的config文件夹中创建命名空间为ROBOT_gazebo的关节配置文件
-2. 将模型文件放到models/ROBOT中
-3. 在rl_sar/config.yaml中添加一个新的字段，命名为ROBOT，更改其中参数，如将model_name改为上一步的模型文件名
-4. 在rl_sar/launch文件夹中添加一个新的launch文件，请参考其他launch文件自行修改
-5. 修改rl_xxx.cpp中的ROBOT_NAME为ROBOT
-6. 编译运行
+1. 在`rl_sar/src/robots`路径下创建名为`<ROBOT>_description`的模型包，将模型的urdf放到`rl_sar/src/robots/<ROBOT>_description/urdf`路径下并命名为`<ROBOT>.urdf`，并在`rl_sar/src/robots/<ROBOT>_description/config`路径下创建命名空间为`<ROBOT>_gazebo`的关节配置文件
+2. 将训练好的RL模型文件放到`rl_sar/src/rl_sar/models/<ROBOT>`路径下
+3. 在`rl_sar/src/rl_sar/models/<ROBOT>`中新建config.yaml文件，参考`rl_sar/src/rl_sar/models/a1_isaacgym/config.yaml`文件修改其中参数
+4. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch`路径下的launch文件自行修改
+5. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_a1.cpp`文件自行修改
 
 ## 参考
 
