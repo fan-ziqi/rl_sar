@@ -31,7 +31,6 @@ private:
     void RobotControl();
 
     // history buffer
-    bool use_history = true;
     ObservationBuffer history_obs_buf;
     torch::Tensor history_obs;
 
@@ -65,6 +64,7 @@ private:
     void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
 
     // others
+    std::string gazebo_model_name;
     int motiontime = 0;
     std::map<std::string, size_t> sorted_to_original_index;
     std::vector<double> mapped_joint_positions;

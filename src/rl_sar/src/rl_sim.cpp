@@ -12,8 +12,7 @@ RL_Sim::RL_Sim()
     this->ReadYaml(this->robot_name);
 
     // history
-    nh.param<bool>("use_history", this->use_history, "");
-    if(this->use_history)
+    if(this->params.use_history)
     {
         this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
     }
@@ -56,6 +55,7 @@ RL_Sim::RL_Sim()
     this->joint_state_subscriber = nh.subscribe<sensor_msgs::JointState>(this->ros_namespace + "joint_states", 10, &RL_Sim::JointStatesCallback, this);
 
     // service
+    nh.param<std::string>("gazebo_model_name", this->gazebo_model_name, "");
     this->gazebo_set_model_state_client = nh.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
     this->gazebo_pause_physics_client = nh.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
     this->gazebo_unpause_physics_client = nh.serviceClient<std_srvs::Empty>("/gazebo/unpause_physics");
@@ -150,8 +150,7 @@ void RL_Sim::RobotControl()
     if(this->control.control_state == STATE_RESET_SIMULATION)
     {
         gazebo_msgs::SetModelState set_model_state;
-        std::string gazebo_model_name = this->robot_name + "_gazebo";
-        set_model_state.request.model_state.model_name = gazebo_model_name;
+        set_model_state.request.model_state.model_name = this->gazebo_model_name;
         set_model_state.request.model_state.pose.position.z = 1.0;
         set_model_state.request.model_state.reference_frame = "world";
         this->gazebo_set_model_state_client.call(set_model_state);
@@ -265,7 +264,7 @@ torch::Tensor RL_Sim::Forward()
     torch::autograd::GradMode::set_enabled(false);
     torch::Tensor clamped_obs = this->ComputeObservation();
     torch::Tensor actions;
-    if(this->use_history)
+    if(this->params.use_history)
     {
         this->history_obs_buf.insert(clamped_obs);
         this->history_obs = this->history_obs_buf.get_obs_vec({0, 1, 2, 3, 4, 5});

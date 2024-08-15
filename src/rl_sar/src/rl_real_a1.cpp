@@ -8,7 +8,7 @@ RL_Real rl_sar;
 RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_udp(UNITREE_LEGGED_SDK::LOWLEVEL)
 {
     // read params from yaml
-    this->robot_name = "a1";
+    this->robot_name = "a1_isaacgym";
     this->ReadYaml(this->robot_name);
 
     // history
