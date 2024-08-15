@@ -1,9 +1,9 @@
 <launch>
     <arg name="wname" default="stairs"/>
     <arg name="rname" default="gr1t2"/>
-    <param name="robot_name" type="str" value="$(arg rname)"/>
-    <param name="use_history" type="bool" value="false"/>
+    <param name="robot_name" type="str" value="$(arg rname)_isaacgym"/>
     <param name="ros_namespace" type="str" value="/$(arg rname)_gazebo/"/>
+    <param name="gazebo_model_name" type="str" value="$(arg rname)_gazebo"/>
     <arg name="robot_path" value="(find $(arg rname)_description)"/>
     <arg name="dollar" value="$"/>
 

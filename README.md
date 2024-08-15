@@ -71,6 +71,8 @@ cd ..
 catkin build
 ```
 
+If catkin build report errors: `Unable to find either executable 'empy' or Python module 'em'`, run `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3` before `catkin build`
+
 ## Running
 
 Before running, copy the trained pt model file to `rl_sar/src/rl_sar/models/YOUR_ROBOT_NAME`, and configure the parameters in `config.yaml`.
@@ -100,9 +102,9 @@ Control:
 * Press **\<Space\>** to sets all control commands to zero.
 * If robot falls down, press **R** to reset Gazebo environment.
 
-### Physical Robots
+### Real Robots
 
-#### Unitree A1
+**Example: Unitree A1**
 
 Unitree A1 can be connected using both wireless and wired methods:
 
@@ -135,14 +137,13 @@ Or press **0** on the keyboard to switch the robot to the default standing posit
 
 ## Add Your Robot
 
-In the following, let ROBOT represent the name of your robot.
+In the following text, `<ROBOT>` represents the name of the robot
 
-1. Create a model package named ROBOT_description in the robots folder. Place the URDF model in the urdf path within the folder and name it ROBOT.urdf. Create a namespace named ROBOT_gazebo in the config folder within the model file for joint configuration.
-2. Place the model file in models/ROBOT.
-3. Add a new field in rl_sar/config.yaml named ROBOT and adjust the parameters, such as changing the model_name to the model file name from the previous step.
-4. Add a new launch file in the rl_sar/launch folder. Refer to other launch files for guidance on modification.
-5. Change ROBOT_NAME to ROBOT in rl_xxx.cpp.
-6. Compile and run.
+1. Create a model package named `<ROBOT>_description` in the `rl_sar/src/robots` directory. Place the robot's URDF file in the `rl_sar/src/robots/<ROBOT>_description/urdf` directory and name it `<ROBOT>.urdf`. Additionally, create a joint configuration file with the namespace `<ROBOT>_gazebo` in the `rl_sar/src/robots/<ROBOT>_description/config` directory.
+2. Place the trained RL model files in the `rl_sar/src/rl_sar/models/<ROBOT>` directory.
+3. In the `rl_sar/src/rl_sar/models/<ROBOT>` directory, create a `config.yaml` file, and modify its parameters based on the `rl_sar/src/rl_sar/models/a1_isaacgym/config.yaml` file.
+4. If you need to run simulations, modify the launch files as needed by referring to those in the `rl_sar/src/rl_sar/launch` directory.
+5. If you need to run on the physical robot, modify the file `rl_sar/src/rl_sar/src/rl_real_a1.cpp` as needed.
 
 ## Reference
 

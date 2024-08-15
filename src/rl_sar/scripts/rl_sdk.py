@@ -6,7 +6,6 @@ from pynput import keyboard
 from enum import Enum, auto
 
 BASE_PATH = os.path.join(os.path.dirname(__file__), "../")
-CONFIG_PATH = os.path.join(BASE_PATH, "config.yaml")
 
 class LOGGER:
     INFO = "\033[0;37m[INFO]\033[0m "
@@ -65,6 +64,7 @@ class ModelParams:
     def __init__(self):
         self.model_name = None
         self.framework = None
+        self.use_history = None
         self.dt = None
         self.decimation = None
         self.num_observations = None
@@ -338,19 +338,24 @@ class RL:
             return transposed_values
         elif framework == "isaacgym":
             return values
+        else:
+            raise ValueError(f"Unsupported framework: {framework}")
 
     def ReadYaml(self, robot_name):
+        # The config file is located at "rl_sar/src/rl_sar/models/<robot_name>/config.yaml"
+        config_path = os.path.join(BASE_PATH, "models", robot_name, "config.yaml")
         try:
-            with open(CONFIG_PATH, 'r') as f:
+            with open(config_path, 'r') as f:
                 config = yaml.safe_load(f)[robot_name]
         except FileNotFoundError as e:
-            print(LOGGER.ERROR + "The file '{CONFIG_PATH}' does not exist")
+            print(LOGGER.ERROR + f"The file '{config_path}' does not exist")
             return
 
         self.params.model_name = config["model_name"]
         self.params.framework = config["framework"]
         rows = config["rows"]
         cols = config["cols"]
+        self.params.use_history = config["use_history"]
         self.params.dt = config["dt"]
         self.params.decimation = config["decimation"]
         self.params.num_observations = config["num_observations"]
