@@ -74,6 +74,7 @@ struct ModelParams
     double dt;
     int decimation;
     int num_observations;
+    std::vector<std::string> observations;
     double damping;
     double stiffness;
     double action_scale;
@@ -128,7 +129,7 @@ public:
 
     // rl functions
     virtual torch::Tensor Forward() = 0;
-    virtual torch::Tensor ComputeObservation() = 0;
+    torch::Tensor ComputeObservation();
     virtual void GetState(RobotState<double> *state) = 0;
     virtual void SetCommand(const RobotCommand<double> *command) = 0;
     void StateController(const RobotState<double> *state, RobotCommand<double> *command);

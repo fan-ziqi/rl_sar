@@ -57,14 +57,7 @@ sudo ldconfig
 
 ## 编译
 
-自定义代码中的以下两个函数，以适配不同的模型：
-
-```cpp
-torch::Tensor forward() override;
-torch::Tensor compute_observation() override;
-```
-
-然后到根目录编译
+在项目根目录编译
 
 ```bash
 cd ..
@@ -143,8 +136,9 @@ rosrun rl_sar rl_real_a1
 1. 在`rl_sar/src/robots`路径下创建名为`<ROBOT>_description`的模型包，将模型的urdf放到`rl_sar/src/robots/<ROBOT>_description/urdf`路径下并命名为`<ROBOT>.urdf`，并在`rl_sar/src/robots/<ROBOT>_description/config`路径下创建命名空间为`<ROBOT>_gazebo`的关节配置文件
 2. 将训练好的RL模型文件放到`rl_sar/src/rl_sar/models/<ROBOT>`路径下
 3. 在`rl_sar/src/rl_sar/models/<ROBOT>`中新建config.yaml文件，参考`rl_sar/src/rl_sar/models/a1_isaacgym/config.yaml`文件修改其中参数
-4. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch`路径下的launch文件自行修改
-5. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_a1.cpp`文件自行修改
+4. 按需修改代码中的`forward()`函数，以适配不同的模型
+5. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch`路径下的launch文件自行修改
+6. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_a1.cpp`文件自行修改
 
 ## 参考
 

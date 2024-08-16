@@ -1,21 +1,5 @@
 #include "rl_sdk.hpp"
 
-/* You may need to override this ComputeObservation() function
-torch::Tensor RL_XXX::ComputeObservation()
-{
-    torch::Tensor obs = torch::cat({
-        this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel, this->params.framework) * this->params.ang_vel_scale,
-        this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec, this->params.framework),
-        this->obs.commands * this->params.commands_scale,
-        (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
-        this->obs.dof_vel * this->params.dof_vel_scale,
-        this->obs.actions
-        },1);
-    torch::Tensor clamped_obs = torch::clamp(obs, -this->params.clip_obs, this->params.clip_obs);
-    return clamped_obs;
-}
-*/
-
 /* You may need to override this Forward() function
 torch::Tensor RL_XXX::Forward()
 {
@@ -26,6 +10,48 @@ torch::Tensor RL_XXX::Forward()
     return clamped_actions;
 }
 */
+
+torch::Tensor RL::ComputeObservation()
+{
+    std::vector<torch::Tensor> obs_list;
+
+    for(const std::string& observation : this->params.observations)
+    {
+        if(observation == "lin_vel")
+        {
+            obs_list.push_back(this->obs.lin_vel * this->params.lin_vel_scale);
+        }
+        else if(observation == "ang_vel")
+        {
+            // obs_list.push_back(this->obs.ang_vel * this->params.ang_vel_scale); // TODO is QuatRotateInverse necessery?
+            obs_list.push_back(this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel, this->params.framework) * this->params.ang_vel_scale);
+        }
+        else if(observation == "gravity_vec")
+        {
+            obs_list.push_back(this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec, this->params.framework));
+        }
+        else if(observation == "commands")
+        {
+            obs_list.push_back(this->obs.commands * this->params.commands_scale);
+        }
+        else if(observation == "dof_pos")
+        {
+            obs_list.push_back((this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale);
+        }
+        else if(observation == "dof_vel")
+        {
+            obs_list.push_back(this->obs.dof_vel * this->params.dof_vel_scale);
+        }
+        else if(observation == "actions")
+        {
+            obs_list.push_back(this->obs.actions);
+        }
+    }
+
+    torch::Tensor obs = torch::cat(obs_list, 1);
+    torch::Tensor clamped_obs = torch::clamp(obs, -this->params.clip_obs, this->params.clip_obs);
+    return clamped_obs;
+}
 
 void RL::InitObservations()
 {
@@ -369,6 +395,7 @@ void RL::ReadYaml(std::string robot_name)
     this->params.dt = config["dt"].as<double>();
     this->params.decimation = config["decimation"].as<int>();
     this->params.num_observations = config["num_observations"].as<int>();
+    this->params.observations = ReadVectorFromYaml<std::string>(config["observations"]);
     this->params.clip_obs = config["clip_obs"].as<double>();
     this->params.clip_actions_upper = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_upper"], this->params.framework, rows, cols)).view({1, -1});
     this->params.clip_actions_lower = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_lower"], this->params.framework, rows, cols)).view({1, -1});

@@ -212,7 +212,7 @@ void RL_Sim::RunModel()
 {
     if(this->running_state == STATE_RL_RUNNING && simulation_running)
     {
-        // this->obs.lin_vel = torch::tensor({{this->vel.linear.x, this->vel.linear.y, this->vel.linear.z}});
+        this->obs.lin_vel = torch::tensor({{this->vel.linear.x, this->vel.linear.y, this->vel.linear.z}});
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
         // this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
         this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
@@ -241,22 +241,6 @@ void RL_Sim::RunModel()
         this->CSVLogger(this->output_torques, tau_est, this->obs.dof_pos, this->output_dof_pos, this->obs.dof_vel);
 #endif
     }
-}
-
-torch::Tensor RL_Sim::ComputeObservation()
-{
-    torch::Tensor obs = torch::cat({
-        // this->obs.lin_vel * this->params.lin_vel_scale,
-        // this->obs.ang_vel * this->params.ang_vel_scale, // TODO is QuatRotateInverse necessery?
-        this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel, this->params.framework) * this->params.ang_vel_scale,
-        this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec, this->params.framework),
-        this->obs.commands * this->params.commands_scale,
-        (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
-        this->obs.dof_vel * this->params.dof_vel_scale,
-        this->obs.actions
-        },1);
-    torch::Tensor clamped_obs = torch::clamp(obs, -this->params.clip_obs, this->params.clip_obs);
-    return clamped_obs;
 }
 
 torch::Tensor RL_Sim::Forward()
