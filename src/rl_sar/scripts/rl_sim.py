@@ -173,7 +173,7 @@ class RL_Sim(RL):
 
     def RunModel(self):
         if self.running_state == STATE.STATE_RL_RUNNING and self.simulation_running:
-            # self.obs.lin_vel = torch.tensor([[self.vel.linear.x, self.vel.linear.y, self.vel.linear.z]])
+            self.obs.lin_vel = torch.tensor([[self.vel.linear.x, self.vel.linear.y, self.vel.linear.z]])
             self.obs.ang_vel = torch.tensor(self.robot_state.imu.gyroscope).unsqueeze(0)
             # self.obs.commands = torch.tensor([[self.cmd_vel.linear.x, self.cmd_vel.linear.y, self.cmd_vel.angular.z]])
             self.obs.commands = torch.tensor([[self.control.x, self.control.y, self.control.yaw]])
@@ -198,20 +198,6 @@ class RL_Sim(RL):
             if CSV_LOGGER:
                 tau_est = torch.tensor(self.mapped_joint_efforts).unsqueeze(0)
                 self.CSVLogger(self.output_torques, tau_est, self.obs.dof_pos, self.output_dof_pos, self.obs.dof_vel)
-
-    def ComputeObservation(self):
-        obs = torch.cat([
-            # self.obs.lin_vel * self.params.lin_vel_scale,
-            # self.obs.ang_vel * self.params.ang_vel_scale, # TODO is QuatRotateInverse necessery?
-            self.QuatRotateInverse(self.obs.base_quat, self.obs.ang_vel, self.params.framework) * self.params.ang_vel_scale,
-            self.QuatRotateInverse(self.obs.base_quat, self.obs.gravity_vec, self.params.framework),
-            self.obs.commands * self.params.commands_scale,
-            (self.obs.dof_pos - self.params.default_dof_pos) * self.params.dof_pos_scale,
-            self.obs.dof_vel * self.params.dof_vel_scale,
-            self.obs.actions
-        ], dim = -1)
-        clamped_obs = torch.clamp(obs, -self.params.clip_obs, self.params.clip_obs)
-        return clamped_obs
 
     def Forward(self):
         torch.set_grad_enabled(False)

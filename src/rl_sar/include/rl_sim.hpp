@@ -24,7 +24,6 @@ public:
 private:
     // rl functions
     torch::Tensor Forward() override;
-    torch::Tensor ComputeObservation() override;
     void GetState(RobotState<double> *state) override;
     void SetCommand(const RobotCommand<double> *command) override;
     void RunModel();

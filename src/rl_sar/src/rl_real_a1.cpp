@@ -170,21 +170,6 @@ void RL_Real::RunModel()
     }
 }
 
-torch::Tensor RL_Real::ComputeObservation()
-{
-    torch::Tensor obs = torch::cat({
-        // this->QuatRotateInverse(this->obs.base_quat, this->obs.lin_vel) * this->params.lin_vel_scale,
-        this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel, this->params.framework) * this->params.ang_vel_scale,
-        this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec, this->params.framework),
-        this->obs.commands * this->params.commands_scale,
-        (this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale,
-        this->obs.dof_vel * this->params.dof_vel_scale,
-        this->obs.actions
-        },1);
-    torch::Tensor clamped_obs = torch::clamp(obs, -this->params.clip_obs, this->params.clip_obs);
-    return clamped_obs;
-}
-
 torch::Tensor RL_Real::Forward()
 {
     torch::autograd::GradMode::set_enabled(false);
