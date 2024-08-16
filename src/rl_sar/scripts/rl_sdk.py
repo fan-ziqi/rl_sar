@@ -68,6 +68,7 @@ class ModelParams:
         self.dt = None
         self.decimation = None
         self.num_observations = None
+        self.observations = None
         self.damping = None
         self.stiffness = None
         self.action_scale = None
@@ -134,6 +135,28 @@ class RL:
         self.output_torques = torch.zeros(1, 32)
         self.output_dof_pos = torch.zeros(1, 32)
 
+    def ComputeObservation(self):
+        obs_list = []
+        for observation in self.params.observations:
+            if observation == "lin_vel":
+                obs_list.append(self.obs.lin_vel * self.params.lin_vel_scale)
+            elif observation == "ang_vel":
+                # obs_list.append(self.obs.ang_vel * self.params.ang_vel_scale) # TODO is QuatRotateInverse necessery?
+                obs_list.append(self.QuatRotateInverse(self.obs.base_quat, self.obs.ang_vel, self.params.framework) * self.params.ang_vel_scale)
+            elif observation == "gravity_vec":
+                obs_list.append(self.QuatRotateInverse(self.obs.base_quat, self.obs.gravity_vec, self.params.framework))
+            elif observation == "commands":
+                obs_list.append(self.obs.commands * self.params.commands_scale)
+            elif observation == "dof_pos":
+                obs_list.append((self.obs.dof_pos - self.params.default_dof_pos) * self.params.dof_pos_scale)
+            elif observation == "dof_vel":
+                obs_list.append(self.obs.dof_vel * self.params.dof_vel_scale)
+            elif observation == "actions":
+                obs_list.append(self.obs.actions)
+        obs = torch.cat(obs_list, dim=-1)
+        clamped_obs = torch.clamp(obs, -self.params.clip_obs, self.params.clip_obs)
+        return clamped_obs
+    
     def InitObservations(self):
         self.obs.lin_vel = torch.zeros(1, 3, dtype=torch.float)
         self.obs.ang_vel = torch.zeros(1, 3, dtype=torch.float)
@@ -359,6 +382,7 @@ class RL:
         self.params.dt = config["dt"]
         self.params.decimation = config["decimation"]
         self.params.num_observations = config["num_observations"]
+        self.params.observations = config["observations"]
         self.params.clip_obs = config["clip_obs"]
         self.params.action_scale = config["action_scale"]
         self.params.hip_scale_reduction = config["hip_scale_reduction"]

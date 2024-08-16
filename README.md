@@ -57,14 +57,7 @@ sudo ldconfig
 
 ## Compilation
 
-Customize the following two functions in your code to adapt to different models:
-
-```cpp
-torch::Tensor forward() override;
-torch::Tensor compute_observation() override;
-```
-
-Then compile in the root directory
+Compile in the root directory of the project
 
 ```bash
 cd ..
@@ -142,8 +135,9 @@ In the following text, `<ROBOT>` represents the name of the robot
 1. Create a model package named `<ROBOT>_description` in the `rl_sar/src/robots` directory. Place the robot's URDF file in the `rl_sar/src/robots/<ROBOT>_description/urdf` directory and name it `<ROBOT>.urdf`. Additionally, create a joint configuration file with the namespace `<ROBOT>_gazebo` in the `rl_sar/src/robots/<ROBOT>_description/config` directory.
 2. Place the trained RL model files in the `rl_sar/src/rl_sar/models/<ROBOT>` directory.
 3. In the `rl_sar/src/rl_sar/models/<ROBOT>` directory, create a `config.yaml` file, and modify its parameters based on the `rl_sar/src/rl_sar/models/a1_isaacgym/config.yaml` file.
-4. If you need to run simulations, modify the launch files as needed by referring to those in the `rl_sar/src/rl_sar/launch` directory.
-5. If you need to run on the physical robot, modify the file `rl_sar/src/rl_sar/src/rl_real_a1.cpp` as needed.
+4. Modify the `forward()` function in the code as needed to adapt to different models.
+5. If you need to run simulations, modify the launch files as needed by referring to those in the `rl_sar/src/rl_sar/launch` directory.
+6. If you need to run on the physical robot, modify the file `rl_sar/src/rl_sar/src/rl_real_a1.cpp` as needed.
 
 ## Reference
 
