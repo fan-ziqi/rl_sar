@@ -7,6 +7,7 @@ a1_isaacgym:
   dt: 0.005
   decimation: 4
   num_observations: 45
+  observations: ["ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
   clip_obs: 100.0
   clip_actions_lower: [-100, -100, -100, 
                        -100, -100, -100, 
