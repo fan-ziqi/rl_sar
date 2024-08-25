@@ -1,5 +1,5 @@
 openloong_isaacsim:
-  model_name: "policy2.pt"
+  model_name: "policy.pt"
   framework: "isaacsim"
   rows: 2
   cols: 6
