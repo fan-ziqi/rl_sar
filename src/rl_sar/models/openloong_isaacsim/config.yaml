@@ -4,8 +4,8 @@ openloong_isaacsim:
   rows: 2
   cols: 6
   use_history: False
-  dt: 0.001
-  decimation: 20
+  dt: 0.005
+  decimation: 4
   num_observations: 48
   observations: ["lin_vel", "ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
   clip_obs: 100.0
