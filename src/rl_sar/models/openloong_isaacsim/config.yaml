@@ -28,8 +28,8 @@ openloong_isaacsim:
   dof_pos_scale: 1.0
   dof_vel_scale: 1.0
   commands_scale: [1.0, 1.0, 1.0]
-  torque_limits: [60.0, 45.0, 130.0, 130.0, 16.0,
-                  60.0, 45.0, 130.0, 130.0, 16.0]
+  torque_limits: [60.0, 45.0, 130.0, 130.0, 16.0, 16.0,
+                  60.0, 45.0, 130.0, 130.0, 16.0, 16.0]
   default_dof_pos: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
   joint_controller_names: ["l_hip_roll_controller", "l_hip_yaw_controller", "l_hip_pitch_controller", "l_knee_pitch_controller", "l_ankle_pitch_controller", "l_ankle_roll_controller",
