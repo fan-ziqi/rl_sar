@@ -1,0 +1,36 @@
+openloong_isaacsim:
+  model_name: "policy.pt"
+  framework: "isaacsim"
+  rows: 2
+  cols: 6
+  use_history: False
+  dt: 0.005
+  decimation: 4
+  num_observations: 48
+  observations: ["lin_vel", "ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
+  clip_obs: 100.0
+  clip_actions_lower: null
+  clip_actions_upper: null
+  rl_kp: [251.625, 362.5214, 200, 200, 10.9805, 10.9805,
+          251.625, 362.5214, 200, 200, 10.9805, 10.9805]
+  rl_kd: [10, 10, 10, 10, 10, 10,
+          10, 10, 10, 10, 10, 10]
+  fixed_kp: [251.625, 362.5214, 200, 200, 10.9805, 10.9805,
+             251.625, 362.5214, 200, 200, 10.9805, 10.9805]
+  fixed_kd: [10, 10, 10, 10, 10, 10,
+             10, 10, 10, 10, 10, 10]
+  hip_scale_reduction: 1.0
+  hip_scale_reduction_indices: []
+  num_of_dofs: 12
+  action_scale: 1.0
+  lin_vel_scale: 1.0
+  ang_vel_scale: 1.0
+  dof_pos_scale: 1.0
+  dof_vel_scale: 1.0
+  commands_scale: [1.0, 1.0, 1.0]
+  torque_limits: [60.0, 45.0, 130.0, 130.0, 16.0, 16.0,
+                  60.0, 45.0, 130.0, 130.0, 16.0, 16.0]
+  default_dof_pos: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  joint_controller_names: ["l_hip_roll_controller", "l_hip_yaw_controller", "l_hip_pitch_controller", "l_knee_pitch_controller", "l_ankle_pitch_controller", "l_ankle_roll_controller",
+                           "r_hip_roll_controller", "r_hip_yaw_controller", "r_hip_pitch_controller", "r_knee_pitch_controller", "r_ankle_pitch_controller", "r_ankle_roll_controller"]
