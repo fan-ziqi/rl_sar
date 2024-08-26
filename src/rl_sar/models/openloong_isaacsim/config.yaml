@@ -9,10 +9,8 @@ openloong_isaacsim:
   num_observations: 48
   observations: ["lin_vel", "ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
   clip_obs: 100.0
-  clip_actions_lower: [-10000, -10000, -10000, -10000, -10000, -10000,
-                       -10000, -10000, -10000, -10000, -10000, -10000]
-  clip_actions_upper: [10000, 10000, 10000, 10000, 10000, 10000,
-                       10000, 10000, 10000, 10000, 10000, 10000]
+  clip_actions_lower: null
+  clip_actions_upper: null
   rl_kp: [251.625, 362.5214, 200, 200, 10.9805, 10.9805,
           251.625, 362.5214, 200, 200, 10.9805, 10.9805]
   rl_kd: [10, 10, 10, 10, 10, 10,
