@@ -397,8 +397,16 @@ void RL::ReadYaml(std::string robot_name)
     this->params.num_observations = config["num_observations"].as<int>();
     this->params.observations = ReadVectorFromYaml<std::string>(config["observations"]);
     this->params.clip_obs = config["clip_obs"].as<double>();
-    this->params.clip_actions_upper = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_upper"], this->params.framework, rows, cols)).view({1, -1});
-    this->params.clip_actions_lower = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_lower"], this->params.framework, rows, cols)).view({1, -1});
+    if(config["clip_actions_lower"] && config["clip_actions_upper"])
+    {
+        this->params.clip_actions_upper = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_upper"], this->params.framework, rows, cols)).view({1, -1});
+        this->params.clip_actions_lower = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_lower"], this->params.framework, rows, cols)).view({1, -1});
+    }
+    else
+    {
+        this->params.clip_actions_upper = torch::tensor({}).view({1, -1});
+        this->params.clip_actions_lower = torch::tensor({}).view({1, -1});
+    }
     this->params.action_scale = config["action_scale"].as<double>();
     this->params.hip_scale_reduction = config["hip_scale_reduction"].as<double>();
     this->params.hip_scale_reduction_indices = ReadVectorFromYaml<int>(config["hip_scale_reduction_indices"]);
