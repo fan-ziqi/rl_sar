@@ -208,8 +208,10 @@ class RL_Sim(RL):
             actions = self.model.forward(history_obs)
         else:
             actions = self.model.forward(clamped_obs)
-        clamped_actions = torch.clamp(actions, self.params.clip_actions_lower, self.params.clip_actions_upper)
-        return clamped_actions
+        if self.params.clip_actions_lower is not None and self.params.clip_actions_upper is not None:
+            return torch.clamp(actions, self.params.clip_actions_lower, self.params.clip_actions_upper)
+        else:
+            return actions
 
     def ThreadControl(self):
         thread_period = self.params.dt

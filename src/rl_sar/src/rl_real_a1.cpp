@@ -181,9 +181,14 @@ torch::Tensor RL_Real::Forward()
 
     torch::Tensor actions = this->model.forward({this->history_obs}).toTensor();
 
-    torch::Tensor clamped_actions = torch::clamp(actions, this->params.clip_actions_lower, this->params.clip_actions_upper);
-
-    return clamped_actions;
+    if(this->params.clip_actions_upper.numel() != 0 && this->params.clip_actions_lower.numel() != 0)
+    {
+        return torch::clamp(actions, this->params.clip_actions_lower, this->params.clip_actions_upper);
+    }
+    else
+    {
+        return actions;
+    }
 }
 
 void RL_Real::Plot()

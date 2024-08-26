@@ -387,8 +387,12 @@ class RL:
         self.params.action_scale = config["action_scale"]
         self.params.hip_scale_reduction = config["hip_scale_reduction"]
         self.params.hip_scale_reduction_indices = config["hip_scale_reduction_indices"]
-        self.params.clip_actions_upper = torch.tensor(self.ReadVectorFromYaml(config["clip_actions_upper"], self.params.framework, rows, cols)).view(1, -1)
-        self.params.clip_actions_lower = torch.tensor(self.ReadVectorFromYaml(config["clip_actions_lower"], self.params.framework, rows, cols)).view(1, -1)
+        if config["clip_actions_upper"] and config["clip_actions_upper"]:
+            self.params.clip_actions_upper = torch.tensor(self.ReadVectorFromYaml(config["clip_actions_upper"], self.params.framework, rows, cols)).view(1, -1)
+            self.params.clip_actions_lower = torch.tensor(self.ReadVectorFromYaml(config["clip_actions_lower"], self.params.framework, rows, cols)).view(1, -1)
+        else:
+            self.params.clip_actions_upper = None
+            self.params.clip_actions_lower = None
         self.params.num_of_dofs = config["num_of_dofs"]
         self.params.lin_vel_scale = config["lin_vel_scale"]
         self.params.ang_vel_scale = config["ang_vel_scale"]
