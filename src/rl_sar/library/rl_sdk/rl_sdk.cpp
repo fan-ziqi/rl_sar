@@ -15,34 +15,34 @@ torch::Tensor RL::ComputeObservation()
 {
     std::vector<torch::Tensor> obs_list;
 
-    for(const std::string& observation : this->params.observations)
+    for (const std::string &observation : this->params.observations)
     {
-        if(observation == "lin_vel")
+        if (observation == "lin_vel")
         {
             obs_list.push_back(this->obs.lin_vel * this->params.lin_vel_scale);
         }
-        else if(observation == "ang_vel")
+        else if (observation == "ang_vel")
         {
             // obs_list.push_back(this->obs.ang_vel * this->params.ang_vel_scale); // TODO is QuatRotateInverse necessery?
             obs_list.push_back(this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel, this->params.framework) * this->params.ang_vel_scale);
         }
-        else if(observation == "gravity_vec")
+        else if (observation == "gravity_vec")
         {
             obs_list.push_back(this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec, this->params.framework));
         }
-        else if(observation == "commands")
+        else if (observation == "commands")
         {
             obs_list.push_back(this->obs.commands * this->params.commands_scale);
         }
-        else if(observation == "dof_pos")
+        else if (observation == "dof_pos")
         {
             obs_list.push_back((this->obs.dof_pos - this->params.default_dof_pos) * this->params.dof_pos_scale);
         }
-        else if(observation == "dof_vel")
+        else if (observation == "dof_vel")
         {
             obs_list.push_back(this->obs.dof_vel * this->params.dof_vel_scale);
         }
-        else if(observation == "actions")
+        else if (observation == "actions")
         {
             obs_list.push_back(this->obs.actions);
         }
@@ -92,22 +92,22 @@ torch::Tensor RL::ComputePosition(torch::Tensor actions)
     return actions_scaled + this->params.default_dof_pos;
 }
 
-torch::Tensor RL::QuatRotateInverse(torch::Tensor q, torch::Tensor v, const std::string& framework)
+torch::Tensor RL::QuatRotateInverse(torch::Tensor q, torch::Tensor v, const std::string &framework)
 {
     torch::Tensor q_w;
     torch::Tensor q_vec;
-    if(framework == "isaacsim")
+    if (framework == "isaacsim")
     {
         q_w = q.index({torch::indexing::Slice(), 0});
         q_vec = q.index({torch::indexing::Slice(), torch::indexing::Slice(1, 4)});
     }
-    else if(framework == "isaacgym")
+    else if (framework == "isaacgym")
     {
         q_w = q.index({torch::indexing::Slice(), 3});
         q_vec = q.index({torch::indexing::Slice(), torch::indexing::Slice(0, 3)});
     }
     c10::IntArrayRef shape = q.sizes();
-    
+
     torch::Tensor a = v * (2.0 * torch::pow(q_w, 2) - 1.0).unsqueeze(-1);
     torch::Tensor b = torch::cross(q_vec, v, -1) * q_w.unsqueeze(-1) * 2.0;
     torch::Tensor c = q_vec * torch::bmm(q_vec.view({shape[0], 1, 3}), v.view({shape[0], 3, 1})).squeeze(-1) * 2.0;
@@ -122,17 +122,17 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
     static float getdown_percent = 0.0;
 
     // waiting
-    if(this->running_state == STATE_WAITING)
+    if (this->running_state == STATE_WAITING)
     {
-        for(int i = 0; i < this->params.num_of_dofs; ++i)
+        for (int i = 0; i < this->params.num_of_dofs; ++i)
         {
             command->motor_command.q[i] = state->motor_state.q[i];
         }
-        if(this->control.control_state == STATE_POS_GETUP)
+        if (this->control.control_state == STATE_POS_GETUP)
         {
             this->control.control_state = STATE_WAITING;
             getup_percent = 0.0;
-            for(int i = 0; i < this->params.num_of_dofs; ++i)
+            for (int i = 0; i < this->params.num_of_dofs; ++i)
             {
                 now_state.motor_state.q[i] = state->motor_state.q[i];
                 start_state.motor_state.q[i] = now_state.motor_state.q[i];
@@ -142,13 +142,13 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
         }
     }
     // stand up (position control)
-    else if(this->running_state == STATE_POS_GETUP)
+    else if (this->running_state == STATE_POS_GETUP)
     {
-        if(getup_percent < 1.0)
+        if (getup_percent < 1.0)
         {
             getup_percent += 1 / 500.0;
             getup_percent = getup_percent > 1.0 ? 1.0 : getup_percent;
-            for(int i = 0; i < this->params.num_of_dofs; ++i)
+            for (int i = 0; i < this->params.num_of_dofs; ++i)
             {
                 command->motor_command.q[i] = (1 - getup_percent) * now_state.motor_state.q[i] + getup_percent * this->params.default_dof_pos[0][i].item<double>();
                 command->motor_command.dq[i] = 0;
@@ -158,17 +158,17 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
             }
             std::cout << "\r" << std::flush << LOGGER::INFO << "Getting up " << std::fixed << std::setprecision(2) << getup_percent * 100.0 << std::flush;
         }
-        if(this->control.control_state == STATE_RL_INIT)
+        if (this->control.control_state == STATE_RL_INIT)
         {
             this->control.control_state = STATE_WAITING;
             this->running_state = STATE_RL_INIT;
             std::cout << std::endl << LOGGER::INFO << "Switching to STATE_RL_INIT" << std::endl;
         }
-        else if(this->control.control_state == STATE_POS_GETDOWN)
+        else if (this->control.control_state == STATE_POS_GETDOWN)
         {
             this->control.control_state = STATE_WAITING;
             getdown_percent = 0.0;
-            for(int i = 0; i < this->params.num_of_dofs; ++i)
+            for (int i = 0; i < this->params.num_of_dofs; ++i)
             {
                 now_state.motor_state.q[i] = state->motor_state.q[i];
             }
@@ -177,9 +177,9 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
         }
     }
     // init obs and start rl loop
-    else if(this->running_state == STATE_RL_INIT)
+    else if (this->running_state == STATE_RL_INIT)
     {
-        if(getup_percent == 1)
+        if (getup_percent == 1)
         {
             this->InitObservations();
             this->InitOutputs();
@@ -189,10 +189,10 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
         }
     }
     // rl loop
-    else if(this->running_state == STATE_RL_RUNNING)
+    else if (this->running_state == STATE_RL_RUNNING)
     {
         std::cout << "\r" << std::flush << LOGGER::INFO << "RL Controller x:" << this->control.x << " y:" << this->control.y << " yaw:" << this->control.yaw << std::flush;
-        for(int i = 0; i < this->params.num_of_dofs; ++i)
+        for (int i = 0; i < this->params.num_of_dofs; ++i)
         {
             command->motor_command.q[i] = this->output_dof_pos[0][i].item<double>();
             command->motor_command.dq[i] = 0;
@@ -200,22 +200,22 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
             command->motor_command.kd[i] = this->params.rl_kd[0][i].item<double>();
             command->motor_command.tau[i] = 0;
         }
-        if(this->control.control_state == STATE_POS_GETDOWN)
+        if (this->control.control_state == STATE_POS_GETDOWN)
         {
             this->control.control_state = STATE_WAITING;
             getdown_percent = 0.0;
-            for(int i = 0; i < this->params.num_of_dofs; ++i)
+            for (int i = 0; i < this->params.num_of_dofs; ++i)
             {
                 now_state.motor_state.q[i] = state->motor_state.q[i];
             }
             this->running_state = STATE_POS_GETDOWN;
             std::cout << std::endl << LOGGER::INFO << "Switching to STATE_POS_GETDOWN" << std::endl;
         }
-        else if(this->control.control_state == STATE_POS_GETUP)
+        else if (this->control.control_state == STATE_POS_GETUP)
         {
             this->control.control_state = STATE_WAITING;
             getup_percent = 0.0;
-            for(int i = 0; i < this->params.num_of_dofs; ++i)
+            for (int i = 0; i < this->params.num_of_dofs; ++i)
             {
                 now_state.motor_state.q[i] = state->motor_state.q[i];
             }
@@ -224,13 +224,13 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
         }
     }
     // get down (position control)
-    else if(this->running_state == STATE_POS_GETDOWN)
+    else if (this->running_state == STATE_POS_GETDOWN)
     {
-        if(getdown_percent < 1.0)
+        if (getdown_percent < 1.0)
         {
             getdown_percent += 1 / 500.0;
             getdown_percent = getdown_percent > 1.0 ? 1.0 : getdown_percent;
-            for(int i = 0; i < this->params.num_of_dofs; ++i)
+            for (int i = 0; i < this->params.num_of_dofs; ++i)
             {
                 command->motor_command.q[i] = (1 - getdown_percent) * now_state.motor_state.q[i] + getdown_percent * start_state.motor_state.q[i];
                 command->motor_command.dq[i] = 0;
@@ -240,7 +240,7 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
             }
             std::cout << "\r" << std::flush << LOGGER::INFO << "Getting down " << std::fixed << std::setprecision(2) << getdown_percent * 100.0 << std::flush;
         }
-        if(getdown_percent == 1)
+        if (getdown_percent == 1)
         {
             this->InitObservations();
             this->InitOutputs();
@@ -255,28 +255,28 @@ void RL::TorqueProtect(torch::Tensor origin_output_torques)
 {
     std::vector<int> out_of_range_indices;
     std::vector<double> out_of_range_values;
-    for(int i = 0; i < origin_output_torques.size(1); ++i)
+    for (int i = 0; i < origin_output_torques.size(1); ++i)
     {
         double torque_value = origin_output_torques[0][i].item<double>();
         double limit_lower = -this->params.torque_limits[0][i].item<double>();
         double limit_upper = this->params.torque_limits[0][i].item<double>();
 
-        if(torque_value < limit_lower || torque_value > limit_upper)
+        if (torque_value < limit_lower || torque_value > limit_upper)
         {
             out_of_range_indices.push_back(i);
             out_of_range_values.push_back(torque_value);
         }
     }
-    if(!out_of_range_indices.empty())
+    if (!out_of_range_indices.empty())
     {
-        for(int i = 0; i < out_of_range_indices.size(); ++i)
+        for (int i = 0; i < out_of_range_indices.size(); ++i)
         {
             int index = out_of_range_indices[i];
             double value = out_of_range_values[i];
             double limit_lower = -this->params.torque_limits[0][index].item<double>();
             double limit_upper = this->params.torque_limits[0][index].item<double>();
 
-            std::cout << LOGGER::WARNING << "Torque(" << index+1 << ")=" << value << " out of range(" << limit_lower << ", " << limit_upper << ")" << std::endl;
+            std::cout << LOGGER::WARNING << "Torque(" << index + 1 << ")=" << value << " out of range(" << limit_lower << ", " << limit_upper << ")" << std::endl;
         }
         // Just a reminder, no protection
         // this->control.control_state = STATE_POS_GETDOWN;
@@ -290,79 +290,109 @@ static bool kbhit()
 {
     termios term;
     tcgetattr(0, &term);
-    
+
     termios term2 = term;
     term2.c_lflag &= ~ICANON;
     tcsetattr(0, TCSANOW, &term2);
-    
+
     int byteswaiting;
     ioctl(0, FIONREAD, &byteswaiting);
-    
+
     tcsetattr(0, TCSANOW, &term);
-    
+
     return byteswaiting > 0;
 }
 
 void RL::KeyboardInterface()
 {
-    if(kbhit())
+    if (kbhit())
     {
         int c = fgetc(stdin);
-        switch(c)
+        switch (c)
         {
-            case '0': this->control.control_state = STATE_POS_GETUP; break;
-            case 'p': this->control.control_state = STATE_RL_INIT; break;
-            case '1': this->control.control_state = STATE_POS_GETDOWN; break;
-            case 'q': break;
-            case 'w': this->control.x += 0.1; break;
-            case 's': this->control.x -= 0.1; break;
-            case 'a': this->control.yaw += 0.1; break;
-            case 'd': this->control.yaw -= 0.1; break;
-            case 'i': break;
-            case 'k': break;
-            case 'j': this->control.y += 0.1; break;
-            case 'l': this->control.y -= 0.1; break;
-            case ' ': this->control.x = 0; this->control.y = 0; this->control.yaw = 0; break;
-            case 'r': this->control.control_state = STATE_RESET_SIMULATION; break;
-            case '\n': this->control.control_state = STATE_TOGGLE_SIMULATION; break;
-            default: break;
+        case '0':
+            this->control.control_state = STATE_POS_GETUP;
+            break;
+        case 'p':
+            this->control.control_state = STATE_RL_INIT;
+            break;
+        case '1':
+            this->control.control_state = STATE_POS_GETDOWN;
+            break;
+        case 'q':
+            break;
+        case 'w':
+            this->control.x += 0.1;
+            break;
+        case 's':
+            this->control.x -= 0.1;
+            break;
+        case 'a':
+            this->control.yaw += 0.1;
+            break;
+        case 'd':
+            this->control.yaw -= 0.1;
+            break;
+        case 'i':
+            break;
+        case 'k':
+            break;
+        case 'j':
+            this->control.y += 0.1;
+            break;
+        case 'l':
+            this->control.y -= 0.1;
+            break;
+        case ' ':
+            this->control.x = 0;
+            this->control.y = 0;
+            this->control.yaw = 0;
+            break;
+        case 'r':
+            this->control.control_state = STATE_RESET_SIMULATION;
+            break;
+        case '\n':
+            this->control.control_state = STATE_TOGGLE_SIMULATION;
+            break;
+        default:
+            break;
         }
     }
 }
 
-template<typename T>
-std::vector<T> ReadVectorFromYaml(const YAML::Node& node)
+template <typename T>
+std::vector<T> ReadVectorFromYaml(const YAML::Node &node)
 {
     std::vector<T> values;
-    for(const auto& val : node)
+    for (const auto &val : node)
     {
         values.push_back(val.as<T>());
     }
     return values;
 }
 
-template<typename T>
-std::vector<T> ReadVectorFromYaml(const YAML::Node& node, const std::string& framework, const int& rows, const int& cols)
+template <typename T>
+std::vector<T> ReadVectorFromYaml(const YAML::Node &node, const std::string &framework, const int &rows, const int &cols)
 {
     std::vector<T> values;
-    for(const auto& val : node)
+    for (const auto &val : node)
     {
         values.push_back(val.as<T>());
     }
 
-    if(framework == "isaacsim")
+    if (framework == "isaacsim")
     {
         std::vector<T> transposed_values(cols * rows);
-        for(int r = 0; r < rows; ++r)
+        for (int r = 0; r < rows; ++r)
         {
-            for(int c = 0; c < cols; ++c)
+            for (int c = 0; c < cols; ++c)
             {
                 transposed_values[c * rows + r] = values[r * cols + c];
             }
         }
         return transposed_values;
     }
-    else if(framework == "isaacgym")
+    else if (framework == "isaacgym")
     {
         return values;
     }
@@ -380,7 +410,8 @@ void RL::ReadYaml(std::string robot_name)
     try
     {
         config = YAML::LoadFile(config_path)[robot_name];
-    } catch(YAML::BadFile &e)
+    }
+    catch (YAML::BadFile &e)
     {
         std::cout << LOGGER::ERROR << "The file '" << config_path << "' does not exist" << std::endl;
         return;
@@ -396,7 +427,7 @@ void RL::ReadYaml(std::string robot_name)
     this->params.num_observations = config["num_observations"].as<int>();
     this->params.observations = ReadVectorFromYaml<std::string>(config["observations"]);
     this->params.clip_obs = config["clip_obs"].as<double>();
-    if(config["clip_actions_lower"].IsNull() && config["clip_actions_upper"].IsNull())
+    if (config["clip_actions_lower"].IsNull() && config["clip_actions_upper"].IsNull())
     {
         this->params.clip_actions_upper = torch::tensor({}).view({1, -1});
         this->params.clip_actions_lower = torch::tensor({}).view({1, -1});
@@ -440,11 +471,11 @@ void RL::CSVInit(std::string robot_name)
     csv_filename += ".csv";
     std::ofstream file(csv_filename.c_str());
 
-    for(int i = 0; i < 12; ++i) {file << "tau_cal_" << i << ",";}
-    for(int i = 0; i < 12; ++i) {file << "tau_est_" << i << ",";}
-    for(int i = 0; i < 12; ++i) {file << "joint_pos_" << i << ",";}
-    for(int i = 0; i < 12; ++i) {file << "joint_pos_target_" << i << ",";}
-    for(int i = 0; i < 12; ++i) {file << "joint_vel_" << i << ",";}
+    for(int i = 0; i < 12; ++i) { file << "tau_cal_" << i << ","; }
+    for(int i = 0; i < 12; ++i) { file << "tau_est_" << i << ","; }
+    for(int i = 0; i < 12; ++i) { file << "joint_pos_" << i << ","; }
+    for(int i = 0; i < 12; ++i) { file << "joint_pos_target_" << i << ","; }
+    for(int i = 0; i < 12; ++i) { file << "joint_vel_" << i << ","; }
 
     file << std::endl;
 
@@ -455,11 +486,11 @@ void RL::CSVLogger(torch::Tensor torque, torch::Tensor tau_est, torch::Tensor jo
 {
     std::ofstream file(csv_filename.c_str(), std::ios_base::app);
 
-    for(int i = 0; i < 12; ++i) {file << torque[0][i].item<double>() << ",";}
-    for(int i = 0; i < 12; ++i) {file << tau_est[0][i].item<double>() << ",";}
-    for(int i = 0; i < 12; ++i) {file << joint_pos[0][i].item<double>() << ",";}
-    for(int i = 0; i < 12; ++i) {file << joint_pos_target[0][i].item<double>() << ",";}
-    for(int i = 0; i < 12; ++i) {file << joint_vel[0][i].item<double>() << ",";}
+    for(int i = 0; i < 12; ++i) { file << torque[0][i].item<double>() << ","; }
+    for(int i = 0; i < 12; ++i) { file << tau_est[0][i].item<double>() << ","; }
+    for(int i = 0; i < 12; ++i) { file << joint_pos[0][i].item<double>() << ","; }
+    for(int i = 0; i < 12; ++i) { file << joint_pos_target[0][i].item<double>() << ","; }
+    for(int i = 0; i < 12; ++i) { file << joint_vel[0][i].item<double>() << ","; }
 
     file << std::endl;
 

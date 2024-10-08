@@ -20,10 +20,10 @@
 #include <algorithm>
 #include <math.h>
 
-#define PosStopF  (2.146E+9f)
-#define VelStopF  (16000.0f)
+#define PosStopF (2.146E+9f)
+#define VelStopF (16000.0f)
 
-typedef struct 
+typedef struct
 {
     uint8_t mode;
     double pos;
@@ -35,15 +35,15 @@ typedef struct
 
 namespace robot_joint_controller
 {
-    class RobotJointController: public controller_interface::Controller<hardware_interface::EffortJointInterface>
+    class RobotJointController : public controller_interface::Controller<hardware_interface::EffortJointInterface>
     {
-private:
+    private:
         hardware_interface::JointHandle joint;
         ros::Subscriber sub_command, sub_ft;
         control_toolbox::Pid pid_controller_;
-        std::unique_ptr<realtime_tools::RealtimePublisher<robot_msgs::MotorState> > controller_state_publisher_ ;
+        std::unique_ptr<realtime_tools::RealtimePublisher<robot_msgs::MotorState>> controller_state_publisher_;
 
-public:
+    public:
         std::string name_space;
         std::string joint_name;
         urdf::JointConstSharedPtr joint_urdf;
@@ -55,10 +55,10 @@ public:
         RobotJointController();
         ~RobotJointController();
         virtual bool init(hardware_interface::EffortJointInterface *robot, ros::NodeHandle &n);
-        virtual void starting(const ros::Time& time);
-        virtual void update(const ros::Time& time, const ros::Duration& period);
+        virtual void starting(const ros::Time &time);
+        virtual void update(const ros::Time &time, const ros::Duration &period);
         virtual void stopping();
-        void setCommandCB(const robot_msgs::MotorCommandConstPtr& msg);
+        void setCommandCB(const robot_msgs::MotorCommandConstPtr &msg);
         void positionLimits(double &position);
         void velocityLimits(double &velocity);
         void effortLimits(double &effort);
@@ -66,7 +66,6 @@ public:
         void setGains(const double &p, const double &i, const double &d, const double &i_max, const double &i_min, const bool &antiwindup = false);
         void getGains(double &p, double &i, double &d, double &i_max, double &i_min, bool &antiwindup);
         void getGains(double &p, double &i, double &d, double &i_max, double &i_min);
-
     };
 }
 

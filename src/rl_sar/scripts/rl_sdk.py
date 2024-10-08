@@ -124,7 +124,7 @@ class RL:
         self.robot_name = ""
         self.running_state = STATE.STATE_RL_RUNNING  # default running_state set to STATE_RL_RUNNING
         self.simulation_running = False
-        
+
         ### protected in cpp ###
         # rl module
         self.model = None
@@ -156,7 +156,7 @@ class RL:
         obs = torch.cat(obs_list, dim=-1)
         clamped_obs = torch.clamp(obs, -self.params.clip_obs, self.params.clip_obs)
         return clamped_obs
-    
+
     def InitObservations(self):
         self.obs.lin_vel = torch.zeros(1, 3, dtype=torch.float)
         self.obs.ang_vel = torch.zeros(1, 3, dtype=torch.float)
@@ -409,35 +409,35 @@ class RL:
 
     def CSVInit(self, robot_name):
         self.csv_filename = os.path.join(BASE_PATH, "models", robot_name, 'motor')
-        
+
         # Uncomment these lines if need timestamp for file name
         # now = datetime.now()
         # timestamp = now.strftime("%Y%m%d%H%M%S")
         # self.csv_filename += f"_{timestamp}"
-        
+
         self.csv_filename += ".csv"
-        
+
         with open(self.csv_filename, 'w', newline='') as file:
             writer = csv.writer(file)
-            
+
             header = []
             header += [f"tau_cal_{i}" for i in range(12)]
             header += [f"tau_est_{i}" for i in range(12)]
             header += [f"joint_pos_{i}" for i in range(12)]
             header += [f"joint_pos_target_{i}" for i in range(12)]
             header += [f"joint_vel_{i}" for i in range(12)]
-            
+
             writer.writerow(header)
 
     def CSVLogger(self, torque, tau_est, joint_pos, joint_pos_target, joint_vel):
         with open(self.csv_filename, 'a', newline='') as file:
             writer = csv.writer(file)
-            
+
             row = []
             row += [torque[0][i].item() for i in range(12)]
             row += [tau_est[0][i].item() for i in range(12)]
             row += [joint_pos[0][i].item() for i in range(12)]
             row += [joint_pos_target[0][i].item() for i in range(12)]
             row += [joint_vel[0][i].item() for i in range(12)]
-            
+
             writer.writerow(row)

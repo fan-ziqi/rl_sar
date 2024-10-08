@@ -14,19 +14,9 @@
 
 class LoopFunc
 {
-    private:
-    std::string _name;
-    double _period;
-    std::function<void()> _func;
-    int _bindCPU;
-    std::atomic<bool> _running;
-    std::mutex _mutex;
-    std::condition_variable _cv;
-    std::thread _thread;
-
-    public:
+public:
     LoopFunc(const std::string &name, double period, std::function<void()> func, int bindCPU = -1)
-    : _name(name), _period(period), _func(func), _bindCPU(bindCPU), _running(false) {}
+        : _name(name), _period(period), _func(func), _bindCPU(bindCPU), _running(false) {}
 
     void start()
     {
@@ -57,12 +47,22 @@ class LoopFunc
         }
         log("[Loop End] named: " + _name);
     }
-    private:
+
+private:
+    std::string _name;
+    double _period;
+    std::function<void()> _func;
+    int _bindCPU;
+    std::atomic<bool> _running;
+    std::mutex _mutex;
+    std::condition_variable _cv;
+    std::thread _thread;
+
     void loop()
     {
-    while (_running)
-    {
-    auto start = std::chrono::steady_clock::now();
+        while (_running)
+        {
+            auto start = std::chrono::steady_clock::now();
 
             _func();
 
@@ -72,7 +72,8 @@ class LoopFunc
             if (sleepTime.count() > 0)
             {
                 std::unique_lock<std::mutex> lock(_mutex);
-                if (_cv.wait_for(lock, sleepTime, [this]{ return !_running; }))
+                if (_cv.wait_for(lock, sleepTime, [this]
+                                 { return !_running; }))
                 {
                     break;
                 }
@@ -87,7 +88,7 @@ class LoopFunc
         return stream.str();
     }
 
-    void log(const std::string& message)
+    void log(const std::string &message)
     {
         static std::mutex logMutex;
         std::lock_guard<std::mutex> lock(logMutex);
@@ -108,4 +109,4 @@ class LoopFunc
     }
 };
 
-#endif
+#endif // LOOP_H

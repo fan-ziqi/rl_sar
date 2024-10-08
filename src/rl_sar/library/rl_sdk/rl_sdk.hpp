@@ -8,14 +8,15 @@
 
 #include <yaml-cpp/yaml.h>
 
-namespace LOGGER {
-    const char* const INFO    = "\033[0;37m[INFO]\033[0m ";
-    const char* const WARNING = "\033[0;33m[WARNING]\033[0m ";
-    const char* const ERROR   = "\033[0;31m[ERROR]\033[0m ";
-    const char* const DEBUG   = "\033[0;32m[DEBUG]\033[0m ";
+namespace LOGGER
+{
+    const char *const INFO    = "\033[0;37m[INFO]\033[0m ";
+    const char *const WARNING = "\033[0;33m[WARNING]\033[0m ";
+    const char *const ERROR   = "\033[0;31m[ERROR]\033[0m ";
+    const char *const DEBUG   = "\033[0;32m[DEBUG]\033[0m ";
 }
 
-template<typename T>
+template <typename T>
 struct RobotCommand
 {
     struct MotorCommand
@@ -28,7 +29,7 @@ struct RobotCommand
     } motor_command;
 };
 
-template<typename T>
+template <typename T>
 struct RobotState
 {
     struct IMU
@@ -48,7 +49,8 @@ struct RobotState
     } motor_state;
 };
 
-enum STATE {
+enum STATE
+{
     STATE_WAITING = 0,
     STATE_POS_GETUP,
     STATE_RL_INIT,
@@ -100,21 +102,21 @@ struct ModelParams
 
 struct Observations
 {
-    torch::Tensor lin_vel;           
-    torch::Tensor ang_vel;      
-    torch::Tensor gravity_vec;      
-    torch::Tensor commands;        
-    torch::Tensor base_quat;   
-    torch::Tensor dof_pos;           
-    torch::Tensor dof_vel;           
+    torch::Tensor lin_vel;
+    torch::Tensor ang_vel;
+    torch::Tensor gravity_vec;
+    torch::Tensor commands;
+    torch::Tensor base_quat;
+    torch::Tensor dof_pos;
+    torch::Tensor dof_vel;
     torch::Tensor actions;
 };
 
 class RL
 {
 public:
-    RL(){};
-    ~RL(){};
+    RL() {};
+    ~RL() {};
 
     ModelParams params;
     Observations obs;
@@ -135,7 +137,7 @@ public:
     void StateController(const RobotState<double> *state, RobotCommand<double> *command);
     torch::Tensor ComputeTorques(torch::Tensor actions);
     torch::Tensor ComputePosition(torch::Tensor actions);
-    torch::Tensor QuatRotateInverse(torch::Tensor q, torch::Tensor v, const std::string& framework);
+    torch::Tensor QuatRotateInverse(torch::Tensor q, torch::Tensor v, const std::string &framework);
 
     // yaml params
     void ReadYaml(std::string robot_name);
@@ -165,4 +167,4 @@ protected:
     torch::Tensor output_dof_pos;
 };
 
-#endif
+#endif // RL_SDK_HPP
