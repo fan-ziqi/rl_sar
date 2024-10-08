@@ -2,9 +2,11 @@
 
 [English document](README.md)
 
-机器人强化学习算法的仿真验证与实物部署，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
+本仓库提供了机器人强化学习算法的仿真验证与实物部署框架，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
 
-本框架支持基于IaacGym的legged_gym，也支持基于IsaacSim的IsaacLab，用`framework`加以区分。
+特性：
+- 支持基于IaacGym的legged_gym，也支持基于IsaacSim的IsaacLab，用`framework`加以区分。
+- 代码有python和cpp两个版本，python版本可以在`src/rl_sar/scripts`中找到
 
 [点击在Discord上讨论](https://discord.gg/MC9KguQHtt)
 
@@ -18,12 +20,10 @@ git clone https://github.com/fan-ziqi/rl_sar.git
 
 ## 依赖
 
-本项目依赖ROS-Noetic(Ubuntu20.04)
-
-安装好ros之后安装依赖库
+本项目使用`ros-noetic`(Ubuntu20.04)，且需要安装以下的ros依赖包
 
 ```bash
-sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface  ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller
+sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller
 ```
 
 在任意位置下载并部署`libtorch`
@@ -34,6 +34,16 @@ wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-de
 unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
 echo 'export Torch_DIR=/path/to/your/torchlib' >> ~/.bashrc
 ```
+
+安装`yaml-cpp`和`lcm`，若您使用Ubuntu，可以直接使用包管理器进行安装
+
+```bash
+sudo apt install liblcm-dev libyaml-cpp-dev
+```
+
+<details>
+
+<summary>也可以使用源码安装，点击展开</summary>
 
 安装yaml-cpp
 
@@ -48,12 +58,13 @@ sudo ldconfig
 安装lcm
 
 ```bash
-git clone https://github.com/lcm-proj/lcm.git 
+git clone https://github.com/lcm-proj/lcm.git
 cd lcm && mkdir build && cd build
 cmake .. && make
 sudo make install
 sudo ldconfig
 ```
+</details>
 
 ## 编译
 

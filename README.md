@@ -2,9 +2,11 @@
 
 [中文文档](README_CN.md)
 
-Simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
+This repository provides a framework for simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
 
-This framework supports legged_gym based on IaacGym and IsaacLab based on IsaacSim. Use `framework` to distinguish.
+feature:
+- Support legged_gym based on IaacGym and IsaacLab based on IsaacSim. Use `framework` to distinguish.
+- The code supports both cpp and python, you can find python version in `src/rl_sar/scripts`
 
 [Click to discuss on Discord](https://discord.gg/vmVjkhVugU)
 
@@ -18,12 +20,10 @@ git clone https://github.com/fan-ziqi/rl_sar.git
 
 ## Dependency
 
-This project relies on ROS Noetic (Ubuntu 20.04)
-
-After installing ROS, install the dependency library
+This project uses `ros-noetic` (Ubuntu 20.04) and requires the installation of the following ROS dependency packages:
 
 ```bash
-sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface  ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller
+sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller
 ```
 
 Download and deploy `libtorch` at any location
@@ -34,6 +34,16 @@ wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-de
 unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
 echo 'export Torch_DIR=/path/to/your/torchlib' >> ~/.bashrc
 ```
+
+Install `yaml-cpp` and `lcm`. If you are using Ubuntu, you can directly use the package manager for installation:
+
+```bash
+sudo apt install liblcm-dev libyaml-cpp-dev
+```
+
+<details>
+
+<summary>You can also use source code installation, click to expand</summary>
 
 Install yaml-cpp
 
@@ -48,12 +58,13 @@ sudo ldconfig
 Install lcm
 
 ```bash
-git clone https://github.com/lcm-proj/lcm.git 
+git clone https://github.com/lcm-proj/lcm.git
 cd lcm && mkdir build && cd build
 cmake .. && make
 sudo make install
 sudo ldconfig
 ```
+</details>
 
 ## Compilation
 
