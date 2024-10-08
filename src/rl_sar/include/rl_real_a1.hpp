@@ -16,6 +16,7 @@ class RL_Real : public RL
 public:
     RL_Real();
     ~RL_Real();
+
 private:
     // rl functions
     torch::Tensor Forward() override;
@@ -43,8 +44,8 @@ private:
     void Plot();
 
     // unitree interface
-    void UDPSend(){unitree_udp.Send();}
-    void UDPRecv(){unitree_udp.Recv();}
+    void UDPSend() { unitree_udp.Send(); }
+    void UDPRecv() { unitree_udp.Recv(); }
     UNITREE_LEGGED_SDK::Safety unitree_safe;
     UNITREE_LEGGED_SDK::UDP unitree_udp;
     UNITREE_LEGGED_SDK::LowCmd unitree_low_command = {0};
@@ -59,4 +60,4 @@ private:
     int state_mapping[12] = {3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8};
 };
 
-#endif
+#endif // RL_REAL_HPP

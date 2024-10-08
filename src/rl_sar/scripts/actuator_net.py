@@ -95,7 +95,7 @@ def load_data(data_path):
 
     for key in data_dict.keys():
         data_dict[key] = np.array(data_dict[key]).T
-    
+
     return data_dict, num_motors
 
 def process_data(data_dict, num_motors, step):
@@ -122,7 +122,7 @@ def process_data(data_dict, num_motors, step):
         xs_joint = torch.cat(xs_joint, dim=1)
         xs.append(xs_joint)
         ys.append(tau_ests_joint)
-    
+
     xs = torch.cat(xs, dim=0)
     ys = torch.cat(ys, dim=0)
     return xs, ys

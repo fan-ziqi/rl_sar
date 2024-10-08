@@ -28,10 +28,10 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
     this->model = torch::jit::load(model_path);
 
     // loop
-    this->loop_udpSend  = std::make_shared<LoopFunc>("loop_udpSend" , 0.002, std::bind(&RL_Real::UDPSend, this), 3);
-    this->loop_udpRecv  = std::make_shared<LoopFunc>("loop_udpRecv" , 0.002, std::bind(&RL_Real::UDPRecv, this), 3);
+    this->loop_udpSend = std::make_shared<LoopFunc>("loop_udpSend", 0.002, std::bind(&RL_Real::UDPSend, this), 3);
+    this->loop_udpRecv = std::make_shared<LoopFunc>("loop_udpRecv", 0.002, std::bind(&RL_Real::UDPRecv, this), 3);
     this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05, std::bind(&RL_Real::KeyboardInterface, this));
-    this->loop_control  = std::make_shared<LoopFunc>("loop_control", this->params.dt, std::bind(&RL_Real::RobotControl, this));
+    this->loop_control = std::make_shared<LoopFunc>("loop_control", this->params.dt, std::bind(&RL_Real::RobotControl, this));
     this->loop_rl = std::make_shared<LoopFunc>("loop_rl", this->params.dt * this->params.decimation, std::bind(&RL_Real::RunModel, this));
     this->loop_udpSend->start();
     this->loop_udpRecv->start();
@@ -39,14 +39,13 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
     this->loop_control->start();
     this->loop_rl->start();
 
-
 #ifdef PLOT
     this->plot_t = std::vector<int>(this->plot_size, 0);
     this->plot_real_joint_pos.resize(this->params.num_of_dofs);
     this->plot_target_joint_pos.resize(this->params.num_of_dofs);
-    for(auto& vector : this->plot_real_joint_pos) { vector = std::vector<double>(this->plot_size, 0); }
-    for(auto& vector : this->plot_target_joint_pos) { vector = std::vector<double>(this->plot_size, 0); }
-    this->loop_plot    = std::make_shared<LoopFunc>("loop_plot"   , 0.002,    std::bind(&RL_Real::Plot,         this));
+    for (auto &vector : this->plot_real_joint_pos) { vector = std::vector<double>(this->plot_size, 0); }
+    for (auto &vector : this->plot_target_joint_pos) { vector = std::vector<double>(this->plot_size, 0); }
+    this->loop_plot = std::make_shared<LoopFunc>("loop_plot", 0.002, std::bind(&RL_Real::Plot, this));
     this->loop_plot->start();
 #endif
 #ifdef CSV_LOGGER
@@ -72,27 +71,27 @@ void RL_Real::GetState(RobotState<double> *state)
     this->unitree_udp.GetRecv(this->unitree_low_state);
     memcpy(&this->unitree_joy, this->unitree_low_state.wirelessRemote, 40);
 
-    if((int)this->unitree_joy.btn.components.R2 == 1)
+    if ((int)this->unitree_joy.btn.components.R2 == 1)
     {
         this->control.control_state = STATE_POS_GETUP;
     }
-    else if((int)this->unitree_joy.btn.components.R1 == 1)
+    else if ((int)this->unitree_joy.btn.components.R1 == 1)
     {
         this->control.control_state = STATE_RL_INIT;
     }
-    else if((int)this->unitree_joy.btn.components.L2 == 1)
+    else if ((int)this->unitree_joy.btn.components.L2 == 1)
     {
         this->control.control_state = STATE_POS_GETDOWN;
     }
 
-    if(this->params.framework == "isaacgym")
+    if (this->params.framework == "isaacgym")
     {
         state->imu.quaternion[3] = this->unitree_low_state.imu.quaternion[0]; // w
         state->imu.quaternion[0] = this->unitree_low_state.imu.quaternion[1]; // x
         state->imu.quaternion[1] = this->unitree_low_state.imu.quaternion[2]; // y
         state->imu.quaternion[2] = this->unitree_low_state.imu.quaternion[3]; // z
     }
-    else if(this->params.framework == "isaacsim")
+    else if (this->params.framework == "isaacsim")
     {
         state->imu.quaternion[0] = this->unitree_low_state.imu.quaternion[0]; // w
         state->imu.quaternion[1] = this->unitree_low_state.imu.quaternion[1]; // x
@@ -100,11 +99,11 @@ void RL_Real::GetState(RobotState<double> *state)
         state->imu.quaternion[3] = this->unitree_low_state.imu.quaternion[3]; // z
     }
 
-    for(int i = 0; i < 3; ++i)
+    for (int i = 0; i < 3; ++i)
     {
         state->imu.gyroscope[i] = this->unitree_low_state.imu.gyroscope[i];
     }
-    for(int i = 0; i < this->params.num_of_dofs; ++i)
+    for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
         state->motor_state.q[i] = this->unitree_low_state.motorState[state_mapping[i]].q;
         state->motor_state.dq[i] = this->unitree_low_state.motorState[state_mapping[i]].dq;
@@ -114,7 +113,7 @@ void RL_Real::GetState(RobotState<double> *state)
 
 void RL_Real::SetCommand(const RobotCommand<double> *command)
 {
-    for(int i = 0; i < this->params.num_of_dofs; ++i)
+    for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
         this->unitree_low_command.motorCmd[i].mode = 0x0A;
         this->unitree_low_command.motorCmd[i].q = command->motor_command.q[command_mapping[i]];
@@ -140,7 +139,7 @@ void RL_Real::RobotControl()
 
 void RL_Real::RunModel()
 {
-    if(this->running_state == STATE_RL_RUNNING)
+    if (this->running_state == STATE_RL_RUNNING)
     {
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
         this->obs.commands = torch::tensor({{this->unitree_joy.ly, -this->unitree_joy.rx, -this->unitree_joy.lx}});
@@ -182,7 +181,7 @@ torch::Tensor RL_Real::Forward()
 
     torch::Tensor actions = this->model.forward({this->history_obs}).toTensor();
 
-    if(this->params.clip_actions_upper.numel() != 0 && this->params.clip_actions_lower.numel() != 0)
+    if (this->params.clip_actions_upper.numel() != 0 && this->params.clip_actions_lower.numel() != 0)
     {
         return torch::clamp(actions, this->params.clip_actions_lower, this->params.clip_actions_upper);
     }
@@ -198,7 +197,7 @@ void RL_Real::Plot()
     this->plot_t.push_back(this->motiontime);
     plt::cla();
     plt::clf();
-    for(int i = 0; i < this->params.num_of_dofs; ++i)
+    for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
         this->plot_real_joint_pos[i].erase(this->plot_real_joint_pos[i].begin());
         this->plot_target_joint_pos[i].erase(this->plot_target_joint_pos[i].begin());
@@ -222,10 +221,10 @@ int main(int argc, char **argv)
 {
     signal(SIGINT, signalHandler);
 
-    while(1)
+    while (1)
     {
         sleep(10);
-    };
+    }
 
     return 0;
 }

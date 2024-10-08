@@ -234,4 +234,3 @@ class RL_Sim(RL):
 if __name__ == "__main__":
     rl_sim = RL_Sim()
     rospy.spin()
-    

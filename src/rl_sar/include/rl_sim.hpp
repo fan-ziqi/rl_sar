@@ -21,6 +21,7 @@ class RL_Sim : public RL
 public:
     RL_Sim();
     ~RL_Sim();
+
 private:
     // rl functions
     torch::Tensor Forward() override;
@@ -69,7 +70,7 @@ private:
     std::vector<double> mapped_joint_positions;
     std::vector<double> mapped_joint_velocities;
     std::vector<double> mapped_joint_efforts;
-    void MapData(const std::vector<double>& source_data, std::vector<double>& target_data);
+    void MapData(const std::vector<double> &source_data, std::vector<double> &target_data);
 };
 
-#endif
+#endif // RL_SIM_HPP

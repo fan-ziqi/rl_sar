@@ -12,7 +12,7 @@
     <arg name="gui" default="true"/>
     <arg name="headless" default="false"/>
     <arg name="debug" default="false"/>
-    
+
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(find rl_sar)/worlds/$(arg wname).world"/>
         <arg name="debug" value="$(arg debug)"/>

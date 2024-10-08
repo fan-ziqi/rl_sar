@@ -23,7 +23,7 @@ class ObservationBuffer:
 
     def get_obs_vec(self, obs_ids):
         """Gets history of observations indexed by obs_ids.
-        
+
         Arguments:
             obs_ids: An array of integers with which to index the desired
                 observations, where 0 is the latest observation and
