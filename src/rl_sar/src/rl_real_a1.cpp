@@ -21,6 +21,7 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
     this->InitObservations();
     this->InitOutputs();
     this->InitControl();
+    running_state = STATE_WAITING;
 
     // model
     std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + this->robot_name + "/" + this->params.model_name;
@@ -37,7 +38,7 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
     this->loop_keyboard->start();
     this->loop_control->start();
     this->loop_rl->start();
-    
+
 
 #ifdef PLOT
     this->plot_t = std::vector<int>(this->plot_size, 0);

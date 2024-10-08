@@ -35,6 +35,7 @@ RL_Sim::RL_Sim()
     this->InitObservations();
     this->InitOutputs();
     this->InitControl();
+    running_state = STATE_RL_RUNNING;
 
     // model
     std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + this->robot_name + "/" + this->params.model_name;
@@ -138,7 +139,7 @@ void RL_Sim::SetCommand(const RobotCommand<double> *command)
         this->joint_publishers_commands[i].kd = command->motor_command.kd[i];
         this->joint_publishers_commands[i].tau = command->motor_command.tau[i];
     }
-    
+
     for(int i = 0; i < this->params.num_of_dofs; ++i)
     {
         this->joint_publishers[this->params.joint_controller_names[i]].publish(this->joint_publishers_commands[i]);
