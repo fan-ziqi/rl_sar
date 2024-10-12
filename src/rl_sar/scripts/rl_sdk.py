@@ -138,10 +138,18 @@ class RL:
     def ComputeObservation(self):
         obs_list = []
         for observation in self.params.observations:
+            """
+                The first argument of the QuatRotateInverse function is the quaternion representing the robot's orientation, and the second argument is in the world coordinate system. The function outputs the value of the second argument in the body coordinate system.
+                In IsaacGym, the coordinate system for angular velocity is in the world coordinate system. During training, the angular velocity in the observation uses QuatRotateInverse to transform the coordinate system to the body coordinate system.
+                In Gazebo, the coordinate system for angular velocity is also in the world coordinate system, so QuatRotateInverse is needed to transform the coordinate system to the body coordinate system.
+                In some real robots like Unitree, if the coordinate system for the angular velocity is already in the body coordinate system, no transformation is necessary.
+                Forgetting to perform the transformation or performing it multiple times may cause controller crashes when the rotation reaches 180 degrees.
+            """
             if observation == "lin_vel":
                 obs_list.append(self.obs.lin_vel * self.params.lin_vel_scale)
-            elif observation == "ang_vel":
-                # obs_list.append(self.obs.ang_vel * self.params.ang_vel_scale) # TODO is QuatRotateInverse necessery?
+            elif observation == "ang_vel_body":
+                obs_list.append(self.obs.ang_vel * self.params.ang_vel_scale)
+            elif observation == "ang_vel_world":
                 obs_list.append(self.QuatRotateInverse(self.obs.base_quat, self.obs.ang_vel, self.params.framework) * self.params.ang_vel_scale)
             elif observation == "gravity_vec":
                 obs_list.append(self.QuatRotateInverse(self.obs.base_quat, self.obs.gravity_vec, self.params.framework))

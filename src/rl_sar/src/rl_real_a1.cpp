@@ -10,6 +10,14 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
     // read params from yaml
     this->robot_name = "a1_isaacgym";
     this->ReadYaml(this->robot_name);
+    for (std::string &observation : this->params.observations)
+    {
+        // In Unitree A1, the coordinate system for angular velocity is in the body coordinate system.
+        if (observation == "ang_vel")
+        {
+            observation = "ang_vel_body";
+        }
+    }
 
     // history
     if (!this->params.observations_history.empty())

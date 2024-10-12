@@ -10,6 +10,14 @@ RL_Sim::RL_Sim()
     // read params from yaml
     nh.param<std::string>("robot_name", this->robot_name, "");
     this->ReadYaml(this->robot_name);
+    for (std::string &observation : this->params.observations)
+    {
+        // In Gazebo, the coordinate system for angular velocity is in the world coordinate system.
+        if (observation == "ang_vel")
+        {
+            observation = "ang_vel_world";
+        }
+    }
 
     // history
     if (!this->params.observations_history.empty())

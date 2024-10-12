@@ -34,6 +34,9 @@ class RL_Sim(RL):
         # read params from yaml
         self.robot_name = rospy.get_param("robot_name", "")
         self.ReadYaml(self.robot_name)
+        for i in range(len(self.params.observations)):
+            if self.params.observations[i] == "ang_vel":
+                self.params.observations[i] = "ang_vel_world"
 
         # history
         if self.params.observations_history is None:
