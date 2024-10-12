@@ -109,7 +109,7 @@ source devel/setup.bash
 
 ### 真实机器人
 
-**示例：Unitree A1**
+#### Unitree A1
 
 与Unitree A1连接可以使用无线与有线两种方式
 
@@ -126,6 +126,17 @@ rosrun rl_sar rl_real_a1
 按下遥控器的**R2**键让机器人切换到默认站起姿态，按下**R1**键切换到RL控制模式，任意状态按下**L2**切换到最初的趴下姿态。左摇杆上下控制x左右控制yaw，右摇杆左右控制y。
 
 或者按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P**键切换到RL控制模式，任意状态按下**1**键切换到最初的趴下姿态。WS控制x，AD控制yaw，JL控制y。
+
+#### Unitree Go2
+
+TODO 添加go2的使用说明
+
+新建终端，启动控制程序
+
+```bash
+source devel/setup.bash
+rosrun rl_sar rl_real_go2
+```
 
 ### 训练执行器网络
 
@@ -154,6 +165,12 @@ rosrun rl_sar rl_real_a1
 ## 参考
 
 [unitree_ros](https://github.com/unitreerobotics/unitree_ros)
+
+## 贡献
+
+衷心欢迎社区的贡献，以使这个框架更加成熟和对所有人有用。贡献可以是bug报告、功能请求或代码贡献。
+
+[贡献者名单](CONTRIBUTORS.md)
 
 ## 引用
 

@@ -108,7 +108,7 @@ Control:
 
 ### Real Robots
 
-**Example: Unitree A1**
+#### Unitree A1
 
 Unitree A1 can be connected using both wireless and wired methods:
 
@@ -125,6 +125,17 @@ rosrun rl_sar rl_real_a1
 Press the **R2** button on the controller to switch the robot to the default standing position, press **R1** to switch to RL control mode, and press **L2** in any state to switch to the initial lying position. The left stick controls x-axis up and down, controls yaw left and right, and the right stick controls y-axis left and right.
 
 Or press **0** on the keyboard to switch the robot to the default standing position, press **P** to switch to RL control mode, and press **1** in any state to switch to the initial lying position. WS controls x-axis, AD controls yaw, and JL controls y-axis.
+
+#### Unitree Go2
+
+TODO 添加go2的使用说明
+
+Open a new terminal and start the control program
+
+```bash
+source devel/setup.bash
+rosrun rl_sar rl_real_go2
+```
 
 ### Train the actuator network
 
@@ -153,6 +164,12 @@ In the following text, `<ROBOT>` represents the name of the robot
 ## Reference
 
 [unitree_ros](https://github.com/unitreerobotics/unitree_ros)
+
+## Contributing
+
+Wholeheartedly welcome contributions from the community to make this framework mature and useful for everyone. These may happen as bug reports, feature requests, or code contributions.
+
+[List of contributors](CONTRIBUTORS.md)
 
 ## Citation
 
