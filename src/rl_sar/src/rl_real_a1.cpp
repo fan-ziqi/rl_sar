@@ -12,7 +12,10 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
     this->ReadYaml(this->robot_name);
 
     // history
-    this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
+    if (!this->params.observations_history.empty())
+    {
+        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
+    }
 
     this->unitree_udp.InitCmdData(this->unitree_low_command);
 
@@ -176,10 +179,17 @@ torch::Tensor RL_Real::Forward()
 
     torch::Tensor clamped_obs = this->ComputeObservation();
 
-    this->history_obs_buf.insert(clamped_obs);
-    this->history_obs = this->history_obs_buf.get_obs_vec({0, 1, 2, 3, 4, 5});
-
-    torch::Tensor actions = this->model.forward({this->history_obs}).toTensor();
+    torch::Tensor actions;
+    if (!this->params.observations_history.empty())
+    {
+        this->history_obs_buf.insert(clamped_obs);
+        this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
+        actions = this->model.forward({this->history_obs}).toTensor();
+    }
+    else
+    {
+        actions = this->model.forward({clamped_obs}).toTensor();
+    }
 
     if (this->params.clip_actions_upper.numel() != 0 && this->params.clip_actions_lower.numel() != 0)
     {

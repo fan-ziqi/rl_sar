@@ -12,7 +12,10 @@ void RL_Real::RL_Real()
     this->ReadYaml(this->robot_name);
 
     // history
-    this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
+    if (!this->params.observations_history.empty())
+    {
+        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
+    }
 
     // init robot
     this->InitRobotStateClient();
@@ -187,10 +190,17 @@ torch::Tensor RL_Real::Forward()
 
     torch::Tensor clamped_obs = this->ComputeObservation();
 
-    this->history_obs_buf.insert(clamped_obs);
-    this->history_obs = this->history_obs_buf.get_obs_vec({5, 4, 3, 2, 1, 0});
-
-    torch::Tensor actions = this->model.forward({this->history_obs}).toTensor();
+    torch::Tensor actions;
+    if (!this->params.observations_history.empty())
+    {
+        this->history_obs_buf.insert(clamped_obs);
+        this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
+        actions = this->model.forward({this->history_obs}).toTensor();
+    }
+    else
+    {
+        actions = this->model.forward({clamped_obs}).toTensor();
+    }
 
     if (this->params.clip_actions_upper.numel() != 0 && this->params.clip_actions_lower.numel() != 0)
     {

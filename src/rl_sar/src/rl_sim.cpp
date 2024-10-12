@@ -12,9 +12,9 @@ RL_Sim::RL_Sim()
     this->ReadYaml(this->robot_name);
 
     // history
-    if (this->params.use_history)
+    if (!this->params.observations_history.empty())
     {
-        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
+        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
     }
 
     // Due to the fact that the robot_state_publisher sorts the joint names alphabetically,
@@ -247,13 +247,14 @@ void RL_Sim::RunModel()
 torch::Tensor RL_Sim::Forward()
 {
     torch::autograd::GradMode::set_enabled(false);
+
     torch::Tensor clamped_obs = this->ComputeObservation();
+
     torch::Tensor actions;
-    if (this->params.use_history)
+    if (!this->params.observations_history.empty())
     {
         this->history_obs_buf.insert(clamped_obs);
-        // TODO-devel-go2 这里要找一种方法适配不同的顺序，不能直接改这里，会导致a1的模型不可用
-        this->history_obs = this->history_obs_buf.get_obs_vec({5, 4, 3, 2, 1, 0});
+        this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
         actions = this->model.forward({this->history_obs}).toTensor();
     }
     else

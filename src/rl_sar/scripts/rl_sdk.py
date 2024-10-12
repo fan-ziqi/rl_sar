@@ -64,11 +64,11 @@ class ModelParams:
     def __init__(self):
         self.model_name = None
         self.framework = None
-        self.use_history = None
         self.dt = None
         self.decimation = None
         self.num_observations = None
         self.observations = None
+        self.observations_history = None
         self.damping = None
         self.stiffness = None
         self.action_scale = None
@@ -378,16 +378,20 @@ class RL:
         self.params.framework = config["framework"]
         rows = config["rows"]
         cols = config["cols"]
-        self.params.use_history = config["use_history"]
         self.params.dt = config["dt"]
         self.params.decimation = config["decimation"]
         self.params.num_observations = config["num_observations"]
         self.params.observations = config["observations"]
+        if config["observations_history"] is None:
+            self.params.observations_history = None
+        else:
+            self.params.observations_history = config["observations_history"]
+
         self.params.clip_obs = config["clip_obs"]
         self.params.action_scale = config["action_scale"]
         self.params.hip_scale_reduction = config["hip_scale_reduction"]
         self.params.hip_scale_reduction_indices = config["hip_scale_reduction_indices"]
-        if config["clip_actions_upper"] is None and config["clip_actions_upper"] is None:
+        if config["clip_actions_lower"] is None and config["clip_actions_upper"] is None:
             self.params.clip_actions_upper = None
             self.params.clip_actions_lower = None
         else:

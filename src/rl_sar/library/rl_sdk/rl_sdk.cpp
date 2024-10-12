@@ -421,11 +421,18 @@ void RL::ReadYaml(std::string robot_name)
     this->params.framework = config["framework"].as<std::string>();
     int rows = config["rows"].as<int>();
     int cols = config["cols"].as<int>();
-    this->params.use_history = config["use_history"].as<bool>();
     this->params.dt = config["dt"].as<double>();
     this->params.decimation = config["decimation"].as<int>();
     this->params.num_observations = config["num_observations"].as<int>();
     this->params.observations = ReadVectorFromYaml<std::string>(config["observations"]);
+    if (config["observations_history"].IsNull())
+    {
+        this->params.observations_history = {};
+    }
+    else
+    {
+        this->params.observations_history = ReadVectorFromYaml<int>(config["observations_history"]);
+    }
     this->params.clip_obs = config["clip_obs"].as<double>();
     if (config["clip_actions_lower"].IsNull() && config["clip_actions_upper"].IsNull())
     {
