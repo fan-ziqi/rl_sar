@@ -252,6 +252,7 @@ torch::Tensor RL_Sim::Forward()
     if (this->params.use_history)
     {
         this->history_obs_buf.insert(clamped_obs);
+        // TODO 这里要找一种方法适配不同的顺序，不能直接改这里，会导致a1的模型不可用
         this->history_obs = this->history_obs_buf.get_obs_vec({5, 4, 3, 2, 1, 0});
         actions = this->model.forward({this->history_obs}).toTensor();
     }
