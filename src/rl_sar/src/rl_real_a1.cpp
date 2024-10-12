@@ -25,9 +25,10 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
         this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
     }
 
+    // init robot
     this->unitree_udp.InitCmdData(this->unitree_low_command);
 
-    // init
+    // init rl
     torch::autograd::GradMode::set_enabled(false);
     this->InitObservations();
     this->InitOutputs();
@@ -79,6 +80,7 @@ RL_Real::~RL_Real()
 
 void RL_Real::GetState(RobotState<double> *state)
 {
+    // TODO-devel-mutex
     this->unitree_udp.GetRecv(this->unitree_low_state);
     memcpy(&this->unitree_joy, this->unitree_low_state.wirelessRemote, 40);
 
@@ -154,6 +156,7 @@ void RL_Real::RunModel()
     {
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
         this->obs.commands = torch::tensor({{this->unitree_joy.ly, -this->unitree_joy.rx, -this->unitree_joy.lx}});
+        // this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
         this->obs.base_quat = torch::tensor(this->robot_state.imu.quaternion).unsqueeze(0);
         this->obs.dof_pos = torch::tensor(this->robot_state.motor_state.q).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
         this->obs.dof_vel = torch::tensor(this->robot_state.motor_state.dq).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
