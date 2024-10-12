@@ -129,7 +129,7 @@ rosrun rl_sar rl_real_a1
 
 #### Unitree Go2
 
-TODO 添加go2的使用说明
+TODO-devel-go2 添加go2的使用说明
 
 新建终端，启动控制程序
 

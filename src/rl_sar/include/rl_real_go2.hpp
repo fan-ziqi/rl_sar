@@ -4,14 +4,14 @@
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
 #include "loop.hpp"
-#include <unitree/robot/channel/channel_publisher.hpp> // TODO go2的sdk没有传上来
+#include <unitree/robot/channel/channel_publisher.hpp> // TODO-devel-go2 go2的sdk没有传上来
 #include <unitree/robot/channel/channel_subscriber.hpp>
 #include <unitree/idl/go2/LowState_.hpp>
 #include <unitree/idl/go2/LowCmd_.hpp>
 #include <unitree/common/time/time_tool.hpp>
 #include <unitree/common/thread/thread.hpp>
 #include <unitree/robot/go2/robot_state/robot_state_client.hpp>
-#include "unitree_joystick.h" // TODO 这里调用的是a1的，go2有自己的键盘接口吗
+#include "unitree_joystick.h" // TODO-devel-go2 这里调用的是a1的，go2有自己的键盘接口吗
 #include <csignal>
 
 #include "matplotlibcpp.h"

@@ -128,7 +128,7 @@ Or press **0** on the keyboard to switch the robot to the default standing posit
 
 #### Unitree Go2
 
-TODO 添加go2的使用说明
+TODO-devel-go2 添加go2的使用说明
 
 Open a new terminal and start the control program
 

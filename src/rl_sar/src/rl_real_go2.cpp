@@ -29,7 +29,7 @@ void RL_Real::RL_Real()
     // create subscriber
     lowstate_subscriber.reset(new ChannelSubscriber<unitree_go::msg::dds_::LowState_>(TOPIC_LOWSTATE));
     lowstate_subscriber->InitChannel(std::bind(&RL_Real::LowStateMessageHandler, this, std::placeholders::_1), 1);
-    // loop publishing thread TODO why?
+    // loop publishing thread TODO-devel-go2 why?
     // lowCmdWriteThreadPtr = CreateRecurrentThreadEx("writebasiccmd", UT_CPU_ID_NONE, 2000, &RL_Real::LowCmdwriteHandler, this);
 
     // init rl
@@ -78,7 +78,7 @@ RL_Real::~RL_Real()
 
 void RL_Real::GetState(RobotState<double> *state)
 {
-    // TODO 加锁
+    // TODO-devel-mutex 加锁
     memcpy(&this->unitree_joy, &this->unitree_low_state.wireless_remote()[0], 40);
 
     if ((int)this->unitree_joy.btn.components.R2 == 1)
@@ -133,7 +133,7 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
         this->unitree_low_command.motor_cmd()[i].tau() = command->motor_command.tau[command_mapping[i]];
     }
 
-    // 暂时不发 TODO Why?
+    // 暂时不发 TODO-devel-go2 Why?
     this->unitree_low_command.crc() = Crc32Core((uint32_t *)&unitree_low_command, (sizeof(unitree_go::msg::dds_::LowCmd_) >> 2) - 1);
     lowcmd_publisher->Write(unitree_low_command);
 }
