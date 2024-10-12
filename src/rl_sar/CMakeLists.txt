@@ -31,10 +31,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
-# find_package(yaml-cpp REQUIRED)
-link_directories(/usr/local/lib)
-include_directories(${YAML_CPP_INCLUDE_DIR})
-
 catkin_package(
   CATKIN_DEPENDS
   robot_joint_controller
@@ -43,6 +39,8 @@ catkin_package(
 
 include_directories(library/unitree_legged_sdk_3.2/include)
 link_directories(library/unitree_legged_sdk_3.2/lib)
+# TODO-devel-go2 add go2 sdk
+
 set(EXTRA_LIBS -pthread libunitree_legged_sdk_amd64.so lcm)
 
 include_directories(
@@ -77,6 +75,12 @@ target_link_libraries(rl_sim
 
 add_executable(rl_real_a1 src/rl_real_a1.cpp )
 target_link_libraries(rl_real_a1
+  ${catkin_LIBRARIES} ${EXTRA_LIBS}
+  rl_sdk observation_buffer yaml-cpp
+)
+
+add_executable(rl_real_go2 src/rl_real_go2.cpp )
+target_link_libraries(rl_real_go2
   ${catkin_LIBRARIES} ${EXTRA_LIBS}
   rl_sdk observation_buffer yaml-cpp
 )
