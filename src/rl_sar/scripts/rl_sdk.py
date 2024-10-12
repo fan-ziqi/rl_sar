@@ -390,11 +390,7 @@ class RL:
         self.params.decimation = config["decimation"]
         self.params.num_observations = config["num_observations"]
         self.params.observations = config["observations"]
-        if config["observations_history"] is None:
-            self.params.observations_history = None
-        else:
-            self.params.observations_history = config["observations_history"]
-
+        self.params.observations_history = config["observations_history"]
         self.params.clip_obs = config["clip_obs"]
         self.params.action_scale = config["action_scale"]
         self.params.hip_scale_reduction = config["hip_scale_reduction"]

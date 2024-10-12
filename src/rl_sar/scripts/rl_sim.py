@@ -39,7 +39,7 @@ class RL_Sim(RL):
                 self.params.observations[i] = "ang_vel_world"
 
         # history
-        if self.params.observations_history is None:
+        if len(self.params.observations_history) != 0:
             self.history_obs_buf = ObservationBuffer(1, self.params.num_observations, len(self.params.observations_history))
 
         # Due to the fact that the robot_state_publisher sorts the joint names alphabetically,
@@ -205,7 +205,7 @@ class RL_Sim(RL):
     def Forward(self):
         torch.set_grad_enabled(False)
         clamped_obs = self.ComputeObservation()
-        if self.params.observations_history is None:
+        if len(self.params.observations_history) != 0:
             self.history_obs_buf.insert(clamped_obs)
             history_obs = self.history_obs_buf.get_obs_vec(self.params.observations_history)
             actions = self.model.forward(history_obs)

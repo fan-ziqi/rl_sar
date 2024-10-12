@@ -20,7 +20,7 @@ RL_Sim::RL_Sim()
     }
 
     // history
-    if (!this->params.observations_history.empty())
+    if (this->params.observations_history.size() != 0)
     {
         this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
     }
@@ -259,7 +259,7 @@ torch::Tensor RL_Sim::Forward()
     torch::Tensor clamped_obs = this->ComputeObservation();
 
     torch::Tensor actions;
-    if (!this->params.observations_history.empty())
+    if (this->params.observations_history.size() != 0)
     {
         this->history_obs_buf.insert(clamped_obs);
         this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
