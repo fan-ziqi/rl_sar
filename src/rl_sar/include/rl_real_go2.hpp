@@ -11,7 +11,7 @@
 #include <unitree/common/time/time_tool.hpp>
 #include <unitree/common/thread/thread.hpp>
 #include <unitree/robot/go2/robot_state/robot_state_client.hpp>
-#include "unitree_joystick.h" // TODO-devel-go2 这里调用的是a1的，go2有自己的键盘接口吗
+// #include "unitree_joystick.h" // TODO-devel-go2 go2键盘接口
 #include <csignal>
 
 #include "matplotlibcpp.h"
@@ -28,7 +28,7 @@ constexpr double VelStopF = (16000.0f);
 class RL_Real : public RL
 {
 public:
-    RL_Real();
+    RL_Real(const std::string &network_interface);
     ~RL_Real();
 
 private:
@@ -68,7 +68,7 @@ private:
     unitree_go::msg::dds_::LowState_ unitree_low_state{}; // default init
     ChannelPublisherPtr<unitree_go::msg::dds_::LowCmd_> lowcmd_publisher; // publisher
     ChannelSubscriberPtr<unitree_go::msg::dds_::LowState_> lowstate_subscriber; //subscriber
-    xRockerBtnDataStruct unitree_joy;
+    // xRockerBtnDataStruct unitree_joy; // TODO-devel-go2 go2键盘接口
 
     // others
     int motiontime = 0;

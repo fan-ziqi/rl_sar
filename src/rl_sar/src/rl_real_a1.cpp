@@ -3,8 +3,6 @@
 // #define PLOT
 // #define CSV_LOGGER
 
-RL_Real rl_sar;
-
 RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_udp(UNITREE_LEGGED_SDK::LOWLEVEL)
 {
     // read params from yaml
@@ -19,17 +17,15 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
         }
     }
 
-    // history
-    if (!this->params.observations_history.empty())
-    {
-        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
-    }
-
     // init robot
     this->unitree_udp.InitCmdData(this->unitree_low_command);
 
     // init rl
     torch::autograd::GradMode::set_enabled(false);
+    if (!this->params.observations_history.empty())
+    {
+        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
+    }
     this->InitObservations();
     this->InitOutputs();
     this->InitControl();
@@ -241,6 +237,8 @@ void signalHandler(int signum)
 int main(int argc, char **argv)
 {
     signal(SIGINT, signalHandler);
+
+    RL_Real rl_sar;
 
     while (1)
     {

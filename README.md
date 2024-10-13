@@ -128,14 +128,15 @@ Or press **0** on the keyboard to switch the robot to the default standing posit
 
 #### Unitree Go2
 
-TODO-devel-go2 添加go2的使用说明
+TODO-devel-go2 完善go2的使用说明
 
-Open a new terminal and start the control program
-
-```bash
-source devel/setup.bash
-rosrun rl_sar rl_real_go2
-```
+1. Connect one end of the Ethernet cable to the Go2 robot and the other end to the user's computer. Then, enable USB Ethernet on the computer and configure it. The IP address of the onboard computer on the Go2 robot is 192.168.123.161, so the computer's USB Ethernet address should be set to the same network segment as the robot. For example, enter 192.168.123.222 in the "Address" field ("222" can be replaced with another number).
+2. Use the `ifconfig` command to find the name of the network interface for the 123 network segment, such as `enxf8e43b808e06`. In the following steps, replace `<YOUR_NETWORK_INTERFACE>` with the actual network interface name.
+3. Open a new terminal and start the control program:
+    ```bash
+    source devel/setup.bash
+    rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE>
+    ```
 
 ### Train the actuator network
 

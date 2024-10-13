@@ -3,9 +3,7 @@
 // #define PLOT
 // #define CSV_LOGGER
 
-RL_Real rl_sar;
-
-void RL_Real::RL_Real()
+RL_Real::RL_Real(const std::string &network_interface)
 {
     // read params from yaml
     this->robot_name = "go2_isaacgym";
@@ -19,18 +17,13 @@ void RL_Real::RL_Real()
         }
     }
 
-    // history
-    if (!this->params.observations_history.empty())
-    {
-        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
-    }
-
     // init robot
+    ChannelFactory::Instance()->Init(0, network_interface);
     this->InitRobotStateClient();
-    while (rl_sar.QueryServiceStatus("sport_mode"))
+    while (this->QueryServiceStatus("sport_mode"))
     {
         std::cout << "Try to deactivate the service: " << "sport_mode" << std::endl;
-        rl_sar.ActivateService("sport_mode", 0);
+        this->ActivateService("sport_mode", 0);
         sleep(1);
     }
     this->InitLowCmd();
@@ -45,6 +38,10 @@ void RL_Real::RL_Real()
 
     // init rl
     torch::autograd::GradMode::set_enabled(false);
+    if (!this->params.observations_history.empty())
+    {
+        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
+    }
     this->InitObservations();
     this->InitOutputs();
     this->InitControl();
@@ -89,21 +86,21 @@ RL_Real::~RL_Real()
 
 void RL_Real::GetState(RobotState<double> *state)
 {
-    // TODO-devel-mutex 加锁
-    memcpy(&this->unitree_joy, &this->unitree_low_state.wireless_remote()[0], 40);
+    // TODO-devel-go2 go2键盘接口
+    // memcpy(&this->unitree_joy, &this->unitree_low_state.wireless_remote()[0], 40);
 
-    if ((int)this->unitree_joy.btn.components.R2 == 1)
-    {
-        this->control.control_state = STATE_POS_GETUP;
-    }
-    else if ((int)this->unitree_joy.btn.components.R1 == 1)
-    {
-        this->control.control_state = STATE_RL_INIT;
-    }
-    else if ((int)this->unitree_joy.btn.components.L2 == 1)
-    {
-        this->control.control_state = STATE_POS_GETDOWN;
-    }
+    // if ((int)this->unitree_joy.btn.components.R2 == 1)
+    // {
+    //     this->control.control_state = STATE_POS_GETUP;
+    // }
+    // else if ((int)this->unitree_joy.btn.components.R1 == 1)
+    // {
+    //     this->control.control_state = STATE_RL_INIT;
+    // }
+    // else if ((int)this->unitree_joy.btn.components.L2 == 1)
+    // {
+    //     this->control.control_state = STATE_POS_GETDOWN;
+    // }
 
     if (this->params.framework == "isaacgym")
     {
@@ -347,6 +344,14 @@ void signalHandler(int signum)
 int main(int argc, char **argv)
 {
     signal(SIGINT, signalHandler);
+
+    if (argc < 2)
+    {
+        std::cout << "Usage: " << argv[0] << " networkInterface" << std::endl;
+        exit(-1);
+    }
+
+    RL_Real rl_sar(argv[1]);
 
     while (1)
     {
