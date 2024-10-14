@@ -3,10 +3,8 @@
 // #define PLOT
 // #define CSV_LOGGER
 
-RL_Real::RL_Real(const std::string &network_interface)
+RL_Real::RL_Real()
 {
-    std::cout<<"000000"<<std::endl;
-    std::cout<<"000000"<<std::endl;
     // read params from yaml
     this->robot_name = "go2_isaacgym";
     this->ReadYaml(this->robot_name);
@@ -18,27 +16,25 @@ RL_Real::RL_Real(const std::string &network_interface)
             observation = "ang_vel_body";
         }
     }
-    std::cout<<"000000"<<std::endl;
+
     // init robot
-    ChannelFactory::Instance()->Init(0, network_interface);
     this->InitRobotStateClient();
     while (this->QueryServiceStatus("sport_mode"))
     {
         std::cout << "Try to deactivate the service: " << "sport_mode" << std::endl;
-        this->ActivateService("sport_mode", 0);
+        this->rsc.ServiceSwitch("sport_mode", 0);
         sleep(1);
     }
     this->InitLowCmd();
     // create publisher
-    lowcmd_publisher.reset(new ChannelPublisher<unitree_go::msg::dds_::LowCmd_>(TOPIC_LOWCMD));
-    lowcmd_publisher->InitChannel();
+    this->lowcmd_publisher.reset(new ChannelPublisher<unitree_go::msg::dds_::LowCmd_>(TOPIC_LOWCMD));
+    this->lowcmd_publisher->InitChannel();
     // create subscriber
-    lowstate_subscriber.reset(new ChannelSubscriber<unitree_go::msg::dds_::LowState_>(TOPIC_LOWSTATE));
-    lowstate_subscriber->InitChannel(std::bind(&RL_Real::LowStateMessageHandler, this, std::placeholders::_1), 1);
+    this->lowstate_subscriber.reset(new ChannelSubscriber<unitree_go::msg::dds_::LowState_>(TOPIC_LOWSTATE));
+    this->lowstate_subscriber->InitChannel(std::bind(&RL_Real::LowStateMessageHandler, this, std::placeholders::_1), 1);
 
-    joystick_subscriber.reset(new ChannelSubscriber<unitree_go::msg::dds_::WirelessController_>(TOPIC_JOYSTICK));
-    joystick_subscriber->InitChannel(std::bind(&RL_Real::JoystickHandler, this, std::placeholders::_1), 1);
-
+    this->joystick_subscriber.reset(new ChannelSubscriber<unitree_go::msg::dds_::WirelessController_>(TOPIC_JOYSTICK));
+    this->joystick_subscriber->InitChannel(std::bind(&RL_Real::JoystickHandler, this, std::placeholders::_1), 1);
 
     // init rl
     torch::autograd::GradMode::set_enabled(false);
@@ -161,7 +157,7 @@ void RL_Real::RunModel()
     {
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
         this->obs.commands = torch::tensor({{this->joystick.ly(), -this->joystick.rx(), -this->joystick.lx()}});
-        //this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
+        // this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
         this->obs.base_quat = torch::tensor(this->robot_state.imu.quaternion).unsqueeze(0);
         this->obs.dof_pos = torch::tensor(this->robot_state.motor_state.q).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
         this->obs.dof_vel = torch::tensor(this->robot_state.motor_state.dq).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
@@ -245,7 +241,7 @@ uint32_t RL_Real::Crc32Core(uint32_t *ptr, uint32_t len)
     unsigned int CRC32 = 0xFFFFFFFF;
     const unsigned int dwPolynomial = 0x04c11db7;
 
-    for (unsigned int i = 0; i < len; i++)
+    for (unsigned int i = 0; i < len; ++i)
     {
         xbit = 1 << 31;
         data = ptr[i];
@@ -262,7 +258,9 @@ uint32_t RL_Real::Crc32Core(uint32_t *ptr, uint32_t len)
             }
 
             if (data & xbit)
+            {
                 CRC32 ^= dwPolynomial;
+            }
             xbit >>= 1;
         }
     }
@@ -272,35 +270,35 @@ uint32_t RL_Real::Crc32Core(uint32_t *ptr, uint32_t len)
 
 void RL_Real::InitLowCmd()
 {
-    unitree_low_command.head()[0] = 0xFE;
-    unitree_low_command.head()[1] = 0xEF;
-    unitree_low_command.level_flag() = 0xFF;
-    unitree_low_command.gpio() = 0;
+    this->unitree_low_command.head()[0] = 0xFE;
+    this->unitree_low_command.head()[1] = 0xEF;
+    this->unitree_low_command.level_flag() = 0xFF;
+    this->unitree_low_command.gpio() = 0;
 
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < 20; ++i)
     {
-        unitree_low_command.motor_cmd()[i].mode() = (0x01); // motor switch to servo (PMSM) mode
-        unitree_low_command.motor_cmd()[i].q() = (PosStopF);
-        unitree_low_command.motor_cmd()[i].kp() = (0);
-        unitree_low_command.motor_cmd()[i].dq() = (VelStopF);
-        unitree_low_command.motor_cmd()[i].kd() = (0);
-        unitree_low_command.motor_cmd()[i].tau() = (0);
+        this->unitree_low_command.motor_cmd()[i].mode() = (0x01); // motor switch to servo (PMSM) mode
+        this->unitree_low_command.motor_cmd()[i].q() = (PosStopF);
+        this->unitree_low_command.motor_cmd()[i].kp() = (0);
+        this->unitree_low_command.motor_cmd()[i].dq() = (VelStopF);
+        this->unitree_low_command.motor_cmd()[i].kd() = (0);
+        this->unitree_low_command.motor_cmd()[i].tau() = (0);
     }
 }
 
 void RL_Real::InitRobotStateClient()
 {
-    rsc.SetTimeout(10.0f);
-    rsc.Init();
+    this->rsc.SetTimeout(10.0f);
+    this->rsc.Init();
 }
 
 int RL_Real::QueryServiceStatus(const std::string &serviceName)
 {
     std::vector<ServiceState> serviceStateList;
     int ret, serviceStatus;
-    ret = rsc.ServiceList(serviceStateList);
+    ret = this->rsc.ServiceList(serviceStateList);
     size_t i, count = serviceStateList.size();
-    for (i = 0; i < count; i++)
+    for (i = 0; i < count; ++i)
     {
         const ServiceState &serviceState = serviceStateList[i];
         if (serviceState.name == serviceName)
@@ -320,22 +318,16 @@ int RL_Real::QueryServiceStatus(const std::string &serviceName)
     return serviceStatus;
 }
 
-void RL_Real::ActivateService(const std::string &serviceName, int activate)
-{
-    rsc.ServiceSwitch(serviceName, activate);
-}
-
 void RL_Real::LowStateMessageHandler(const void *message)
 {
-    unitree_low_state = *(unitree_go::msg::dds_::LowState_ *)message;
+    this->unitree_low_state = *(unitree_go::msg::dds_::LowState_ *)message;
 }
 
 void RL_Real::JoystickHandler(const void *message)
 {
     joystick = *(unitree_go::msg::dds_::WirelessController_ *)message;
-    unitree_joy.value = joystick.keys();
+    this->unitree_joy.value = joystick.keys();
 }
-
 
 void signalHandler(int signum)
 {
@@ -344,7 +336,6 @@ void signalHandler(int signum)
 
 int main(int argc, char **argv)
 {
-    std::cout<<"000000"<<std::endl;
     signal(SIGINT, signalHandler);
 
     if (argc < 2)
@@ -352,8 +343,10 @@ int main(int argc, char **argv)
         std::cout << "Usage: " << argv[0] << " networkInterface" << std::endl;
         exit(-1);
     }
-    std::cout<<argv[1]<<std::endl;
-    RL_Real rl_sar(argv[0]);
+
+    ChannelFactory::Instance()->Init(0, argv[1]);
+
+    RL_Real rl_sar;
 
     while (1)
     {
