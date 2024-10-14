@@ -141,7 +141,9 @@ TODO-devel-go2 完善go2的使用说明
 
 ### 训练执行器网络
 
-1. 取消注释`rl_real.cpp`中最上面的`#define CSV_LOGGER`，你也可以在仿真程序中修改对应部分采集仿真数据用来测试训练过程。
+下面拿A1举例
+
+1. 取消注释`rl_real_a1.cpp`中最上面的`#define CSV_LOGGER`，你也可以在仿真程序中修改对应部分采集仿真数据用来测试训练过程。
 2. 运行控制程序，程序会在执行后记录所有数据。
 3. 停止控制程序，开始训练执行器网络。注意，下面的路径前均省略了`rl_sar/src/rl_sar/models/`。
     ```bash
@@ -162,10 +164,6 @@ TODO-devel-go2 完善go2的使用说明
 4. 按需修改代码中的`forward()`函数，以适配不同的模型
 5. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch`路径下的launch文件自行修改
 6. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_a1.cpp`文件自行修改
-
-## 参考
-
-[unitree_ros](https://github.com/unitreerobotics/unitree_ros)
 
 ## 贡献
 
