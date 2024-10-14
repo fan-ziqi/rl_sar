@@ -8,6 +8,8 @@
 #include <unitree/robot/channel/channel_subscriber.hpp>
 #include <unitree/idl/go2/LowState_.hpp>
 #include <unitree/idl/go2/LowCmd_.hpp>
+#include <unitree/idl/go2/WirelessController_.hpp>
+#include <unitree/robot/client/client.hpp>
 #include <unitree/common/time/time_tool.hpp>
 #include <unitree/common/thread/thread.hpp>
 #include <unitree/robot/go2/robot_state/robot_state_client.hpp>
@@ -22,8 +24,36 @@ using namespace unitree::robot;
 using namespace unitree::robot::go2;
 #define TOPIC_LOWCMD "rt/lowcmd"
 #define TOPIC_LOWSTATE "rt/lowstate"
+#define TOPIC_JOYSTICK "rt/wirelesscontroller"
 constexpr double PosStopF = (2.146E+9f);
 constexpr double VelStopF = (16000.0f);
+
+// 遥控器键值联合体
+typedef union
+{
+  struct
+  {
+    uint8_t R1 : 1;
+    uint8_t L1 : 1;
+    uint8_t start : 1;
+    uint8_t select : 1;
+    uint8_t R2 : 1;
+    uint8_t L2 : 1;
+    uint8_t F1 : 1;
+    uint8_t F2 : 1;
+    uint8_t A : 1;
+    uint8_t B : 1;
+    uint8_t X : 1;
+    uint8_t Y : 1;
+    uint8_t up : 1;
+    uint8_t right : 1;
+    uint8_t down : 1;
+    uint8_t left : 1;
+  } components;
+  uint16_t value;
+} xKeySwitchUnion;
+
+
 
 class RL_Real : public RL
 {
@@ -59,16 +89,18 @@ private:
     void InitRobotStateClient();
     int QueryServiceStatus(const std::string &serviceName);
     void ActivateService(const std::string &serviceName, int activate);
-    void LowCmdwriteHandler();
     uint32_t Crc32Core(uint32_t *ptr, uint32_t len);
     void InitLowCmd();
     void LowStateMessageHandler(const void *messages);
+    void JoystickHandler(const void *message);
     RobotStateClient rsc;
     unitree_go::msg::dds_::LowCmd_ unitree_low_command{}; // default init
     unitree_go::msg::dds_::LowState_ unitree_low_state{}; // default init
+    unitree_go::msg::dds_::WirelessController_ joystick{};
     ChannelPublisherPtr<unitree_go::msg::dds_::LowCmd_> lowcmd_publisher; // publisher
     ChannelSubscriberPtr<unitree_go::msg::dds_::LowState_> lowstate_subscriber; //subscriber
-    // xRockerBtnDataStruct unitree_joy; // TODO-devel-go2 go2键盘接口
+    ChannelSubscriberPtr<unitree_go::msg::dds_::WirelessController_> joystick_subscriber; 
+    xKeySwitchUnion unitree_joy; 
 
     // others
     int motiontime = 0;

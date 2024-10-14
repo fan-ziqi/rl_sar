@@ -5,6 +5,8 @@
 
 RL_Real::RL_Real(const std::string &network_interface)
 {
+    std::cout<<"000000"<<std::endl;
+    std::cout<<"000000"<<std::endl;
     // read params from yaml
     this->robot_name = "go2_isaacgym";
     this->ReadYaml(this->robot_name);
@@ -16,7 +18,7 @@ RL_Real::RL_Real(const std::string &network_interface)
             observation = "ang_vel_body";
         }
     }
-
+    std::cout<<"000000"<<std::endl;
     // init robot
     ChannelFactory::Instance()->Init(0, network_interface);
     this->InitRobotStateClient();
@@ -33,8 +35,10 @@ RL_Real::RL_Real(const std::string &network_interface)
     // create subscriber
     lowstate_subscriber.reset(new ChannelSubscriber<unitree_go::msg::dds_::LowState_>(TOPIC_LOWSTATE));
     lowstate_subscriber->InitChannel(std::bind(&RL_Real::LowStateMessageHandler, this, std::placeholders::_1), 1);
-    // loop publishing thread TODO-devel-go2 why?
-    // lowCmdWriteThreadPtr = CreateRecurrentThreadEx("writebasiccmd", UT_CPU_ID_NONE, 2000, &RL_Real::LowCmdwriteHandler, this);
+
+    joystick_subscriber.reset(new ChannelSubscriber<unitree_go::msg::dds_::WirelessController_>(TOPIC_JOYSTICK));
+    joystick_subscriber->InitChannel(std::bind(&RL_Real::JoystickHandler, this, std::placeholders::_1), 1);
+
 
     // init rl
     torch::autograd::GradMode::set_enabled(false);
@@ -86,21 +90,18 @@ RL_Real::~RL_Real()
 
 void RL_Real::GetState(RobotState<double> *state)
 {
-    // TODO-devel-go2 go2键盘接口
-    // memcpy(&this->unitree_joy, &this->unitree_low_state.wireless_remote()[0], 40);
-
-    // if ((int)this->unitree_joy.btn.components.R2 == 1)
-    // {
-    //     this->control.control_state = STATE_POS_GETUP;
-    // }
-    // else if ((int)this->unitree_joy.btn.components.R1 == 1)
-    // {
-    //     this->control.control_state = STATE_RL_INIT;
-    // }
-    // else if ((int)this->unitree_joy.btn.components.L2 == 1)
-    // {
-    //     this->control.control_state = STATE_POS_GETDOWN;
-    // }
+    if ((int)this->unitree_joy.components.R2 == 1)
+    {
+        this->control.control_state = STATE_POS_GETUP;
+    }
+    else if ((int)this->unitree_joy.components.R1 == 1)
+    {
+        this->control.control_state = STATE_RL_INIT;
+    }
+    else if ((int)this->unitree_joy.components.L2 == 1)
+    {
+        this->control.control_state = STATE_POS_GETDOWN;
+    }
 
     if (this->params.framework == "isaacgym")
     {
@@ -141,7 +142,6 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
         this->unitree_low_command.motor_cmd()[i].tau() = command->motor_command.tau[command_mapping[i]];
     }
 
-    // 暂时不发 TODO-devel-go2 Why?
     this->unitree_low_command.crc() = Crc32Core((uint32_t *)&unitree_low_command, (sizeof(unitree_go::msg::dds_::LowCmd_) >> 2) - 1);
     lowcmd_publisher->Write(unitree_low_command);
 }
@@ -160,8 +160,8 @@ void RL_Real::RunModel()
     if (this->running_state == STATE_RL_RUNNING)
     {
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
-        // this->obs.commands = torch::tensor({{this->unitree_joy.ly, -this->unitree_joy.rx, -this->unitree_joy.lx}});
-        this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
+        this->obs.commands = torch::tensor({{this->joystick.ly(), -this->joystick.rx(), -this->joystick.lx()}});
+        //this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
         this->obs.base_quat = torch::tensor(this->robot_state.imu.quaternion).unsqueeze(0);
         this->obs.dof_pos = torch::tensor(this->robot_state.motor_state.q).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
         this->obs.dof_vel = torch::tensor(this->robot_state.motor_state.dq).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
@@ -330,11 +330,12 @@ void RL_Real::LowStateMessageHandler(const void *message)
     unitree_low_state = *(unitree_go::msg::dds_::LowState_ *)message;
 }
 
-void RL_Real::LowCmdwriteHandler()
+void RL_Real::JoystickHandler(const void *message)
 {
-    // this->unitree_low_command.crc() = Crc32Core((uint32_t *)&unitree_low_command, (sizeof(unitree_go::msg::dds_::LowCmd_)>>2)-1);
-    // this->lowcmd_publisher->Write(unitree_low_command);
+    joystick = *(unitree_go::msg::dds_::WirelessController_ *)message;
+    unitree_joy.value = joystick.keys();
 }
+
 
 void signalHandler(int signum)
 {
@@ -343,6 +344,7 @@ void signalHandler(int signum)
 
 int main(int argc, char **argv)
 {
+    std::cout<<"000000"<<std::endl;
     signal(SIGINT, signalHandler);
 
     if (argc < 2)
@@ -350,8 +352,8 @@ int main(int argc, char **argv)
         std::cout << "Usage: " << argv[0] << " networkInterface" << std::endl;
         exit(-1);
     }
-
-    RL_Real rl_sar(argv[1]);
+    std::cout<<argv[1]<<std::endl;
+    RL_Real rl_sar(argv[0]);
 
     while (1)
     {

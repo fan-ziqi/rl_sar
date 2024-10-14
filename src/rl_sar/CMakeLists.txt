@@ -37,6 +37,9 @@ catkin_package(
   rospy
 )
 
+link_directories(/usr/local/lib)
+include_directories(${YAML_CPP_INCLUDE_DIR})
+
 # Unitree A1
 include_directories(library/unitree_legged_sdk_3.2/include)
 link_directories(library/unitree_legged_sdk_3.2/lib)
