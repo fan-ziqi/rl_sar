@@ -16,6 +16,6 @@ Guidelines for modifications:
 
 ## Contributors
 
-TODO-devel-go2 add your name
-
+Jijie Huang
+ 
 ## Acknowledgements
