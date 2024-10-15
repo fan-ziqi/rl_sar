@@ -135,7 +135,8 @@ Or press **0** on the keyboard to switch the robot to the default standing posit
     source devel/setup.bash
     rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE>
     ```
-4. Go2 supports both gamepad and keyboard control, using the same method as mentioned above for a1.
+4. Go2 supports both joy and keyboard control, using the same method as mentioned above for A1.
+
 ### Train the actuator network
 
 Take A1 as an example below

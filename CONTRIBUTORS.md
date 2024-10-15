@@ -8,7 +8,6 @@ Guidelines for modifications:
 
 * Please keep the lists sorted alphabetically.
 * Names should be added to this file as: *individual names* or *organizations*.
-* E-mail addresses are tracked elsewhere to avoid spam.
 
 ## Developers
 
@@ -16,6 +15,8 @@ Guidelines for modifications:
 
 ## Contributors
 
-Jijie Huang
- 
+* Jijie Huang
+
 ## Acknowledgements
+
+* Unitree Robotics

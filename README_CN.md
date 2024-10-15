@@ -137,6 +137,7 @@ rosrun rl_sar rl_real_a1
     rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE>
     ```
 4. Go2支持手柄与键盘控制，方法与上面a1相同
+
 ### 训练执行器网络
 
 下面拿A1举例
