@@ -79,7 +79,9 @@ catkin build
 
 ## 运行
 
-运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/models/YOUR_ROBOT_NAME`中，并配置`config.yaml`中的参数。
+下文中使用 **\<ROBOT\>_\<PLATFORM\>** 代替表示不同的环境，可以是 `a1_isaacgym` 、 `a1_isaacsim` 、 `go2_isaacgym` 、 `gr1t1_isaacgym` 、 `gr1t2_isaacgym`
+
+运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/models/<ROBOT>_<PLATFORM>`中，并配置`config.yaml`中的参数。
 
 ### 仿真
 
@@ -87,7 +89,7 @@ catkin build
 
 ```bash
 source devel/setup.bash
-roslaunch rl_sar gazebo_<ROBOT>.launch
+roslaunch rl_sar gazebo_<ROBOT>_<PLATFORM>.launch
 ```
 
 打开一个新终端，启动控制程序
@@ -97,8 +99,6 @@ source devel/setup.bash
 (for cpp version)    rosrun rl_sar rl_sim
 (for python version) rosrun rl_sar rl_sim.py
 ```
-
-其中 \<ROBOT\> 可以是 `a1` 或 `a1_isaaclab` 或 `gr1t1` 或 `gr1t2`.
 
 控制：
 
@@ -155,14 +155,13 @@ rosrun rl_sar rl_real_a1
 
 ## 添加你的机器人
 
-下文中将`<ROBOT>`代表机器人名称
+下文中使用 **\<ROBOT\>_\<PLATFORM\>** 代替表示你的机器人环境
 
 1. 在`rl_sar/src/robots`路径下创建名为`<ROBOT>_description`的模型包，将模型的urdf放到`rl_sar/src/robots/<ROBOT>_description/urdf`路径下并命名为`<ROBOT>.urdf`，并在`rl_sar/src/robots/<ROBOT>_description/config`路径下创建命名空间为`<ROBOT>_gazebo`的关节配置文件
-2. 将训练好的RL模型文件放到`rl_sar/src/rl_sar/models/<ROBOT>`路径下
-3. 在`rl_sar/src/rl_sar/models/<ROBOT>`中新建config.yaml文件，参考`rl_sar/src/rl_sar/models/a1_isaacgym/config.yaml`文件修改其中参数
-4. 按需修改代码中的`forward()`函数，以适配不同的模型
-5. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch`路径下的launch文件自行修改
-6. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_a1.cpp`文件自行修改
+2. 将训练好的RL模型文件放到`rl_sar/src/rl_sar/models/<ROBOT>_<PLATFORM>`路径下，并在此路径中新建config.yaml文件，参考`rl_sar/src/rl_sar/models/a1_isaacgym/config.yaml`文件修改其中参数
+3. 按需修改代码中的`forward()`函数，以适配不同的模型
+4. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch`路径下的launch文件自行修改
+5. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_a1.cpp`文件自行修改
 
 ## 贡献
 
