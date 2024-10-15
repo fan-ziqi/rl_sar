@@ -96,7 +96,7 @@ private:
     RobotStateClient rsc;
     unitree_go::msg::dds_::LowCmd_ unitree_low_command{}; // default init
     unitree_go::msg::dds_::LowState_ unitree_low_state{}; // default init
-    unitree_go::msg::dds_::WirelessController_ joystick{};
+    //unitree_go::msg::dds_::WirelessController_ joystick{}; 
     ChannelPublisherPtr<unitree_go::msg::dds_::LowCmd_> lowcmd_publisher; // publisher
     ChannelSubscriberPtr<unitree_go::msg::dds_::LowState_> lowstate_subscriber; //subscriber
     ChannelSubscriberPtr<unitree_go::msg::dds_::WirelessController_> joystick_subscriber; 
