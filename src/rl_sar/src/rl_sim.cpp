@@ -10,13 +10,14 @@ RL_Sim::RL_Sim()
     // read params from yaml
     nh.param<std::string>("robot_name", this->robot_name, "");
     this->ReadYaml(this->robot_name);
-
-    // history
-    if (this->params.use_history)
+    for (std::string &observation : this->params.observations)
     {
-        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
+        // In Gazebo, the coordinate system for angular velocity is in the world coordinate system.
+        if (observation == "ang_vel")
+        {
+            observation = "ang_vel_world";
+        }
     }
-
     // Due to the fact that the robot_state_publisher sorts the joint names alphabetically,
     // the mapping table is established according to the order defined in the YAML file
     std::vector<std::string> sorted_joint_controller_names = this->params.joint_controller_names;
@@ -29,8 +30,12 @@ RL_Sim::RL_Sim()
     this->mapped_joint_velocities = std::vector<double>(this->params.num_of_dofs, 0.0);
     this->mapped_joint_efforts = std::vector<double>(this->params.num_of_dofs, 0.0);
 
-    // init
+    // init rl
     torch::autograd::GradMode::set_enabled(false);
+    if (this->params.observations_history.size() != 0)
+    {
+        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
+    }
     this->joint_publishers_commands.resize(this->params.num_of_dofs);
     this->InitObservations();
     this->InitOutputs();
@@ -247,12 +252,14 @@ void RL_Sim::RunModel()
 torch::Tensor RL_Sim::Forward()
 {
     torch::autograd::GradMode::set_enabled(false);
+
     torch::Tensor clamped_obs = this->ComputeObservation();
+
     torch::Tensor actions;
-    if (this->params.use_history)
+    if (this->params.observations_history.size() != 0)
     {
         this->history_obs_buf.insert(clamped_obs);
-        this->history_obs = this->history_obs_buf.get_obs_vec({0, 1, 2, 3, 4, 5});
+        this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
         actions = this->model.forward({this->history_obs}).toTensor();
     }
     else

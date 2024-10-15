@@ -109,7 +109,7 @@ source devel/setup.bash
 
 ### 真实机器人
 
-**示例：Unitree A1**
+#### Unitree A1
 
 与Unitree A1连接可以使用无线与有线两种方式
 
@@ -127,9 +127,22 @@ rosrun rl_sar rl_real_a1
 
 或者按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P**键切换到RL控制模式，任意状态按下**1**键切换到最初的趴下姿态。WS控制x，AD控制yaw，JL控制y。
 
+#### Unitree Go2
+
+1. 用网线的一端连接Go2机器人，另一端连接用户电脑，并开启电脑的 USB Ethernet 后进行配置。机器狗机载电脑的 IP 地地址为 192.168.123.161，故需将电脑 USB Ethernet 地址设置为与机器狗同一网段，如在 Address 中输入 192.168.123.222 (“222”可以改成其他)。
+2. 通过`ifconfig`命令查看123网段的网卡名字，如`enxf8e43b808e06`，下文用 \<YOUR_NETWORK_INTERFACE\> 代替
+3. 新建终端，启动控制程序
+    ```bash
+    source devel/setup.bash
+    rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE>
+    ```
+4. Go2支持手柄与键盘控制，方法与上面a1相同
+
 ### 训练执行器网络
 
-1. 取消注释`rl_real.cpp`中最上面的`#define CSV_LOGGER`，你也可以在仿真程序中修改对应部分采集仿真数据用来测试训练过程。
+下面拿A1举例
+
+1. 取消注释`rl_real_a1.cpp`中最上面的`#define CSV_LOGGER`，你也可以在仿真程序中修改对应部分采集仿真数据用来测试训练过程。
 2. 运行控制程序，程序会在执行后记录所有数据。
 3. 停止控制程序，开始训练执行器网络。注意，下面的路径前均省略了`rl_sar/src/rl_sar/models/`。
     ```bash
@@ -151,9 +164,11 @@ rosrun rl_sar rl_real_a1
 5. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch`路径下的launch文件自行修改
 6. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_a1.cpp`文件自行修改
 
-## 参考
+## 贡献
 
-[unitree_ros](https://github.com/unitreerobotics/unitree_ros)
+衷心欢迎社区的贡献，以使这个框架更加成熟和对所有人有用。贡献可以是bug报告、功能请求或代码贡献。
+
+[贡献者名单](CONTRIBUTORS.md)
 
 ## 引用
 
