@@ -140,7 +140,9 @@ TODO-devel-go2 完善go2的使用说明
 
 ### Train the actuator network
 
-1. Uncomment `#define CSV_LOGGER` in the top of `rl_real.cpp`. You can also modify the corresponding part in the simulation program to collect simulation data for testing the training process.
+Take A1 as an example below
+
+1. Uncomment `#define CSV_LOGGER` in the top of `rl_real_a1.cpp`. You can also modify the corresponding part in the simulation program to collect simulation data for testing the training process.
 2. Run the control program, and the program will log all data after execution.
 3. Stop the control program and start training the actuator network. Note that `rl_sar/src/rl_sar/models/` is omitted before the following paths.
     ```bash
@@ -161,10 +163,6 @@ In the following text, `<ROBOT>` represents the name of the robot
 4. Modify the `forward()` function in the code as needed to adapt to different models.
 5. If you need to run simulations, modify the launch files as needed by referring to those in the `rl_sar/src/rl_sar/launch` directory.
 6. If you need to run on the physical robot, modify the file `rl_sar/src/rl_sar/src/rl_real_a1.cpp` as needed.
-
-## Reference
-
-[unitree_ros](https://github.com/unitreerobotics/unitree_ros)
 
 ## Contributing
 
