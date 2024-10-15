@@ -108,7 +108,7 @@ Control:
 
 ### Real Robots
 
-**Example: Unitree A1**
+#### Unitree A1
 
 Unitree A1 can be connected using both wireless and wired methods:
 
@@ -126,9 +126,22 @@ Press the **R2** button on the controller to switch the robot to the default sta
 
 Or press **0** on the keyboard to switch the robot to the default standing position, press **P** to switch to RL control mode, and press **1** in any state to switch to the initial lying position. WS controls x-axis, AD controls yaw, and JL controls y-axis.
 
+#### Unitree Go2
+
+1. Connect one end of the Ethernet cable to the Go2 robot and the other end to the user's computer. Then, enable USB Ethernet on the computer and configure it. The IP address of the onboard computer on the Go2 robot is 192.168.123.161, so the computer's USB Ethernet address should be set to the same network segment as the robot. For example, enter 192.168.123.222 in the "Address" field ("222" can be replaced with another number).
+2. Use the `ifconfig` command to find the name of the network interface for the 123 network segment, such as `enxf8e43b808e06`. In the following steps, replace `<YOUR_NETWORK_INTERFACE>` with the actual network interface name.
+3. Open a new terminal and start the control program:
+    ```bash
+    source devel/setup.bash
+    rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE>
+    ```
+4. Go2 supports both joy and keyboard control, using the same method as mentioned above for A1.
+
 ### Train the actuator network
 
-1. Uncomment `#define CSV_LOGGER` in the top of `rl_real.cpp`. You can also modify the corresponding part in the simulation program to collect simulation data for testing the training process.
+Take A1 as an example below
+
+1. Uncomment `#define CSV_LOGGER` in the top of `rl_real_a1.cpp`. You can also modify the corresponding part in the simulation program to collect simulation data for testing the training process.
 2. Run the control program, and the program will log all data after execution.
 3. Stop the control program and start training the actuator network. Note that `rl_sar/src/rl_sar/models/` is omitted before the following paths.
     ```bash
@@ -150,9 +163,11 @@ In the following text, `<ROBOT>` represents the name of the robot
 5. If you need to run simulations, modify the launch files as needed by referring to those in the `rl_sar/src/rl_sar/launch` directory.
 6. If you need to run on the physical robot, modify the file `rl_sar/src/rl_sar/src/rl_real_a1.cpp` as needed.
 
-## Reference
+## Contributing
 
-[unitree_ros](https://github.com/unitreerobotics/unitree_ros)
+Wholeheartedly welcome contributions from the community to make this framework mature and useful for everyone. These may happen as bug reports, feature requests, or code contributions.
+
+[List of contributors](CONTRIBUTORS.md)
 
 ## Citation
 

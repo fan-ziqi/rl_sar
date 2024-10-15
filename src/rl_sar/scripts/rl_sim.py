@@ -34,10 +34,13 @@ class RL_Sim(RL):
         # read params from yaml
         self.robot_name = rospy.get_param("robot_name", "")
         self.ReadYaml(self.robot_name)
+        for i in range(len(self.params.observations)):
+            if self.params.observations[i] == "ang_vel":
+                self.params.observations[i] = "ang_vel_world"
 
         # history
-        if self.params.use_history:
-            self.history_obs_buf = ObservationBuffer(1, self.params.num_observations, 6)
+        if len(self.params.observations_history) != 0:
+            self.history_obs_buf = ObservationBuffer(1, self.params.num_observations, len(self.params.observations_history))
 
         # Due to the fact that the robot_state_publisher sorts the joint names alphabetically,
         # the mapping table is established according to the order defined in the YAML file
@@ -202,9 +205,9 @@ class RL_Sim(RL):
     def Forward(self):
         torch.set_grad_enabled(False)
         clamped_obs = self.ComputeObservation()
-        if self.params.use_history:
+        if len(self.params.observations_history) != 0:
             self.history_obs_buf.insert(clamped_obs)
-            history_obs = self.history_obs_buf.get_obs_vec(np.arange(6))
+            history_obs = self.history_obs_buf.get_obs_vec(self.params.observations_history)
             actions = self.model.forward(history_obs)
         else:
             actions = self.model.forward(clamped_obs)

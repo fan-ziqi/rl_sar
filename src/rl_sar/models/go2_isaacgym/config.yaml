@@ -1,0 +1,56 @@
+go2_isaacgym:
+  model_name: "himloco.pt"
+  framework: "isaacgym"
+  rows: 4
+  cols: 3
+  dt: 0.005
+  decimation: 4
+  num_observations: 45
+  observations: ["commands", "ang_vel", "gravity_vec", "dof_pos", "dof_vel", "actions"]
+  observations_history: [5, 4, 3, 2, 1, 0]
+  clip_obs: 100.0
+  clip_actions_lower: [-100, -100, -100,
+                       -100, -100, -100,
+                       -100, -100, -100,
+                       -100, -100, -100]
+  clip_actions_upper: [100, 100, 100,
+                       100, 100, 100,
+                       100, 100, 100,
+                       100, 100, 100]
+  rl_kp: [40, 40, 40,
+          40, 40, 40,
+          40, 40, 40,
+          40, 40, 40]
+  rl_kd: [1, 1, 1,
+          1, 1, 1,
+          1, 1, 1,
+          1, 1, 1]
+  fixed_kp: [60, 60, 60,
+             60, 60, 60,
+             60, 60, 60,
+             60, 60, 60]
+  fixed_kd: [5, 5, 5,
+             5, 5, 5,
+             5, 5, 5,
+             5, 5, 5]
+  hip_scale_reduction: 1.0
+  hip_scale_reduction_indices: [0, 3, 6, 9]
+  num_of_dofs: 12
+  action_scale: 0.25
+  lin_vel_scale: 2.0
+  ang_vel_scale: 0.25
+  dof_pos_scale: 1.0
+  dof_vel_scale: 0.05
+  commands_scale: [2.0, 2.0, 0.25]
+  torque_limits: [33.5, 33.5, 33.5,
+                  33.5, 33.5, 33.5,
+                  33.5, 33.5, 33.5,
+                  33.5, 33.5, 33.5]
+  default_dof_pos: [ 0.1000, 0.8000, -1.5000,
+                    -0.1000, 0.8000, -1.5000,
+                     0.1000, 1.0000, -1.5000,
+                    -0.1000, 1.0000, -1.5000]
+  joint_controller_names: ["FL_hip_controller", "FL_thigh_controller", "FL_calf_controller",
+                           "FR_hip_controller", "FR_thigh_controller", "FR_calf_controller",
+                           "RL_hip_controller", "RL_thigh_controller", "RL_calf_controller",
+                           "RR_hip_controller", "RR_thigh_controller", "RR_calf_controller"]

@@ -3,21 +3,29 @@
 // #define PLOT
 // #define CSV_LOGGER
 
-RL_Real rl_sar;
-
 RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_udp(UNITREE_LEGGED_SDK::LOWLEVEL)
 {
     // read params from yaml
     this->robot_name = "a1_isaacgym";
     this->ReadYaml(this->robot_name);
+    for (std::string &observation : this->params.observations)
+    {
+        // In Unitree A1, the coordinate system for angular velocity is in the body coordinate system.
+        if (observation == "ang_vel")
+        {
+            observation = "ang_vel_body";
+        }
+    }
 
-    // history
-    this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, 6);
-
+    // init robot
     this->unitree_udp.InitCmdData(this->unitree_low_command);
 
-    // init
+    // init rl
     torch::autograd::GradMode::set_enabled(false);
+    if (!this->params.observations_history.empty())
+    {
+        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
+    }
     this->InitObservations();
     this->InitOutputs();
     this->InitControl();
@@ -68,6 +76,7 @@ RL_Real::~RL_Real()
 
 void RL_Real::GetState(RobotState<double> *state)
 {
+    // TODO-devel-mutex
     this->unitree_udp.GetRecv(this->unitree_low_state);
     memcpy(&this->unitree_joy, this->unitree_low_state.wirelessRemote, 40);
 
@@ -143,6 +152,7 @@ void RL_Real::RunModel()
     {
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
         this->obs.commands = torch::tensor({{this->unitree_joy.ly, -this->unitree_joy.rx, -this->unitree_joy.lx}});
+        // this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
         this->obs.base_quat = torch::tensor(this->robot_state.imu.quaternion).unsqueeze(0);
         this->obs.dof_pos = torch::tensor(this->robot_state.motor_state.q).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
         this->obs.dof_vel = torch::tensor(this->robot_state.motor_state.dq).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
@@ -176,10 +186,17 @@ torch::Tensor RL_Real::Forward()
 
     torch::Tensor clamped_obs = this->ComputeObservation();
 
-    this->history_obs_buf.insert(clamped_obs);
-    this->history_obs = this->history_obs_buf.get_obs_vec({0, 1, 2, 3, 4, 5});
-
-    torch::Tensor actions = this->model.forward({this->history_obs}).toTensor();
+    torch::Tensor actions;
+    if (!this->params.observations_history.empty())
+    {
+        this->history_obs_buf.insert(clamped_obs);
+        this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
+        actions = this->model.forward({this->history_obs}).toTensor();
+    }
+    else
+    {
+        actions = this->model.forward({clamped_obs}).toTensor();
+    }
 
     if (this->params.clip_actions_upper.numel() != 0 && this->params.clip_actions_lower.numel() != 0)
     {
@@ -220,6 +237,8 @@ void signalHandler(int signum)
 int main(int argc, char **argv)
 {
     signal(SIGINT, signalHandler);
+
+    RL_Real rl_sar;
 
     while (1)
     {
