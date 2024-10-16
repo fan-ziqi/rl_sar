@@ -153,6 +153,8 @@ void RL_Sim::SetCommand(const RobotCommand<double> *command)
 
 void RL_Sim::RobotControl()
 {
+    std::lock_guard<std::mutex> lock(robot_state_mutex);
+
     if (this->control.control_state == STATE_RESET_SIMULATION)
     {
         gazebo_msgs::SetModelState set_model_state;
@@ -216,6 +218,8 @@ void RL_Sim::JointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg)
 
 void RL_Sim::RunModel()
 {
+    std::lock_guard<std::mutex> lock(robot_state_mutex);
+
     if (this->running_state == STATE_RL_RUNNING && simulation_running)
     {
         this->obs.lin_vel = torch::tensor({{this->vel.linear.x, this->vel.linear.y, this->vel.linear.z}});

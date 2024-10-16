@@ -144,6 +144,8 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
 
 void RL_Real::RobotControl()
 {
+    std::lock_guard<std::mutex> lock(robot_state_mutex);
+
     this->motiontime++;
 
     this->GetState(&this->robot_state);
@@ -153,6 +155,8 @@ void RL_Real::RobotControl()
 
 void RL_Real::RunModel()
 {
+    std::lock_guard<std::mutex> lock(robot_state_mutex);
+
     if (this->running_state == STATE_RL_RUNNING)
     {
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);

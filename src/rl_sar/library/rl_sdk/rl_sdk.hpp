@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <unistd.h>
+#include <mutex>
 
 #include <yaml-cpp/yaml.h>
 
@@ -123,6 +124,7 @@ public:
 
     RobotState<double> robot_state;
     RobotCommand<double> robot_command;
+    std::mutex robot_state_mutex;
 
     // init
     void InitObservations();
