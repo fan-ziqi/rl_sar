@@ -2,6 +2,8 @@
 
 [中文文档](README_CN.md)
 
+**Version Select: [ROS-Noetic](https://github.com/fan-ziqi/rl_sar/tree/main) | [ROS2-Foxy](https://github.com/fan-ziqi/rl_sar/tree/ros2)**
+
 This repository provides a framework for simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
 
 feature:
