@@ -2,6 +2,8 @@
 
 [English document](README.md)
 
+**版本选择: [ROS-Noetic](https://github.com/fan-ziqi/rl_sar/tree/main) | [ROS2-Foxy](https://github.com/fan-ziqi/rl_sar/tree/ros2)**
+
 本仓库提供了机器人强化学习算法的仿真验证与实物部署框架，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
 
 特性：
