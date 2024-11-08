@@ -11,10 +11,10 @@
 
 namespace LOGGER
 {
-    const char *const INFO    = "\033[0;37m[INFO]\033[0m ";
-    const char *const WARNING = "\033[0;33m[WARNING]\033[0m ";
-    const char *const ERROR   = "\033[0;31m[ERROR]\033[0m ";
-    const char *const DEBUG   = "\033[0;32m[DEBUG]\033[0m ";
+    const std::string INFO    = "\033[0;37m[INFO]\033[0m ";
+    const std::string WARNING = "\033[0;33m[WARNING]\033[0m ";
+    const std::string ERROR   = "\033[0;31m[ERROR]\033[0m ";
+    const std::string DEBUG   = "\033[0;32m[DEBUG]\033[0m ";
 }
 
 template <typename T>
@@ -45,7 +45,7 @@ struct RobotState
         std::vector<T> q = std::vector<T>(32, 0.0);
         std::vector<T> dq = std::vector<T>(32, 0.0);
         std::vector<T> ddq = std::vector<T>(32, 0.0);
-        std::vector<T> tauEst = std::vector<T>(32, 0.0);
+        std::vector<T> tau_est = std::vector<T>(32, 0.0);
         std::vector<T> cur = std::vector<T>(32, 0.0);
     } motor_state;
 };
@@ -156,7 +156,7 @@ public:
     // others
     std::string robot_name;
     STATE running_state = STATE_RL_RUNNING; // default running_state set to STATE_RL_RUNNING
-    bool simulation_running = false;
+    bool simulation_running = true;
 
     // protect func
     void TorqueProtect(torch::Tensor origin_output_torques);

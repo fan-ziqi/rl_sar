@@ -1,14 +1,22 @@
-cmake_minimum_required(VERSION 2.8.3)
-
+cmake_minimum_required(VERSION 3.8)
 project(go2_description)
 
-find_package(catkin REQUIRED)
+find_package(ament_cmake REQUIRED)
+find_package(ament_lint_auto REQUIRED)
+find_package(urdf REQUIRED)
+find_package(xacro REQUIRED)
+find_package(robot_state_publisher REQUIRED)
 
-catkin_package()
+install(
+  DIRECTORY
+    config
+    launch
+    meshes
+    urdf
+    xacro
 
-find_package(roslaunch)
+  DESTINATION
+    share/${PROJECT_NAME}/
+)
 
-foreach(dir config launch meshes urdf)
-	install(DIRECTORY ${dir}/
-		DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
-endforeach(dir)
+ament_package()

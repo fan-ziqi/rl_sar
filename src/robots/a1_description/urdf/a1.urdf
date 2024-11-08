@@ -44,12 +44,20 @@
     <color rgba="1.0 1.0 1.0 1.0"/>
   </material>
   <!-- ros_control plugin -->
-  <gazebo>
+  <!-- <gazebo>
     <plugin filename="libgazebo_ros_control.so" name="gazebo_ros_control">
       <robotNamespace>/a1_gazebo</robotNamespace>
       <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
     </plugin>
-  </gazebo>
+  </gazebo> -->
+  <gazebo>
+        <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+            <robot_sim_type>gazebo_ros2_control/GazeboSystem</robot_sim_type>
+            <robot_param>robot_description</robot_param>
+            <robot_param_node>robot_state_publisher_node</robot_param_node>
+            <parameters>$(find a1_description)/config/robot_control.yaml</parameters>
+        </plugin>
+    </gazebo>
   <!-- Show the trajectory of trunk center. -->
   <gazebo>
     <plugin filename="libLinkPlot3DPlugin.so" name="3dplotTrunk">

@@ -41,7 +41,7 @@ class RobotState:
             self.q = [0.0] * 32
             self.dq = [0.0] * 32
             self.ddq = [0.0] * 32
-            self.tauEst = [0.0] * 32
+            self.tau_est = [0.0] * 32
             self.cur = [0.0] * 32
 
 class STATE(Enum):
@@ -123,7 +123,7 @@ class RL:
         # others
         self.robot_name = ""
         self.running_state = STATE.STATE_RL_RUNNING  # default running_state set to STATE_RL_RUNNING
-        self.simulation_running = False
+        self.simulation_running = True
 
         ### protected in cpp ###
         # rl module
@@ -228,10 +228,10 @@ class RL:
                 self.getup_percent = min(self.getup_percent, 1.0)
                 for i in range(self.params.num_of_dofs):
                     command.motor_command.q[i] = (1 - self.getup_percent) * self.now_state.motor_state.q[i] + self.getup_percent * self.params.default_dof_pos[0][i].item()
-                    command.motor_command.dq[i] = 0
+                    command.motor_command.dq[i] = 0.0
                     command.motor_command.kp[i] = self.params.fixed_kp[0][i].item()
                     command.motor_command.kd[i] = self.params.fixed_kd[0][i].item()
-                    command.motor_command.tau[i] = 0
+                    command.motor_command.tau[i] = 0.0
                 print("\r" + LOGGER.INFO + f"Getting up {self.getup_percent * 100.0:.1f}", end='', flush=True)
 
             if self.control.control_state == STATE.STATE_RL_INIT:
@@ -261,10 +261,10 @@ class RL:
             print("\r" + LOGGER.INFO + f"RL Controller x: {self.control.x:.1f} y: {self.control.y:.1f} yaw: {self.control.yaw:.1f}", end='', flush=True)
             for i in range(self.params.num_of_dofs):
                 command.motor_command.q[i] = self.output_dof_pos[0][i].item()
-                command.motor_command.dq[i] = 0
+                command.motor_command.dq[i] = 0.0
                 command.motor_command.kp[i] = self.params.rl_kp[0][i].item()
                 command.motor_command.kd[i] = self.params.rl_kd[0][i].item()
-                command.motor_command.tau[i] = 0
+                command.motor_command.tau[i] = 0.0
 
             if self.control.control_state == STATE.STATE_POS_GETDOWN:
                 self.control.control_state = STATE.STATE_WAITING
@@ -289,10 +289,10 @@ class RL:
                 self.getdown_percent = min(1.0, self.getdown_percent)
                 for i in range(self.params.num_of_dofs):
                     command.motor_command.q[i] = (1 - self.getdown_percent) * self.now_state.motor_state.q[i] + self.getdown_percent * self.start_state.motor_state.q[i]
-                    command.motor_command.dq[i] = 0
+                    command.motor_command.dq[i] = 0.0
                     command.motor_command.kp[i] = self.params.fixed_kp[0][i].item()
                     command.motor_command.kd[i] = self.params.fixed_kd[0][i].item()
-                    command.motor_command.tau[i] = 0
+                    command.motor_command.tau[i] = 0.0
                 print("\r" + LOGGER.INFO + f"Getting down {self.getdown_percent * 100.0:.1f}", end='', flush=True)
 
             if self.getdown_percent == 1:
@@ -424,6 +424,7 @@ class RL:
         # self.csv_filename += f"_{timestamp}"
 
         self.csv_filename += ".csv"
+        print(LOGGER.INFO + f"Recording motor data in '{os.path.abspath(self.csv_filename)}'")
 
         with open(self.csv_filename, 'w', newline='') as file:
             writer = csv.writer(file)

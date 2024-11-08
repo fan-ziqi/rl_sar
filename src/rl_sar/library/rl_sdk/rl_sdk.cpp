@@ -486,6 +486,7 @@ void RL::CSVInit(std::string robot_name)
     // csv_filename += "_" + timestamp;
 
     csv_filename += ".csv";
+    std::cout << LOGGER::INFO << "Recording motor data in " << csv_filename << std::endl;
     std::ofstream file(csv_filename.c_str());
 
     for(int i = 0; i < 12; ++i) { file << "tau_cal_" << i << ","; }

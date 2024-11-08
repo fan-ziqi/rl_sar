@@ -2,10 +2,13 @@
 
 [English document](README.md)
 
+**版本选择: [ROS-Noetic](https://github.com/fan-ziqi/rl_sar/tree/main) | [ROS2-Foxy](https://github.com/fan-ziqi/rl_sar/tree/ros2)**
+
 本仓库提供了机器人强化学习算法的仿真验证与实物部署框架，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
 
 特性：
 - 支持基于IaacGym的legged_gym，也支持基于IsaacSim的IsaacLab，用`framework`加以区分。
+- 代码有**ROS**和**ROS2**两个版本
 - 代码有python和cpp两个版本，python版本可以在`src/rl_sar/scripts`中找到
 
 [点击在Discord上讨论](https://discord.gg/MC9KguQHtt)
@@ -20,10 +23,10 @@ git clone https://github.com/fan-ziqi/rl_sar.git
 
 ## 依赖
 
-本项目使用`ros-noetic`(Ubuntu20.04)，且需要安装以下的ros依赖包
+本项目使用`ros2-foxy`(Ubuntu20.04)，且需要安装以下的ros依赖包
 
 ```bash
-sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller
+sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-control ros-$ROS_DISTRO-ros2-controllers ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-robot-state-publisher ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-gazebo-ros2-control ros-$ROS_DISTRO-gazebo-ros-pkgs ros-$ROS_DISTRO-xacro
 ```
 
 在任意位置下载并部署`libtorch`
@@ -72,14 +75,17 @@ sudo ldconfig
 
 ```bash
 cd ..
-catkin build
+colcon build --merge-install --symlink-install
 ```
-
-如果 catkin build 报错: `Unable to find either executable 'empy' or Python module 'em'`, 在`catkin build` 之前执行 `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3`
 
 ## 运行
 
-下文中使用 **\<ROBOT\>_\<PLATFORM\>** 代替表示不同的环境，可以是 `a1_isaacgym` 、 `a1_isaacsim` 、 `go2_isaacgym` 、 `gr1t1_isaacgym` 、 `gr1t2_isaacgym`
+下文中使用 **\<ROBOT\>** 和 **\<PLATFORM\>** 代替表示不同的机器人和框架。目前支持列表：
+
+|       | isaacgym | isaacsim |
+|-------|----------|----------|
+| a1    | ✓        | ✓        |
+| go2   | ✓        |          |
 
 运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/models/<ROBOT>_<PLATFORM>`中，并配置`config.yaml`中的参数。
 
@@ -88,24 +94,25 @@ catkin build
 打开一个终端，启动gazebo仿真环境
 
 ```bash
-source devel/setup.bash
-roslaunch rl_sar gazebo_<ROBOT>_<PLATFORM>.launch
+source install/setup.bash
+ros2 launch rl_sar gazebo.launch.py rname:=<ROBOT> framework:=<PLATFORM>
+(e.g. ros2 launch rl_sar gazebo.launch.py rname:=a1 framework:=isaacgym)
 ```
 
 打开一个新终端，启动控制程序
 
 ```bash
-source devel/setup.bash
-(for cpp version)    rosrun rl_sar rl_sim
-(for python version) rosrun rl_sar rl_sim.py
+source install/setup.bash
+(for cpp version)    ros2 run rl_sar rl_sim
+(for python version) ros2 run rl_sar rl_sim.py
 ```
 
 控制：
 
-* 按 **\<Enter\>** 切换仿真器运行/停止。
-* **W** 和 **S** 控制x轴，**A** 和 **D** 控制yaw轴，**J** 和 **L** 控制y轴，按下空格重置控制指令。
+<!-- * 按 **\<Enter\>** 切换仿真器运行/停止。 -->
+* **W** 和 **S** 控制x轴，**A** 和 **D** 控制yaw轴，**J** 和 **L** 控制y轴。
 * 按 **\<Space\>** 将所有控制指令设置为零。
-* 如果机器人摔倒，按 **R** 重置Gazebo环境。
+<!-- * 如果机器人摔倒，按 **R** 重置Gazebo环境。 -->
 
 ### 真实机器人
 
@@ -119,8 +126,8 @@ source devel/setup.bash
 新建终端，启动控制程序
 
 ```bash
-source devel/setup.bash
-rosrun rl_sar rl_real_a1
+source install/local.bash
+ros2 run rl_sar rl_real_a1
 ```
 
 按下遥控器的**R2**键让机器人切换到默认站起姿态，按下**R1**键切换到RL控制模式，任意状态按下**L2**切换到最初的趴下姿态。左摇杆上下控制x左右控制yaw，右摇杆左右控制y。
@@ -133,8 +140,8 @@ rosrun rl_sar rl_real_a1
 2. 通过`ifconfig`命令查看123网段的网卡名字，如`enxf8e43b808e06`，下文用 \<YOUR_NETWORK_INTERFACE\> 代替
 3. 新建终端，启动控制程序
     ```bash
-    source devel/setup.bash
-    rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE>
+    source install/local.bash
+    ros2 run rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE>
     ```
 4. Go2支持手柄与键盘控制，方法与上面a1相同
 
@@ -144,13 +151,13 @@ rosrun rl_sar rl_real_a1
 
 1. 取消注释`rl_real_a1.cpp`中最上面的`#define CSV_LOGGER`，你也可以在仿真程序中修改对应部分采集仿真数据用来测试训练过程。
 2. 运行控制程序，程序会在执行后记录所有数据。
-3. 停止控制程序，开始训练执行器网络。注意，下面的路径前均省略了`rl_sar/src/rl_sar/models/`。
+3. 停止控制程序，开始训练执行器网络。
     ```bash
-    rosrun rl_sar actuator_net.py --mode train --data a1/motor.csv --output a1/motor.pt
+    ros2 run rl_sar actuator_net.py --mode train --data a1_isaacgym/motor.csv --output a1_isaacgym/motor.pt
     ```
 4. 验证已经训练好的训练执行器网络。
     ```bash
-    rosrun rl_sar actuator_net.py --mode play --data a1/motor.csv --output a1/motor.pt
+    ros2 run rl_sar actuator_net.py --mode play --data a1_isaacgym/motor.csv --output a1_isaacgym/motor.pt
     ```
 
 ## 添加你的机器人
@@ -160,8 +167,8 @@ rosrun rl_sar rl_real_a1
 1. 在`rl_sar/src/robots`路径下创建名为`<ROBOT>_description`的模型包，将模型的urdf放到`rl_sar/src/robots/<ROBOT>_description/urdf`路径下并命名为`<ROBOT>.urdf`，并在`rl_sar/src/robots/<ROBOT>_description/config`路径下创建命名空间为`<ROBOT>_gazebo`的关节配置文件
 2. 将训练好的RL模型文件放到`rl_sar/src/rl_sar/models/<ROBOT>_<PLATFORM>`路径下，并在此路径中新建config.yaml文件，参考`rl_sar/src/rl_sar/models/a1_isaacgym/config.yaml`文件修改其中参数
 3. 按需修改代码中的`forward()`函数，以适配不同的模型
-4. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch`路径下的launch文件自行修改
-5. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_a1.cpp`文件自行修改
+<!-- 4. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch`路径下的launch文件自行修改 -->
+4. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_a1.cpp`文件自行修改
 
 ## 贡献
 

@@ -1,6 +1,8 @@
 build
 devel
 logs
+install
+log
 .catkin_tools
 .vscode
 *.csv

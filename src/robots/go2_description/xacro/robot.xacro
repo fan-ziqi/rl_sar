@@ -9,6 +9,7 @@
     <xacro:include filename="$(find go2_description)/xacro/leg.xacro"/>
     <!-- <xacro:include filename="$(find go2_description)/xacro/stairs.xacro"/> -->
     <xacro:include filename="$(find go2_description)/xacro/gazebo.xacro"/>
+    <xacro:include filename="$(find a1_description)/xacro/ros2_control.xacro"/>
     <!-- <xacro:include filename="$(find go2_gazebo)/launch/stairs.urdf.xacro"/> -->
 
     <!-- <xacro:stairs stairs="15" xpos="0" ypos="0" zpos="0" /> -->
@@ -24,7 +25,7 @@
             <parent link="world"/>
             <child link="base"/>
         </joint>
-    </xacro:if> 
+    </xacro:if>
 
     <link name="base">
         <visual>
@@ -61,7 +62,7 @@
             <inertia
                 ixx="${trunk_ixx}" ixy="${trunk_ixy}" ixz="${trunk_ixz}"
                 iyy="${trunk_iyy}" iyz="${trunk_iyz}"
-                izz="${trunk_izz}"/>  
+                izz="${trunk_izz}"/>
         </inertial>
     </link>
 

@@ -1,15 +1,7 @@
 <?xml version="1.0"?>
 <robot>
-    <!-- ros_control plugin -->
-    <gazebo>
-        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-            <robotNamespace>/a1_gazebo</robotNamespace>
-            <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
-        </plugin>
-    </gazebo>
-
     <!-- Show the trajectory of trunk center. -->
-    <gazebo>
+    <!-- <gazebo>
         <plugin name="3dplot" filename="libLinkPlot3DPlugin.so">
             <frequency>10</frequency>
             <plot>
@@ -18,7 +10,7 @@
                 <material>Gazebo/Yellow</material>
             </plot>
         </plugin>
-    </gazebo>
+    </gazebo> -->
 
     <!-- Show the trajectory of foot. You can add another trajectory about another foot. -->
     <!-- <gazebo>
@@ -32,31 +24,80 @@
         </plugin>
     </gazebo> -->
 
-    <gazebo>
+    <!-- <gazebo>
         <plugin filename="libgazebo_ros_force.so" name="gazebo_ros_force">
             <bodyName>trunk</bodyName>
             <topicName>/apply_force/trunk</topicName>
         </plugin>
-    </gazebo>
+    </gazebo> -->
 
     <gazebo reference="imu_link">
-        <gravity>true</gravity>
-        <sensor name="imu_sensor" type="imu">
-            <always_on>true</always_on>
-            <update_rate>1000</update_rate>
-            <visualize>true</visualize>
-            <topic>__default_topic__</topic>
-            <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
-                <topicName>trunk_imu</topicName>
-                <bodyName>imu_link</bodyName>
-                <updateRateHZ>1000.0</updateRateHZ>
-                <gaussianNoise>0.0</gaussianNoise>
-                <xyzOffset>0 0 0</xyzOffset>
-                <rpyOffset>0 0 0</rpyOffset>
-                <frameName>imu_link</frameName>
-            </plugin>
-            <pose>0 0 0 0 0 0</pose>
-        </sensor>
+      <sensor name="imu_sensor" type="imu">
+      <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+          <ros>
+            <namespace>/</namespace>
+            <remapping>~/out:=imu</remapping>
+          </ros>
+          <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        </plugin>
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <visualize>true</visualize>
+        <imu>
+          <angular_velocity>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
     </gazebo>
 
     <!-- Foot contacts. -->

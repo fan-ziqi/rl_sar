@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import argparse
 from matplotlib import pyplot as plt
@@ -8,8 +9,9 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from torch.optim import Adam
 import pandas as pd
+from ament_index_python.packages import get_package_share_directory
 
-BASE_PATH = os.path.join(os.path.dirname(__file__), "../")
+BASE_PATH = os.path.join(get_package_share_directory('rl_sar'))
 
 class Config:
     def __init__(self):
