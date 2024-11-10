@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.15)
 project(rl_sar)
 
 add_definitions(-DCMAKE_CURRENT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
@@ -29,7 +29,8 @@ find_package(rclpy REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 
-find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+# Make sure we find Python 3.8, matching ROS2 Foxy
+find_package(Python3 3.8 EXACT COMPONENTS Interpreter Development REQUIRED)
 
 link_directories(/usr/local/lib)
 include_directories(${YAML_CPP_INCLUDE_DIR})
