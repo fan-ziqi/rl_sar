@@ -46,7 +46,7 @@ def generate_launch_description():
 
     controller_nodes = [Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=[name],
         output='screen',
     ) for name in controller_names]
