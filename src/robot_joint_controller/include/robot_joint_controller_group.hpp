@@ -50,6 +50,7 @@ public:
     controller_interface::return_type update() override;
 #elif defined(ROS_DISTRO_HUMBLE)
     ROBOT_JOINT_CONTROLLER_PUBLIC
+    controller_interface::CallbackReturn on_init() override;
     controller_interface::return_type update(const rclcpp::Time &time, const rclcpp::Duration &period) override;
 #endif
     ROBOT_JOINT_CONTROLLER_PUBLIC

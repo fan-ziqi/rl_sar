@@ -18,10 +18,10 @@ RobotJointController::RobotJointController()
     memset(&servo_command_, 0, sizeof(ServoCommand));
 }
 
-// CallbackReturn RobotJointController::on_init()
-// {
-//     return CallbackReturn::SUCCESS;
-// }
+CallbackReturn RobotJointController::on_init()
+{
+    return CallbackReturn::SUCCESS;
+}
 
 CallbackReturn RobotJointController::on_configure(const rclcpp_lifecycle::State &previous_state)
 {

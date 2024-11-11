@@ -18,7 +18,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 find_package(gazebo REQUIRED)
 
 find_package(ament_cmake REQUIRED)
-find_package(joint_state_controller REQUIRED)
+find_package(joint_state_broadcaster REQUIRED)
 find_package(robot_state_publisher REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(gazebo_ros REQUIRED)
@@ -100,7 +100,7 @@ target_link_libraries(rl_real_go2
 )
 
 ament_target_dependencies(rl_sim
-  joint_state_controller
+  joint_state_broadcaster
   robot_state_publisher
   rclcpp
   gazebo_ros
