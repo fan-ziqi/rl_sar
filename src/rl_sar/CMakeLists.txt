@@ -29,7 +29,7 @@ find_package(rclpy REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 
-# Make sure we find Python 3.8, matching ROS2 Foxy
+# Make sure to find Python 3.8
 find_package(Python3 3.8 EXACT COMPONENTS Interpreter Development REQUIRED)
 
 link_directories(/usr/local/lib)
