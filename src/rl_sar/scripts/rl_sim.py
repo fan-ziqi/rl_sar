@@ -54,7 +54,7 @@ class RL_Sim(RL, Node):
         self.ReadYaml(self.robot_name)
         for i in range(len(self.params.observations)):
             if self.params.observations[i] == "ang_vel":
-                self.params.observations[i] = "ang_vel_world"
+                self.params.observations[i] = "ang_vel_body"
 
         # init rl
         torch.set_grad_enabled(False)
