@@ -1,7 +1,7 @@
 #include "rl_sim.hpp"
 
 // #define PLOT
-#define CSV_LOGGER
+// #define CSV_LOGGER
 
 RL_Sim::RL_Sim()
     : rclcpp::Node("rl_sim_node")
@@ -25,17 +25,23 @@ RL_Sim::RL_Sim()
     auto future = param_client->async_send_request(request);
     auto status = rclcpp::spin_until_future_complete(this->get_node_base_interface(), future, std::chrono::seconds(5));
 
-    if (status == rclcpp::FutureReturnCode::SUCCESS) {
+    if (status == rclcpp::FutureReturnCode::SUCCESS)
+    {
         auto result = future.get();
-        if (result->values.size() < 2) {
+        if (result->values.size() < 2)
+        {
             std::cout << LOGGER::ERROR << "Failed to get all parameters from param_node" << std::endl;
-        } else {
+        }
+        else
+        {
             this->robot_name = result->values[0].string_value;
             this->gazebo_model_name = result->values[1].string_value;
             std::cout << LOGGER::INFO << "Get param robot_name: " << this->robot_name << std::endl;
             std::cout << LOGGER::INFO << "Get param gazebo_model_name: " << this->gazebo_model_name << std::endl;
         }
-    } else {
+    }
+    else
+    {
         std::cout << LOGGER::ERROR << "Failed to call param_node service" << std::endl;
     }
 

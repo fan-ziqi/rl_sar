@@ -38,14 +38,14 @@ def generate_launch_description():
 
     joint_state_broadcaster_node = Node(
         package="controller_manager",
-        executable="spawner",
+        executable='spawner.py' if os.environ.get('ROS_DISTRO', '') == 'foxy' else 'spawner',
         arguments=["joint_state_broadcaster"],
         output='screen',
     )
 
     robot_joint_controller_node = Node(
         package="controller_manager",
-        executable="spawner",
+        executable='spawner.py' if os.environ.get('ROS_DISTRO', '') == 'foxy' else 'spawner',
         arguments=["robot_joint_controller"],
         output='screen',
     )
