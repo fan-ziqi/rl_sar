@@ -18,7 +18,7 @@ feature:
 Clone the code
 
 ```bash
-git clone https://github.com/fan-ziqi/rl_sar.git
+git clone -b ros2 https://github.com/fan-ziqi/rl_sar.git
 ```
 
 ## Dependency
