@@ -8,6 +8,7 @@
 
 特性：
 - 支持基于IaacGym的legged_gym，也支持基于IsaacSim的IsaacLab，用`framework`加以区分。
+- 代码有**ROS**和**ROS2**两个版本
 - 代码有python和cpp两个版本，python版本可以在`src/rl_sar/scripts`中找到
 
 [点击在Discord上讨论](https://discord.gg/MC9KguQHtt)
