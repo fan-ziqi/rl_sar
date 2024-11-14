@@ -19,7 +19,7 @@ RobotJointController::RobotJointController()
 }
 
 #if defined(ROS_DISTRO_HUMBLE)
-CallbackReturn RobotJointControllerGroup::on_init()
+CallbackReturn RobotJointController::on_init()
 {
     return CallbackReturn::SUCCESS;
 }
