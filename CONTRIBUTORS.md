@@ -16,6 +16,7 @@ Guidelines for modifications:
 ## Contributors
 
 * Jijie Huang
+* Yufeng Chi (-T.K.-)
 
 ## Acknowledgements
 

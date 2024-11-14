@@ -18,10 +18,12 @@ RobotJointController::RobotJointController()
     memset(&servo_command_, 0, sizeof(ServoCommand));
 }
 
-// CallbackReturn RobotJointController::on_init()
-// {
-//     return CallbackReturn::SUCCESS;
-// }
+#if defined(ROS_DISTRO_HUMBLE)
+CallbackReturn RobotJointController::on_init()
+{
+    return CallbackReturn::SUCCESS;
+}
+#endif
 
 CallbackReturn RobotJointController::on_configure(const rclcpp_lifecycle::State &previous_state)
 {

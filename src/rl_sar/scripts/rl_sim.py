@@ -19,7 +19,7 @@ from ament_index_python.packages import get_package_share_directory
 from rl_sdk import *
 from observation_buffer import *
 
-CSV_LOGGER = True
+CSV_LOGGER = False
 
 class RL_Sim(RL, Node):
     def __init__(self):

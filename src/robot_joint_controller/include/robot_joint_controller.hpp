@@ -37,7 +37,11 @@ typedef struct
 
 namespace robot_joint_controller
 {
-using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+#if defined(ROS_DISTRO_FOXY)
+    using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+#elif defined(ROS_DISTRO_HUMBLE)
+    using CallbackReturn = controller_interface::CallbackReturn;
+#endif
 
 class RobotJointController : public controller_interface::ControllerInterface
 {
@@ -51,13 +55,13 @@ public:
 #elif defined(ROS_DISTRO_HUMBLE)
     ROBOT_JOINT_CONTROLLER_PUBLIC
     controller_interface::return_type update(const rclcpp::Time &time, const rclcpp::Duration &period) override;
+    ROBOT_JOINT_CONTROLLER_PUBLIC
+    CallbackReturn on_init() override;
 #endif
     ROBOT_JOINT_CONTROLLER_PUBLIC
     controller_interface::InterfaceConfiguration command_interface_configuration() const override;
     ROBOT_JOINT_CONTROLLER_PUBLIC
     controller_interface::InterfaceConfiguration state_interface_configuration() const override;
-    // ROBOT_JOINT_CONTROLLER_PUBLIC
-    // CallbackReturn on_init() override;
     ROBOT_JOINT_CONTROLLER_PUBLIC
     CallbackReturn on_configure(const rclcpp_lifecycle::State &previous_state) override;
     ROBOT_JOINT_CONTROLLER_PUBLIC

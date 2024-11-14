@@ -1,7 +1,7 @@
 #include "rl_sim.hpp"
 
 // #define PLOT
-#define CSV_LOGGER
+// #define CSV_LOGGER
 
 RL_Sim::RL_Sim()
     : rclcpp::Node("rl_sim_node")
@@ -12,30 +12,38 @@ RL_Sim::RL_Sim()
     param_client = this->create_client<rcl_interfaces::srv::GetParameters>("/param_node/get_parameters");
     while (!param_client->wait_for_service(std::chrono::seconds(1)))
     {
+        if (!rclcpp::ok()) {
+            std::cout << LOGGER::ERROR << "Interrupted while waiting for param_node service. Exiting." << std::endl;
+            return;
+        }
         std::cout << LOGGER::WARNING << "Waiting for param_node service to be available..." << std::endl;
     }
     auto request = std::make_shared<rcl_interfaces::srv::GetParameters::Request>();
-    request->names.push_back("robot_name");
-    request->names.push_back("gazebo_model_name");
+    request->names = {"robot_name", "gazebo_model_name"};
+
+    // Use a timeout for the future
     auto future = param_client->async_send_request(request);
-    rclcpp::spin_until_future_complete(this->get_node_base_interface(), future);
-    if (future.get()->values.size() < 2)
+    auto status = rclcpp::spin_until_future_complete(this->get_node_base_interface(), future, std::chrono::seconds(5));
+
+    if (status == rclcpp::FutureReturnCode::SUCCESS)
     {
-        std::cout << LOGGER::WARNING << "Failed to get all parameters from param_node" << std::endl;
+        auto result = future.get();
+        if (result->values.size() < 2)
+        {
+            std::cout << LOGGER::ERROR << "Failed to get all parameters from param_node" << std::endl;
+        }
+        else
+        {
+            this->robot_name = result->values[0].string_value;
+            this->gazebo_model_name = result->values[1].string_value;
+            std::cout << LOGGER::INFO << "Get param robot_name: " << this->robot_name << std::endl;
+            std::cout << LOGGER::INFO << "Get param gazebo_model_name: " << this->gazebo_model_name << std::endl;
+        }
     }
     else
     {
-        this->robot_name = future.get()->values[0].string_value;
-        this->gazebo_model_name = future.get()->values[1].string_value;
-        std::cout << LOGGER::INFO << "Get param robot_name: " << this->robot_name << std::endl;
-        std::cout << LOGGER::INFO << "Get param gazebo_model_name: " << this->gazebo_model_name << std::endl;
+        std::cout << LOGGER::ERROR << "Failed to call param_node service" << std::endl;
     }
-
-    // // get params from this node
-    // this->declare_parameter<std::string>("robot_name", "");
-    // this->get_parameter("robot_name", this->robot_name);
-    // this->declare_parameter<std::string>("gazebo_model_name", "");
-    // this->get_parameter("gazebo_model_name", this->gazebo_model_name);
 
     // read params from yaml
     this->ReadYaml(this->robot_name);
