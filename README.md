@@ -8,6 +8,7 @@ This repository provides a framework for simulation verification and physical de
 
 feature:
 - Support legged_gym based on IaacGym and IsaacLab based on IsaacSim. Use `framework` to distinguish.
+- The code has two versions: **ROS** and **ROS2**
 - The code supports both cpp and python, you can find python version in `src/rl_sar/scripts`
 
 [Click to discuss on Discord](https://discord.gg/vmVjkhVugU)
