@@ -49,10 +49,9 @@ RL_Sim::RL_Sim()
     this->ReadYaml(this->robot_name);
     for (std::string &observation : this->params.observations)
     {
-        // In Gazebo, the coordinate system for angular velocity is in the world coordinate system.
         if (observation == "ang_vel")
         {
-            observation = "ang_vel_world";
+            observation = "ang_vel_body";
         }
     }
 

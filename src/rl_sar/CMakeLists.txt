@@ -29,7 +29,8 @@ find_package(rclpy REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 
-find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+# Make sure to find Python 3.8
+find_package(Python3 3.8 EXACT COMPONENTS Interpreter Development REQUIRED)
 
 link_directories(/usr/local/lib)
 include_directories(${YAML_CPP_INCLUDE_DIR})
