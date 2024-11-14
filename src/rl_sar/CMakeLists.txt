@@ -29,8 +29,19 @@ find_package(rclpy REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 
-# Make sure to find Python 3.8
-find_package(Python3 3.8 EXACT COMPONENTS Interpreter Development REQUIRED)
+# Make sure to find correct Python version based on ROS distro
+if(DEFINED ENV{ROS_DISTRO})
+    set(ROS_DISTRO_ENV $ENV{ROS_DISTRO})
+    if(ROS_DISTRO_ENV STREQUAL "foxy")
+      find_package(Python3 3.8 EXACT COMPONENTS Interpreter Development REQUIRED)
+    elseif(ROS_DISTRO_ENV STREQUAL "humble")
+      find_package(Python3 3.10 EXACT COMPONENTS Interpreter Development REQUIRED)
+    else()
+      # Not very sure what would the default case be. A fuzzy match?
+      find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+    endif()
+endif()
+
 
 link_directories(/usr/local/lib)
 include_directories(${YAML_CPP_INCLUDE_DIR})
