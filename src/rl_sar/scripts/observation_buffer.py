@@ -31,7 +31,7 @@ class ObservationBuffer:
         """
 
         obs = []
-        for obs_id in reversed(sorted(obs_ids)):
+        for obs_id in reversed(obs_ids):
             slice_idx = self.include_history_steps - obs_id - 1
             obs.append(self.obs_buf[:, slice_idx * self.num_obs : (slice_idx + 1) * self.num_obs])
         return torch.cat(obs, dim=-1)
