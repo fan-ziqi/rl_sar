@@ -184,3 +184,11 @@ rosrun rl_sar rl_real_a1
   year = {2024}
 }
 ```
+
+## 致谢
+
+本项目使用了以下开源代码库中的部分代码：
+
+- [unitreerobotics/unitree_guide](https://github.com/unitreerobotics/unitree_guide)
+- [src/rl_sar/scripts/actuator_net.py](src/rl_sar/scripts/actuator_net.py) 中的代码修改自 [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways) 仓库中的 [scripts/actuator_net](https://github.com/Improbable-AI/walk-these-ways/tree/master/scripts/actuator_net)
+
