@@ -144,7 +144,7 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
 
 void RL_Real::RobotControl()
 {
-    std::lock_guard<std::mutex> lock(robot_state_mutex);
+    // std::lock_guard<std::mutex> lock(robot_state_mutex); // TODO will cause thread timeout
 
     this->motiontime++;
 
@@ -155,7 +155,7 @@ void RL_Real::RobotControl()
 
 void RL_Real::RunModel()
 {
-    std::lock_guard<std::mutex> lock(robot_state_mutex);
+    // std::lock_guard<std::mutex> lock(robot_state_mutex); // TODO will cause thread timeout
 
     if (this->running_state == STATE_RL_RUNNING)
     {
