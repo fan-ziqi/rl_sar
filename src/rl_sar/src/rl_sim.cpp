@@ -180,7 +180,7 @@ void RL_Sim::SetCommand(const RobotCommand<double> *command)
 
 void RL_Sim::RobotControl()
 {
-    std::lock_guard<std::mutex> lock(robot_state_mutex);
+    // std::lock_guard<std::mutex> lock(robot_state_mutex); // TODO will cause thread timeout
 
     // if (this->control.control_state == STATE_RESET_SIMULATION)
     // {
@@ -267,7 +267,7 @@ void RL_Sim::RobotStateCallback(const robot_msgs::msg::RobotState::SharedPtr msg
 
 void RL_Sim::RunModel()
 {
-    std::lock_guard<std::mutex> lock(robot_state_mutex);
+    // std::lock_guard<std::mutex> lock(robot_state_mutex); // TODO will cause thread timeout
 
     if (this->running_state == STATE_RL_RUNNING && simulation_running)
     {
