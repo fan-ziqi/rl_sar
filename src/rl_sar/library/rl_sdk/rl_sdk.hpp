@@ -160,6 +160,7 @@ public:
 
     // protect func
     void TorqueProtect(torch::Tensor origin_output_torques);
+    void AttitudeProtect(const std::vector<double> &quaternion, float pitch_threshold, float roll_threshold);
 
 protected:
     // rl module
