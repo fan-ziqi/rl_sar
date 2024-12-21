@@ -5,6 +5,7 @@
 #include "observation_buffer.hpp"
 #include "loop.hpp"
 #include <ros/ros.h>
+#include <sensor_msgs/Joy.h>
 #include <gazebo_msgs/ModelStates.h>
 #include <sensor_msgs/JointState.h>
 #include "std_srvs/Empty.h"
@@ -51,9 +52,11 @@ private:
     geometry_msgs::Twist vel;
     geometry_msgs::Pose pose;
     geometry_msgs::Twist cmd_vel;
+    sensor_msgs::Joy joy_msg;
     ros::Subscriber model_state_subscriber;
     ros::Subscriber joint_state_subscriber;
     ros::Subscriber cmd_vel_subscriber;
+    ros::Subscriber joy_subscriber;
     ros::ServiceClient gazebo_set_model_state_client;
     ros::ServiceClient gazebo_pause_physics_client;
     ros::ServiceClient gazebo_unpause_physics_client;
@@ -62,6 +65,7 @@ private:
     void ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg);
     void JointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg);
     void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
+    void JoyCallback(const sensor_msgs::Joy::ConstPtr &msg);
 
     // others
     std::string gazebo_model_name;

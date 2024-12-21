@@ -26,7 +26,7 @@ git clone https://github.com/fan-ziqi/rl_sar.git
 This project uses `ros-noetic` (Ubuntu 20.04) and requires the installation of the following ROS dependency packages:
 
 ```bash
-sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller
+sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller ros-noetic-joy
 ```
 
 Download and deploy `libtorch` at any location
@@ -103,12 +103,19 @@ source devel/setup.bash
 (for python version) rosrun rl_sar rl_sim.py
 ```
 
-Control:
+# Keyboard Controls
 
-* Press **\<Enter\>** to toggle simulation start/stop.
-* **W** and **S** controls x-axis, **A** and **D** controls yaw, and **J** and **L** controls y-axis.
-* Press **\<Space\>** to sets all control commands to zero.
-* If robot falls down, press **R** to reset Gazebo environment.
+* Press **\<Enter\>** to toggle the simulator between running and stopped.
+* Use **W/S** to control forward/backward movement, **A/D** to control turning, and **J/L** to control lateral movement. Press **\<Space\>** to reset all control commands to zero.
+* If the robot falls, press **R** to reset the Gazebo environment.
+* Press **0** to move the robot from its simulation start posture to `init_pos`, and press **1** to move the robot from `init_pos` back to its simulation start posture.
+
+# Gamepad Controls
+
+* Press **LB** to toggle the simulator between running and stopped.
+* Use **LY** to control forward/backward movement, **LX** to control turning, and **J** and **L** to control lateral movement.
+* If the robot falls, press **RB+X** to reset the Gazebo environment.
+* Press **RB+Y** to move the robot from its simulation start posture to `init_pos`, and press **RB+A** to move the robot from `init_pos` back to its simulation start posture.
 
 ### Real Robots
 
