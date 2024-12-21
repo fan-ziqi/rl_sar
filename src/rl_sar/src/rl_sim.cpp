@@ -57,6 +57,7 @@ RL_Sim::RL_Sim()
 
     // subscriber
     this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Sim::CmdvelCallback, this);
+    this->joy_subscriber = nh.subscribe<sensor_msgs::Joy>("/joy", 10, &RL_Sim::JoyCallback, this);
     this->model_state_subscriber = nh.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 10, &RL_Sim::ModelStatesCallback, this);
     this->joint_state_subscriber = nh.subscribe<sensor_msgs::JointState>(this->ros_namespace + "joint_states", 10, &RL_Sim::JointStatesCallback, this);
 
@@ -199,6 +200,43 @@ void RL_Sim::ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg)
 void RL_Sim::CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg)
 {
     this->cmd_vel = *msg;
+}
+
+void RL_Sim::JoyCallback(const sensor_msgs::Joy::ConstPtr &msg)
+{
+    this->joy_msg = *msg;
+
+    // joystick control
+    // Description of buttons and axes(F710):
+    // |__ buttons[]: A=0, B=1, X=2, Y=3, LB=4, RB=5, back=6, start=7, power=8, stickL=9, stickR=10
+    // |__ axes[]: Lx=0, Ly=1, Rx=3, Ry=4, LT=2, RT=5
+    if (this->joy_msg.buttons[5])
+    {
+        if (this->joy_msg.buttons[3]) // RB+Y
+        {
+            this->control.control_state = STATE_POS_GETUP;
+        }
+        else if (this->joy_msg.buttons[0]) // RB+A
+        {
+            this->control.control_state = STATE_POS_GETDOWN;
+        }
+        else if (this->joy_msg.buttons[1]) // RB+B
+        {
+            this->control.control_state = STATE_RL_INIT;
+        }
+        else if (this->joy_msg.buttons[2]) // RB+X
+        {
+            this->control.control_state = STATE_RESET_SIMULATION;
+        }
+    }
+    if (this->joy_msg.buttons[4]) // LB
+    {
+        this->control.control_state = STATE_TOGGLE_SIMULATION;
+    }
+
+    this->control.x = this->joy_msg.axes[1] * 1.5; // Ly
+    this->control.y = this->joy_msg.axes[3] * 1.5; // Rx
+    this->control.yaw = this->joy_msg.axes[0] * 1.5; // Lx
 }
 
 void RL_Sim::MapData(const std::vector<double> &source_data, std::vector<double> &target_data)

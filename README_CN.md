@@ -26,7 +26,7 @@ git clone https://github.com/fan-ziqi/rl_sar.git
 本项目使用`ros-noetic`(Ubuntu20.04)，且需要安装以下的ros依赖包
 
 ```bash
-sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller
+sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller ros-noetic-joy
 ```
 
 在任意位置下载并部署`libtorch`
@@ -103,12 +103,19 @@ source devel/setup.bash
 (for python version) rosrun rl_sar rl_sim.py
 ```
 
-控制：
+键盘控制：
 
 * 按 **\<Enter\>** 切换仿真器运行/停止。
-* **W** 和 **S** 控制x轴，**A** 和 **D** 控制yaw轴，**J** 和 **L** 控制y轴，按下空格重置控制指令。
-* 按 **\<Space\>** 将所有控制指令设置为零。
+* **W/S** 控制水平移动，**A/D** 控制转向，**J/L** 控制横向移动，按 **\<Space\>** 将所有控制指令设置为零。
 * 如果机器人摔倒，按 **R** 重置Gazebo环境。
+* 按 **0** 让机器人从仿真开始的姿态运动到`init_pos`，按 **1** 让机器人从`init_pos`运动到仿真开始的姿态。
+
+手柄控制：
+
+* 按 **LB** 切换仿真器运行/停止。
+* **LY** 控制水平移动，**LX** 控制转向，**J** 和 **L** 控制横向移动。
+* 如果机器人摔倒，按 **RB+X** 重置Gazebo环境。
+* 按 **RB+Y** 让机器人从仿真开始的姿态运动到`init_pos`，按 **RB+A** 让机器人从`init_pos`运动到仿真开始的姿态。
 
 ### 真实机器人
 
