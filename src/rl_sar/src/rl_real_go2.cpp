@@ -178,6 +178,7 @@ void RL_Real::RunModel()
         torch::Tensor origin_output_torques = this->ComputeTorques(this->obs.actions);
 
         this->TorqueProtect(origin_output_torques);
+        this->AttitudeProtect(this->robot_state.imu.quaternion, 60.0f, 60.0f);
 
         this->output_torques = torch::clamp(origin_output_torques, -(this->params.torque_limits), this->params.torque_limits);
         this->output_dof_pos = this->ComputePosition(this->obs.actions);
