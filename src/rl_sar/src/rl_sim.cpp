@@ -235,8 +235,8 @@ void RL_Sim::JoyCallback(const sensor_msgs::Joy::ConstPtr &msg)
     }
 
     this->control.x = this->joy_msg.axes[1] * 1.5; // Ly
-    this->control.y = this->joy_msg.axes[3] * 1.5; // Rx
-    this->control.yaw = this->joy_msg.axes[0] * 1.5; // Lx
+    this->control.y = this->joy_msg.axes[0] * 1.5; // Lx
+    this->control.yaw = this->joy_msg.axes[3] * 1.5; // Rx
 }
 
 void RL_Sim::MapData(const std::vector<double> &source_data, std::vector<double> &target_data)

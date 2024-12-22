@@ -103,17 +103,17 @@ source devel/setup.bash
 (for python version) rosrun rl_sar rl_sim.py
 ```
 
-# Keyboard Controls
+Keyboard Controls
 
 * Press **\<Enter\>** to toggle the simulator between running and stopped.
 * Use **W/S** to control forward/backward movement, **A/D** to control turning, and **J/L** to control lateral movement. Press **\<Space\>** to reset all control commands to zero.
 * If the robot falls, press **R** to reset the Gazebo environment.
 * Press **0** to move the robot from its simulation start posture to `init_pos`, and press **1** to move the robot from `init_pos` back to its simulation start posture.
 
-# Gamepad Controls
+Gamepad Controls
 
 * Press **LB** to toggle the simulator between running and stopped.
-* Use **LY** to control forward/backward movement, **LX** to control turning, and **J** and **L** to control lateral movement.
+* **LY** controls forward/backward movement, **LX** controls lateral movement, and **RX** controls turning.
 * If the robot falls, press **RB+X** to reset the Gazebo environment.
 * Press **RB+Y** to move the robot from its simulation start posture to `init_pos`, and press **RB+A** to move the robot from `init_pos` back to its simulation start posture.
 
