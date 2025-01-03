@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2024-2025 Ziqi Fan
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "rl_real_a1.hpp"
 
 // #define PLOT

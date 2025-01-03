@@ -1,3 +1,6 @@
+# Copyright (c) 2024-2025 Ziqi Fan
+# SPDX-License-Identifier: Apache-2.0
+
 gr1t2_isaacgym:
   model_name: "model_4000_jit.pt"
   framework: "isaacgym"

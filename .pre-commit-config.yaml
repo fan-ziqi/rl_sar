@@ -1,0 +1,25 @@
+repos:
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.1
+    hooks:
+      - id: insert-license
+        files: \.(py|yaml)$
+        args:
+          # - --remove-header    # Remove existing license headers. Useful when updating license.
+          - --license-filepath
+          - .github/LICENSE_HEADER.txt
+          - --use-current-year
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.1
+    hooks:
+      - id: insert-license
+        files: \.(cpp|hpp)$
+        args:
+          # - --remove-header    # Remove existing license headers. Useful when updating license.
+          - --license-filepath
+          - .github/LICENSE_HEADER.txt
+          - --use-current-year
+          - --comment-style
+          - /*| *| */
+
+exclude: ^(src/rl_sar/library/matplotlibcpp|src/rl_sar/library/unitree_legged_sdk_3.2|src/rl_sar/library/unitree_sdk2)/
