@@ -4,11 +4,9 @@ import torch
 import threading
 import time
 import rospy
-import numpy as np
 from gazebo_msgs.msg import ModelStates
-from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Twist, Pose
-from robot_msgs.msg import MotorCommand
+from robot_msgs.msg import MotorState, MotorCommand
 from gazebo_msgs.srv import SetModelState, SetModelStateRequest
 from std_srvs.srv import Empty
 
@@ -42,22 +40,13 @@ class RL_Sim(RL):
         if len(self.params.observations_history) != 0:
             self.history_obs_buf = ObservationBuffer(1, self.params.num_observations, len(self.params.observations_history))
 
-        # Due to the fact that the robot_state_publisher sorts the joint names alphabetically,
-        # the mapping table is established according to the order defined in the YAML file
-        sorted_joint_controller_names = sorted(self.params.joint_controller_names)
-        self.sorted_to_original_index = {}
-        for i in range(len(self.params.joint_controller_names)):
-            self.sorted_to_original_index[sorted_joint_controller_names[i]] = i
-        self.mapped_joint_positions = [0.0] * self.params.num_of_dofs
-        self.mapped_joint_velocities = [0.0] * self.params.num_of_dofs
-        self.mapped_joint_efforts = [0.0] * self.params.num_of_dofs
-
         # init
         torch.set_grad_enabled(False)
         self.joint_publishers_commands = [MotorCommand() for _ in range(self.params.num_of_dofs)]
         self.InitObservations()
         self.InitOutputs()
         self.InitControl()
+        self.running_state = STATE.STATE_RL_RUNNING
 
         # model
         model_path = os.path.join(os.path.dirname(__file__), f"../models/{self.robot_name}/{self.params.model_name}")
@@ -67,14 +56,29 @@ class RL_Sim(RL):
         self.ros_namespace = rospy.get_param("ros_namespace", "")
         self.joint_publishers = {}
         for i in range(self.params.num_of_dofs):
-            topic_name = f"{self.ros_namespace}{self.params.joint_controller_names[i]}/command"
+            joint_name = self.params.joint_controller_names[i]
+            topic_name = f"{self.ros_namespace}{joint_name}/command"
             self.joint_publishers[self.params.joint_controller_names[i]] = rospy.Publisher(topic_name, MotorCommand, queue_size=10)
 
         # subscriber
         self.cmd_vel_subscriber = rospy.Subscriber("/cmd_vel", Twist, self.CmdvelCallback, queue_size=10)
         self.model_state_subscriber = rospy.Subscriber("/gazebo/model_states", ModelStates, self.ModelStatesCallback, queue_size=10)
-        joint_states_topic = f"{self.ros_namespace}joint_states"
-        self.joint_state_subscriber = rospy.Subscriber(joint_states_topic, JointState, self.JointStatesCallback, queue_size=10)
+        self.joint_subscribers = {}
+        self.joint_positions = {}
+        self.joint_velocities = {}
+        self.joint_efforts = {}
+        for i in range(self.params.num_of_dofs):
+            joint_name = self.params.joint_controller_names[i]
+            topic_name = f"{self.ros_namespace}{joint_name}/state"
+            self.joint_subscribers[joint_name] = rospy.Subscriber(
+                topic_name,
+                MotorState,
+                lambda msg, name=joint_name: self.JointStatesCallback(msg, name),
+                queue_size=10
+            )
+            self.joint_positions[joint_name] = 0.0
+            self.joint_velocities[joint_name] = 0.0
+            self.joint_efforts[joint_name] = 0.0
 
         # service
         self.gazebo_model_name = rospy.get_param("gazebo_model_name", "")
@@ -120,9 +124,9 @@ class RL_Sim(RL):
         # state.imu.accelerometer
 
         for i in range(self.params.num_of_dofs):
-            state.motor_state.q[i] = self.mapped_joint_positions[i]
-            state.motor_state.dq[i] = self.mapped_joint_velocities[i]
-            state.motor_state.tauEst[i] = self.mapped_joint_efforts[i]
+            state.motor_state.q[i] = self.joint_positions[self.params.joint_controller_names[i]]
+            state.motor_state.dq[i] = self.joint_velocities[self.params.joint_controller_names[i]]
+            state.motor_state.tau_est[i] = self.joint_efforts[self.params.joint_controller_names[i]]
 
     def SetCommand(self, command):
         for i in range(self.params.num_of_dofs):
@@ -165,14 +169,10 @@ class RL_Sim(RL):
     def CmdvelCallback(self, msg):
         self.cmd_vel = msg
 
-    def MapData(self, source_data, target_data):
-        for i in range(len(source_data)):
-            target_data[i] = source_data[self.sorted_to_original_index[self.params.joint_controller_names[i]]]
-
-    def JointStatesCallback(self, msg):
-        self.MapData(msg.position, self.mapped_joint_positions)
-        self.MapData(msg.velocity, self.mapped_joint_velocities)
-        self.MapData(msg.effort, self.mapped_joint_efforts)
+    def JointStatesCallback(self, msg, joint_name):
+        self.joint_positions[joint_name] = msg.q
+        self.joint_velocities[joint_name] = msg.dq
+        self.joint_efforts[joint_name] = msg.tau_est
 
     def RunModel(self):
         if self.running_state == STATE.STATE_RL_RUNNING and self.simulation_running:
@@ -199,7 +199,9 @@ class RL_Sim(RL):
             self.output_dof_pos = self.ComputePosition(self.obs.actions)
 
             if CSV_LOGGER:
-                tau_est = torch.tensor(self.mapped_joint_efforts).unsqueeze(0)
+                tau_est = torch.zeros((1, self.params.num_of_dofs))
+                for i in range(self.params.num_of_dofs):
+                    tau_est[0, i] = self.joint_efforts[self.params.joint_controller_names[i]]
                 self.CSVLogger(self.output_torques, tau_est, self.obs.dof_pos, self.output_dof_pos, self.obs.dof_vel)
 
     def Forward(self):

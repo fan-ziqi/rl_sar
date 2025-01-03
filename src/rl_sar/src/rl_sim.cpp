@@ -18,17 +18,6 @@ RL_Sim::RL_Sim()
             observation = "ang_vel_world";
         }
     }
-    // Due to the fact that the robot_state_publisher sorts the joint names alphabetically,
-    // the mapping table is established according to the order defined in the YAML file
-    std::vector<std::string> sorted_joint_controller_names = this->params.joint_controller_names;
-    std::sort(sorted_joint_controller_names.begin(), sorted_joint_controller_names.end());
-    for (size_t i = 0; i < this->params.joint_controller_names.size(); ++i)
-    {
-        this->sorted_to_original_index[sorted_joint_controller_names[i]] = i;
-    }
-    this->mapped_joint_positions = std::vector<double>(this->params.num_of_dofs, 0.0);
-    this->mapped_joint_velocities = std::vector<double>(this->params.num_of_dofs, 0.0);
-    this->mapped_joint_efforts = std::vector<double>(this->params.num_of_dofs, 0.0);
 
     // init rl
     torch::autograd::GradMode::set_enabled(false);
@@ -52,15 +41,32 @@ RL_Sim::RL_Sim()
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
         // joint need to rename as xxx_joint
-        this->joint_publishers[this->params.joint_controller_names[i]] =
-            nh.advertise<robot_msgs::MotorCommand>(this->ros_namespace + this->params.joint_controller_names[i] + "/command", 10);
+        const std::string &joint_name = this->params.joint_controller_names[i];
+        const std::string topic_name = this->ros_namespace + joint_name + "/command";
+        this->joint_publishers[joint_name] =
+            nh.advertise<robot_msgs::MotorCommand>(topic_name, 10);
     }
 
     // subscriber
     this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Sim::CmdvelCallback, this);
     this->joy_subscriber = nh.subscribe<sensor_msgs::Joy>("/joy", 10, &RL_Sim::JoyCallback, this);
     this->model_state_subscriber = nh.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 10, &RL_Sim::ModelStatesCallback, this);
-    this->joint_state_subscriber = nh.subscribe<sensor_msgs::JointState>(this->ros_namespace + "joint_states", 10, &RL_Sim::JointStatesCallback, this);
+    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    {
+        // joint need to rename as xxx_joint
+        const std::string &joint_name = this->params.joint_controller_names[i];
+        const std::string topic_name = this->ros_namespace + joint_name + "/state";
+        this->joint_subscribers[joint_name] =
+            nh.subscribe<robot_msgs::MotorState>(topic_name, 10,
+                [this, joint_name](const robot_msgs::MotorState::ConstPtr &msg)
+                {
+                    this->JointStatesCallback(msg, joint_name);
+                }
+            );
+        this->joint_positions[joint_name] = 0.0;
+        this->joint_velocities[joint_name] = 0.0;
+        this->joint_efforts[joint_name] = 0.0;
+    }
 
     // service
     nh.param<std::string>("gazebo_model_name", this->gazebo_model_name, "");
@@ -130,9 +136,9 @@ void RL_Sim::GetState(RobotState<double> *state)
 
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
-        state->motor_state.q[i] = this->mapped_joint_positions[i];
-        state->motor_state.dq[i] = this->mapped_joint_velocities[i];
-        state->motor_state.tauEst[i] = this->mapped_joint_efforts[i];
+        state->motor_state.q[i] = this->joint_positions[this->params.joint_controller_names[i]];
+        state->motor_state.dq[i] = this->joint_velocities[this->params.joint_controller_names[i]];
+        state->motor_state.tau_est[i] = this->joint_efforts[this->params.joint_controller_names[i]];
     }
 }
 
@@ -240,19 +246,11 @@ void RL_Sim::JoyCallback(const sensor_msgs::Joy::ConstPtr &msg)
     this->control.yaw = this->joy_msg.axes[3] * 1.5; // Rx
 }
 
-void RL_Sim::MapData(const std::vector<double> &source_data, std::vector<double> &target_data)
+void RL_Sim::JointStatesCallback(const robot_msgs::MotorState::ConstPtr &msg, const std::string &joint_name)
 {
-    for (size_t i = 0; i < source_data.size(); ++i)
-    {
-        target_data[i] = source_data[this->sorted_to_original_index[this->params.joint_controller_names[i]]];
-    }
-}
-
-void RL_Sim::JointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg)
-{
-    MapData(msg->position, this->mapped_joint_positions);
-    MapData(msg->velocity, this->mapped_joint_velocities);
-    MapData(msg->effort, this->mapped_joint_efforts);
+    this->joint_positions[joint_name] = msg->q;
+    this->joint_velocities[joint_name] = msg->dq;
+    this->joint_efforts[joint_name] = msg->tau_est;
 }
 
 void RL_Sim::RunModel()
@@ -286,7 +284,11 @@ void RL_Sim::RunModel()
         this->output_dof_pos = this->ComputePosition(this->obs.actions);
 
 #ifdef CSV_LOGGER
-        torch::Tensor tau_est = torch::tensor(this->mapped_joint_efforts).unsqueeze(0);
+        torch::Tensor tau_est = torch::zeros({1, this->params.num_of_dofs});
+        for (int i = 0; i < this->params.num_of_dofs; ++i)
+        {
+            tau_est[0][i] = this->joint_efforts[this->params.joint_controller_names[i]];
+        }
         this->CSVLogger(this->output_torques, tau_est, this->obs.dof_pos, this->output_dof_pos, this->obs.dof_vel);
 #endif
     }
@@ -330,7 +332,7 @@ void RL_Sim::Plot()
     {
         this->plot_real_joint_pos[i].erase(this->plot_real_joint_pos[i].begin());
         this->plot_target_joint_pos[i].erase(this->plot_target_joint_pos[i].begin());
-        this->plot_real_joint_pos[i].push_back(this->mapped_joint_positions[i]);
+        this->plot_real_joint_pos[i].push_back(this->joint_positions[this->params.joint_controller_names[i]]);
         this->plot_target_joint_pos[i].push_back(this->joint_publishers_commands[i].q);
         plt::subplot(4, 3, i + 1);
         plt::named_plot("_real_joint_pos", this->plot_t, this->plot_real_joint_pos[i], "r");

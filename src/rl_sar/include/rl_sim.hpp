@@ -7,10 +7,10 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
 #include <gazebo_msgs/ModelStates.h>
-#include <sensor_msgs/JointState.h>
 #include "std_srvs/Empty.h"
 #include <geometry_msgs/Twist.h>
 #include "robot_msgs/MotorCommand.h"
+#include "robot_msgs/MotorState.h"
 #include <csignal>
 #include <gazebo_msgs/SetModelState.h>
 
@@ -54,27 +54,25 @@ private:
     geometry_msgs::Twist cmd_vel;
     sensor_msgs::Joy joy_msg;
     ros::Subscriber model_state_subscriber;
-    ros::Subscriber joint_state_subscriber;
     ros::Subscriber cmd_vel_subscriber;
     ros::Subscriber joy_subscriber;
     ros::ServiceClient gazebo_set_model_state_client;
     ros::ServiceClient gazebo_pause_physics_client;
     ros::ServiceClient gazebo_unpause_physics_client;
     std::map<std::string, ros::Publisher> joint_publishers;
+    std::map<std::string, ros::Subscriber> joint_subscribers;
     std::vector<robot_msgs::MotorCommand> joint_publishers_commands;
     void ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg);
-    void JointStatesCallback(const sensor_msgs::JointState::ConstPtr &msg);
+    void JointStatesCallback(const robot_msgs::MotorState::ConstPtr &msg, const std::string &joint_name);
     void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
     void JoyCallback(const sensor_msgs::Joy::ConstPtr &msg);
 
     // others
     std::string gazebo_model_name;
     int motiontime = 0;
-    std::map<std::string, size_t> sorted_to_original_index;
-    std::vector<double> mapped_joint_positions;
-    std::vector<double> mapped_joint_velocities;
-    std::vector<double> mapped_joint_efforts;
-    void MapData(const std::vector<double> &source_data, std::vector<double> &target_data);
+    std::map<std::string, double> joint_positions;
+    std::map<std::string, double> joint_velocities;
+    std::map<std::string, double> joint_efforts;
 };
 
 #endif // RL_SIM_HPP

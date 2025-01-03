@@ -116,7 +116,7 @@ void RL_Real::GetState(RobotState<double> *state)
     {
         state->motor_state.q[i] = this->unitree_low_state.motorState[state_mapping[i]].q;
         state->motor_state.dq[i] = this->unitree_low_state.motorState[state_mapping[i]].dq;
-        state->motor_state.tauEst[i] = this->unitree_low_state.motorState[state_mapping[i]].tauEst;
+        state->motor_state.tau_est[i] = this->unitree_low_state.motorState[state_mapping[i]].tauEst;
     }
 }
 
@@ -179,7 +179,7 @@ void RL_Real::RunModel()
         this->output_dof_pos = this->ComputePosition(this->obs.actions);
 
 #ifdef CSV_LOGGER
-        torch::Tensor tau_est = torch::tensor(this->robot_state.motor_state.tauEst).unsqueeze(0);
+        torch::Tensor tau_est = torch::tensor(this->robot_state.motor_state.tau_est).unsqueeze(0);
         this->CSVLogger(this->output_torques, tau_est, this->obs.dof_pos, this->output_dof_pos, this->obs.dof_vel);
 #endif
     }
