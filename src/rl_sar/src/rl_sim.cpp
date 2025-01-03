@@ -32,6 +32,7 @@ RL_Sim::RL_Sim()
 
     // init rl
     torch::autograd::GradMode::set_enabled(false);
+    torch::set_num_threads(4);
     if (this->params.observations_history.size() != 0)
     {
         this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
