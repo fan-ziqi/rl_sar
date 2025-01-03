@@ -45,7 +45,7 @@ struct RobotState
         std::vector<T> q = std::vector<T>(32, 0.0);
         std::vector<T> dq = std::vector<T>(32, 0.0);
         std::vector<T> ddq = std::vector<T>(32, 0.0);
-        std::vector<T> tauEst = std::vector<T>(32, 0.0);
+        std::vector<T> tau_est = std::vector<T>(32, 0.0);
         std::vector<T> cur = std::vector<T>(32, 0.0);
     } motor_state;
 };

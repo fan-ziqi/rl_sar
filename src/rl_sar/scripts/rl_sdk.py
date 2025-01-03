@@ -41,7 +41,7 @@ class RobotState:
             self.q = [0.0] * 32
             self.dq = [0.0] * 32
             self.ddq = [0.0] * 32
-            self.tauEst = [0.0] * 32
+            self.tau_est = [0.0] * 32
             self.cur = [0.0] * 32
 
 class STATE(Enum):

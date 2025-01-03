@@ -1,5 +1,5 @@
 float32 q            # motor current position (rad)
 float32 dq           # motor current speed (rad/s)
 float32 ddq          # motor current speed (rad/s)
-float32 tauEst       # current estimated output torque (N*m)
+float32 tau_est      # current estimated output torque (N*m)
 float32 cur          # current estimated output cur (N*m)
