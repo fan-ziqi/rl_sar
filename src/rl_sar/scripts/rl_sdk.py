@@ -135,7 +135,7 @@ class RL:
         self.stand_model = None
 
         # output buffer
-        self.output_torques = torch.zeros(1, 32)
+        self.output_dof_tau = torch.zeros(1, 32)
         self.output_dof_pos = torch.zeros(1, 32)
 
     def ComputeObservation(self):
@@ -179,7 +179,7 @@ class RL:
         self.obs.actions = torch.zeros(1, self.params.num_of_dofs, dtype=torch.float)
 
     def InitOutputs(self):
-        self.output_torques = torch.zeros(1, self.params.num_of_dofs, dtype=torch.float)
+        self.output_dof_tau = torch.zeros(1, self.params.num_of_dofs, dtype=torch.float)
         self.output_dof_pos = self.params.default_dof_pos
 
     def InitControl(self):
@@ -190,8 +190,8 @@ class RL:
 
     def ComputeTorques(self, actions):
         actions_scaled = actions * self.params.action_scale
-        output_torques = self.params.rl_kp * (actions_scaled + self.params.default_dof_pos - self.obs.dof_pos) - self.params.rl_kd * self.obs.dof_vel
-        return output_torques
+        output_dof_tau = self.params.rl_kp * (actions_scaled + self.params.default_dof_pos - self.obs.dof_pos) - self.params.rl_kd * self.obs.dof_vel
+        return output_dof_tau
 
     def ComputePosition(self, actions):
         actions_scaled = actions * self.params.action_scale
@@ -305,12 +305,12 @@ class RL:
                 self.running_state = STATE.STATE_WAITING
                 print("\r\n" + LOGGER.INFO + "Switching to STATE_WAITING")
 
-    def TorqueProtect(self, origin_output_torques):
+    def TorqueProtect(self, origin_output_dof_tau):
         out_of_range_indices = []
         out_of_range_values = []
 
-        for i in range(origin_output_torques.size(1)):
-            torque_value = origin_output_torques[0][i].item()
+        for i in range(origin_output_dof_tau.size(1)):
+            torque_value = origin_output_dof_tau[0][i].item()
             limit_lower = -self.params.torque_limits[0][i].item()
             limit_upper = self.params.torque_limits[0][i].item()
 

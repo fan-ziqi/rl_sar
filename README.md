@@ -44,6 +44,12 @@ Install `yaml-cpp` and `lcm`. If you are using Ubuntu, you can directly use the 
 sudo apt install liblcm-dev libyaml-cpp-dev
 ```
 
+This project uses the Intel TBB (Threading Building Blocks) library to implement data exchange between different threads. If you use Ubuntu, you can directly use the package manager to install it
+
+```bash
+sudo apt install libtbb-dev
+```
+
 <details>
 
 <summary>You can also use source code installation, click to expand</summary>

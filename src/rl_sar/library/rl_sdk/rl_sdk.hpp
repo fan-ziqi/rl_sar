@@ -10,7 +10,7 @@
 #include <iostream>
 #include <string>
 #include <unistd.h>
-#include <mutex>
+#include <tbb/concurrent_queue.h>
 
 #include <yaml-cpp/yaml.h>
 
@@ -27,6 +27,7 @@ struct RobotCommand
 {
     struct MotorCommand
     {
+        std::vector<int> mode = std::vector<int>(32, 0);
         std::vector<T> q = std::vector<T>(32, 0.0);
         std::vector<T> dq = std::vector<T>(32, 0.0);
         std::vector<T> tau = std::vector<T>(32, 0.0);
@@ -72,6 +73,7 @@ struct Control
     double x = 0.0;
     double y = 0.0;
     double yaw = 0.0;
+    double wheel = 0.0;
 };
 
 struct ModelParams
@@ -88,6 +90,8 @@ struct ModelParams
     double action_scale;
     double hip_scale_reduction;
     std::vector<int> hip_scale_reduction_indices;
+    double action_scale_wheel;
+    std::vector<int> wheel_indices;
     int num_of_dofs;
     double lin_vel_scale;
     double ang_vel_scale;
@@ -129,7 +133,9 @@ public:
 
     RobotState<double> robot_state;
     RobotCommand<double> robot_command;
-    std::mutex robot_state_mutex;
+    tbb::concurrent_queue<torch::Tensor> output_dof_pos_queue;
+    tbb::concurrent_queue<torch::Tensor> output_dof_vel_queue;
+    tbb::concurrent_queue<torch::Tensor> output_dof_tau_queue;
 
     // init
     void InitObservations();
@@ -142,8 +148,7 @@ public:
     virtual void GetState(RobotState<double> *state) = 0;
     virtual void SetCommand(const RobotCommand<double> *command) = 0;
     void StateController(const RobotState<double> *state, RobotCommand<double> *command);
-    torch::Tensor ComputeTorques(torch::Tensor actions);
-    torch::Tensor ComputePosition(torch::Tensor actions);
+    void ComputeOutput(const torch::Tensor &actions, torch::Tensor &output_dof_pos, torch::Tensor &output_dof_vel, torch::Tensor &output_dof_tau);
     torch::Tensor QuatRotateInverse(torch::Tensor q, torch::Tensor v, const std::string &framework);
 
     // yaml params
@@ -164,15 +169,24 @@ public:
     bool simulation_running = false;
 
     // protect func
-    void TorqueProtect(torch::Tensor origin_output_torques);
+    void TorqueProtect(torch::Tensor origin_output_dof_tau);
     void AttitudeProtect(const std::vector<double> &quaternion, float pitch_threshold, float roll_threshold);
 
 protected:
     // rl module
     torch::jit::script::Module model;
     // output buffer
-    torch::Tensor output_torques;
+    torch::Tensor output_dof_tau;
     torch::Tensor output_dof_pos;
+    torch::Tensor output_dof_vel;
 };
+
+template <typename T>
+T clamp(T value, T min, T max)
+{
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+}
 
 #endif // RL_SDK_HPP
