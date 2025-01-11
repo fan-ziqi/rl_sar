@@ -194,18 +194,18 @@ class RL_Sim(RL):
 
             self.obs.actions = clamped_actions
 
-            origin_output_torques = self.ComputeTorques(self.obs.actions)
+            origin_output_dof_tau = self.ComputeTorques(self.obs.actions)
 
-            # self.TorqueProtect(origin_output_torques)
+            # self.TorqueProtect(origin_output_dof_tau)
 
-            self.output_torques = torch.clamp(origin_output_torques, -(self.params.torque_limits), self.params.torque_limits)
+            self.output_dof_tau = torch.clamp(origin_output_dof_tau, -(self.params.torque_limits), self.params.torque_limits)
             self.output_dof_pos = self.ComputePosition(self.obs.actions)
 
             if CSV_LOGGER:
                 tau_est = torch.zeros((1, self.params.num_of_dofs))
                 for i in range(self.params.num_of_dofs):
                     tau_est[0, i] = self.joint_efforts[self.params.joint_controller_names[i]]
-                self.CSVLogger(self.output_torques, tau_est, self.obs.dof_pos, self.output_dof_pos, self.obs.dof_vel)
+                self.CSVLogger(self.output_dof_tau, tau_est, self.obs.dof_pos, self.output_dof_pos, self.obs.dof_vel)
 
     def Forward(self):
         torch.set_grad_enabled(False)

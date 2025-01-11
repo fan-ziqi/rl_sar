@@ -166,8 +166,6 @@ void RL_Sim::SetCommand(const RobotCommand<double> *command)
 
 void RL_Sim::RobotControl()
 {
-    // std::lock_guard<std::mutex> lock(robot_state_mutex); // TODO will cause thread timeout
-
     if (this->control.control_state == STATE_RESET_SIMULATION)
     {
         gazebo_msgs::SetModelState set_model_state;
@@ -260,8 +258,6 @@ void RL_Sim::JointStatesCallback(const robot_msgs::MotorState::ConstPtr &msg, co
 
 void RL_Sim::RunModel()
 {
-    // std::lock_guard<std::mutex> lock(robot_state_mutex); // TODO will cause thread timeout
-
     if (this->running_state == STATE_RL_RUNNING && simulation_running)
     {
         this->obs.lin_vel = torch::tensor({{this->vel.linear.x, this->vel.linear.y, this->vel.linear.z}});
@@ -274,19 +270,29 @@ void RL_Sim::RunModel()
 
         torch::Tensor clamped_actions = this->Forward();
 
+        this->obs.actions = clamped_actions;
+
         for (int i : this->params.hip_scale_reduction_indices)
         {
             clamped_actions[0][i] *= this->params.hip_scale_reduction;
         }
 
-        this->obs.actions = clamped_actions;
+        this->ComputeOutput(this->obs.actions, this->output_dof_pos, this->output_dof_vel, this->output_dof_tau);
 
-        torch::Tensor origin_output_torques = this->ComputeTorques(this->obs.actions);
+        if (this->output_dof_pos.defined() && this->output_dof_pos.numel() > 0)
+        {
+            output_dof_pos_queue.push(this->output_dof_pos);
+        }
+        if (this->output_dof_vel.defined() && this->output_dof_vel.numel() > 0)
+        {
+            output_dof_vel_queue.push(this->output_dof_vel);
+        }
+        if (this->output_dof_tau.defined() && this->output_dof_tau.numel() > 0)
+        {
+            output_dof_tau_queue.push(this->output_dof_tau);
+        }
 
-        // this->TorqueProtect(origin_output_torques);
-
-        this->output_torques = torch::clamp(origin_output_torques, -(this->params.torque_limits), this->params.torque_limits);
-        this->output_dof_pos = this->ComputePosition(this->obs.actions);
+        // this->TorqueProtect(this->output_dof_tau);
 
 #ifdef CSV_LOGGER
         torch::Tensor tau_est = torch::zeros({1, this->params.num_of_dofs});
@@ -294,7 +300,7 @@ void RL_Sim::RunModel()
         {
             tau_est[0][i] = this->joint_efforts[this->params.joint_controller_names[i]];
         }
-        this->CSVLogger(this->output_torques, tau_est, this->obs.dof_pos, this->output_dof_pos, this->obs.dof_vel);
+        this->CSVLogger(this->output_dof_tau, tau_est, this->obs.dof_pos, this->output_dof_pos, this->obs.dof_vel);
 #endif
     }
 }

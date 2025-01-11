@@ -44,6 +44,12 @@ echo 'export Torch_DIR=/path/to/your/torchlib' >> ~/.bashrc
 sudo apt install liblcm-dev libyaml-cpp-dev
 ```
 
+本项目使用Intel TBB（Threading Building Blocks）库进行线程间数据交换，若您使用Ubuntu，可直接使用包管理器进行安装
+
+```bash
+sudo apt install libtbb-dev
+```
+
 <details>
 
 <summary>也可以使用源码安装，点击展开</summary>
