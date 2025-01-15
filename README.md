@@ -7,11 +7,14 @@
 This repository provides a framework for simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
 
 feature:
-- Support legged_gym based on IaacGym and IsaacLab based on IsaacSim. Use `framework` to distinguish.
+- Support legged_gym based on IsaacGym and IsaacLab based on IsaacSim. Use `framework` to distinguish.
 - The code has two versions: **ROS** and **ROS2**
 - The code supports both cpp and python, you can find python version in `src/rl_sar/scripts`
 
-[Click to discuss on Discord](https://discord.gg/vmVjkhVugU)
+> [!NOTE]
+> If you want to train policy using IsaacLab(IsaacSim), please use [robot_lab](https://github.com/fan-ziqi/robot_lab) project.
+>
+> [Click to discuss on Discord](https://discord.gg/vmVjkhVugU)
 
 ## Preparation
 
@@ -32,10 +35,11 @@ sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interfac
 Download and deploy `libtorch` at any location
 
 ```bash
-cd /path/to/your/torchlib
+cd /path/to/your/libtorch
 wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip
 unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
-echo 'export Torch_DIR=/path/to/your/torchlib' >> ~/.bashrc
+echo 'export Torch_DIR=/path/to/your/libtorch' >> ~/.bashrc
+source ~/.bashrc
 ```
 
 Install `yaml-cpp` and `lcm`. If you are using Ubuntu, you can directly use the package manager for installation:
@@ -83,8 +87,8 @@ Compile in the root directory of the project
 cd ..
 catkin build
 ```
-
-If catkin build report errors: `Unable to find either executable 'empy' or Python module 'em'`, run `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3` before `catkin build`
+> [!NOTE]
+> If catkin build report errors: `Unable to find either executable 'empy' or Python module 'em'`, run `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3` before `catkin build`
 
 ## Running
 
@@ -192,7 +196,7 @@ Please cite the following if you use this code or parts of it:
 ```
 @software{fan-ziqi2024rl_sar,
   author = {fan-ziqi},
-  title = {{rl_sar: Simulation Verification and Physical Deployment of Robot Reinforcement Learning Algorithm.}},
+  title = {rl_sar: Simulation Verification and Physical Deployment of Robot Reinforcement Learning Algorithm.},
   url = {https://github.com/fan-ziqi/rl_sar},
   year = {2024}
 }
@@ -203,4 +207,5 @@ Please cite the following if you use this code or parts of it:
 The project uses some code from the following open-source code repositories:
 
 - [unitreerobotics/unitree_guide](https://github.com/unitreerobotics/unitree_guide)
+- [mertgungor/unitree_model_control](https://github.com/mertgungor/unitree_model_control)
 - The code in [src/rl_sar/scripts/actuator_net.py](src/rl_sar/scripts/actuator_net.py) is modified from [scripts/actuator_net](https://github.com/Improbable-AI/walk-these-ways/tree/master/scripts/actuator_net) in the [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways) repository.
