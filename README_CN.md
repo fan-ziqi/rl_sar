@@ -7,11 +7,14 @@
 本仓库提供了机器人强化学习算法的仿真验证与实物部署框架，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
 
 特性：
-- 支持基于IaacGym的legged_gym，也支持基于IsaacSim的IsaacLab，用`framework`加以区分。
+- 支持基于IsaacGym的legged_gym，也支持基于IsaacSim的IsaacLab，用`framework`加以区分。
 - 代码有**ROS**和**ROS2**两个版本
 - 代码有python和cpp两个版本，python版本可以在`src/rl_sar/scripts`中找到
 
-[点击在Discord上讨论](https://discord.gg/MC9KguQHtt)
+> [!NOTE]
+> 如果你想使用IsaacLab（IsaacSim）训练策略，请使用[robot_lab](https://github.com/fan-ziqi/robot_lab)项目。
+>
+> [点击在Discord上讨论](https://discord.gg/MC9KguQHtt)
 
 ## 准备
 
@@ -32,10 +35,11 @@ sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interfac
 在任意位置下载并部署`libtorch`
 
 ```bash
-cd /path/to/your/torchlib
+cd /path/to/your/libtorch
 wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip
 unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
-echo 'export Torch_DIR=/path/to/your/torchlib' >> ~/.bashrc
+echo 'export Torch_DIR=/path/to/your/libtorch' >> ~/.bashrc
+source ~/.bashrc
 ```
 
 安装`yaml-cpp`和`lcm`，若您使用Ubuntu，可以直接使用包管理器进行安装
@@ -84,7 +88,8 @@ cd ..
 catkin build
 ```
 
-如果 catkin build 报错: `Unable to find either executable 'empy' or Python module 'em'`, 在`catkin build` 之前执行 `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3`
+> [!NOTE]
+> 如果 catkin build 报错: `Unable to find either executable 'empy' or Python module 'em'`, 在`catkin build` 之前执行 `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3`
 
 ## 运行
 
@@ -192,7 +197,7 @@ rosrun rl_sar rl_real_a1
 ```
 @software{fan-ziqi2024rl_sar,
   author = {fan-ziqi},
-  title = {{rl_sar: Simulation Verification and Physical Deployment of Robot Reinforcement Learning Algorithm.}},
+  title = {rl_sar: Simulation Verification and Physical Deployment of Robot Reinforcement Learning Algorithm.},
   url = {https://github.com/fan-ziqi/rl_sar},
   year = {2024}
 }
@@ -203,5 +208,6 @@ rosrun rl_sar rl_real_a1
 本项目使用了以下开源代码库中的部分代码：
 
 - [unitreerobotics/unitree_guide](https://github.com/unitreerobotics/unitree_guide)
+- [mertgungor/unitree_model_control](https://github.com/mertgungor/unitree_model_control)
 - [src/rl_sar/scripts/actuator_net.py](src/rl_sar/scripts/actuator_net.py) 中的代码修改自 [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways) 仓库中的 [scripts/actuator_net](https://github.com/Improbable-AI/walk-these-ways/tree/master/scripts/actuator_net)
 
