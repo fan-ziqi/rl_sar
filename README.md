@@ -2,13 +2,13 @@
 
 [中文文档](README_CN.md)
 
-**Version Select: [ROS-Noetic](https://github.com/fan-ziqi/rl_sar/tree/main) | [ROS2-Foxy](https://github.com/fan-ziqi/rl_sar/tree/ros2)**
+**Version Select: [ROS-Noetic](https://github.com/fan-ziqi/rl_sar/tree/main) | [ROS2-Foxy/Humble](https://github.com/fan-ziqi/rl_sar/tree/ros2)**
 
 This repository provides a framework for simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
 
 feature:
 - Support legged_gym based on IsaacGym and IsaacLab based on IsaacSim. Use `framework` to distinguish.
-- The code has two versions: **ROS** and **ROS2**
+- The code has two versions: **ROS-Noetic** and **ROS2-Foxy/Humble**
 - The code supports both cpp and python, you can find python version in `src/rl_sar/scripts`
 
 > [!NOTE]
@@ -26,7 +26,7 @@ git clone -b ros2 https://github.com/fan-ziqi/rl_sar.git
 
 ## Dependency
 
-This project uses `ros2-foxy` (Ubuntu 20.04) and requires the installation of the following ROS dependency packages:
+This project uses `ros2-foxy` (Ubuntu 20.04) or `ros2-humble` (Ubuntu22.04) and requires the installation of the following ROS dependency packages:
 
 ```bash
 sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-control ros-$ROS_DISTRO-ros2-controllers ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-robot-state-publisher ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-gazebo-ros2-control ros-$ROS_DISTRO-gazebo-ros-pkgs ros-$ROS_DISTRO-xacro

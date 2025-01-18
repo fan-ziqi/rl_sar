@@ -2,13 +2,13 @@
 
 [English document](README.md)
 
-**版本选择: [ROS-Noetic](https://github.com/fan-ziqi/rl_sar/tree/main) | [ROS2-Foxy](https://github.com/fan-ziqi/rl_sar/tree/ros2)**
+**版本选择: [ROS-Noetic](https://github.com/fan-ziqi/rl_sar/tree/main) | [ROS2-Foxy/Humble](https://github.com/fan-ziqi/rl_sar/tree/ros2)**
 
 本仓库提供了机器人强化学习算法的仿真验证与实物部署框架，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
 
 特性：
 - 支持基于IsaacGym的legged_gym，也支持基于IsaacSim的IsaacLab，用`framework`加以区分。
-- 代码有**ROS**和**ROS2**两个版本
+- 代码有**ROS-Noetic**和**ROS2-Foxy/Humble**两个版本
 - 代码有python和cpp两个版本，python版本可以在`src/rl_sar/scripts`中找到
 
 > [!NOTE]
@@ -26,7 +26,7 @@ git clone -b ros2 https://github.com/fan-ziqi/rl_sar.git
 
 ## 依赖
 
-本项目使用`ros2-foxy`(Ubuntu20.04)，且需要安装以下的ros依赖包
+本项目使用`ros2-foxy`(Ubuntu20.04)或`ros2-humble`(Ubuntu22.04)，且需要安装以下的ros依赖包
 
 ```bash
 sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-control ros-$ROS_DISTRO-ros2-controllers ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-robot-state-publisher ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-gazebo-ros2-control ros-$ROS_DISTRO-gazebo-ros-pkgs ros-$ROS_DISTRO-xacro
