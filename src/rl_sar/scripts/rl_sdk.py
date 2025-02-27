@@ -93,6 +93,8 @@ class ModelParams:
         self.commands_scale = None
         self.default_dof_pos = None
         self.joint_controller_names = None
+        self.command_mapping = None
+        self.state_mapping = None
 
 class Observations:
     def __init__(self):
@@ -363,32 +365,19 @@ class RL:
         except AttributeError:
             pass
 
-    def ReadVectorFromYaml(self, values, framework, rows, cols):
-        if framework == "isaacsim":
-            transposed_values = [0] * cols * rows
-            for r in range(rows):
-                for c in range(cols):
-                    transposed_values[c * rows + r] = values[r * cols + c]
-            return transposed_values
-        elif framework == "isaacgym":
-            return values
-        else:
-            raise ValueError(f"Unsupported framework: {framework}")
 
-    def ReadYaml(self, robot_name):
-        # The config file is located at "rl_sar/src/rl_sar/models/<robot_name>/config.yaml"
-        config_path = os.path.join(BASE_PATH, "models", robot_name, "config.yaml")
+    def ReadYaml(self, robot_path):
+        # The config file is located at "rl_sar/src/rl_sar/models/<robot_path>/config.yaml"
+        config_path = os.path.join(BASE_PATH, "models", robot_path, "config.yaml")
         try:
             with open(config_path, 'r') as f:
-                config = yaml.safe_load(f)[robot_name]
+                config = yaml.safe_load(f)[robot_path]
         except FileNotFoundError as e:
             print(LOGGER.ERROR + f"The file '{config_path}' does not exist")
             return
 
         self.params.model_name = config["model_name"]
         self.params.framework = config["framework"]
-        rows = config["rows"]
-        cols = config["cols"]
         self.params.dt = config["dt"]
         self.params.decimation = config["decimation"]
         self.params.num_observations = config["num_observations"]
@@ -402,21 +391,23 @@ class RL:
             self.params.clip_actions_upper = None
             self.params.clip_actions_lower = None
         else:
-            self.params.clip_actions_upper = torch.tensor(self.ReadVectorFromYaml(config["clip_actions_upper"], self.params.framework, rows, cols)).view(1, -1)
-            self.params.clip_actions_lower = torch.tensor(self.ReadVectorFromYaml(config["clip_actions_lower"], self.params.framework, rows, cols)).view(1, -1)
+            self.params.clip_actions_upper = torch.tensor(config["clip_actions_upper"]).view(1, -1)
+            self.params.clip_actions_lower = torch.tensor(config["clip_actions_lower"]).view(1, -1)
         self.params.num_of_dofs = config["num_of_dofs"]
         self.params.lin_vel_scale = config["lin_vel_scale"]
         self.params.ang_vel_scale = config["ang_vel_scale"]
         self.params.dof_pos_scale = config["dof_pos_scale"]
         self.params.dof_vel_scale = config["dof_vel_scale"]
         self.params.commands_scale = torch.tensor([self.params.lin_vel_scale, self.params.lin_vel_scale, self.params.ang_vel_scale])
-        self.params.rl_kp = torch.tensor(self.ReadVectorFromYaml(config["rl_kp"], self.params.framework, rows, cols)).view(1, -1)
-        self.params.rl_kd = torch.tensor(self.ReadVectorFromYaml(config["rl_kd"], self.params.framework, rows, cols)).view(1, -1)
-        self.params.fixed_kp = torch.tensor(self.ReadVectorFromYaml(config["fixed_kp"], self.params.framework, rows, cols)).view(1, -1)
-        self.params.fixed_kd = torch.tensor(self.ReadVectorFromYaml(config["fixed_kd"], self.params.framework, rows, cols)).view(1, -1)
-        self.params.torque_limits = torch.tensor(self.ReadVectorFromYaml(config["torque_limits"], self.params.framework, rows, cols)).view(1, -1)
-        self.params.default_dof_pos = torch.tensor(self.ReadVectorFromYaml(config["default_dof_pos"], self.params.framework, rows, cols)).view(1, -1)
-        self.params.joint_controller_names = self.ReadVectorFromYaml(config["joint_controller_names"], self.params.framework, rows, cols)
+        self.params.rl_kp = torch.tensor(config["rl_kp"]).view(1, -1)
+        self.params.rl_kd = torch.tensor(config["rl_kd"]).view(1, -1)
+        self.params.fixed_kp = torch.tensor(config["fixed_kp"]).view(1, -1)
+        self.params.fixed_kd = torch.tensor(config["fixed_kd"]).view(1, -1)
+        self.params.torque_limits = torch.tensor(config["torque_limits"]).view(1, -1)
+        self.params.default_dof_pos = torch.tensor(config["default_dof_pos"]).view(1, -1)
+        self.params.joint_controller_names = config["joint_controller_names"]
+        self.params.command_mapping = config["command_mapping"]
+        self.params.state_mapping = config["state_mapping"]
 
     def CSVInit(self, robot_name):
         self.csv_filename = os.path.join(BASE_PATH, "models", robot_name, 'motor')

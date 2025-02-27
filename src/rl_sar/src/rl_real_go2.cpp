@@ -11,8 +11,10 @@
 RL_Real::RL_Real()
 {
     // read params from yaml
-    this->robot_name = "go2_isaacgym";
-    this->ReadYaml(this->robot_name);
+    this->robot_name = "go2";
+    this->config_name = "himloco";
+    std::string robot_path = this->robot_name + "/" + this->config_name;
+    this->ReadYaml(robot_path);
     for (std::string &observation : this->params.observations)
     {
         // In Unitree Go2, the coordinate system for angular velocity is in the body coordinate system.
@@ -54,7 +56,7 @@ RL_Real::RL_Real()
     running_state = STATE_WAITING;
 
     // model
-    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + this->robot_name + "/" + this->params.model_name;
+    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/" + this->params.model_name;
     this->model = torch::jit::load(model_path);
 
     // loop
@@ -126,9 +128,9 @@ void RL_Real::GetState(RobotState<double> *state)
     }
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
-        state->motor_state.q[i] = this->unitree_low_state.motor_state()[state_mapping[i]].q();
-        state->motor_state.dq[i] = this->unitree_low_state.motor_state()[state_mapping[i]].dq();
-        state->motor_state.tau_est[i] = this->unitree_low_state.motor_state()[state_mapping[i]].tau_est();
+        state->motor_state.q[i] = this->unitree_low_state.motor_state()[this->params.state_mapping[i]].q();
+        state->motor_state.dq[i] = this->unitree_low_state.motor_state()[this->params.state_mapping[i]].dq();
+        state->motor_state.tau_est[i] = this->unitree_low_state.motor_state()[this->params.state_mapping[i]].tau_est();
     }
 }
 
@@ -137,11 +139,11 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
         this->unitree_low_command.motor_cmd()[i].mode() = 0x01;
-        this->unitree_low_command.motor_cmd()[i].q() = command->motor_command.q[command_mapping[i]];
-        this->unitree_low_command.motor_cmd()[i].dq() = command->motor_command.dq[command_mapping[i]];
-        this->unitree_low_command.motor_cmd()[i].kp() = command->motor_command.kp[command_mapping[i]];
-        this->unitree_low_command.motor_cmd()[i].kd() = command->motor_command.kd[command_mapping[i]];
-        this->unitree_low_command.motor_cmd()[i].tau() = command->motor_command.tau[command_mapping[i]];
+        this->unitree_low_command.motor_cmd()[i].q() = command->motor_command.q[this->params.command_mapping[i]];
+        this->unitree_low_command.motor_cmd()[i].dq() = command->motor_command.dq[this->params.command_mapping[i]];
+        this->unitree_low_command.motor_cmd()[i].kp() = command->motor_command.kp[this->params.command_mapping[i]];
+        this->unitree_low_command.motor_cmd()[i].kd() = command->motor_command.kd[this->params.command_mapping[i]];
+        this->unitree_low_command.motor_cmd()[i].tau() = command->motor_command.tau[this->params.command_mapping[i]];
     }
 
     this->unitree_low_command.crc() = Crc32Core((uint32_t *)&unitree_low_command, (sizeof(unitree_go::msg::dds_::LowCmd_) >> 2) - 1);

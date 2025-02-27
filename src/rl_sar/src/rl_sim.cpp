@@ -14,7 +14,9 @@ RL_Sim::RL_Sim()
 
     // read params from yaml
     nh.param<std::string>("robot_name", this->robot_name, "");
-    this->ReadYaml(this->robot_name);
+    nh.param<std::string>("config_name", this->config_name, "");
+    std::string robot_path = this->robot_name + "/" + this->config_name;
+    this->ReadYaml(robot_path);
     for (std::string &observation : this->params.observations)
     {
         // In Gazebo, the coordinate system for angular velocity is in the world coordinate system.
@@ -38,7 +40,7 @@ RL_Sim::RL_Sim()
     running_state = STATE_RL_RUNNING;
 
     // model
-    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + this->robot_name + "/" + this->params.model_name;
+    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/" + this->params.model_name;
     this->model = torch::jit::load(model_path);
 
     // publisher

@@ -34,7 +34,9 @@ class RL_Sim(RL):
 
         # read params from yaml
         self.robot_name = rospy.get_param("robot_name", "")
-        self.ReadYaml(self.robot_name)
+        self.config_name = rospy.get_param("config_name", "")
+        robot_path = self.robot_name + "/" + self.config_name
+        self.ReadYaml(robot_path)
         for i in range(len(self.params.observations)):
             if self.params.observations[i] == "ang_vel":
                 self.params.observations[i] = "ang_vel_world"
@@ -52,7 +54,7 @@ class RL_Sim(RL):
         self.running_state = STATE.STATE_RL_RUNNING
 
         # model
-        model_path = os.path.join(os.path.dirname(__file__), f"../models/{self.robot_name}/{self.params.model_name}")
+        model_path = os.path.join(os.path.dirname(__file__), f"../models/{robot_path}/{self.params.model_name}")
         self.model = torch.jit.load(model_path)
 
         # publisher

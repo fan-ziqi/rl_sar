@@ -11,8 +11,10 @@
 RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_udp(UNITREE_LEGGED_SDK::LOWLEVEL)
 {
     // read params from yaml
-    this->robot_name = "a1_isaacgym";
-    this->ReadYaml(this->robot_name);
+    this->robot_name = "a1";
+    this->config_name = "legged_gym";
+    std::string robot_path = this->robot_name + "/" + this->config_name;
+    this->ReadYaml(robot_path);
     for (std::string &observation : this->params.observations)
     {
         // In Unitree A1, the coordinate system for angular velocity is in the body coordinate system.
@@ -38,7 +40,7 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
     running_state = STATE_WAITING;
 
     // model
-    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + this->robot_name + "/" + this->params.model_name;
+    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/" + this->params.model_name;
     this->model = torch::jit::load(model_path);
 
     // loop
@@ -119,9 +121,9 @@ void RL_Real::GetState(RobotState<double> *state)
     }
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
-        state->motor_state.q[i] = this->unitree_low_state.motorState[state_mapping[i]].q;
-        state->motor_state.dq[i] = this->unitree_low_state.motorState[state_mapping[i]].dq;
-        state->motor_state.tau_est[i] = this->unitree_low_state.motorState[state_mapping[i]].tauEst;
+        state->motor_state.q[i] = this->unitree_low_state.motorState[this->params.state_mapping[i]].q;
+        state->motor_state.dq[i] = this->unitree_low_state.motorState[this->params.state_mapping[i]].dq;
+        state->motor_state.tau_est[i] = this->unitree_low_state.motorState[this->params.state_mapping[i]].tauEst;
     }
 }
 
@@ -130,11 +132,11 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
         this->unitree_low_command.motorCmd[i].mode = 0x0A;
-        this->unitree_low_command.motorCmd[i].q = command->motor_command.q[command_mapping[i]];
-        this->unitree_low_command.motorCmd[i].dq = command->motor_command.dq[command_mapping[i]];
-        this->unitree_low_command.motorCmd[i].Kp = command->motor_command.kp[command_mapping[i]];
-        this->unitree_low_command.motorCmd[i].Kd = command->motor_command.kd[command_mapping[i]];
-        this->unitree_low_command.motorCmd[i].tau = command->motor_command.tau[command_mapping[i]];
+        this->unitree_low_command.motorCmd[i].q = command->motor_command.q[this->params.command_mapping[i]];
+        this->unitree_low_command.motorCmd[i].dq = command->motor_command.dq[this->params.command_mapping[i]];
+        this->unitree_low_command.motorCmd[i].Kp = command->motor_command.kp[this->params.command_mapping[i]];
+        this->unitree_low_command.motorCmd[i].Kd = command->motor_command.kd[this->params.command_mapping[i]];
+        this->unitree_low_command.motorCmd[i].tau = command->motor_command.tau[this->params.command_mapping[i]];
     }
 
     this->unitree_safe.PowerProtect(this->unitree_low_command, this->unitree_low_state, 6);
