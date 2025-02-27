@@ -458,45 +458,14 @@ std::vector<T> ReadVectorFromYaml(const YAML::Node &node)
     return values;
 }
 
-template <typename T>
-std::vector<T> ReadVectorFromYaml(const YAML::Node &node, const std::string &framework, const int &rows, const int &cols)
+void RL::ReadYaml(std::string robot_path)
 {
-    std::vector<T> values;
-    for (const auto &val : node)
-    {
-        values.push_back(val.as<T>());
-    }
-
-    if (framework == "isaacsim")
-    {
-        std::vector<T> transposed_values(cols * rows);
-        for (int r = 0; r < rows; ++r)
-        {
-            for (int c = 0; c < cols; ++c)
-            {
-                transposed_values[c * rows + r] = values[r * cols + c];
-            }
-        }
-        return transposed_values;
-    }
-    else if (framework == "isaacgym")
-    {
-        return values;
-    }
-    else
-    {
-        throw std::invalid_argument("Unsupported framework: " + framework);
-    }
-}
-
-void RL::ReadYaml(std::string robot_name)
-{
-    // The config file is located at "rl_sar/src/rl_sar/models/<robot_name>/config.yaml"
-    std::string config_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_name + "/config.yaml";
+    // The config file is located at "rl_sar/src/rl_sar/models/<robot_path/config.yaml"
+    std::string config_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/config.yaml";
     YAML::Node config;
     try
     {
-        config = YAML::LoadFile(config_path)[robot_name];
+        config = YAML::LoadFile(config_path)[robot_path];
     }
     catch (YAML::BadFile &e)
     {
@@ -506,8 +475,6 @@ void RL::ReadYaml(std::string robot_name)
 
     this->params.model_name = config["model_name"].as<std::string>();
     this->params.framework = config["framework"].as<std::string>();
-    int rows = config["rows"].as<int>();
-    int cols = config["cols"].as<int>();
     this->params.dt = config["dt"].as<double>();
     this->params.decimation = config["decimation"].as<int>();
     this->params.num_observations = config["num_observations"].as<int>();
@@ -528,8 +495,8 @@ void RL::ReadYaml(std::string robot_name)
     }
     else
     {
-        this->params.clip_actions_upper = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_upper"], this->params.framework, rows, cols)).view({1, -1});
-        this->params.clip_actions_lower = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_lower"], this->params.framework, rows, cols)).view({1, -1});
+        this->params.clip_actions_upper = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_upper"])).view({1, -1});
+        this->params.clip_actions_lower = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_lower"])).view({1, -1});
     }
     this->params.action_scale = config["action_scale"].as<double>();
     this->params.hip_scale_reduction = config["hip_scale_reduction"].as<double>();
@@ -543,13 +510,15 @@ void RL::ReadYaml(std::string robot_name)
     this->params.dof_vel_scale = config["dof_vel_scale"].as<double>();
     this->params.commands_scale = torch::tensor(ReadVectorFromYaml<double>(config["commands_scale"])).view({1, -1});
     // this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale});
-    this->params.rl_kp = torch::tensor(ReadVectorFromYaml<double>(config["rl_kp"], this->params.framework, rows, cols)).view({1, -1});
-    this->params.rl_kd = torch::tensor(ReadVectorFromYaml<double>(config["rl_kd"], this->params.framework, rows, cols)).view({1, -1});
-    this->params.fixed_kp = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kp"], this->params.framework, rows, cols)).view({1, -1});
-    this->params.fixed_kd = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kd"], this->params.framework, rows, cols)).view({1, -1});
-    this->params.torque_limits = torch::tensor(ReadVectorFromYaml<double>(config["torque_limits"], this->params.framework, rows, cols)).view({1, -1});
-    this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<double>(config["default_dof_pos"], this->params.framework, rows, cols)).view({1, -1});
-    this->params.joint_controller_names = ReadVectorFromYaml<std::string>(config["joint_controller_names"], this->params.framework, rows, cols);
+    this->params.rl_kp = torch::tensor(ReadVectorFromYaml<double>(config["rl_kp"])).view({1, -1});
+    this->params.rl_kd = torch::tensor(ReadVectorFromYaml<double>(config["rl_kd"])).view({1, -1});
+    this->params.fixed_kp = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kp"])).view({1, -1});
+    this->params.fixed_kd = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kd"])).view({1, -1});
+    this->params.torque_limits = torch::tensor(ReadVectorFromYaml<double>(config["torque_limits"])).view({1, -1});
+    this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<double>(config["default_dof_pos"])).view({1, -1});
+    this->params.joint_controller_names = ReadVectorFromYaml<std::string>(config["joint_controller_names"]);
+    this->params.command_mapping = ReadVectorFromYaml<int>(config["command_mapping"]);
+    this->params.state_mapping = ReadVectorFromYaml<int>(config["state_mapping"]);
 }
 
 void RL::CSVInit(std::string robot_name)

@@ -108,6 +108,8 @@ struct ModelParams
     torch::Tensor commands_scale;
     torch::Tensor default_dof_pos;
     std::vector<std::string> joint_controller_names;
+    std::vector<int> command_mapping;
+    std::vector<int> state_mapping;
 };
 
 struct Observations
@@ -152,7 +154,7 @@ public:
     torch::Tensor QuatRotateInverse(torch::Tensor q, torch::Tensor v, const std::string &framework);
 
     // yaml params
-    void ReadYaml(std::string robot_name);
+    void ReadYaml(std::string robot_path);
 
     // csv logger
     std::string csv_filename;
@@ -164,7 +166,7 @@ public:
     void KeyboardInterface();
 
     // others
-    std::string robot_name;
+    std::string robot_name, config_name;
     STATE running_state = STATE_RL_RUNNING; // default running_state set to STATE_RL_RUNNING
     bool simulation_running = false;
 
