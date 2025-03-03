@@ -102,17 +102,18 @@ void RL::InitControl()
 
 void RL::ComputeOutput(const torch::Tensor &actions, torch::Tensor &output_dof_pos, torch::Tensor &output_dof_vel, torch::Tensor &output_dof_tau)
 {
-    torch::Tensor joint_actions_scaled = actions * this->params.action_scale;
-    torch::Tensor wheel_actions_scaled = torch::zeros({1, this->params.num_of_dofs});
+    torch::Tensor actions_scaled = actions * this->params.action_scale;
+    torch::Tensor pos_actions_scaled = actions_scaled;
+    torch::Tensor vel_actions_scaled = torch::zeros_like(actions);
     for (int i : this->params.wheel_indices)
     {
-        joint_actions_scaled[0][i] = 0.0;
-        wheel_actions_scaled[0][i] = actions[0][i] * this->params.action_scale_wheel;
+        pos_actions_scaled[0][i] = 0.0;
+        vel_actions_scaled[0][i] = actions[0][i];
     }
-    torch::Tensor actions_scaled = joint_actions_scaled + wheel_actions_scaled;
-    output_dof_pos = joint_actions_scaled + this->params.default_dof_pos;
-    output_dof_vel = wheel_actions_scaled;
-    output_dof_tau = this->params.rl_kp * (actions_scaled + this->params.default_dof_pos - this->obs.dof_pos) - this->params.rl_kd * this->obs.dof_vel;
+    torch::Tensor all_actions_scaled = pos_actions_scaled + vel_actions_scaled;
+    output_dof_pos = pos_actions_scaled + this->params.default_dof_pos;
+    output_dof_vel = vel_actions_scaled;
+    output_dof_tau = this->params.rl_kp * (all_actions_scaled + this->params.default_dof_pos - this->obs.dof_pos) - this->params.rl_kd * this->obs.dof_vel;
     output_dof_tau = torch::clamp(output_dof_tau, -(this->params.torque_limits), this->params.torque_limits);
 }
 
@@ -498,10 +499,7 @@ void RL::ReadYaml(std::string robot_path)
         this->params.clip_actions_upper = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_upper"])).view({1, -1});
         this->params.clip_actions_lower = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_lower"])).view({1, -1});
     }
-    this->params.action_scale = config["action_scale"].as<double>();
-    this->params.hip_scale_reduction = config["hip_scale_reduction"].as<double>();
-    this->params.hip_scale_reduction_indices = ReadVectorFromYaml<int>(config["hip_scale_reduction_indices"]);
-    this->params.action_scale_wheel = config["action_scale_wheel"].as<double>();
+    this->params.action_scale = torch::tensor(ReadVectorFromYaml<double>(config["action_scale"])).view({1, -1});
     this->params.wheel_indices = ReadVectorFromYaml<int>(config["wheel_indices"]);
     this->params.num_of_dofs = config["num_of_dofs"].as<int>();
     this->params.lin_vel_scale = config["lin_vel_scale"].as<double>();

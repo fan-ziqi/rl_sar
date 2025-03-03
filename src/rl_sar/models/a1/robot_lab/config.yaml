@@ -34,11 +34,11 @@ a1/robot_lab:
              3.0, 3.0, 3.0,
              3.0, 3.0, 3.0,
              3.0, 3.0, 3.0]
-  hip_scale_reduction: 1.0
-  hip_scale_reduction_indices: []
   num_of_dofs: 12
-  action_scale: 0.25
-  action_scale_wheel: 0.0
+  action_scale: [0.125, 0.25, 0.25,
+                 0.125, 0.25, 0.25,
+                 0.125, 0.25, 0.25,
+                 0.125, 0.25, 0.25]
   wheel_indices: []
   lin_vel_scale: 2.0
   ang_vel_scale: 0.25

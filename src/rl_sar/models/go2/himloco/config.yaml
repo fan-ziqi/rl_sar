@@ -34,11 +34,11 @@ go2/himloco:
              5, 5, 5,
              5, 5, 5,
              5, 5, 5]
-  hip_scale_reduction: 1.0
-  hip_scale_reduction_indices: [0, 3, 6, 9]
   num_of_dofs: 12
-  action_scale: 0.25
-  action_scale_wheel: 0.0
+  action_scale: [0.125, 0.25, 0.25,
+                 0.125, 0.25, 0.25,
+                 0.125, 0.25, 0.25,
+                 0.125, 0.25, 0.25]
   wheel_indices: []
   lin_vel_scale: 2.0
   ang_vel_scale: 0.25

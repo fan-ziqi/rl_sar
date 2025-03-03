@@ -47,6 +47,7 @@ class RL_Sim(RL):
 
         # init
         torch.set_grad_enabled(False)
+        torch.set_num_threads(4)
         self.joint_publishers_commands = [MotorCommand() for _ in range(self.params.num_of_dofs)]
         self.InitObservations()
         self.InitOutputs()
@@ -189,19 +190,10 @@ class RL_Sim(RL):
             self.obs.dof_pos = torch.tensor(self.robot_state.motor_state.q).narrow(0, 0, self.params.num_of_dofs).unsqueeze(0)
             self.obs.dof_vel = torch.tensor(self.robot_state.motor_state.dq).narrow(0, 0, self.params.num_of_dofs).unsqueeze(0)
 
-            clamped_actions = self.Forward()
+            self.obs.actions = self.Forward()
+            self.output_dof_pos, self.output_dof_vel, self.output_dof_tau = self.ComputeOutput(self.obs.actions)
 
-            for i in self.params.hip_scale_reduction_indices:
-                clamped_actions[0][i] *= self.params.hip_scale_reduction
-
-            self.obs.actions = clamped_actions
-
-            origin_output_dof_tau = self.ComputeTorques(self.obs.actions)
-
-            # self.TorqueProtect(origin_output_dof_tau)
-
-            self.output_dof_tau = torch.clamp(origin_output_dof_tau, -(self.params.torque_limits), self.params.torque_limits)
-            self.output_dof_pos = self.ComputePosition(self.obs.actions)
+            # self.TorqueProtect(self.output_dof_pos)
 
             if CSV_LOGGER:
                 tau_est = torch.zeros((1, self.params.num_of_dofs))

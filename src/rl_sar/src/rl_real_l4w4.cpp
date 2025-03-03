@@ -186,15 +186,7 @@ void RL_Real::RunModel()
         this->obs.dof_pos = torch::tensor(this->robot_state.motor_state.q).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
         this->obs.dof_vel = torch::tensor(this->robot_state.motor_state.dq).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
 
-        torch::Tensor clamped_actions = this->Forward();
-
-        this->obs.actions = clamped_actions;
-
-        for (int i : this->params.hip_scale_reduction_indices)
-        {
-            clamped_actions[0][i] *= this->params.hip_scale_reduction;
-        }
-
+        this->obs.actions = this->Forward();
         this->ComputeOutput(this->obs.actions, this->output_dof_pos, this->output_dof_vel, this->output_dof_tau);
 
         if (this->output_dof_pos.defined() && this->output_dof_pos.numel() > 0)

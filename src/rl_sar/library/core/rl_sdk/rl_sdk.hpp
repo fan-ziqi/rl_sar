@@ -87,10 +87,7 @@ struct ModelParams
     std::vector<int> observations_history;
     double damping;
     double stiffness;
-    double action_scale;
-    double hip_scale_reduction;
-    std::vector<int> hip_scale_reduction_indices;
-    double action_scale_wheel;
+    torch::Tensor action_scale;
     std::vector<int> wheel_indices;
     int num_of_dofs;
     double lin_vel_scale;

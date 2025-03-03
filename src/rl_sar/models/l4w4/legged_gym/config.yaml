@@ -36,11 +36,11 @@ l4w4/legged_gym:
              3.0, 3.0, 3.0, 0.5,
              3.0, 3.0, 3.0, 0.5,
              3.0, 3.0, 3.0, 0.5]
-  hip_scale_reduction: 0.5
-  hip_scale_reduction_indices: [0, 4, 8, 12]
   num_of_dofs: 16
-  action_scale: 0.5
-  action_scale_wheel: 8.0
+  action_scale: [0.25, 0.5, 0.5, 8.0,
+                 0.25, 0.5, 0.5, 8.0,
+                 0.25, 0.5, 0.5, 8.0,
+                 0.25, 0.5, 0.5, 8.0]
   wheel_indices: [3, 7, 11, 15]
   lin_vel_scale: 2.0
   ang_vel_scale: 0.25

@@ -22,11 +22,9 @@ gr1t2/legged_gym:
              57.0, 43.0, 114.0, 114.0, 15.3]
   fixed_kd: [5.7, 4.3, 11.4, 11.4, 1.5,
              5.7, 4.3, 11.4, 11.4, 1.5]
-  hip_scale_reduction: 1.0
-  hip_scale_reduction_indices: []
   num_of_dofs: 10
-  action_scale: 1.0
-  action_scale_wheel: 0.0
+  action_scale: [1.0, 1.0, 1.0, 1.0, 1.0,
+                 1.0, 1.0, 1.0, 1.0, 1.0]
   wheel_indices: []
   lin_vel_scale: 1.0
   ang_vel_scale: 1.0
