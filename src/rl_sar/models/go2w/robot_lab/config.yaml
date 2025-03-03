@@ -5,7 +5,7 @@ go2w/robot_lab:
   decimation: 4
   num_observations: 57
   observations: ["ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
-  observations_history: []
+  observations_history: []  # 0 is the latest observation
   clip_obs: 100.0
   clip_actions_lower: [-100.0, -100.0, -100.0,
                        -100.0, -100.0, -100.0,

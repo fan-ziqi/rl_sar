@@ -29,12 +29,12 @@ class ObservationBuffer:
 
         Arguments:
             obs_ids: An array of integers with which to index the desired
-                observations, where 0 is the latest observation and
-                include_history_steps - 1 is the oldest observation.
+                     observations, where 0 is the latest observation and
+                     include_history_steps - 1 is the oldest observation.
         """
 
         obs = []
-        for obs_id in reversed(obs_ids):
+        for obs_id in obs_ids:
             slice_idx = self.include_history_steps - obs_id - 1
             obs.append(self.obs_buf[:, slice_idx * self.num_obs : (slice_idx + 1) * self.num_obs])
         return torch.cat(obs, dim=-1)

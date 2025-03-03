@@ -38,10 +38,18 @@ void ObservationBuffer::insert(torch::Tensor new_obs)
     obs_buf.index({torch::indexing::Slice(torch::indexing::None), torch::indexing::Slice(-num_obs, torch::indexing::None)}) = new_obs;
 }
 
+/**
+ * @brief Gets history of observations indexed by obs_ids.
+ *
+ * @param obs_ids An array of integers with which to index the desired
+ *                observations, where 0 is the latest observation and
+ *                include_history_steps - 1 is the oldest observation.
+ * @return A torch::Tensor containing the concatenated observations.
+ */
 torch::Tensor ObservationBuffer::get_obs_vec(std::vector<int> obs_ids)
 {
     std::vector<torch::Tensor> obs;
-    for (int i = obs_ids.size() - 1; i >= 0; --i)
+    for (int i = 0; i < obs_ids.size(); ++i)
     {
         int obs_id = obs_ids[i];
         int slice_idx = include_history_steps - obs_id - 1;
