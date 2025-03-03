@@ -231,8 +231,7 @@ torch::Tensor RL_Real::Forward()
     {
         this->history_obs_buf.insert(clamped_obs);
         this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
-        // actions = this->model.forward({this->history_obs}).toTensor();
-        actions = this->model.forward({clamped_obs, history_obs.view({1, 10, 57})}).toTensor();
+        actions = this->model.forward({this->history_obs}).toTensor();
     }
     else
     {
