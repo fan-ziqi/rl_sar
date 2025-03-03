@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 l4w4/legged_gym:
-  model_name: "policy_20000.pt"
+  model_name: "policy.pt"
   framework: "isaacgym"
   rows: 4
   cols: 3
