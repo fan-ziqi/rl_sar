@@ -27,9 +27,7 @@
     </include>
 
     <!-- Load the URDF into the ROS Parameter Server -->
-    <param name="robot_description"
-           command="$(find xacro)/xacro --inorder '$(arg dollar)$(arg robot_path)/xacro/robot.xacro'
-           DEBUG:=$(arg user_debug)"/>
+    <param name="robot_description" textfile="$(find l4w4_description)/urdf/l4w4.urdf"/>
 
     <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
     <!-- Set trunk and joint positions at startup -->
