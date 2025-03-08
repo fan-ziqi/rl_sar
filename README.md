@@ -20,6 +20,8 @@ feature:
 > [!NOTE]
 > If you want to train policy using IsaacLab(IsaacSim), please use [robot_lab](https://github.com/fan-ziqi/robot_lab) project.
 >
+> The order of joints in robot_lab cfg file `joint_names` is the same as that defined in `xxx/robot_lab/config.yaml` in this project.
+>
 > Discuss in [Github Discussion](https://github.com/fan-ziqi/rl_sar/discussions) or [Discord](https://discord.gg/vmVjkhVugU).
 
 ## Preparation
