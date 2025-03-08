@@ -12,7 +12,7 @@
 This repository provides a framework for simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
 
 feature:
-- Built-in pre-trained models for multiple robot simulations, including `a1`, `go2`, `go2w`, `b2`, `b2w`, `gr1t1`, `gr1t2`, `l4w4`;
+- Built-in pre-trained models for multiple robot simulations, including `Unitree-A1`, `Unitree-Go2`, `Unitree-Go2W`, `Unitree-B2`, `Unitree-B2W`, `FFTAI-GR1T1`, `FFTAI-GR1T2`, `GoldenRetriever-L4W0`, `GoldenRetriever-L4W4`;
 - The training framework supports **IsaacGym** and **IsaacSim**, distinguished by `framework`;
 - The code has **ROS-Noetic** and **ROS2-Foxy/Humble** versions;
 - The code has **cpp** and **python** versions, with the python version located in `src/rl_sar/scripts`;
@@ -142,7 +142,7 @@ Gamepad Controls
 Unitree A1 can be connected using both wireless and wired methods:
 
 * Wireless: Connect to the Unitree starting with WIFI broadcasted by the robot **(Note: Wireless connection may lead to packet loss, disconnection, or even loss of control, please ensure safety)**
-* Wired: Use an Ethernet cable to connect any port on the computer and the robot, configure the computer IP as 192.168.123.162, and the gateway as 255.255.255.0
+* Wired: Use an Ethernet cable to connect any port on the computer and the robot, configure the computer IP as 192.168.123.162, and the netmask as 255.255.255.0
 
 Open a new terminal and start the control program
 

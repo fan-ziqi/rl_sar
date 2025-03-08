@@ -12,7 +12,7 @@
 本仓库提供了机器人强化学习算法的仿真验证与实物部署框架，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
 
 特性：
-- 内置多种机器人仿真的预训练模型，包括 `a1`、`go2`、`go2w`、`b2`、`b2w`、`gr1t1`、`gr1t2`、`l4w4`；
+- 内置多种机器人仿真的预训练模型，包括 `Unitree-A1`、`Unitree-Go2`、`Unitree-Go2W`、`Unitree-B2`、`Unitree-B2W`、`FFTAI-GR1T1`、`FFTAI-GR1T2`、`GoldenRetriever-L4W0`、`GoldenRetriever-L4W4`；
 - 训练框架支持**IsaacGym**和**IsaacSim**，用`framework`加以区分；
 - 代码有**ROS-Noetic**和**ROS2-Foxy/Humble**两个版本；
 - 代码有**python**和**cpp**两个版本，其中python版本在`src/rl_sar/scripts`内；
@@ -143,7 +143,7 @@ source devel/setup.bash
 与Unitree A1连接可以使用无线与有线两种方式
 
 * 无线：连接机器人发出的Unitree开头的WIFI **（注意：无线连接可能会出现丢包断联甚至失控，请注意安全）**
-* 有线：用网线连接计算机和机器人的任意网口，配置计算机ip为192.168.123.162，网关255.255.255.0
+* 有线：用网线连接计算机和机器人的任意网口，配置计算机地址为192.168.123.162，子网掩码255.255.255.0
 
 新建终端，启动控制程序
 
