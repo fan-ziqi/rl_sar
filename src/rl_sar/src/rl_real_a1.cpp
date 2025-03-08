@@ -139,7 +139,7 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
         this->unitree_low_command.motorCmd[i].tau = command->motor_command.tau[this->params.command_mapping[i]];
     }
 
-    this->unitree_safe.PowerProtect(this->unitree_low_command, this->unitree_low_state, 6);
+    this->unitree_safe.PowerProtect(this->unitree_low_command, this->unitree_low_state, 8);
     // this->unitree_safe.PositionProtect(this->unitree_low_command, this->unitree_low_state);
     this->unitree_udp.SetSend(this->unitree_low_command);
 }
@@ -180,8 +180,8 @@ void RL_Real::RunModel()
             output_dof_tau_queue.push(this->output_dof_tau);
         }
 
-        this->TorqueProtect(this->output_dof_tau);
-        this->AttitudeProtect(this->robot_state.imu.quaternion, 75.0f, 75.0f);
+        // this->TorqueProtect(this->output_dof_tau);
+        // this->AttitudeProtect(this->robot_state.imu.quaternion, 75.0f, 75.0f);
 
 #ifdef CSV_LOGGER
         torch::Tensor tau_est = torch::tensor(this->robot_state.motor_state.tau_est).unsqueeze(0);
