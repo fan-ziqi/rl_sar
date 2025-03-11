@@ -40,13 +40,13 @@ This project uses `ros-noetic` (Ubuntu 20.04) and requires the installation of t
 sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller ros-noetic-joy
 ```
 
-Download and deploy `libtorch` at any location
+Download and deploy `libtorch` at any location (Please modify **\<YOUR_PATH\>** below to the actual path)
 
 ```bash
-cd /path/to/your/libtorch
+cd <YOUR_PATH>/libtorch
 wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip
 unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
-echo 'export Torch_DIR=/path/to/your/libtorch' >> ~/.bashrc
+echo 'export Torch_DIR=<YOUR_PATH>/libtorch' >> ~/.bashrc
 source ~/.bashrc
 ```
 
