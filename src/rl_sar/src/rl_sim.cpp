@@ -15,6 +15,12 @@ RL_Sim::RL_Sim()
     // read params from yaml
     nh.param<std::string>("robot_name", this->robot_name, "");
     nh.param<std::string>("config_name", this->config_name, "");
+    if (this->config_name.empty())
+    {
+        std::cerr << LOGGER::ERROR << "Configuration file not specified. Please provide it using 'cfg:=xxx'" << std::endl
+                  << LOGGER::ERROR << "Example: roslaunch rl_sar gazebo_<ROBOT>.launch cfg:=<CONFIG>" << std::endl;
+        std::abort();  // Abnormally terminate the program (triggers SIGABRT)
+    }
     std::string robot_path = this->robot_name + "/" + this->config_name;
     this->ReadYaml(robot_path);
     for (std::string &observation : this->params.observations)

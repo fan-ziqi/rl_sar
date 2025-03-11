@@ -1,7 +1,7 @@
 <launch>
     <arg name="wname" default="stairs"/>
     <arg name="rname" default="b2w"/>
-    <arg name="cfg" default="isaacgym"/>
+    <arg name="cfg" default=""/>
     <param name="robot_name" type="str" value="$(arg rname)"/>
     <param name="config_name" type="str" value="$(arg cfg)"/>
     <param name="ros_namespace" type="str" value="/$(arg rname)_gazebo/"/>
