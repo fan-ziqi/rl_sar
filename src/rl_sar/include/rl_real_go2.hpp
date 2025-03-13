@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef RL_REAL_HPP
-#define RL_REAL_HPP
+#ifndef RL_REAL_GO2_HPP
+#define RL_REAL_GO2_HPP
 
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
@@ -107,8 +107,6 @@ private:
     int motiontime = 0;
     std::vector<double> mapped_joint_positions;
     std::vector<double> mapped_joint_velocities;
-    int command_mapping[12] = {3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8};
-    int state_mapping[12] = {3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8};
 };
 
-#endif // RL_REAL_HPP
+#endif // RL_REAL_GO2_HPP
