@@ -43,28 +43,28 @@ link_directories(/usr/local/lib)
 include_directories(${YAML_CPP_INCLUDE_DIR})
 
 # Unitree A1
-include_directories(library/unitree_legged_sdk_3.2/include)
-link_directories(library/unitree_legged_sdk_3.2/lib)
+include_directories(library/thirdparty/unitree_legged_sdk_3.2/include)
+link_directories(library/thirdparty/unitree_legged_sdk_3.2/lib)
 set(UNITREE_A1_LIBS -pthread unitree_legged_sdk_amd64 lcm)
 
 # Unitree Go2
-include_directories(library/unitree_sdk2/include)
-link_directories(library/unitree_sdk2/lib/x86_64)
-include_directories(library/unitree_sdk2/thirdparty/include)
-include_directories(library/unitree_sdk2/thirdparty/include/ddscxx)
-link_directories(library/unitree_sdk2/thirdparty/lib/x86_64)
+include_directories(library/thirdparty/unitree_sdk2/include)
+link_directories(library/thirdparty/unitree_sdk2/lib/x86_64)
+include_directories(library/thirdparty/unitree_sdk2/thirdparty/include)
+include_directories(library/thirdparty/unitree_sdk2/thirdparty/include/ddscxx)
+link_directories(library/thirdparty/unitree_sdk2/thirdparty/lib/x86_64)
 set(UNITREE_GO2_LIBS -pthread unitree_sdk2 ddsc ddscxx)
 
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  library/matplotlibcpp
-  library/observation_buffer
-  library/rl_sdk
-  library/loop
+  library/core/matplotlibcpp
+  library/core/observation_buffer
+  library/core/rl_sdk
+  library/core/loop
 )
 
-add_library(rl_sdk library/rl_sdk/rl_sdk.cpp)
+add_library(rl_sdk library/core/rl_sdk/rl_sdk.cpp)
 target_link_libraries(rl_sdk "${TORCH_LIBRARIES}" Python3::Python Python3::Module TBB::tbb)
 set_property(TARGET rl_sdk PROPERTY CXX_STANDARD 14)
 find_package(Python3 COMPONENTS NumPy)
@@ -74,7 +74,7 @@ else()
   target_compile_definitions(rl_sdk WITHOUT_NUMPY)
 endif()
 
-add_library(observation_buffer library/observation_buffer/observation_buffer.cpp)
+add_library(observation_buffer library/core/observation_buffer/observation_buffer.cpp)
 target_link_libraries(observation_buffer "${TORCH_LIBRARIES}")
 set_property(TARGET observation_buffer PROPERTY CXX_STANDARD 14)
 
@@ -93,6 +93,13 @@ target_link_libraries(rl_real_a1
 add_executable(rl_real_go2 src/rl_real_go2.cpp )
 target_link_libraries(rl_real_go2
   ${catkin_LIBRARIES} ${UNITREE_GO2_LIBS}
+  rl_sdk observation_buffer yaml-cpp
+)
+
+include_directories(library/thirdparty/l4w4_sdk)
+add_executable(rl_real_l4w4 src/rl_real_l4w4.cpp )
+target_link_libraries(rl_real_l4w4
+  ${catkin_LIBRARIES} -pthread
   rl_sdk observation_buffer yaml-cpp
 )
 

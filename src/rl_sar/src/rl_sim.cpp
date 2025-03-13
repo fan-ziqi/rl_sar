@@ -14,7 +14,15 @@ RL_Sim::RL_Sim()
 
     // read params from yaml
     nh.param<std::string>("robot_name", this->robot_name, "");
-    this->ReadYaml(this->robot_name);
+    nh.param<std::string>("config_name", this->config_name, "");
+    if (this->config_name.empty())
+    {
+        std::cerr << LOGGER::ERROR << "Configuration file not specified. Please provide it using 'cfg:=xxx'" << std::endl
+                  << LOGGER::ERROR << "Example: roslaunch rl_sar gazebo_<ROBOT>.launch cfg:=<CONFIG>" << std::endl;
+        std::abort();  // Abnormally terminate the program (triggers SIGABRT)
+    }
+    std::string robot_path = this->robot_name + "/" + this->config_name;
+    this->ReadYaml(robot_path);
     for (std::string &observation : this->params.observations)
     {
         // In Gazebo, the coordinate system for angular velocity is in the world coordinate system.
@@ -38,7 +46,7 @@ RL_Sim::RL_Sim()
     running_state = STATE_RL_RUNNING;
 
     // model
-    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + this->robot_name + "/" + this->params.model_name;
+    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/" + this->params.model_name;
     this->model = torch::jit::load(model_path);
 
     // publisher
@@ -268,15 +276,7 @@ void RL_Sim::RunModel()
         this->obs.dof_pos = torch::tensor(this->robot_state.motor_state.q).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
         this->obs.dof_vel = torch::tensor(this->robot_state.motor_state.dq).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
 
-        torch::Tensor clamped_actions = this->Forward();
-
-        this->obs.actions = clamped_actions;
-
-        for (int i : this->params.hip_scale_reduction_indices)
-        {
-            clamped_actions[0][i] *= this->params.hip_scale_reduction;
-        }
-
+        this->obs.actions = this->Forward();
         this->ComputeOutput(this->obs.actions, this->output_dof_pos, this->output_dof_vel, this->output_dof_tau);
 
         if (this->output_dof_pos.defined() && this->output_dof_pos.numel() > 0)
