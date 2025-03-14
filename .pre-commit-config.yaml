@@ -22,4 +22,4 @@ repos:
           - --comment-style
           - /*| *| */
 
-exclude: ^(src/rl_sar/library/matplotlibcpp|src/rl_sar/library/unitree_legged_sdk_3.2|src/rl_sar/library/unitree_sdk2)/
+exclude: ^(src/rl_sar/library/core/matplotlibcpp|src/rl_sar/library/thirdparty)/
