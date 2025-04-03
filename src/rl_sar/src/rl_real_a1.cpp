@@ -157,6 +157,7 @@ void RL_Real::RunModel()
 {
     if (this->running_state == STATE_RL_RUNNING)
     {
+        this->episode_length_buf += 1;
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
         this->obs.commands = torch::tensor({{this->unitree_joy.ly, -this->unitree_joy.rx, -this->unitree_joy.lx}});
         // this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
