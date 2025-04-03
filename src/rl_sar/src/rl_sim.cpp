@@ -268,6 +268,7 @@ void RL_Sim::RunModel()
 {
     if (this->running_state == STATE_RL_RUNNING && simulation_running)
     {
+        this->episode_length_buf += 1;
         this->obs.lin_vel = torch::tensor({{this->vel.linear.x, this->vel.linear.y, this->vel.linear.z}});
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
         // this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});

@@ -166,6 +166,7 @@ public:
     std::string robot_name, config_name;
     STATE running_state = STATE_RL_RUNNING; // default running_state set to STATE_RL_RUNNING
     bool simulation_running = false;
+    unsigned long long episode_length_buf = 0;
 
     // protect func
     void TorqueProtect(torch::Tensor origin_output_dof_tau);

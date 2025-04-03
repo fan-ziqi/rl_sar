@@ -66,6 +66,19 @@ torch::Tensor RL::ComputeObservation()
         {
             obs_list.push_back(this->obs.actions);
         }
+        else if (observation == "phase")
+        {
+            torch::Tensor phase = torch::tensor({{3.1415926 * this->episode_length_buf * this->params.dt * this->params.decimation / 2}});
+            torch::Tensor phase_tensor = torch::cat({
+                torch::sin(phase),
+                torch::cos(phase),
+                torch::sin(phase / 2),
+                torch::cos(phase / 2),
+                torch::sin(phase / 4),
+                torch::cos(phase / 4),
+            }, -1);
+            obs_list.push_back(phase_tensor);
+        }
     }
 
     torch::Tensor obs = torch::cat(obs_list, 1);
@@ -212,6 +225,7 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
             this->InitObservations();
             this->InitOutputs();
             this->InitControl();
+            this->episode_length_buf = 0;
             this->running_state = STATE_RL_RUNNING;
             std::cout << std::endl << LOGGER::INFO << "Switching to STATE_RL_RUNNING" << std::endl;
         }
@@ -284,6 +298,7 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
             this->InitObservations();
             this->InitOutputs();
             this->InitControl();
+            this->episode_length_buf = 0;
             this->running_state = STATE_WAITING;
             std::cout << std::endl << LOGGER::INFO << "Switching to STATE_WAITING" << std::endl;
         }
