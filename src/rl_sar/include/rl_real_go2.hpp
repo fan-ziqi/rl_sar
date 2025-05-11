@@ -20,6 +20,9 @@
 #include <unitree/robot/go2/robot_state/robot_state_client.hpp>
 #include <csignal>
 
+#include <ros/ros.h>
+#include <geometry_msgs/Twist.h>
+
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
 
@@ -71,10 +74,6 @@ private:
     void RunModel();
     void RobotControl();
 
-    // history buffer
-    ObservationBuffer history_obs_buf;
-    torch::Tensor history_obs;
-
     // loop
     std::shared_ptr<LoopFunc> loop_keyboard;
     std::shared_ptr<LoopFunc> loop_control;
@@ -107,6 +106,9 @@ private:
     int motiontime = 0;
     std::vector<double> mapped_joint_positions;
     std::vector<double> mapped_joint_velocities;
+
+    // ros
+    ros::Subscriber cmd_vel_subscriber;
 };
 
 #endif // RL_REAL_GO2_HPP

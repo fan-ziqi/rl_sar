@@ -12,6 +12,9 @@
 #include "l4w4_sdk.hpp"
 #include <csignal>
 
+#include <ros/ros.h>
+#include <geometry_msgs/Twist.h>
+
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
 
@@ -28,10 +31,6 @@ private:
     void SetCommand(const RobotCommand<double> *command) override;
     void RunModel();
     void RobotControl();
-
-    // history buffer
-    ObservationBuffer history_obs_buf;
-    torch::Tensor history_obs;
 
     // loop
     std::shared_ptr<LoopFunc> loop_keyboard;
@@ -55,6 +54,9 @@ private:
     int motiontime = 0;
     std::vector<double> mapped_joint_positions;
     std::vector<double> mapped_joint_velocities;
+
+    // ros
+    ros::Subscriber cmd_vel_subscriber;
 };
 
 #endif // RL_REAL_L4W4_HPP

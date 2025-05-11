@@ -10,39 +10,24 @@
 
 RL_Real::RL_Real()
 {
+    // init ros
+    ros::NodeHandle nh;
+    this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Real::CmdvelCallback, this);
+
     // read params from yaml
     this->robot_name = "l4w4";
-    this->config_name = "legged_gym";
-    std::string robot_path = this->robot_name + "/" + this->config_name;
-    this->ReadYaml(robot_path);
-    for (std::string &observation : this->params.observations)
-    {
-        // In Unitree A1, the coordinate system for angular velocity is in the body coordinate system.
-        if (observation == "ang_vel")
-        {
-            observation = "ang_vel_body";
-        }
-    }
+    this->default_rl_config = "legged_gym";
+    this->ReadYamlBase(this->robot_name);
+
+    // init torch
+    torch::autograd::GradMode::set_enabled(false);
+    torch::set_num_threads(4);
 
     // init robot
     this->l4w4_sdk.InitUDP();
     this->l4w4_sdk.InitCmdData(this->l4w4_low_command);
-
-    // init rl
-    torch::autograd::GradMode::set_enabled(false);
-    torch::set_num_threads(4);
-    if (!this->params.observations_history.empty())
-    {
-        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
-    }
-    this->InitObservations();
     this->InitOutputs();
     this->InitControl();
-    running_state = STATE_WAITING;
-
-    // model
-    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/" + this->params.model_name;
-    this->model = torch::jit::load(model_path);
 
     // loop
     this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05, std::bind(&RL_Real::KeyboardInterface, this));
@@ -102,17 +87,21 @@ void RL_Real::GetState(RobotState<double> *state)
 
         memcpy(&this->unitree_joy, this->l4w4_low_state.wirelessRemote, 40);
 
+        this->control.x = this->unitree_joy.ly * 1.5f;
+        this->control.y = -this->unitree_joy.rx * 1.5f;
+        this->control.yaw = -this->unitree_joy.lx * 2.0f;
+
         if ((int)this->unitree_joy.btn.components.R2 == 1)
         {
-            this->control.control_state = STATE_POS_GETUP;
+            this->control.SetControlState(STATE_POS_GETUP);
         }
         else if ((int)this->unitree_joy.btn.components.R1 == 1)
         {
-            this->control.control_state = STATE_RL_INIT;
+            this->control.SetControlState(STATE_RL_LOCOMOTION);
         }
         else if ((int)this->unitree_joy.btn.components.L2 == 1)
         {
-            this->control.control_state = STATE_POS_GETDOWN;
+            this->control.SetControlState(STATE_POS_GETDOWN);
         }
 
         if (this->params.framework == "isaacgym")
@@ -175,14 +164,18 @@ void RL_Real::RobotControl()
 
 void RL_Real::RunModel()
 {
-    // this->l4w4_sdk.PrintMCU(this->running_state);
-
-    if (this->running_state == STATE_RL_RUNNING)
+    if (this->rl_init_done)
     {
         this->episode_length_buf += 1;
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
-        this->obs.commands = torch::tensor({{this->unitree_joy.ly * 1.5f, -this->unitree_joy.lx * 1.5f, -this->unitree_joy.rx * 2}});
-        // this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
+        if (this->fsm._currentState->getStateName() == "RLFSMStateRL_Navigation")
+        {
+            this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
+        }
+        else
+        {
+            this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
+        }
         this->obs.base_quat = torch::tensor(this->robot_state.imu.quaternion).unsqueeze(0);
         this->obs.dof_pos = torch::tensor(this->robot_state.motor_state.q).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
         this->obs.dof_vel = torch::tensor(this->robot_state.motor_state.dq).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
@@ -262,21 +255,22 @@ void RL_Real::Plot()
     plt::pause(0.0001);
 }
 
+void RL_Real::CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg)
+{
+    this->cmd_vel = *msg;
+}
+
 void signalHandler(int signum)
 {
+    ros::shutdown();
     exit(0);
 }
 
 int main(int argc, char **argv)
 {
     signal(SIGINT, signalHandler);
-
+    ros::init(argc, argv, "rl_sar");
     RL_Real rl_sar;
-
-    while (1)
-    {
-        sleep(10);
-    }
-
+    ros::spin();
     return 0;
 }
