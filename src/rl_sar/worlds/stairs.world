@@ -3,10 +3,10 @@
     <world name="default">
 
         <physics type="ode">
-        <max_step_size>0.002</max_step_size>
-        <real_time_factor>1</real_time_factor>
-        <real_time_update_rate>500</real_time_update_rate>
-        <gravity>0 0 -9.81</gravity>
+            <max_step_size>0.0005</max_step_size>
+            <real_time_factor>1</real_time_factor>
+            <real_time_update_rate>2000</real_time_update_rate>
+            <gravity>0 0 -9.81</gravity>
             <ode>
                 <solver>
                     <type>quick</type>
