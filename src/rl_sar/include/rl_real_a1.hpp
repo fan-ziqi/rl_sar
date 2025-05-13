@@ -62,7 +62,9 @@ private:
     std::vector<double> mapped_joint_velocities;
 
     // ros
+    geometry_msgs::Twist cmd_vel;
     ros::Subscriber cmd_vel_subscriber;
+    void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
 };
 
 #endif // RL_REAL_A1_HPP

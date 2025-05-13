@@ -4,8 +4,6 @@
 l4w4/legged_gym:
   model_name: "policy.pt"
   framework: "isaacgym"
-  rows: 4
-  cols: 3
   dt: 0.005
   decimation: 4
   num_observations: 57

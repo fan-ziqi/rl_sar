@@ -54,7 +54,7 @@ private:
     geometry_msgs::Twist vel;
     geometry_msgs::Pose pose;
     geometry_msgs::Twist cmd_vel;
-    // sensor_msgs::Joy joy_msg;
+    sensor_msgs::Joy joy_msg;
     ros::Subscriber model_state_subscriber;
     ros::Subscriber cmd_vel_subscriber;
     ros::Subscriber joy_subscriber;

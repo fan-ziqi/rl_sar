@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2024-2025 Ziqi Fan
- * SPDX-License-Identifier: Apache-2.0
- */
+* Copyright (c) 2024-2025 Ziqi Fan
+* SPDX-License-Identifier: Apache-2.0
+*/
 
 #include "rl_real_l4w4.hpp"
 
@@ -70,36 +70,36 @@ void RL_Real::GetState(RobotState<double> *state)
     timeval timeout;
     timeout.tv_sec = 0;
     timeout.tv_usec = 0;
-    int ret = select(this->l4w4_sdk.client_socket+1, &rfd, NULL, NULL, &timeout);
+    int ret = select(this->l4w4_sdk.client_socket + 1, &rfd, NULL, NULL, &timeout);
 
-    if(ret > 0)
+    if (ret > 0)
     {
         socklen_t addr_len = sizeof(struct sockaddr_in);
-        this->l4w4_sdk.recv_len = recvfrom(this->l4w4_sdk.client_socket, this->l4w4_sdk.recv_buff, sizeof(this->l4w4_sdk.recv_buff), 0, (sockaddr*)& this->l4w4_sdk.server_addr, & addr_len);
+        this->l4w4_sdk.recv_len = recvfrom(this->l4w4_sdk.client_socket, this->l4w4_sdk.recv_buff, sizeof(this->l4w4_sdk.recv_buff), 0, (sockaddr *)&this->l4w4_sdk.server_addr, &addr_len);
         this->l4w4_sdk.ex_send_recv++;
 
-        if(this->l4w4_sdk.recv_len < 32)
+        if (this->l4w4_sdk.recv_len < 32)
         {
-            std::cout<<" udp recv_len = "<<this->l4w4_sdk.recv_len<<std::endl;
+            std::cout << " udp recv_len = " << this->l4w4_sdk.recv_len << std::endl;
             return;
         }
         this->l4w4_sdk.AnalyzeUDP(this->l4w4_sdk.recv_buff, this->l4w4_low_state);
 
-        memcpy(&this->unitree_joy, this->l4w4_low_state.wirelessRemote, 40);
+        memcpy(&this->l4w4_joy, this->l4w4_low_state.wirelessRemote, 40);
 
-        this->control.x = this->unitree_joy.ly * 1.5f;
-        this->control.y = -this->unitree_joy.rx * 1.5f;
-        this->control.yaw = -this->unitree_joy.lx * 2.0f;
+        this->control.x = this->l4w4_joy.ly * 1.5f;
+        this->control.y = -this->l4w4_joy.rx * 1.5f;
+        this->control.yaw = -this->l4w4_joy.lx * 2.0f;
 
-        if ((int)this->unitree_joy.btn.components.R2 == 1)
+        if ((int)this->l4w4_joy.btn.components.R2 == 1)
         {
             this->control.SetControlState(STATE_POS_GETUP);
         }
-        else if ((int)this->unitree_joy.btn.components.R1 == 1)
+        else if ((int)this->l4w4_joy.btn.components.R1 == 1)
         {
             this->control.SetControlState(STATE_RL_LOCOMOTION);
         }
-        else if ((int)this->unitree_joy.btn.components.L2 == 1)
+        else if ((int)this->l4w4_joy.btn.components.L2 == 1)
         {
             this->control.SetControlState(STATE_POS_GETDOWN);
         }
@@ -119,7 +119,6 @@ void RL_Real::GetState(RobotState<double> *state)
             state->imu.quaternion[3] = this->l4w4_low_state.imu.quaternion[3]; // z
         }
 
-
         for (int i = 0; i < 3; ++i)
         {
             state->imu.gyroscope[i] = this->l4w4_low_state.imu.gyroscope[i];
@@ -134,7 +133,7 @@ void RL_Real::GetState(RobotState<double> *state)
     }
     else
     {
-        sendto(this->l4w4_sdk.client_socket, this->l4w4_sdk.sent_buff, 96, 0, (const sockaddr*)& this->l4w4_sdk.server_addr, sizeof(this->l4w4_sdk.server_addr));
+        sendto(this->l4w4_sdk.client_socket, this->l4w4_sdk.sent_buff, 96, 0, (const sockaddr *)&this->l4w4_sdk.server_addr, sizeof(this->l4w4_sdk.server_addr));
     }
 }
 

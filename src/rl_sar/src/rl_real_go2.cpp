@@ -79,9 +79,9 @@ RL_Real::~RL_Real()
 
 void RL_Real::GetState(RobotState<double> *state)
 {
-    this->control.x = this->unitree_joy.ly;
-    this->control.y = -this->unitree_joy.rx;
-    this->control.yaw = -this->unitree_joy.lx;
+    this->control.x = this->joystick.ly();
+    this->control.y = -this->joystick.rx();
+    this->control.yaw = -this->joystick.lx();
 
     if ((int)this->unitree_joy.components.R2 == 1)
     {
