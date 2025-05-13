@@ -7,12 +7,15 @@
 
 // #define PLOT
 // #define CSV_LOGGER
+// #define USE_ROS
 
 RL_Real::RL_Real()
 {
+#ifdef USE_ROS
     // init ros
     ros::NodeHandle nh;
     this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Real::CmdvelCallback, this);
+#endif
 
     // read params from yaml
     this->robot_name = "l4w4";
@@ -261,15 +264,23 @@ void RL_Real::CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg)
 
 void signalHandler(int signum)
 {
+#ifdef USE_ROS
     ros::shutdown();
+#endif
     exit(0);
 }
 
 int main(int argc, char **argv)
 {
     signal(SIGINT, signalHandler);
+#ifdef USE_ROS
     ros::init(argc, argv, "rl_sar");
+#endif
     RL_Real rl_sar;
+#ifdef USE_ROS
     ros::spin();
+#else
+    while (1) { sleep(10); }
+#endif
     return 0;
 }
