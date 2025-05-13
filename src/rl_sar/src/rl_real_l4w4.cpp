@@ -91,8 +91,8 @@ void RL_Real::GetState(RobotState<double> *state)
         memcpy(&this->l4w4_joy, this->l4w4_low_state.wirelessRemote, 40);
 
         this->control.x = this->l4w4_joy.ly * 1.5f;
-        this->control.y = -this->l4w4_joy.rx * 1.5f;
-        this->control.yaw = -this->l4w4_joy.lx * 2.0f;
+        this->control.y = -this->l4w4_joy.lx * 1.5f;
+        this->control.yaw = -this->l4w4_joy.rx * 2.0f;
 
         if ((int)this->l4w4_joy.btn.components.R2 == 1)
         {
@@ -219,7 +219,16 @@ torch::Tensor RL_Real::Forward()
     {
         this->history_obs_buf.insert(clamped_obs);
         this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
-        actions = this->model.forward({this->history_obs}).toTensor();
+        if (this->fsm._currentState->getStateName() != "RLFSMStateRL_LocomotionLab")
+        {
+            torch::Tensor myTensor = history_obs.view({1,10,57});
+            actions = this->model.forward({clamped_obs, myTensor}).toTensor();
+        }
+        else
+        {
+            actions = this->model.forward({this->history_obs}).toTensor();
+        }
+        
     }
     else
     {

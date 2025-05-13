@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 l4w4/legged_gym:
-  model_name: "policy.pt"
+  model_name: "policy_n1600.pt"
   framework: "isaacgym"
-  dt: 0.005
-  decimation: 4
+  dt: 0.0025
+  decimation: 5
   num_observations: 57
   observations: ["ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
   observations_history: [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]  # 0 is the latest observation
@@ -18,10 +18,10 @@ l4w4/legged_gym:
                        100.0, 100.0, 100.0, 100.0,
                        100.0, 100.0, 100.0, 100.0,
                        100.0, 100.0, 100.0, 100.0]
-  rl_kp: [160.0, 160.0, 160.0, 0.0,
-          160.0, 160.0, 160.0, 0.0,
-          160.0, 160.0, 160.0, 0.0,
-          160.0, 160.0, 160.0, 0.0]
+  rl_kp: [150.0, 160.0, 150.0, 0.0,
+          150.0, 160.0, 150.0, 0.0,
+          150.0, 160.0, 150.0, 0.0,
+          150.0, 160.0, 150.0, 0.0]
   rl_kd: [5.0, 5.0, 5.0, 1.0,
           5.0, 5.0, 5.0, 1.0,
           5.0, 5.0, 5.0, 1.0,
