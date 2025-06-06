@@ -91,11 +91,15 @@ private:
     // unitree interface
     void InitRobotStateClient();
     void InitLowCmd();
-    int QueryServiceStatus(const std::string &serviceName);
+
+    int queryMotionStatus();
+
     uint32_t Crc32Core(uint32_t *ptr, uint32_t len);
     void LowStateMessageHandler(const void *messages);
     void JoystickHandler(const void *message);
-    RobotStateClient rsc;
+
+    unitree::robot::b2::MotionSwitcherClient msc; 
+
     unitree_go::msg::dds_::LowCmd_ unitree_low_command{};
     unitree_go::msg::dds_::LowState_ unitree_low_state{};
     unitree_go::msg::dds_::WirelessController_ joystick{};

@@ -6,12 +6,12 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_TWISTWITHCOVARIANCESTAMPED__HPP
-#define DDSCXX_TWISTWITHCOVARIANCESTAMPED__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_TWISTWITHCOVARIANCESTAMPED__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_TWISTWITHCOVARIANCESTAMPED__HPP
 
-#include "TwistWithCovariance_.hpp"
+#include "unitree/idl/ros2/TwistWithCovariance_.hpp"
 
-#include "Header_.hpp"
+#include "unitree/idl/ros2/Header_.hpp"
 
 
 namespace geometry_msgs
@@ -414,4 +414,4 @@ bool max(S& str, const ::geometry_msgs::msg::dds_::TwistWithCovarianceStamped_& 
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_TWISTWITHCOVARIANCESTAMPED__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_TWISTWITHCOVARIANCESTAMPED__HPP

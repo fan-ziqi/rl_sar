@@ -11,7 +11,17 @@ namespace common
 class LogStore
 {
 public:
+    explicit LogStore()
+    {}
+    virtual ~LogStore()
+    {
+        mWriterPtr.reset();
+    }
+
     virtual void Append(const std::string& s) = 0;
+
+protected:
+    LogWriterPtr mWriterPtr;
 };
 
 typedef std::shared_ptr<LogStore> LogStorePtr;
@@ -19,12 +29,10 @@ typedef std::shared_ptr<LogStore> LogStorePtr;
 class LogStdoutStore : public LogStore
 {
 public:
-    LogStdoutStore();
+    explicit LogStdoutStore();
+    ~LogStdoutStore();
 
     void Append(const std::string& s);
-
-protected:
-    LogWriterPtr mWriterPtr;
 };
 
 typedef std::shared_ptr<LogStdoutStore> LogStdoutStorePtr;
@@ -32,12 +40,10 @@ typedef std::shared_ptr<LogStdoutStore> LogStdoutStorePtr;
 class LogStderrStore : public LogStore
 {
 public:
-    LogStderrStore();
+    explicit LogStderrStore();
+    ~LogStderrStore();
 
     void Append(const std::string& s);
-
-protected:
-    LogWriterPtr mWriterPtr;
 };
 
 typedef std::shared_ptr<LogStderrStore> LogStderrStorePtr;
@@ -45,13 +51,10 @@ typedef std::shared_ptr<LogStderrStore> LogStderrStorePtr;
 class LogFileStore : public LogStore
 {
 public:
-    LogFileStore(LogKeeperPtr keeperPtr);
+    explicit LogFileStore(LogKeeperPtr keeperPtr);
+    ~LogFileStore();
 
     void Append(const std::string& s);
-
-private:
-    LogKeeperPtr mKeeperPtr;
-    LogWriterPtr mWriterPtr;
 };
 
 typedef std::shared_ptr<LogFileStore> LogFileStorePtr;
@@ -59,18 +62,10 @@ typedef std::shared_ptr<LogFileStore> LogFileStorePtr;
 class LogFileAsyncStore : public LogStore
 {
 public:
-    enum
-    {
-        WRITE_INTERVAL = 100000,
-    };
-
-    LogFileAsyncStore(LogKeeperPtr keeperPtr);
+    explicit LogFileAsyncStore(LogKeeperPtr keeperPtr);
+    ~LogFileAsyncStore();
 
     void Append(const std::string& s);
-
-private:
-    LogWriterPtr mWriterPtr;
-    LogKeeperPtr mKeeperPtr;
 };
 
 typedef std::shared_ptr<LogFileAsyncStore> LogFileAsyncStorePtr;

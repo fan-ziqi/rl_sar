@@ -25,7 +25,10 @@ public:
     {}
 
     virtual void Init()
-    {}
+    {
+        mModel.Init(AnyCast<JsonMap>(GetGlobalParameter("DdsParameter")));
+        LOG_INFO(mLogger, "parse init dds model success.");
+    }
 
     virtual void Start()
     {}
@@ -45,9 +48,6 @@ public:
     {
         ServiceBase::Parse(configFileName);
         LOG_INFO(mLogger, "parse config success. filename:", configFileName);
-
-        mModel.Init(AnyCast<JsonMap>(GetGlobalParameter("DdsParameter")));
-        LOG_INFO(mLogger, "parse init dds model success.");
     }
 
 protected:

@@ -10,7 +10,7 @@
     if (debug)                                              \
     {                                                       \
         std::cout << "[" << ::time(NULL)                    \
-            << "] [" << ::gettid()                          \
+            << "] [" << ::syscall(SYS_gettid)               \
             << "] UT_ASSERT DEBUG at __FILE__:" << file     \
             << ", __FUNCTION__:" << func                    \
             << ", __LINE__:" << line                        \
@@ -21,7 +21,7 @@
     else                                                    \
     {                                                       \
         std::cout << "[" << ::time(NULL)                    \
-            << "] [" << ::gettid()                          \
+            << "] [" << ::syscall(SYS_gettid)               \
             << "] UT_ASSERT ABORT at __FILE__:" << file     \
             << ", __FUNCTION__:" << func                    \
             << ", __LINE__:" << line                        \

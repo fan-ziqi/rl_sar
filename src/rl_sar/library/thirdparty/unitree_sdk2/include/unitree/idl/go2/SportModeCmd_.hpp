@@ -6,12 +6,12 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_SPORTMODECMD__HPP
-#define DDSCXX_SPORTMODECMD__HPP
+#ifndef DDSCXX_UNITREE_IDL_GO2_SPORTMODECMD__HPP
+#define DDSCXX_UNITREE_IDL_GO2_SPORTMODECMD__HPP
 
-#include "BmsCmd_.hpp"
+#include "unitree/idl/go2/BmsCmd_.hpp"
 
-#include "PathPoint_.hpp"
+#include "unitree/idl/go2/PathPoint_.hpp"
 
 #include <cstdint>
 #include <array>
@@ -816,4 +816,4 @@ bool max(S& str, const ::unitree_go::msg::dds_::SportModeCmd_& instance, bool as
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_SPORTMODECMD__HPP
+#endif // DDSCXX_UNITREE_IDL_GO2_SPORTMODECMD__HPP

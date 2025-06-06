@@ -6,8 +6,8 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_HEIGHTMAP__HPP
-#define DDSCXX_HEIGHTMAP__HPP
+#ifndef DDSCXX_UNITREE_IDL_GO2_HEIGHTMAP__HPP
+#define DDSCXX_UNITREE_IDL_GO2_HEIGHTMAP__HPP
 
 #include <cstdint>
 #include <array>
@@ -578,4 +578,4 @@ bool max(S& str, const ::unitree_go::msg::dds_::HeightMap_& instance, bool as_ke
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_HEIGHTMAP__HPP
+#endif // DDSCXX_UNITREE_IDL_GO2_HEIGHTMAP__HPP

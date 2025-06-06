@@ -6,8 +6,8 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_GO2FRONTVIDEODATA__HPP
-#define DDSCXX_GO2FRONTVIDEODATA__HPP
+#ifndef DDSCXX_UNITREE_IDL_GO2_GO2FRONTVIDEODATA__HPP
+#define DDSCXX_UNITREE_IDL_GO2_GO2FRONTVIDEODATA__HPP
 
 #include <cstdint>
 #include <vector>
@@ -520,4 +520,4 @@ bool max(S& str, const ::unitree_go::msg::dds_::Go2FrontVideoData_& instance, bo
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_GO2FRONTVIDEODATA__HPP
+#endif // DDSCXX_UNITREE_IDL_GO2_GO2FRONTVIDEODATA__HPP

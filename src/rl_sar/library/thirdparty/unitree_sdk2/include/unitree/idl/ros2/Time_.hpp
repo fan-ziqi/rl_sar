@@ -6,8 +6,8 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_TIME__HPP
-#define DDSCXX_TIME__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_TIME__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_TIME__HPP
 
 #include <cstdint>
 
@@ -299,4 +299,4 @@ bool max(S& str, const ::builtin_interfaces::msg::dds_::Time_& instance, bool as
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_TIME__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_TIME__HPP

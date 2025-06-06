@@ -37,6 +37,8 @@ public:
     const std::string& GetName();
     const std::string& GetApiVersion() const;
 
+    int32_t GetCurrentApiId() const;
+
 protected:
     void SetApiVersion(const std::string& version);
 
@@ -62,6 +64,9 @@ private:
     std::set<int32_t> mApiBinarySet;
 
     LeaseServerPtr mLeaseServerPtr;
+
+private:
+    static thread_local int32_t mCurrentApiId;
 };
 
 using ServerPtr = std::shared_ptr<Server>;

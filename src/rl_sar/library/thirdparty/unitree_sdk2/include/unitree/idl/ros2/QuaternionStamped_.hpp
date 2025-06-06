@@ -6,12 +6,12 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_QUATERNIONSTAMPED__HPP
-#define DDSCXX_QUATERNIONSTAMPED__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_QUATERNIONSTAMPED__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_QUATERNIONSTAMPED__HPP
 
-#include "Quaternion_.hpp"
+#include "unitree/idl/ros2/Quaternion_.hpp"
 
-#include "Header_.hpp"
+#include "unitree/idl/ros2/Header_.hpp"
 
 
 namespace geometry_msgs
@@ -372,4 +372,4 @@ bool max(S& str, const ::geometry_msgs::msg::dds_::QuaternionStamped_& instance,
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_QUATERNIONSTAMPED__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_QUATERNIONSTAMPED__HPP

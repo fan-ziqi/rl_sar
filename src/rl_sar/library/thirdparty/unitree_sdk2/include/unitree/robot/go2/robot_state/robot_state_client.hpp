@@ -35,7 +35,7 @@ public:
     void Init();
 
     int32_t ServiceList(std::vector<ServiceState>& serviceStateList);
-    int32_t ServiceSwitch(const std::string& name, int32_t swit);
+    int32_t ServiceSwitch(const std::string& name, int32_t swit, int32_t& status);
     int32_t SetReportFreq(int32_t interval, int32_t duration);
 };
 

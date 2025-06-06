@@ -90,11 +90,11 @@ target_link_libraries(rl_real_a1
   rl_sdk observation_buffer yaml-cpp
 )
 
-add_executable(rl_real_go2 src/rl_real_go2.cpp )
-target_link_libraries(rl_real_go2
-  ${catkin_LIBRARIES} ${UNITREE_GO2_LIBS}
-  rl_sdk observation_buffer yaml-cpp
-)
+# add_executable(rl_real_go2 src/rl_real_go2.cpp )
+# target_link_libraries(rl_real_go2
+#   ${catkin_LIBRARIES} ${UNITREE_GO2_LIBS}
+#   rl_sdk observation_buffer yaml-cpp
+# )
 
 add_executable(rl_real_go2w src/rl_real_go2w.cpp )
 target_link_libraries(rl_real_go2w

@@ -6,8 +6,8 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_POINTFIELD__HPP
-#define DDSCXX_POINTFIELD__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_POINTFIELD__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_POINTFIELD__HPP
 
 #include <cstdint>
 #include <string>
@@ -409,4 +409,4 @@ bool max(S& str, const ::sensor_msgs::msg::dds_::PointField_& instance, bool as_
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_POINTFIELD__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_POINTFIELD__HPP

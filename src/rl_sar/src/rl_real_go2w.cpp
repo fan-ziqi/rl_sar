@@ -7,47 +7,25 @@
 
 // #define PLOT
 // #define CSV_LOGGER
-// unitree::robot::b2::MotionSwitcherClient msc;
 
-// std::string queryServiceName(std::string form,std::string name)
-// {
-//     if(form == "0")
-//     {
-//         if(name == "normal" ) return "sport_mode"; 
-//         if(name == "ai" ) return "ai_sport"; 
-//         if(name == "advanced" ) return "advanced_sport"; 
-//     }
-//     else
-//     {
-//         if(name == "ai-w" ) return "wheeled_sport(go2W)"; 
-//         if(name == "normal-w" ) return "wheeled_sport(b2W)";
-//     }
-//     return "";
-// }
 
-// int queryMotionStatus()
-// {
-//     std::string robotForm,motionName;
-//     int motionStatus;
-//     int32_t ret = msc.CheckMode(robotForm,motionName);
-//     if (ret == 0) {
-//         std::cout << "CheckMode succeeded." << std::endl;
-//     } else {
-//         std::cout << "CheckMode failed. Error code: " << ret << std::endl;
-//     }
-//     if(motionName.empty())
-//     {
-//         std::cout << "The motion control-related service is deactivated." << std::endl;
-//         motionStatus = 0;
-//     }
-//     else
-//     {
-//         std::string serviceName = queryServiceName(robotForm,motionName);
-//         std::cout << "Service: "<< serviceName<< " is activate" << std::endl;
-//         motionStatus = 1;
-//     }
-//     return motionStatus;
-// }
+std::string queryServiceName(std::string form,std::string name)
+{
+    if(form == "0")
+    {
+        if(name == "normal" ) return "sport_mode"; 
+        if(name == "ai" ) return "ai_sport"; 
+        if(name == "advanced" ) return "advanced_sport"; 
+    }
+    else
+    {
+        if(name == "ai-w" ) return "wheeled_sport(go2W)"; 
+        if(name == "normal-w" ) return "wheeled_sport(b2W)";
+    }
+    return "";
+}
+
+
 
 RL_Real::RL_Real()
 {
@@ -65,26 +43,19 @@ RL_Real::RL_Real()
         }
     }
 
-    // init robot
     this->InitRobotStateClient();
-    while (this->QueryServiceStatus("sport_mode"))
-    {
-        std::cout << "Try to deactivate the service: " << "sport_mode" << std::endl;
-        this->rsc.ServiceSwitch("sport_mode", 0);
-        sleep(1);
-    }
 
-    // while(queryMotionStatus())
-    // {
-    //     std::cout << "Try to deactivate the motion control-related service." << std::endl;
-    //     int32_t ret = msc.ReleaseMode(); 
-    //     if (ret == 0) {
-    //         std::cout << "ReleaseMode succeeded." << std::endl;
-    //     } else {
-    //         std::cout << "ReleaseMode failed. Error code: " << ret << std::endl;
-    //     }
-    //     sleep(5);
-    // }
+    while(queryMotionStatus())
+    {
+        std::cout << "Try to deactivate the motion control-related service." << std::endl;
+        int32_t ret = msc.ReleaseMode(); 
+        if (ret == 0) {
+            std::cout << "ReleaseMode succeeded." << std::endl;
+        } else {
+            std::cout << "ReleaseMode failed. Error code: " << ret << std::endl;
+        }
+        sleep(5);
+    }
 
 
 
@@ -371,40 +342,42 @@ void RL_Real::InitLowCmd()
 
 void RL_Real::InitRobotStateClient()
 {
-    this->rsc.SetTimeout(10.0f);
-    this->rsc.Init();
+    this->msc.SetTimeout(10.0f);
+    this->msc.Init();
 }
 
-int RL_Real::QueryServiceStatus(const std::string &serviceName)
+int RL_Real::queryMotionStatus()
 {
-    std::vector<ServiceState> serviceStateList;
-    int ret, serviceStatus;
-    ret = this->rsc.ServiceList(serviceStateList);
-    size_t i, count = serviceStateList.size();
-    for (i = 0; i < count; ++i)
-    {
-        const ServiceState &serviceState = serviceStateList[i];
-        if (serviceState.name == serviceName)
-        {
-            if (serviceState.status == 0)
-            {
-                std::cout << "name: " << serviceState.name << " is activate" << std::endl;
-                serviceStatus = 1;
-            }
-            else
-            {
-                std::cout << "name:" << serviceState.name << " is deactivate" << std::endl;
-                serviceStatus = 0;
-            }
-        }
+    std::string robotForm,motionName;
+    int motionStatus;
+    int32_t ret = msc.CheckMode(robotForm,motionName);
+    if (ret == 0) {
+        std::cout << "CheckMode succeeded." << std::endl;
+    } else {
+        std::cout << "CheckMode failed. Error code: " << ret << std::endl;
     }
-    return serviceStatus;
+    if(motionName.empty())
+    {
+        std::cout << "The motion control-related service is deactivated." << std::endl;
+        motionStatus = 0;
+    }
+    else
+    {
+        std::string serviceName = queryServiceName(robotForm,motionName);
+        std::cout << "Service: "<< serviceName<< " is activate" << std::endl;
+        motionStatus = 1;
+    }
+    return motionStatus;
 }
+
+
 
 void RL_Real::LowStateMessageHandler(const void *message)
 {
     this->unitree_low_state = *(unitree_go::msg::dds_::LowState_ *)message;
 }
+
+
 
 void RL_Real::JoystickHandler(const void *message)
 {
@@ -412,10 +385,14 @@ void RL_Real::JoystickHandler(const void *message)
     this->unitree_joy.value = joystick.keys();
 }
 
+
+
 void signalHandler(int signum)
 {
     exit(0);
 }
+
+
 
 int main(int argc, char **argv)
 {

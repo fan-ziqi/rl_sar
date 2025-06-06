@@ -6,12 +6,12 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_TWISTSTAMPED__HPP
-#define DDSCXX_TWISTSTAMPED__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_TWISTSTAMPED__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_TWISTSTAMPED__HPP
 
-#include "Twist_.hpp"
+#include "unitree/idl/ros2/Twist_.hpp"
 
-#include "Header_.hpp"
+#include "unitree/idl/ros2/Header_.hpp"
 
 
 namespace geometry_msgs
@@ -391,4 +391,4 @@ bool max(S& str, const ::geometry_msgs::msg::dds_::TwistStamped_& instance, bool
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_TWISTSTAMPED__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_TWISTSTAMPED__HPP

@@ -6,8 +6,8 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_QUATERNION__HPP
-#define DDSCXX_QUATERNION__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_QUATERNION__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_QUATERNION__HPP
 
 
 namespace geometry_msgs
@@ -380,4 +380,4 @@ bool max(S& str, const ::geometry_msgs::msg::dds_::Quaternion_& instance, bool a
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_QUATERNION__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_QUATERNION__HPP

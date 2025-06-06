@@ -6,8 +6,8 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_UWBSTATE__HPP
-#define DDSCXX_UWBSTATE__HPP
+#ifndef DDSCXX_UNITREE_IDL_GO2_UWBSTATE__HPP
+#define DDSCXX_UNITREE_IDL_GO2_UWBSTATE__HPP
 
 #include <cstdint>
 #include <array>
@@ -965,4 +965,4 @@ bool max(S& str, const ::unitree_go::msg::dds_::UwbState_& instance, bool as_key
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_UWBSTATE__HPP
+#endif // DDSCXX_UNITREE_IDL_GO2_UWBSTATE__HPP
