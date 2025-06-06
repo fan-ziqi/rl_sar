@@ -422,28 +422,27 @@ void RL::KeyboardInterface()
         case '1':
             this->control.control_state = STATE_POS_GETDOWN;
             break;
-        case 'q':
-            break;
+       
         case 'w':
             this->control.x += 0.1;
             break;
         case 's':
             this->control.x -= 0.1;
             break;
-        case 'a':
+        case 'q':
             this->control.yaw += 0.1;
             break;
-        case 'd':
+        case 'e':
             this->control.yaw -= 0.1;
             break;
         case 'i':
             break;
         case 'k':
             break;
-        case 'j':
+        case 'a':
             this->control.y += 0.1;
             break;
-        case 'l':
+        case 'd':
             this->control.y -= 0.1;
             break;
         case ' ':

@@ -96,6 +96,12 @@ target_link_libraries(rl_real_go2
   rl_sdk observation_buffer yaml-cpp
 )
 
+add_executable(rl_real_go2w src/rl_real_go2w.cpp )
+target_link_libraries(rl_real_go2w
+  ${catkin_LIBRARIES} ${UNITREE_GO2_LIBS}
+  rl_sdk observation_buffer yaml-cpp
+)
+
 include_directories(library/thirdparty/l4w4_sdk)
 add_executable(rl_real_l4w4 src/rl_real_l4w4.cpp )
 target_link_libraries(rl_real_l4w4
