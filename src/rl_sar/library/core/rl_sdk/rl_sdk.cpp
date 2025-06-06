@@ -295,6 +295,8 @@ void RL::StateController(const RobotState<double> *state, RobotCommand<double> *
         }
         if (getdown_percent == 1)
         {
+           
+
             this->InitObservations();
             this->InitOutputs();
             this->InitControl();

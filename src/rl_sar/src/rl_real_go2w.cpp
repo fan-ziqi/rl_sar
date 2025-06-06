@@ -7,7 +7,7 @@
 
 // #define PLOT
 // #define CSV_LOGGER
-// b2::MotionSwitcherClient msc;
+// unitree::robot::b2::MotionSwitcherClient msc;
 
 // std::string queryServiceName(std::string form,std::string name)
 // {
@@ -192,8 +192,12 @@ void RL_Real::GetState(RobotState<double> *state)
     }
 }
 
+
+int set_command_count=0;
+
 void RL_Real::SetCommand(const RobotCommand<double> *command)
 {
+    // set_command_count++;
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
         this->unitree_low_command.motor_cmd()[i].mode() = 0x01;
@@ -202,7 +206,16 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
         this->unitree_low_command.motor_cmd()[i].kp() = command->motor_command.kp[this->params.command_mapping[i]];
         this->unitree_low_command.motor_cmd()[i].kd() = command->motor_command.kd[this->params.command_mapping[i]];
         this->unitree_low_command.motor_cmd()[i].tau() = command->motor_command.tau[this->params.command_mapping[i]];
+
+        
     }
+    // if(set_command_count%100==0)
+    // {
+    //     std::cout<<"wheel_speed 1 ="<<this->unitree_low_command.motor_cmd()[12].dq()<<'\t';
+    //     std::cout<<"wheel_speed 2 ="<<this->unitree_low_command.motor_cmd()[13].dq()<<'\t';
+    //     std::cout<<"wheel_speed 3 ="<<this->unitree_low_command.motor_cmd()[14].dq()<<'\t';
+    //     std::cout<<"wheel_speed 1 ="<<this->unitree_low_command.motor_cmd()[12].dq()<<std::endl;
+    // }
 
     this->unitree_low_command.crc() = Crc32Core((uint32_t *)&unitree_low_command, (sizeof(unitree_go::msg::dds_::LowCmd_) >> 2) - 1);
     lowcmd_publisher->Write(unitree_low_command);
