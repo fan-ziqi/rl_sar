@@ -5,10 +5,6 @@
 
 #include "rl_real_a1.hpp"
 
-// #define PLOT
-// #define CSV_LOGGER
-// #define USE_ROS
-
 RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_udp(UNITREE_LEGGED_SDK::LOWLEVEL)
 {
 #ifdef USE_ROS
@@ -153,7 +149,9 @@ void RL_Real::RunModel()
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
         if (this->fsm._currentState->getStateName() == "RLFSMStateRL_Navigation")
         {
+#ifdef USE_ROS
             this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
+#endif
         }
         else
         {
@@ -238,10 +236,12 @@ void RL_Real::Plot()
     plt::pause(0.0001);
 }
 
+#ifdef USE_ROS
 void RL_Real::CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg)
 {
     this->cmd_vel = *msg;
 }
+#endif
 
 void signalHandler(int signum)
 {

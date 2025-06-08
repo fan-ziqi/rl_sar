@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(rl_sar)
 
+set(USE_CATKIN ON CACHE BOOL "Use Catkin build system")
+message(STATUS "USE_CATKIN: ${USE_CATKIN}")
+if(NOT USE_CATKIN)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+endif()
+
 add_definitions(-DCMAKE_CURRENT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -8,46 +16,50 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
+if(USE_CATKIN)
+  find_package(catkin REQUIRED COMPONENTS
+    controller_manager
+    genmsg
+    joint_state_controller
+    robot_state_publisher
+    roscpp
+    gazebo_ros
+    std_msgs
+    tf
+    geometry_msgs
+    robot_msgs
+    robot_joint_controller
+    rospy
+  )
+
+  find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+
+  catkin_package(
+    CATKIN_DEPENDS
+    robot_joint_controller
+    rospy
+  )
+
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
+  find_package(gazebo REQUIRED)
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 find_package(Torch REQUIRED)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
-find_package(gazebo REQUIRED)
-
 find_package(TBB REQUIRED)
-
-find_package(catkin REQUIRED COMPONENTS
-  controller_manager
-  genmsg
-  joint_state_controller
-  robot_state_publisher
-  roscpp
-  gazebo_ros
-  std_msgs
-  tf
-  geometry_msgs
-  robot_msgs
-  robot_joint_controller
-  rospy
-)
-
-find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
-
-catkin_package(
-  CATKIN_DEPENDS
-  robot_joint_controller
-  rospy
-)
 
 link_directories(/usr/local/lib)
 include_directories(${YAML_CPP_INCLUDE_DIR})
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
     set(ARCH_DIR "aarch64")
+    message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64")
+  message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
     set(ARCH_DIR "x86_64")
 else()
-    message(FATAL_ERROR "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+    message(STATUS "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
 # Unitree A1
@@ -68,9 +80,12 @@ include_directories(library/thirdparty/unitree_sdk2/thirdparty/include/ddscxx)
 link_directories(library/thirdparty/unitree_sdk2/thirdparty/lib/${ARCH_DIR})
 set(UNITREE_GO2_LIBS -pthread unitree_sdk2 ddsc ddscxx)
 
+if(USE_CATKIN)
+  include_directories(${catkin_INCLUDE_DIRS})
+endif()
+
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
   library/core/matplotlibcpp
   library/core/observation_buffer
   library/core/rl_sdk
@@ -92,33 +107,45 @@ add_library(observation_buffer library/core/observation_buffer/observation_buffe
 target_link_libraries(observation_buffer "${TORCH_LIBRARIES}")
 set_property(TARGET observation_buffer PROPERTY CXX_STANDARD 14)
 
-add_executable(rl_sim src/rl_sim.cpp )
-target_link_libraries(rl_sim
-  ${catkin_LIBRARIES} -pthread
-  rl_sdk observation_buffer yaml-cpp
-)
+if(USE_CATKIN)
+  add_executable(rl_sim src/rl_sim.cpp )
+  target_link_libraries(rl_sim
+    rl_sdk observation_buffer yaml-cpp -pthread
+  )
+  target_link_libraries(rl_sim ${catkin_LIBRARIES})
+endif()
 
 add_executable(rl_real_a1 src/rl_real_a1.cpp )
 target_link_libraries(rl_real_a1
-  ${catkin_LIBRARIES} ${UNITREE_A1_LIBS}
+  ${UNITREE_A1_LIBS}
   rl_sdk observation_buffer yaml-cpp
 )
+if(USE_CATKIN)
+  target_link_libraries(rl_real_a1 ${catkin_LIBRARIES})
+endif()
 
 add_executable(rl_real_go2 src/rl_real_go2.cpp )
 target_link_libraries(rl_real_go2
-  ${catkin_LIBRARIES} ${UNITREE_GO2_LIBS}
+  ${UNITREE_GO2_LIBS}
   rl_sdk observation_buffer yaml-cpp
 )
+if(USE_CATKIN)
+  target_link_libraries(rl_real_go2 ${catkin_LIBRARIES})
+endif()
 
 include_directories(library/thirdparty/l4w4_sdk)
 add_executable(rl_real_l4w4 src/rl_real_l4w4.cpp )
 target_link_libraries(rl_real_l4w4
-  ${catkin_LIBRARIES} -pthread
-  rl_sdk observation_buffer yaml-cpp
+  rl_sdk observation_buffer yaml-cpp -pthread
 )
+if(USE_CATKIN)
+  target_link_libraries(rl_real_l4w4 ${catkin_LIBRARIES})
+endif()
 
-catkin_install_python(PROGRAMS
-  scripts/rl_sim.py
-  scripts/actuator_net.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+if(USE_CATKIN)
+  catkin_install_python(PROGRAMS
+    scripts/rl_sim.py
+    scripts/actuator_net.py
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
+endif()

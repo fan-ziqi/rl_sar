@@ -6,14 +6,20 @@
 #ifndef RL_REAL_L4W4_HPP
 #define RL_REAL_L4W4_HPP
 
+// #define PLOT
+// #define CSV_LOGGER
+// #define USE_ROS
+
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
 #include "loop.hpp"
 #include "l4w4_sdk.hpp"
 #include <csignal>
 
+#ifdef USE_ROS
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
+#endif
 
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
@@ -55,10 +61,12 @@ private:
     std::vector<double> mapped_joint_positions;
     std::vector<double> mapped_joint_velocities;
 
+#ifdef USE_ROS
     // ros
     geometry_msgs::Twist cmd_vel;
     ros::Subscriber cmd_vel_subscriber;
     void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
+#endif
 };
 
 #endif // RL_REAL_L4W4_HPP
