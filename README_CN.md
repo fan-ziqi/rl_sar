@@ -92,6 +92,8 @@ sudo ldconfig
 
 ## 编译
 
+### 使用catkin编译
+
 在项目根目录编译
 
 ```bash
@@ -99,8 +101,21 @@ cd ..
 catkin build
 ```
 
+如果需要用到ROS，需要手动打开对应`rl_xxx.hpp`中的宏定义
+
 > [!NOTE]
 > 如果 catkin build 报错: `Unable to find either executable 'empy' or Python module 'em'`, 在`catkin build` 之前执行 `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3`
+
+### 使用Cmake编译
+
+如果不需要仿真，只在机器人上运行，可以不用catkin编译，同时禁用ROS：
+
+```bash
+cmake src/rl_sar/ -B cmake_build -DUSE_CATKIN=OFF
+cmake --build cmake_build
+```
+
+编译生成的可执行文件在`cmake_build/bin`中，库在`cmake_build/lib`中。
 
 ## 运行
 
@@ -188,7 +203,7 @@ rosrun rl_sar rl_real_a1
 
 下面拿A1举例
 
-1. 取消注释`rl_real_a1.cpp`中最上面的`#define CSV_LOGGER`，你也可以在仿真程序中修改对应部分采集仿真数据用来测试训练过程。
+1. 取消注释`rl_real_a1.hpp`中最上面的`#define CSV_LOGGER`，你也可以在仿真程序中修改对应部分采集仿真数据用来测试训练过程。
 2. 运行控制程序，程序会在执行后记录所有数据。
 3. 停止控制程序，开始训练执行器网络。注意，下面的路径前均省略了`rl_sar/src/rl_sar/models/`。
     ```bash
