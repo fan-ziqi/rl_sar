@@ -76,8 +76,8 @@ void RL_Real::GetState(RobotState<double> *state)
     memcpy(&this->unitree_joy, this->unitree_low_state.wirelessRemote, 40);
 
     this->control.x = this->unitree_joy.ly;
-    this->control.y = -this->unitree_joy.rx;
-    this->control.yaw = -this->unitree_joy.lx;
+    this->control.y = -this->unitree_joy.lx;
+    this->control.yaw = -this->unitree_joy.rx;
 
     if ((int)this->unitree_joy.btn.components.R2 == 1)
     {
