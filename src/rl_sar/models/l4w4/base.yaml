@@ -1,31 +1,9 @@
 # Copyright (c) 2024-2025 Ziqi Fan
 # SPDX-License-Identifier: Apache-2.0
 
-l4w4/legged_gym:
-  model_name: "policy_n1600.pt"
-  framework: "isaacgym"
-  dt: 0.0025
-  decimation: 5
-  num_observations: 57
-  observations: ["ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
-  observations_history: [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]  # 0 is the latest observation
-  clip_obs: 100.0
-  clip_actions_lower: [-100.0, -100.0, -100.0, -100.0,
-                       -100.0, -100.0, -100.0, -100.0,
-                       -100.0, -100.0, -100.0, -100.0,
-                       -100.0, -100.0, -100.0, -100.0]
-  clip_actions_upper: [100.0, 100.0, 100.0, 100.0,
-                       100.0, 100.0, 100.0, 100.0,
-                       100.0, 100.0, 100.0, 100.0,
-                       100.0, 100.0, 100.0, 100.0]
-  rl_kp: [150.0, 160.0, 150.0, 0.0,
-          150.0, 160.0, 150.0, 0.0,
-          150.0, 160.0, 150.0, 0.0,
-          150.0, 160.0, 150.0, 0.0]
-  rl_kd: [5.0, 5.0, 5.0, 1.0,
-          5.0, 5.0, 5.0, 1.0,
-          5.0, 5.0, 5.0, 1.0,
-          5.0, 5.0, 5.0, 1.0]
+l4w4:
+  dt: 0.005
+  decimation: 4
   fixed_kp: [180.0, 180.0, 180.0, 0.0,
              180.0, 180.0, 180.0, 0.0,
              180.0, 180.0, 180.0, 0.0,
@@ -35,16 +13,7 @@ l4w4/legged_gym:
              3.0, 3.0, 3.0, 0.5,
              3.0, 3.0, 3.0, 0.5]
   num_of_dofs: 16
-  action_scale: [0.25, 0.5, 0.5, 8.0,
-                 0.25, 0.5, 0.5, 8.0,
-                 0.25, 0.5, 0.5, 8.0,
-                 0.25, 0.5, 0.5, 8.0]
   wheel_indices: [3, 7, 11, 15]
-  lin_vel_scale: 2.0
-  ang_vel_scale: 0.25
-  dof_pos_scale: 1.0
-  dof_vel_scale: 0.05
-  commands_scale: [2.0, 2.0, 0.25]
   torque_limits: [150.0, 150.0, 150.0, 30.0,
                   150.0, 150.0, 150.0, 30.0,
                   150.0, 150.0, 150.0, 30.0,

@@ -62,6 +62,7 @@ include_directories(
   library/core/observation_buffer
   library/core/rl_sdk
   library/core/loop
+  library/core/fsm
 )
 
 add_library(rl_sdk library/core/rl_sdk/rl_sdk.cpp)

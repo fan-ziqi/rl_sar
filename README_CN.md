@@ -9,6 +9,9 @@
 
 **版本选择: [ROS-Noetic](https://github.com/fan-ziqi/rl_sar/tree/main) | [ROS2-Foxy/Humble](https://github.com/fan-ziqi/rl_sar/tree/ros2)**
 
+> [!IMPORTANT]
+> 本仓库持续维护 ROS1 的 C++ 版本，而 ROS2 版本和 Python 版本未能同步更新，部分功能可能缺失或存在差异。因此，建议优先使用 ROS1 的 C++ 版本，以获得最新的功能特性和 bug 修复。
+
 本仓库提供了机器人强化学习算法的仿真验证与实物部署框架，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
 
 特性：
@@ -103,7 +106,7 @@ catkin build
 
 下文中使用 **\<ROBOT\>/\<CONFIG\>** 代替表示不同的环境，如 `a1/isaacgym` 、 `go2/himloco`。
 
-运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/models/<ROBOT>/<CONFIG>`中，并配置`config.yaml`中的参数。
+运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/models/<ROBOT>/<CONFIG>`中，并配置`<ROBOT>/<CONFIG>/config.yaml`和`<ROBOT>/base.yaml`中的参数。
 
 ### 仿真
 
@@ -124,17 +127,23 @@ source devel/setup.bash
 
 键盘控制：
 
-* 按 **\<Enter\>** 切换仿真器运行/停止。
-* **W/S** 控制水平移动，**A/D** 控制转向，**J/L** 控制横向移动，按 **\<Space\>** 将所有控制指令设置为零。
-* 如果机器人摔倒，按 **R** 重置Gazebo环境。
-* 按 **0** 让机器人从仿真开始的姿态运动到`init_pos`，按 **1** 让机器人从`init_pos`运动到仿真开始的姿态。
+- 按 **\<Enter\>** 切换仿真器运行/停止。
+- 按 **0** 让机器人从仿真开始的姿态以位控插值运动到yaml中定义的`default_dof_pos`。
+- 按 **p** 切换到强化学习模式。
+- **W/S** 控制前后移动，**J/L** 控制左右移动，**A/D** 控制转向，按 **\<Space\>** 将所有控制指令设置为零。
+- 按 **n** 切换到导航模式，屏蔽手柄命令，接收`cmd_vel`话题。
+- 如果机器人摔倒，按 **R** 重置Gazebo环境。
+- 按 **1** 让机器人从当前位置以位控插值运动到仿真开始的姿态。
 
 手柄控制：
 
-* 按 **LB** 切换仿真器运行/停止。
-* **LY** 控制前后移动，**LX** 控制横向移动，**RX** 控制转向。
-* 如果机器人摔倒，按 **RB+X** 重置Gazebo环境。
-* 按 **RB+Y** 让机器人从仿真开始的姿态运动到`init_pos`，按 **RB+A** 让机器人从`init_pos`运动到仿真开始的姿态。
+- 按 **LB** 切换仿真器运行/停止。
+- 按 **RB+Y** 让机器人从仿真开始的姿态以位控插值运动到yaml中定义的`default_dof_pos`。
+- 按 **RB+B** 切换到强化学习模式。
+- **LY** 控制前后移动，**LX** 控制左右移动，**RX** 控制转向。
+- 按 **左面的下键** 切换到导航模式，屏蔽手柄命令，接收`cmd_vel`话题。
+- 如果机器人摔倒，按 **RB+X** 重置Gazebo环境。
+- 按 **RB+A** 让机器人从当前位置以位控插值运动到仿真开始的姿态。
 
 ### 真实机器人
 
@@ -144,8 +153,8 @@ source devel/setup.bash
 
 与Unitree A1连接可以使用无线与有线两种方式
 
-* 无线：连接机器人发出的Unitree开头的WIFI **（注意：无线连接可能会出现丢包断联甚至失控，请注意安全）**
-* 有线：用网线连接计算机和机器人的任意网口，配置计算机地址为192.168.123.162，子网掩码255.255.255.0
+- 无线：连接机器人发出的Unitree开头的WIFI **（注意：无线连接可能会出现丢包断联甚至失控，请注意安全）**
+- 有线：用网线连接计算机和机器人的任意网口，配置计算机地址为192.168.123.162，子网掩码255.255.255.0
 
 新建终端，启动控制程序
 
@@ -154,7 +163,7 @@ source devel/setup.bash
 rosrun rl_sar rl_real_a1
 ```
 
-按下遥控器的**R2**键让机器人切换到默认站起姿态，按下**R1**键切换到RL控制模式，任意状态按下**L2**切换到最初的趴下姿态。左摇杆上下控制x左右控制yaw，右摇杆左右控制y。
+按下遥控器的**R2**键让机器人切换到默认站起姿态，按下**R1**键切换到RL控制模式，任意状态按下**L2**切换到最初的趴下姿态。左摇杆上下控制x，左摇杆左右控制yaw，右摇杆左右控制y。
 
 或者按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P**键切换到RL控制模式，任意状态按下**1**键切换到最初的趴下姿态。WS控制x，AD控制yaw，JL控制y。
 
@@ -194,11 +203,11 @@ rosrun rl_sar rl_real_a1
 
 下文中使用 **\<ROBOT\>/\<CONFIG\>** 代替表示你的机器人环境
 
-1. 在`rl_sar/src/robots`路径下创建名为`<ROBOT>_description`的模型包，将模型的urdf放到`rl_sar/src/robots/<ROBOT>_description/urdf`路径下并命名为`<ROBOT>.urdf`，并在`rl_sar/src/robots/<ROBOT>_description/config`路径下创建命名空间为`<ROBOT>_gazebo`的关节配置文件
-2. 将训练好的RL模型文件放到`rl_sar/src/rl_sar/models/<ROBOT>/<CONFIG>`路径下，并在此路径中新建config.yaml文件，参考`rl_sar/src/rl_sar/models/a1/isaacgym/config.yaml`文件修改其中参数
-3. 按需修改代码中的`forward()`函数，以适配不同的模型
-4. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch`路径下的launch文件自行修改
-5. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_a1.cpp`文件自行修改
+1. 在`rl_sar/src/robots`路径下创建名为`<ROBOT>_description`的模型包，将模型的urdf放到`rl_sar/src/robots/<ROBOT>_description/urdf`路径下并命名为`<ROBOT>.urdf`，并在`rl_sar/src/robots/<ROBOT>_description/config`路径下创建命名空间为`<ROBOT>_gazebo`的关节配置文件。
+2. 将训练好的RL模型文件放到`rl_sar/src/rl_sar/models/<ROBOT>/<CONFIG>`路径下，在此路径中新建config.yaml文件，参考`rl_sar/src/rl_sar/models/a1/isaacgym/config.yaml`文件修改其中参数；在其上级目录新建base.yaml文件，参考`rl_sar/src/rl_sar/models/a1/base.yaml`文件修改其中参数。
+3. 按需修改代码中的`forward()`函数，以适配不同的模型。
+4. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch`路径下的launch文件自行修改。
+5. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_a1.cpp`文件自行修改。
 
 ## 贡献
 

@@ -1,48 +1,36 @@
 /*
- * Copyright (c) 2024-2025 Ziqi Fan
- * SPDX-License-Identifier: Apache-2.0
- */
+* Copyright (c) 2024-2025 Ziqi Fan
+* SPDX-License-Identifier: Apache-2.0
+*/
 
 #include "rl_real_l4w4.hpp"
 
 // #define PLOT
 // #define CSV_LOGGER
+// #define USE_ROS
 
 RL_Real::RL_Real()
 {
+#ifdef USE_ROS
+    // init ros
+    ros::NodeHandle nh;
+    this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Real::CmdvelCallback, this);
+#endif
+
     // read params from yaml
     this->robot_name = "l4w4";
-    this->config_name = "legged_gym";
-    std::string robot_path = this->robot_name + "/" + this->config_name;
-    this->ReadYaml(robot_path);
-    for (std::string &observation : this->params.observations)
-    {
-        // In Unitree A1, the coordinate system for angular velocity is in the body coordinate system.
-        if (observation == "ang_vel")
-        {
-            observation = "ang_vel_body";
-        }
-    }
+    this->default_rl_config = "legged_gym";
+    this->ReadYamlBase(this->robot_name);
+
+    // init torch
+    torch::autograd::GradMode::set_enabled(false);
+    torch::set_num_threads(4);
 
     // init robot
     this->l4w4_sdk.InitUDP();
     this->l4w4_sdk.InitCmdData(this->l4w4_low_command);
-
-    // init rl
-    torch::autograd::GradMode::set_enabled(false);
-    torch::set_num_threads(4);
-    if (!this->params.observations_history.empty())
-    {
-        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
-    }
-    this->InitObservations();
     this->InitOutputs();
     this->InitControl();
-    running_state = STATE_WAITING;
-
-    // model
-    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/" + this->params.model_name;
-    this->model = torch::jit::load(model_path);
 
     // loop
     this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05, std::bind(&RL_Real::KeyboardInterface, this));
@@ -85,34 +73,38 @@ void RL_Real::GetState(RobotState<double> *state)
     timeval timeout;
     timeout.tv_sec = 0;
     timeout.tv_usec = 0;
-    int ret = select(this->l4w4_sdk.client_socket+1, &rfd, NULL, NULL, &timeout);
+    int ret = select(this->l4w4_sdk.client_socket + 1, &rfd, NULL, NULL, &timeout);
 
-    if(ret > 0)
+    if (ret > 0)
     {
         socklen_t addr_len = sizeof(struct sockaddr_in);
-        this->l4w4_sdk.recv_len = recvfrom(this->l4w4_sdk.client_socket, this->l4w4_sdk.recv_buff, sizeof(this->l4w4_sdk.recv_buff), 0, (sockaddr*)& this->l4w4_sdk.server_addr, & addr_len);
+        this->l4w4_sdk.recv_len = recvfrom(this->l4w4_sdk.client_socket, this->l4w4_sdk.recv_buff, sizeof(this->l4w4_sdk.recv_buff), 0, (sockaddr *)&this->l4w4_sdk.server_addr, &addr_len);
         this->l4w4_sdk.ex_send_recv++;
 
-        if(this->l4w4_sdk.recv_len < 32)
+        if (this->l4w4_sdk.recv_len < 32)
         {
-            std::cout<<" udp recv_len = "<<this->l4w4_sdk.recv_len<<std::endl;
+            std::cout << " udp recv_len = " << this->l4w4_sdk.recv_len << std::endl;
             return;
         }
         this->l4w4_sdk.AnalyzeUDP(this->l4w4_sdk.recv_buff, this->l4w4_low_state);
 
-        memcpy(&this->unitree_joy, this->l4w4_low_state.wirelessRemote, 40);
+        memcpy(&this->l4w4_joy, this->l4w4_low_state.wirelessRemote, 40);
 
-        if ((int)this->unitree_joy.btn.components.R2 == 1)
+        this->control.x = this->l4w4_joy.ly * 1.5f;
+        this->control.y = -this->l4w4_joy.lx * 1.5f;
+        this->control.yaw = -this->l4w4_joy.rx * 2.0f;
+
+        if ((int)this->l4w4_joy.btn.components.R2 == 1)
         {
-            this->control.control_state = STATE_POS_GETUP;
+            this->control.SetControlState(STATE_POS_GETUP);
         }
-        else if ((int)this->unitree_joy.btn.components.R1 == 1)
+        else if ((int)this->l4w4_joy.btn.components.R1 == 1)
         {
-            this->control.control_state = STATE_RL_INIT;
+            this->control.SetControlState(STATE_RL_LOCOMOTION);
         }
-        else if ((int)this->unitree_joy.btn.components.L2 == 1)
+        else if ((int)this->l4w4_joy.btn.components.L2 == 1)
         {
-            this->control.control_state = STATE_POS_GETDOWN;
+            this->control.SetControlState(STATE_POS_GETDOWN);
         }
 
         if (this->params.framework == "isaacgym")
@@ -130,7 +122,6 @@ void RL_Real::GetState(RobotState<double> *state)
             state->imu.quaternion[3] = this->l4w4_low_state.imu.quaternion[3]; // z
         }
 
-
         for (int i = 0; i < 3; ++i)
         {
             state->imu.gyroscope[i] = this->l4w4_low_state.imu.gyroscope[i];
@@ -145,7 +136,7 @@ void RL_Real::GetState(RobotState<double> *state)
     }
     else
     {
-        sendto(this->l4w4_sdk.client_socket, this->l4w4_sdk.sent_buff, 96, 0, (const sockaddr*)& this->l4w4_sdk.server_addr, sizeof(this->l4w4_sdk.server_addr));
+        sendto(this->l4w4_sdk.client_socket, this->l4w4_sdk.sent_buff, 96, 0, (const sockaddr *)&this->l4w4_sdk.server_addr, sizeof(this->l4w4_sdk.server_addr));
     }
 }
 
@@ -175,14 +166,18 @@ void RL_Real::RobotControl()
 
 void RL_Real::RunModel()
 {
-    // this->l4w4_sdk.PrintMCU(this->running_state);
-
-    if (this->running_state == STATE_RL_RUNNING)
+    if (this->rl_init_done)
     {
         this->episode_length_buf += 1;
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
-        this->obs.commands = torch::tensor({{this->unitree_joy.ly * 1.5f, -this->unitree_joy.lx * 1.5f, -this->unitree_joy.rx * 2}});
-        // this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
+        if (this->fsm._currentState->getStateName() == "RLFSMStateRL_Navigation")
+        {
+            this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
+        }
+        else
+        {
+            this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
+        }
         this->obs.base_quat = torch::tensor(this->robot_state.imu.quaternion).unsqueeze(0);
         this->obs.dof_pos = torch::tensor(this->robot_state.motor_state.q).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
         this->obs.dof_vel = torch::tensor(this->robot_state.motor_state.dq).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
@@ -224,7 +219,16 @@ torch::Tensor RL_Real::Forward()
     {
         this->history_obs_buf.insert(clamped_obs);
         this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
-        actions = this->model.forward({this->history_obs}).toTensor();
+        if (this->fsm._currentState->getStateName() != "RLFSMStateRL_LocomotionLab")
+        {
+            torch::Tensor myTensor = history_obs.view({1,10,57});
+            actions = this->model.forward({clamped_obs, myTensor}).toTensor();
+        }
+        else
+        {
+            actions = this->model.forward({this->history_obs}).toTensor();
+        }
+        
     }
     else
     {
@@ -262,21 +266,30 @@ void RL_Real::Plot()
     plt::pause(0.0001);
 }
 
+void RL_Real::CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg)
+{
+    this->cmd_vel = *msg;
+}
+
 void signalHandler(int signum)
 {
+#ifdef USE_ROS
+    ros::shutdown();
+#endif
     exit(0);
 }
 
 int main(int argc, char **argv)
 {
     signal(SIGINT, signalHandler);
-
+#ifdef USE_ROS
+    ros::init(argc, argv, "rl_sar");
+#endif
     RL_Real rl_sar;
-
-    while (1)
-    {
-        sleep(10);
-    }
-
+#ifdef USE_ROS
+    ros::spin();
+#else
+    while (1) { sleep(10); }
+#endif
     return 0;
 }

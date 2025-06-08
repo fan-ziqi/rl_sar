@@ -13,6 +13,8 @@
 #include <tbb/concurrent_queue.h>
 
 #include <yaml-cpp/yaml.h>
+#include "fsm.hpp"
+#include "observation_buffer.hpp"
 
 namespace LOGGER
 {
@@ -60,8 +62,8 @@ enum STATE
 {
     STATE_WAITING = 0,
     STATE_POS_GETUP,
-    STATE_RL_INIT,
-    STATE_RL_RUNNING,
+    STATE_RL_LOCOMOTION,
+    STATE_RL_NAVIGATION,
     STATE_POS_GETDOWN,
     STATE_RESET_SIMULATION,
     STATE_TOGGLE_SIMULATION,
@@ -69,11 +71,19 @@ enum STATE
 
 struct Control
 {
-    STATE control_state;
+    STATE control_state, last_control_state;
     double x = 0.0;
     double y = 0.0;
     double yaw = 0.0;
     double wheel = 0.0;
+    void SetControlState(STATE new_state)
+    {
+        if (control_state != new_state)
+        {
+            last_control_state = control_state;
+            control_state = new_state;
+        }
+    }
 };
 
 struct ModelParams
@@ -124,7 +134,7 @@ struct Observations
 class RL
 {
 public:
-    RL() {};
+    RL();
     ~RL() {};
 
     ModelParams params;
@@ -136,10 +146,17 @@ public:
     tbb::concurrent_queue<torch::Tensor> output_dof_vel_queue;
     tbb::concurrent_queue<torch::Tensor> output_dof_tau_queue;
 
+    FSM fsm;
+    RobotState<double> start_state;
+    RobotState<double> now_state;
+    float running_percent = 0.0f;
+    bool rl_init_done = false;
+
     // init
     void InitObservations();
     void InitOutputs();
     void InitControl();
+    void InitRL(std::string robot_path);
 
     // rl functions
     virtual torch::Tensor Forward() = 0;
@@ -151,7 +168,8 @@ public:
     torch::Tensor QuatRotateInverse(torch::Tensor q, torch::Tensor v, const std::string &framework);
 
     // yaml params
-    void ReadYaml(std::string robot_path);
+    void ReadYamlBase(std::string robot_name);
+    void ReadYamlRL(std::string robot_name);
 
     // csv logger
     std::string csv_filename;
@@ -162,23 +180,37 @@ public:
     Control control;
     void KeyboardInterface();
 
+    // history buffer
+    ObservationBuffer history_obs_buf;
+    torch::Tensor history_obs;
+
     // others
-    std::string robot_name, config_name;
-    STATE running_state = STATE_RL_RUNNING; // default running_state set to STATE_RL_RUNNING
+    std::string robot_name, config_name, default_rl_config;
     bool simulation_running = false;
+    bool is_simulation = false;
     unsigned long long episode_length_buf = 0;
 
     // protect func
     void TorqueProtect(torch::Tensor origin_output_dof_tau);
     void AttitudeProtect(const std::vector<double> &quaternion, float pitch_threshold, float roll_threshold);
 
-protected:
     // rl module
     torch::jit::script::Module model;
     // output buffer
     torch::Tensor output_dof_tau;
     torch::Tensor output_dof_pos;
     torch::Tensor output_dof_vel;
+};
+
+class RLFSMState : public FSMState
+{
+public:
+    RLFSMState(RL& rl, const RobotState<double>* state, RobotCommand<double>* command, const std::string& name)
+        : FSMState(name), rl(rl), fsm_state(state), fsm_command(command) {}
+
+    RL& rl;
+    const RobotState<double>* fsm_state;
+    RobotCommand<double>* fsm_command;
 };
 
 template <typename T>

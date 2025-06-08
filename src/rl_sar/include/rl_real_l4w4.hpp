@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2024-2025 Ziqi Fan
- * SPDX-License-Identifier: Apache-2.0
- */
+* Copyright (c) 2024-2025 Ziqi Fan
+* SPDX-License-Identifier: Apache-2.0
+*/
 
 #ifndef RL_REAL_L4W4_HPP
 #define RL_REAL_L4W4_HPP
@@ -11,6 +11,9 @@
 #include "loop.hpp"
 #include "l4w4_sdk.hpp"
 #include <csignal>
+
+#include <ros/ros.h>
+#include <geometry_msgs/Twist.h>
 
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
@@ -29,10 +32,6 @@ private:
     void RunModel();
     void RobotControl();
 
-    // history buffer
-    ObservationBuffer history_obs_buf;
-    torch::Tensor history_obs;
-
     // loop
     std::shared_ptr<LoopFunc> loop_keyboard;
     std::shared_ptr<LoopFunc> loop_control;
@@ -49,12 +48,17 @@ private:
     L4W4SDK l4w4_sdk;
     LowCmd l4w4_low_command = {0};
     LowState l4w4_low_state = {0};
-    xRockerBtnDataStruct unitree_joy;
+    xRockerBtnDataStruct l4w4_joy;
 
     // others
     int motiontime = 0;
     std::vector<double> mapped_joint_positions;
     std::vector<double> mapped_joint_velocities;
+
+    // ros
+    geometry_msgs::Twist cmd_vel;
+    ros::Subscriber cmd_vel_subscriber;
+    void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
 };
 
 #endif // RL_REAL_L4W4_HPP

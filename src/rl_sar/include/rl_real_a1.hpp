@@ -13,6 +13,9 @@
 #include "unitree_legged_sdk/unitree_joystick.h"
 #include <csignal>
 
+#include <ros/ros.h>
+#include <geometry_msgs/Twist.h>
+
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
 
@@ -29,10 +32,6 @@ private:
     void SetCommand(const RobotCommand<double> *command) override;
     void RunModel();
     void RobotControl();
-
-    // history buffer
-    ObservationBuffer history_obs_buf;
-    torch::Tensor history_obs;
 
     // loop
     std::shared_ptr<LoopFunc> loop_keyboard;
@@ -61,6 +60,11 @@ private:
     int motiontime = 0;
     std::vector<double> mapped_joint_positions;
     std::vector<double> mapped_joint_velocities;
+
+    // ros
+    geometry_msgs::Twist cmd_vel;
+    ros::Subscriber cmd_vel_subscriber;
+    void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
 };
 
 #endif // RL_REAL_A1_HPP

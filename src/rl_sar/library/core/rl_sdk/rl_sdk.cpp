@@ -16,6 +16,343 @@ torch::Tensor RL_XXX::Forward()
 }
 */
 
+class RLFSMStateWaiting : public RLFSMState
+{
+public:
+    RLFSMStateWaiting(RL& rl, const RobotState<double>* state, RobotCommand<double>* command)
+        : RLFSMState(rl, state, command, "RLFSMStateWaiting") {}
+
+    void enter() override
+    {
+        rl.running_percent = 0.0f;
+    }
+
+    void run() override
+    {
+        for (int i = 0; i < rl.params.num_of_dofs; ++i)
+        {
+            fsm_command->motor_command.q[i] = fsm_state->motor_state.q[i];
+        }
+    }
+
+    std::string checkChange() override
+    {
+        if (rl.control.control_state == STATE::STATE_POS_GETUP)
+        {
+            return "RLFSMStateGetUp";
+        }
+        return _stateName;
+    }
+
+    void exit() override { }
+};
+
+class RLFSMStateGetUp : public RLFSMState
+{
+public:
+    RLFSMStateGetUp(RL& rl, const RobotState<double>* state, RobotCommand<double>* command)
+        : RLFSMState(rl, state, command, "RLFSMStateGetUp") {}
+
+    void enter() override
+    {
+        rl.running_percent = 0.0f;
+        rl.now_state = *fsm_state;
+        rl.start_state = rl.now_state;
+    }
+
+    void run() override
+    {
+        if (rl.running_percent < 1.0f)
+        {
+            rl.running_percent += 1.0f / 500.0f;
+            rl.running_percent = std::min(rl.running_percent, 1.0f);
+
+            for (int i = 0; i < rl.params.num_of_dofs; ++i)
+            {
+                fsm_command->motor_command.q[i] = (1 - rl.running_percent) * rl.now_state.motor_state.q[i] + rl.running_percent * rl.params.default_dof_pos[0][i].item<double>();
+                fsm_command->motor_command.dq[i] = 0;
+                fsm_command->motor_command.kp[i] = rl.params.fixed_kp[0][i].item<double>();
+                fsm_command->motor_command.kd[i] = rl.params.fixed_kd[0][i].item<double>();
+                fsm_command->motor_command.tau[i] = 0;
+            }
+            std::cout << "\r" << std::flush << LOGGER::INFO << "Getting up " << std::fixed << std::setprecision(2) << rl.running_percent * 100.0f << "%" << std::flush;
+        }
+    }
+
+    std::string checkChange() override
+    {
+        if (rl.running_percent >= 1.0f)
+        {
+            if (rl.control.control_state == STATE::STATE_RL_LOCOMOTION)
+            {
+                return "RLFSMStateRL_Locomotion";
+            }
+            else if (rl.control.control_state == STATE::STATE_RL_NAVIGATION)
+            {
+                return "RLFSMStateRL_Navigation";
+            }
+            // else if (rl.control.control_state == STATE::STATE_RL_CLIMB)
+            // {
+            //     return "RLFSMStateRL_Climb";
+            // }
+            else if (rl.control.control_state == STATE::STATE_POS_GETDOWN)
+            {
+                return "RLFSMStateGetDown";
+            }
+            else if (rl.control.control_state == STATE::STATE_WAITING)
+            {
+                return "RLFSMStateWaiting";
+            }
+        }
+        return _stateName;
+    }
+
+    void exit() override { }
+};
+
+class RLFSMStateGetDown : public RLFSMState
+{
+public:
+    RLFSMStateGetDown(RL& rl, const RobotState<double>* state, RobotCommand<double>* command)
+        : RLFSMState(rl, state, command, "RLFSMStateGetDown") {}
+
+    void enter() override
+    {
+        rl.running_percent = 0.0f;
+        rl.now_state = *fsm_state;
+    }
+
+    void run() override
+    {
+        if (rl.running_percent < 1.0f)
+        {
+            rl.running_percent += 1.0f / 500.0f;
+            rl.running_percent = std::min(rl.running_percent, 1.0f);
+
+            for (int i = 0; i < rl.params.num_of_dofs; ++i)
+            {
+                fsm_command->motor_command.q[i] = (1 - rl.running_percent) * rl.now_state.motor_state.q[i] + rl.running_percent * rl.start_state.motor_state.q[i];
+                fsm_command->motor_command.dq[i] = 0;
+                fsm_command->motor_command.kp[i] = rl.params.fixed_kp[0][i].item<double>();
+                fsm_command->motor_command.kd[i] = rl.params.fixed_kd[0][i].item<double>();
+                fsm_command->motor_command.tau[i] = 0;
+            }
+            std::cout << "\r" << std::flush << LOGGER::INFO << "Getting down "<< std::fixed << std::setprecision(2) << rl.running_percent * 100.0f << "%" << std::flush;
+        }
+    }
+
+    std::string checkChange() override
+    {
+        if (rl.running_percent >= 1.0f)
+        {
+            return "RLFSMStateWaiting";
+        }
+        else if (rl.control.control_state == STATE::STATE_POS_GETUP)
+        {
+            return "RLFSMStateGetUp";
+        }
+        return _stateName;
+    }
+
+    void exit() override { }
+};
+
+class RLFSMStateRL_Locomotion : public RLFSMState
+{
+public:
+    RLFSMStateRL_Locomotion(RL& rl, const RobotState<double>* state, RobotCommand<double>* command)
+        : RLFSMState(rl, state, command, "RLFSMStateRL_Locomotion") {}
+
+    void enter() override
+    {
+        // read params from yaml
+        rl.config_name = rl.default_rl_config;
+        std::string robot_path = rl.robot_name + "/" + rl.config_name;
+        try
+        {
+            rl.InitRL(robot_path);
+            rl.rl_init_done = true;
+        }
+        catch (...)
+        {
+            std::cout << LOGGER::ERROR << "InitRL() failed." << std::endl;
+            rl.rl_init_done = false;
+            rl.control.control_state = STATE::STATE_POS_GETUP;
+        }
+
+        // pos init
+    }
+
+    void run() override
+    {
+        std::cout << "\r" << std::flush << LOGGER::INFO << "RL Controller x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
+
+        torch::Tensor _output_dof_pos, _output_dof_vel;
+        if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
+        {
+            for (int i = 0; i < rl.params.num_of_dofs; ++i)
+            {
+                if (_output_dof_pos.defined() && _output_dof_pos.numel() > 0)
+                {
+                    fsm_command->motor_command.q[i] = rl.output_dof_pos[0][i].item<double>();
+                }
+                if (_output_dof_vel.defined() && _output_dof_vel.numel() > 0)
+                {
+                    fsm_command->motor_command.dq[i] = rl.output_dof_vel[0][i].item<double>();
+                }
+                fsm_command->motor_command.kp[i] = rl.params.rl_kp[0][i].item<double>();
+                fsm_command->motor_command.kd[i] = rl.params.rl_kd[0][i].item<double>();
+                fsm_command->motor_command.tau[i] = 0;
+            }
+        }
+    }
+
+    std::string checkChange() override
+    {
+        if (rl.control.control_state == STATE::STATE_POS_GETDOWN)
+        {
+            return "RLFSMStateGetDown";
+        }
+        else if (rl.control.control_state == STATE::STATE_POS_GETUP)
+        {
+            return "RLFSMStateGetUp";
+        }
+        else if (rl.control.control_state == STATE::STATE_RL_LOCOMOTION)
+        {
+            return "RLFSMStateRL_Locomotion";
+        }
+        else if (rl.control.control_state == STATE::STATE_RL_NAVIGATION)
+        {
+            return "RLFSMStateRL_Navigation";
+        }
+        // else if (rl.control.control_state == STATE::STATE_RL_CLIMB)
+        // {
+        //     return "RLFSMStateRL_Climb";
+        // }
+        else if (rl.control.control_state == STATE::STATE_WAITING)
+        {
+            return "RLFSMStateWaiting";
+        }
+        return _stateName;
+    }
+
+    void exit() override
+    {
+        rl.rl_init_done = false;
+    }
+};
+
+class RLFSMStateRL_Navigation : public RLFSMState
+{
+public:
+    RLFSMStateRL_Navigation(RL& rl, const RobotState<double>* state, RobotCommand<double>* command)
+        : RLFSMState(rl, state, command, "RLFSMStateRL_Navigation") {}
+
+    void enter() override
+    {
+        // read params from yaml
+        rl.config_name = rl.default_rl_config;
+        std::string robot_path = rl.robot_name + "/" + rl.config_name;
+        try
+        {
+            rl.InitRL(robot_path);
+            rl.rl_init_done = true;
+        }
+        catch (...)
+        {
+            std::cout << LOGGER::ERROR << "InitRL() failed." << std::endl;
+            rl.rl_init_done = false;
+            rl.control.control_state = STATE::STATE_POS_GETUP;
+        }
+
+        // pos init
+    }
+
+    void run() override
+    {
+        std::cout << "\r" << std::flush << LOGGER::INFO << "RL Controller x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
+
+        torch::Tensor _output_dof_pos, _output_dof_vel;
+        if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
+        {
+            for (int i = 0; i < rl.params.num_of_dofs; ++i)
+            {
+                if (_output_dof_pos.defined() && _output_dof_pos.numel() > 0)
+                {
+                    fsm_command->motor_command.q[i] = rl.output_dof_pos[0][i].item<double>();
+                }
+                if (_output_dof_vel.defined() && _output_dof_vel.numel() > 0)
+                {
+                    fsm_command->motor_command.dq[i] = rl.output_dof_vel[0][i].item<double>();
+                }
+                fsm_command->motor_command.kp[i] = rl.params.rl_kp[0][i].item<double>();
+                fsm_command->motor_command.kd[i] = rl.params.rl_kd[0][i].item<double>();
+                fsm_command->motor_command.tau[i] = 0;
+            }
+        }
+    }
+
+    std::string checkChange() override
+    {
+        if (rl.control.control_state == STATE::STATE_POS_GETDOWN)
+        {
+            return "RLFSMStateGetDown";
+        }
+        else if (rl.control.control_state == STATE::STATE_POS_GETUP)
+        {
+            return "RLFSMStateGetUp";
+        }
+        else if (rl.control.control_state == STATE::STATE_RL_LOCOMOTION)
+        {
+            return "RLFSMStateRL_Locomotion";
+        }
+        else if (rl.control.control_state == STATE::STATE_RL_NAVIGATION)
+        {
+            return "RLFSMStateRL_Navigation";
+        }
+        else if (rl.control.control_state == STATE::STATE_WAITING)
+        {
+            return "RLFSMStateWaiting";
+        }
+        return _stateName;
+    }
+
+    void exit() override
+    {
+        rl.rl_init_done = false;
+    }
+};
+
+
+void RL::StateController(const RobotState<double>* state, RobotCommand<double>* command)
+{
+    auto updateState = [&](std::shared_ptr<FSMState> statePtr)
+    {
+        if (auto rl_fsm_state = std::dynamic_pointer_cast<RLFSMState>(statePtr))
+        {
+            rl_fsm_state->fsm_state = state;
+            rl_fsm_state->fsm_command = command;
+        }
+    };
+    for (auto& pair : fsm._states)
+    {
+        updateState(pair.second);
+    }
+
+    fsm.run();
+}
+
+RL::RL()
+{
+    fsm.addState(std::make_shared<RLFSMStateWaiting>(*this, nullptr, nullptr));
+    fsm.addState(std::make_shared<RLFSMStateGetUp>(*this, nullptr, nullptr));
+    fsm.addState(std::make_shared<RLFSMStateGetDown>(*this, nullptr, nullptr));
+    fsm.addState(std::make_shared<RLFSMStateRL_Locomotion>(*this, nullptr, nullptr));
+    fsm.addState(std::make_shared<RLFSMStateRL_Navigation>(*this, nullptr, nullptr));
+
+    fsm.setInitialState("RLFSMStateWaiting");
+}
+
 torch::Tensor RL::ComputeObservation()
 {
     std::vector<torch::Tensor> obs_list;
@@ -107,10 +444,43 @@ void RL::InitOutputs()
 
 void RL::InitControl()
 {
-    this->control.control_state = STATE_WAITING;
     this->control.x = 0.0;
     this->control.y = 0.0;
     this->control.yaw = 0.0;
+}
+
+void RL::InitRL(std::string robot_path)
+{
+    this->ReadYamlRL(robot_path);
+    for (std::string &observation : this->params.observations)
+    {
+        if (observation == "ang_vel")
+        {
+            if (this->is_simulation == true)
+            {
+                // In Gazebo, the coordinate system for angular velocity is in the world coordinate system.
+                observation = "ang_vel_world";
+            }
+            else
+            {
+                // In real robot, the coordinate system for angular velocity is in the body coordinate system.
+                observation = "ang_vel_body";
+            }
+
+        }
+    }
+    // init rl
+    if (!this->params.observations_history.empty())
+    {
+        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
+    }
+    // model
+    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/" + this->params.model_name;
+    this->model = torch::jit::load(model_path);
+
+    this->InitObservations();
+    this->InitOutputs();
+    this->InitControl();
 }
 
 void RL::ComputeOutput(const torch::Tensor &actions, torch::Tensor &output_dof_pos, torch::Tensor &output_dof_vel, torch::Tensor &output_dof_tau)
@@ -152,159 +522,6 @@ torch::Tensor RL::QuatRotateInverse(torch::Tensor q, torch::Tensor v, const std:
     return a - b + c;
 }
 
-void RL::StateController(const RobotState<double> *state, RobotCommand<double> *command)
-{
-    static RobotState<double> start_state;
-    static RobotState<double> now_state;
-    static float getup_percent = 0.0;
-    static float getdown_percent = 0.0;
-
-    // waiting
-    if (this->running_state == STATE_WAITING)
-    {
-        for (int i = 0; i < this->params.num_of_dofs; ++i)
-        {
-            command->motor_command.q[i] = state->motor_state.q[i];
-        }
-        if (this->control.control_state == STATE_POS_GETUP)
-        {
-            this->control.control_state = STATE_WAITING;
-            getup_percent = 0.0;
-            for (int i = 0; i < this->params.num_of_dofs; ++i)
-            {
-                now_state.motor_state.q[i] = state->motor_state.q[i];
-                start_state.motor_state.q[i] = now_state.motor_state.q[i];
-            }
-            this->running_state = STATE_POS_GETUP;
-            std::cout << std::endl << LOGGER::INFO << "Switching to STATE_POS_GETUP" << std::endl;
-        }
-    }
-    // stand up (position control)
-    else if (this->running_state == STATE_POS_GETUP)
-    {
-        if (getup_percent < 1.0)
-        {
-            getup_percent += 1 / 500.0;
-            getup_percent = getup_percent > 1.0 ? 1.0 : getup_percent;
-            for (int i = 0; i < this->params.num_of_dofs; ++i)
-            {
-                command->motor_command.q[i] = (1 - getup_percent) * now_state.motor_state.q[i] + getup_percent * this->params.default_dof_pos[0][i].item<double>();
-                command->motor_command.dq[i] = 0;
-                command->motor_command.kp[i] = this->params.fixed_kp[0][i].item<double>();
-                command->motor_command.kd[i] = this->params.fixed_kd[0][i].item<double>();
-                command->motor_command.tau[i] = 0;
-            }
-            std::cout << "\r" << std::flush << LOGGER::INFO << "Getting up " << std::fixed << std::setprecision(2) << getup_percent * 100.0 << std::flush;
-        }
-        else
-        {
-            if (this->control.control_state == STATE_RL_INIT)
-            {
-                this->control.control_state = STATE_WAITING;
-                this->running_state = STATE_RL_INIT;
-                std::cout << std::endl << LOGGER::INFO << "Switching to STATE_RL_INIT" << std::endl;
-            }
-            else if (this->control.control_state == STATE_POS_GETDOWN)
-            {
-                this->control.control_state = STATE_WAITING;
-                getdown_percent = 0.0;
-                for (int i = 0; i < this->params.num_of_dofs; ++i)
-                {
-                    now_state.motor_state.q[i] = state->motor_state.q[i];
-                }
-                this->running_state = STATE_POS_GETDOWN;
-                std::cout << std::endl << LOGGER::INFO << "Switching to STATE_POS_GETDOWN" << std::endl;
-            }
-        }
-    }
-    // init obs and start rl loop
-    else if (this->running_state == STATE_RL_INIT)
-    {
-        if (getup_percent == 1)
-        {
-            this->InitObservations();
-            this->InitOutputs();
-            this->InitControl();
-            this->episode_length_buf = 0;
-            this->running_state = STATE_RL_RUNNING;
-            std::cout << std::endl << LOGGER::INFO << "Switching to STATE_RL_RUNNING" << std::endl;
-        }
-    }
-    // rl loop
-    else if (this->running_state == STATE_RL_RUNNING)
-    {
-        std::cout << "\r" << std::flush << LOGGER::INFO << "RL Controller x:" << this->control.x << " y:" << this->control.y << " yaw:" << this->control.yaw << std::flush;
-
-        torch::Tensor _output_dof_pos, _output_dof_vel;
-        if (this->output_dof_pos_queue.try_pop(_output_dof_pos) && this->output_dof_vel_queue.try_pop(_output_dof_vel))
-        {
-            for (int i = 0; i < this->params.num_of_dofs; ++i)
-            {
-                if (_output_dof_pos.defined() && _output_dof_pos.numel() > 0)
-                {
-                    command->motor_command.q[i] = this->output_dof_pos[0][i].item<double>();
-                }
-                if (_output_dof_vel.defined() && _output_dof_vel.numel() > 0)
-                {
-                    command->motor_command.dq[i] = this->output_dof_vel[0][i].item<double>();
-                }
-                command->motor_command.kp[i] = this->params.rl_kp[0][i].item<double>();
-                command->motor_command.kd[i] = this->params.rl_kd[0][i].item<double>();
-                command->motor_command.tau[i] = 0;
-            }
-        }
-        if (this->control.control_state == STATE_POS_GETDOWN)
-        {
-            this->control.control_state = STATE_WAITING;
-            getdown_percent = 0.0;
-            for (int i = 0; i < this->params.num_of_dofs; ++i)
-            {
-                now_state.motor_state.q[i] = state->motor_state.q[i];
-            }
-            this->running_state = STATE_POS_GETDOWN;
-            std::cout << std::endl << LOGGER::INFO << "Switching to STATE_POS_GETDOWN" << std::endl;
-        }
-        else if (this->control.control_state == STATE_POS_GETUP)
-        {
-            this->control.control_state = STATE_WAITING;
-            getup_percent = 0.0;
-            for (int i = 0; i < this->params.num_of_dofs; ++i)
-            {
-                now_state.motor_state.q[i] = state->motor_state.q[i];
-            }
-            this->running_state = STATE_POS_GETUP;
-            std::cout << std::endl << LOGGER::INFO << "Switching to STATE_POS_GETUP" << std::endl;
-        }
-    }
-    // get down (position control)
-    else if (this->running_state == STATE_POS_GETDOWN)
-    {
-        if (getdown_percent < 1.0)
-        {
-            getdown_percent += 1 / 500.0;
-            getdown_percent = getdown_percent > 1.0 ? 1.0 : getdown_percent;
-            for (int i = 0; i < this->params.num_of_dofs; ++i)
-            {
-                command->motor_command.q[i] = (1 - getdown_percent) * now_state.motor_state.q[i] + getdown_percent * start_state.motor_state.q[i];
-                command->motor_command.dq[i] = 0;
-                command->motor_command.kp[i] = this->params.fixed_kp[0][i].item<double>();
-                command->motor_command.kd[i] = this->params.fixed_kd[0][i].item<double>();
-                command->motor_command.tau[i] = 0;
-            }
-            std::cout << "\r" << std::flush << LOGGER::INFO << "Getting down " << std::fixed << std::setprecision(2) << getdown_percent * 100.0 << std::flush;
-        }
-        if (getdown_percent == 1)
-        {
-            this->InitObservations();
-            this->InitOutputs();
-            this->InitControl();
-            this->episode_length_buf = 0;
-            this->running_state = STATE_WAITING;
-            std::cout << std::endl << LOGGER::INFO << "Switching to STATE_WAITING" << std::endl;
-        }
-    }
-}
-
 void RL::TorqueProtect(torch::Tensor origin_output_dof_tau)
 {
     std::vector<int> out_of_range_indices;
@@ -333,7 +550,7 @@ void RL::TorqueProtect(torch::Tensor origin_output_dof_tau)
             std::cout << LOGGER::WARNING << "Torque(" << index + 1 << ")=" << value << " out of range(" << limit_lower << ", " << limit_upper << ")" << std::endl;
         }
         // Just a reminder, no protection
-        // this->control.control_state = STATE_POS_GETDOWN;
+        // this->control.SetControlState(STATE_POS_GETDOWN);
         // std::cout << LOGGER::INFO << "Switching to STATE_POS_GETDOWN"<< std::endl;
     }
 }
@@ -377,12 +594,12 @@ void RL::AttitudeProtect(const std::vector<double> &quaternion, float pitch_thre
 
     if (std::fabs(roll) > roll_threshold)
     {
-        // this->control.control_state = STATE_POS_GETDOWN;
+        // this->control.SetControlState(STATE_POS_GETDOWN);
         std::cout << LOGGER::WARNING << "Roll exceeds " << roll_threshold << " degrees. Current: " << roll << " degrees." << std::endl;
     }
     if (std::fabs(pitch) > pitch_threshold)
     {
-        // this->control.control_state = STATE_POS_GETDOWN;
+        // this->control.SetControlState(STATE_POS_GETDOWN);
         std::cout << LOGGER::WARNING << "Pitch exceeds " << pitch_threshold << " degrees. Current: " << pitch << " degrees." << std::endl;
     }
 }
@@ -414,13 +631,16 @@ void RL::KeyboardInterface()
         switch (c)
         {
         case '0':
-            this->control.control_state = STATE_POS_GETUP;
+            this->control.SetControlState(STATE_POS_GETUP);
             break;
         case 'p':
-            this->control.control_state = STATE_RL_INIT;
+            this->control.SetControlState(STATE_RL_LOCOMOTION);
+            break;
+        case 'n':
+            this->control.SetControlState(STATE_RL_NAVIGATION);
             break;
         case '1':
-            this->control.control_state = STATE_POS_GETDOWN;
+            this->control.SetControlState(STATE_POS_GETDOWN);
             break;
         case 'q':
             break;
@@ -452,10 +672,10 @@ void RL::KeyboardInterface()
             this->control.yaw = 0;
             break;
         case 'r':
-            this->control.control_state = STATE_RESET_SIMULATION;
+            this->control.SetControlState(STATE_RESET_SIMULATION);
             break;
         case '\n':
-            this->control.control_state = STATE_TOGGLE_SIMULATION;
+            this->control.SetControlState(STATE_TOGGLE_SIMULATION);
             break;
         default:
             break;
@@ -474,9 +694,37 @@ std::vector<T> ReadVectorFromYaml(const YAML::Node &node)
     return values;
 }
 
-void RL::ReadYaml(std::string robot_path)
+void RL::ReadYamlBase(std::string robot_path)
 {
-    // The config file is located at "rl_sar/src/rl_sar/models/<robot_path/config.yaml"
+    // The config file is located at "rl_sar/src/rl_sar/models/<robot_path>/base.yaml"
+    std::string config_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/base.yaml";
+    YAML::Node config;
+    try
+    {
+        config = YAML::LoadFile(config_path)[robot_path];
+    }
+    catch (YAML::BadFile &e)
+    {
+        std::cout << LOGGER::ERROR << "The file '" << config_path << "' does not exist" << std::endl;
+        return;
+    }
+
+    this->params.dt = config["dt"].as<double>();
+    this->params.decimation = config["decimation"].as<int>();
+    this->params.wheel_indices = ReadVectorFromYaml<int>(config["wheel_indices"]);
+    this->params.num_of_dofs = config["num_of_dofs"].as<int>();
+    this->params.fixed_kp = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kp"])).view({1, -1});
+    this->params.fixed_kd = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kd"])).view({1, -1});
+    this->params.torque_limits = torch::tensor(ReadVectorFromYaml<double>(config["torque_limits"])).view({1, -1});
+    this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<double>(config["default_dof_pos"])).view({1, -1});
+    this->params.joint_controller_names = ReadVectorFromYaml<std::string>(config["joint_controller_names"]);
+    this->params.command_mapping = ReadVectorFromYaml<int>(config["command_mapping"]);
+    this->params.state_mapping = ReadVectorFromYaml<int>(config["state_mapping"]);
+}
+
+void RL::ReadYamlRL(std::string robot_path)
+{
+    // The config file is located at "rl_sar/src/rl_sar/models/<robot_path>/config.yaml"
     std::string config_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/config.yaml";
     YAML::Node config;
     try
@@ -534,9 +782,9 @@ void RL::ReadYaml(std::string robot_path)
     this->params.state_mapping = ReadVectorFromYaml<int>(config["state_mapping"]);
 }
 
-void RL::CSVInit(std::string robot_name)
+void RL::CSVInit(std::string robot_path)
 {
-    csv_filename = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_name + "/motor";
+    csv_filename = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/motor";
 
     // Uncomment these lines if need timestamp for file name
     // auto now = std::chrono::system_clock::now();

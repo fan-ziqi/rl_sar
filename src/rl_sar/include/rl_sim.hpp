@@ -9,15 +9,16 @@
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
 #include "loop.hpp"
+#include <csignal>
+
 #include <ros/ros.h>
-#include <sensor_msgs/Joy.h>
-#include <gazebo_msgs/ModelStates.h>
 #include "std_srvs/Empty.h"
+#include <sensor_msgs/Joy.h>
 #include <geometry_msgs/Twist.h>
+#include <gazebo_msgs/ModelStates.h>
+#include <gazebo_msgs/SetModelState.h>
 #include "robot_msgs/MotorCommand.h"
 #include "robot_msgs/MotorState.h"
-#include <csignal>
-#include <gazebo_msgs/SetModelState.h>
 
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
@@ -35,10 +36,6 @@ private:
     void SetCommand(const RobotCommand<double> *command) override;
     void RunModel();
     void RobotControl();
-
-    // history buffer
-    ObservationBuffer history_obs_buf;
-    torch::Tensor history_obs;
 
     // loop
     std::shared_ptr<LoopFunc> loop_keyboard;

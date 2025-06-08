@@ -338,8 +338,8 @@
 
   <link name="FR_foot">
     <inertial>
-      <origin xyz="0 -0.045 0" rpy="0 0 0" />
-      <mass value="1.939" />
+      <origin xyz="0 -0.0559 0" rpy="0 0 0" />
+      <mass value="2.6" />
       <inertia ixx="0.003934" ixy="0.0" ixz="0.000004" iyy="0.007113" iyz="-0.000004" izz="0.00395" />
     </inertial>
     <visual>
@@ -352,9 +352,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 -0.045 0" rpy="1.570796327 0 0" />
+      <origin xyz="0 -0.0559 0" rpy="1.570796327 0 0" />
       <geometry>
-        <cylinder length="0.038" radius="0.105"/>
+        <cylinder length="0.040" radius="0.105"/>
       </geometry>
     </collision>
   </link>
@@ -499,8 +499,8 @@
 
   <link name="FL_foot">
     <inertial>
-      <origin xyz="0 0.045 0" rpy="0 0 0" />
-      <mass value="1.939" />
+      <origin xyz="0 0.0559 0" rpy="0 0 0" />
+      <mass value="2.6" />
       <inertia ixx="0.003934" ixy="0.0" ixz="0.000004" iyy="0.007113" iyz="0.000004" izz="0.00395" />
     </inertial>
     <visual>
@@ -513,9 +513,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0.045 0" rpy="1.570796327 0 0" />
+      <origin xyz="0 0.0559 0" rpy="1.570796327 0 0" />
       <geometry>
-        <cylinder length="0.038" radius="0.105"/>
+        <cylinder length="0.040" radius="0.105"/>
       </geometry>
     </collision>
   </link>
@@ -660,8 +660,8 @@
 
   <link name="RR_foot">
     <inertial>
-      <origin xyz="0 -0.045 0" rpy="0 0 0" />
-      <mass value="1.939" />
+      <origin xyz="0 -0.0559 0" rpy="0 0 0" />
+      <mass value="2.6" />
       <inertia ixx="0.003934" ixy="0.0" ixz="0.000004" iyy="0.007113" iyz="-0.000004" izz="0.00395" />
     </inertial>
     <visual>
@@ -674,9 +674,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 -0.045 0" rpy="1.570796327 0 0" />
+      <origin xyz="0 -0.0559 0" rpy="1.570796327 0 0" />
       <geometry>
-        <cylinder length="0.038" radius="0.105"/>
+        <cylinder length="0.040" radius="0.105"/>
       </geometry>
     </collision>
   </link>
@@ -685,7 +685,7 @@
     <parent link="RR_calf" />
     <child link="RR_foot" />
     <axis xyz="0 1 0" />
-    <limit lower="-1000000" upper="1000000" effort="32" velocity="12.56" />
+    <limit lower="-1000000" upper="1000000" effort="32" velocity="12.0" />
   </joint>
 
   <link name="RL_hip">
@@ -821,8 +821,8 @@
 
   <link name="RL_foot">
     <inertial>
-      <origin xyz="0 0.045 0" rpy="0 0 0" />
-      <mass value="1.939" />
+      <origin xyz="0 0.0559 0" rpy="0 0 0" />
+      <mass value="2.6" />
       <inertia ixx="0.003934" ixy="0.0" ixz="0.000004" iyy="0.007113" iyz="0.000004" izz="0.00395" />
     </inertial>
     <visual>
@@ -835,9 +835,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0.045 0" rpy="1.570796327 0 0" />
+      <origin xyz="0 0.0559 0" rpy="1.570796327 0 0" />
       <geometry>
-        <cylinder length="0.038" radius="0.105"/>
+        <cylinder length="0.040" radius="0.105"/>
       </geometry>
     </collision>
   </link>
