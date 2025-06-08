@@ -6,8 +6,8 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_AUDIODATA__HPP
-#define DDSCXX_AUDIODATA__HPP
+#ifndef DDSCXX_UNITREE_IDL_GO2_AUDIODATA__HPP
+#define DDSCXX_UNITREE_IDL_GO2_AUDIODATA__HPP
 
 #include <cstdint>
 #include <vector>
@@ -348,4 +348,4 @@ bool max(S& str, const ::unitree_go::msg::dds_::AudioData_& instance, bool as_ke
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_AUDIODATA__HPP
+#endif // DDSCXX_UNITREE_IDL_GO2_AUDIODATA__HPP

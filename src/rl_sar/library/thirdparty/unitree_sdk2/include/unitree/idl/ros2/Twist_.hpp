@@ -6,10 +6,10 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_TWIST__HPP
-#define DDSCXX_TWIST__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_TWIST__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_TWIST__HPP
 
-#include "Vector3_.hpp"
+#include "unitree/idl/ros2/Vector3_.hpp"
 
 
 namespace geometry_msgs
@@ -325,4 +325,4 @@ bool max(S& str, const ::geometry_msgs::msg::dds_::Twist_& instance, bool as_key
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_TWIST__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_TWIST__HPP

@@ -6,8 +6,8 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_POINT__HPP
-#define DDSCXX_POINT__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_POINT__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_POINT__HPP
 
 
 namespace geometry_msgs
@@ -338,4 +338,4 @@ bool max(S& str, const ::geometry_msgs::msg::dds_::Point_& instance, bool as_key
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_POINT__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_POINT__HPP

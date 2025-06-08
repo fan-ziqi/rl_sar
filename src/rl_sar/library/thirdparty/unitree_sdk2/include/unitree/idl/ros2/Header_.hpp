@@ -6,10 +6,10 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_HEADER__HPP
-#define DDSCXX_HEADER__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_HEADER__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_HEADER__HPP
 
-#include "Time_.hpp"
+#include "unitree/idl/ros2/Time_.hpp"
 
 #include <string>
 
@@ -327,4 +327,4 @@ bool max(S& str, const ::std_msgs::msg::dds_::Header_& instance, bool as_key) {
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_HEADER__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_HEADER__HPP

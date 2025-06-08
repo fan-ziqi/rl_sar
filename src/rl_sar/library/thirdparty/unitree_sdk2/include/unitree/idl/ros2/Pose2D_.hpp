@@ -6,8 +6,8 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_POSE2D__HPP
-#define DDSCXX_POSE2D__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_POSE2D__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_POSE2D__HPP
 
 
 namespace geometry_msgs
@@ -338,4 +338,4 @@ bool max(S& str, const ::geometry_msgs::msg::dds_::Pose2D_& instance, bool as_ke
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_POSE2D__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_POSE2D__HPP

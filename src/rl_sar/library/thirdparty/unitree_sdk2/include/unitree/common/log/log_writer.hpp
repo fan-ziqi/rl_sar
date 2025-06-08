@@ -2,6 +2,7 @@
 #define __LOG_WRITER_HPP__
 
 #include <unitree/common/log/log_buffer.hpp>
+#include <unitree/common/log/log_keeper.hpp>
 
 namespace unitree
 {
@@ -10,27 +11,7 @@ namespace common
 class LogWriter
 {
 public:
-    LogWriter() :
-        mFd(UT_FD_INVALID)
-    {}
-
-    virtual ~LogWriter()
-    {}
-
-    virtual void SetFd(int32_t fd)
-    {
-        mFd = fd;
-    }
-
-    virtual int32_t GetFd()
-    {
-        return mFd;
-    }
-
     virtual void Write(const std::string& s) = 0;
-
-protected:
-    int32_t mFd;
 };
 
 typedef std::shared_ptr<LogWriter> LogWriterPtr;
@@ -38,25 +19,22 @@ typedef std::shared_ptr<LogWriter> LogWriterPtr;
 class LogDirectWriter : public LogWriter
 {
 public:
-    LogDirectWriter();
-    LogDirectWriter(int32_t fd);
-
+    explicit LogDirectWriter(int32_t fd);
     virtual ~LogDirectWriter();
 
-    void SetFd(int32_t fd);
     void Write(const std::string& s);
 
-protected:
+private:
     Mutex mLock;
+    int32_t mFd;
 };
 
 class LogStdoutWriter : public LogDirectWriter
 {
 public:
-    LogStdoutWriter() :
+    explicit LogStdoutWriter() :
         LogDirectWriter(UT_FD_STDOUT)
     {}
-
     ~LogStdoutWriter()
     {}
 };
@@ -64,10 +42,9 @@ public:
 class LogStderrWriter : public LogDirectWriter
 {
 public:
-    LogStderrWriter() :
+    explicit LogStderrWriter() :
         LogDirectWriter(UT_FD_STDERR)
     {}
-
     ~LogStderrWriter()
     {}
 };
@@ -75,34 +52,33 @@ public:
 class LogBufferWriter : public LogWriter
 {
 public:
-    explicit LogBufferWriter(uint64_t writeIntervalMicrosec = 100000);
-
+    explicit LogBufferWriter(LogKeeperPtr keeperPtr);
     ~LogBufferWriter();
 
-    void SetFd(int32_t fd);
     void Write(const std::string& s);
 
 private:
     LogBufferPtr mBufferPtr;
+    LogKeeperPtr mKeeperPtr;
     Mutex mLock;
 };
 
 class LogAsyncBufferWriter : public LogWriter
 {
 public:
-    explicit LogAsyncBufferWriter(uint64_t writeIntervalMicrosec = 10000);
-
+    explicit LogAsyncBufferWriter(LogKeeperPtr keeperPtr);
     ~LogAsyncBufferWriter();
 
-    void SetFd(int32_t fd);
     void Write(const std::string& s);
 
 private:
     void DoWrite();
-    bool WriteFD(const std::string& s);
 
 private:
-    LogBlockBufferPtr mBufferPtr;
+    volatile bool mRotate;
+    std::string mTempBuf;
+    LogBufferPtr mBufferPtr;
+    LogKeeperPtr mKeeperPtr;
     ThreadPtr mThreadPtr;
     Mutex mLock;
 };

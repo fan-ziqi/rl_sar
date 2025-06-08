@@ -6,8 +6,8 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_ERROR__HPP
-#define DDSCXX_ERROR__HPP
+#ifndef DDSCXX_UNITREE_IDL_GO2_ERROR__HPP
+#define DDSCXX_UNITREE_IDL_GO2_ERROR__HPP
 
 #include <cstdint>
 
@@ -298,4 +298,4 @@ bool max(S& str, const ::unitree_go::msg::dds_::Error_& instance, bool as_key) {
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_ERROR__HPP
+#endif // DDSCXX_UNITREE_IDL_GO2_ERROR__HPP

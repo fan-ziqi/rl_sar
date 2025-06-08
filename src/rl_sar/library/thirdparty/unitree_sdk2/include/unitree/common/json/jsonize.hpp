@@ -2,13 +2,13 @@
 #define __UT_JSONIZE_HPP__
 
 #define JN_FROM_WEAK(m, name, value) \
-    if (m.find(name) != m.end()) { value = m[name]; }
+    if (m.find(name) != m.end()){ JN_FROM(m, name, value); }
 
 #define JN_FROM(m, name, value) \
-    value = m[name]
+    unitree::common::FromJson(m[name], value)
 
 #define JN_TO(m, name, value) \
-    m[name] = value
+    unitree::common::ToJson(value, m[name])
 
 #include <unitree/common/json/json.hpp>
 
@@ -43,6 +43,14 @@ public:
     virtual void toJson(JsonMap& a) const = 0;
     virtual void fromJson(JsonMap& a) = 0;
 };
+
+void FromAny(const Any& a, int8_t& value);
+
+void FromAny(const Any& a, uint8_t& value);
+
+void FromAny(const Any& a, int16_t& value);
+
+void FromAny(const Any& a, uint16_t& value);
 
 void FromAny(const Any& a, int32_t& value);
 
@@ -152,6 +160,14 @@ void FromJson(const Any& a, T& t)
 {
     FromAny(a, t);
 }
+
+void ToAny(const int8_t& value, Any& a);
+
+void ToAny(const uint8_t& value, Any& a);
+
+void ToAny(const int16_t& value, Any& a);
+
+void ToAny(const uint16_t& value, Any& a);
 
 void ToAny(const int32_t& value, Any& a);
 

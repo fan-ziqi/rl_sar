@@ -6,14 +6,14 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_ODOMETRY__HPP
-#define DDSCXX_ODOMETRY__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_ODOMETRY__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_ODOMETRY__HPP
 
-#include "PoseWithCovariance_.hpp"
+#include "unitree/idl/ros2/PoseWithCovariance_.hpp"
 
-#include "TwistWithCovariance_.hpp"
+#include "unitree/idl/ros2/TwistWithCovariance_.hpp"
 
-#include "Header_.hpp"
+#include "unitree/idl/ros2/Header_.hpp"
 
 #include <string>
 
@@ -585,4 +585,4 @@ bool max(S& str, const ::nav_msgs::msg::dds_::Odometry_& instance, bool as_key) 
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_ODOMETRY__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_ODOMETRY__HPP

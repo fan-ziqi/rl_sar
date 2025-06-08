@@ -6,12 +6,12 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_MAPMETADATA__HPP
-#define DDSCXX_MAPMETADATA__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_MAPMETADATA__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_MAPMETADATA__HPP
 
-#include "Time_.hpp"
+#include "unitree/idl/ros2/Time_.hpp"
 
-#include "Pose_.hpp"
+#include "unitree/idl/ros2/Pose_.hpp"
 
 #include <cstdint>
 
@@ -514,4 +514,4 @@ bool max(S& str, const ::nav_msgs::msg::dds_::MapMetaData_& instance, bool as_ke
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_MAPMETADATA__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_MAPMETADATA__HPP

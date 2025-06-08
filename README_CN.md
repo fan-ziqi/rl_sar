@@ -171,16 +171,16 @@ rosrun rl_sar rl_real_a1
 
 <details>
 
-<summary>Unitree Go2（点击展开）</summary>
+<summary>Unitree Go2/Go2W（点击展开）</summary>
 
-1. 用网线的一端连接Go2机器人，另一端连接用户电脑，并开启电脑的 USB Ethernet 后进行配置。机器狗机载电脑的 IP 地地址为 192.168.123.161，故需将电脑 USB Ethernet 地址设置为与机器狗同一网段，如在 Address 中输入 192.168.123.222 (“222”可以改成其他)。
+1. 用网线的一端连接Go2/Go2W机器人，另一端连接用户电脑，并开启电脑的 USB Ethernet 后进行配置。机器狗机载电脑的 IP 地地址为 192.168.123.161，故需将电脑 USB Ethernet 地址设置为与机器狗同一网段，如在 Address 中输入 192.168.123.222 (“222”可以改成其他)。
 2. 通过`ifconfig`命令查看123网段的网卡名字，如`enxf8e43b808e06`，下文用 \<YOUR_NETWORK_INTERFACE\> 代替
-3. 新建终端，启动控制程序
+3. 新建终端，启动控制程序。如果控制Go2W，需要在命令后加`wheel`，否则留空。
     ```bash
     source devel/setup.bash
-    rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE>
+    rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
     ```
-4. Go2支持手柄与键盘控制，方法与上面a1相同
+4. Go2/Go2W支持手柄与键盘控制，方法与上面a1相同
 
 </details>
 

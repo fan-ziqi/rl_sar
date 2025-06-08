@@ -14,10 +14,9 @@
 #include <unitree/idl/go2/LowState_.hpp>
 #include <unitree/idl/go2/LowCmd_.hpp>
 #include <unitree/idl/go2/WirelessController_.hpp>
-#include <unitree/robot/client/client.hpp>
 #include <unitree/common/time/time_tool.hpp>
 #include <unitree/common/thread/thread.hpp>
-#include <unitree/robot/go2/robot_state/robot_state_client.hpp>
+#include <unitree/robot/b2/motion_switcher/motion_switcher_client.hpp>
 #include <csignal>
 
 #include <ros/ros.h>
@@ -28,7 +27,7 @@ namespace plt = matplotlibcpp;
 
 using namespace unitree::common;
 using namespace unitree::robot;
-using namespace unitree::robot::go2;
+using namespace unitree::robot::b2;
 #define TOPIC_LOWCMD "rt/lowcmd"
 #define TOPIC_LOWSTATE "rt/lowstate"
 #define TOPIC_JOYSTICK "rt/wirelesscontroller"
@@ -63,7 +62,7 @@ typedef union
 class RL_Real : public RL
 {
 public:
-    RL_Real();
+    RL_Real(bool wheel_mode);
     ~RL_Real();
 
 private:
@@ -87,13 +86,13 @@ private:
     void Plot();
 
     // unitree interface
-    void InitRobotStateClient();
     void InitLowCmd();
-    int QueryServiceStatus(const std::string &serviceName);
+    int QueryMotionStatus();
+    std::string QueryServiceName(std::string form, std::string name);
     uint32_t Crc32Core(uint32_t *ptr, uint32_t len);
     void LowStateMessageHandler(const void *messages);
     void JoystickHandler(const void *message);
-    RobotStateClient rsc;
+    MotionSwitcherClient msc;
     unitree_go::msg::dds_::LowCmd_ unitree_low_command{};
     unitree_go::msg::dds_::LowState_ unitree_low_state{};
     unitree_go::msg::dds_::WirelessController_ joystick{};

@@ -9,7 +9,7 @@
 // #define CSV_LOGGER
 // #define USE_ROS
 
-RL_Real::RL_Real()
+RL_Real::RL_Real(bool wheel_mode)
 {
 #ifdef USE_ROS
     // init ros
@@ -18,8 +18,16 @@ RL_Real::RL_Real()
 #endif
 
     // read params from yaml
-    this->robot_name = "go2";
-    this->default_rl_config = "himloco";
+    if (wheel_mode)
+    {
+        this->robot_name = "go2w";
+        this->default_rl_config = "robot_lab";
+    }
+    else
+    {
+        this->robot_name = "go2";
+        this->default_rl_config = "himloco";
+    }
     this->ReadYamlBase(this->robot_name);
 
     // init torch
@@ -27,25 +35,36 @@ RL_Real::RL_Real()
     torch::set_num_threads(4);
 
     // init robot
-    this->InitRobotStateClient();
-    while (this->QueryServiceStatus("sport_mode"))
-    {
-        std::cout << "Try to deactivate the service: " << "sport_mode" << std::endl;
-        this->rsc.ServiceSwitch("sport_mode", 0);
-        sleep(1);
-    }
     this->InitLowCmd();
     this->InitOutputs();
     this->InitControl();
-    // create publisher
+    // create lowcmd publisher
     this->lowcmd_publisher.reset(new ChannelPublisher<unitree_go::msg::dds_::LowCmd_>(TOPIC_LOWCMD));
     this->lowcmd_publisher->InitChannel();
-    // create subscriber
+    // create lowstate subscriber
     this->lowstate_subscriber.reset(new ChannelSubscriber<unitree_go::msg::dds_::LowState_>(TOPIC_LOWSTATE));
     this->lowstate_subscriber->InitChannel(std::bind(&RL_Real::LowStateMessageHandler, this, std::placeholders::_1), 1);
-
+    // create joystick subscriber
     this->joystick_subscriber.reset(new ChannelSubscriber<unitree_go::msg::dds_::WirelessController_>(TOPIC_JOYSTICK));
     this->joystick_subscriber->InitChannel(std::bind(&RL_Real::JoystickHandler, this, std::placeholders::_1), 1);
+    // init MotionSwitcherClient
+    this->msc.SetTimeout(10.0f);
+    this->msc.Init();
+    // Shut down motion control-related service
+    while(this->QueryMotionStatus())
+    {
+        std::cout << "Try to deactivate the motion control-related service." << std::endl;
+        int32_t ret = this->msc.ReleaseMode();
+        if (ret == 0)
+        {
+            std::cout << "ReleaseMode succeeded." << std::endl;
+        }
+        else
+        {
+            std::cout << "ReleaseMode failed. Error code: " << ret << std::endl;
+        }
+        sleep(1);
+    }
 
     // loop
     this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05, std::bind(&RL_Real::KeyboardInterface, this));
@@ -185,8 +204,8 @@ void RL_Real::RunModel()
             output_dof_tau_queue.push(this->output_dof_tau);
         }
 
-        this->TorqueProtect(this->output_dof_tau);
-        this->AttitudeProtect(this->robot_state.imu.quaternion, 75.0f, 75.0f);
+        // this->TorqueProtect(this->output_dof_tau);
+        // this->AttitudeProtect(this->robot_state.imu.quaternion, 75.0f, 75.0f);
 
 #ifdef CSV_LOGGER
         torch::Tensor tau_est = torch::tensor(this->robot_state.motor_state.tau_est).unsqueeze(0);
@@ -296,36 +315,47 @@ void RL_Real::InitLowCmd()
     }
 }
 
-void RL_Real::InitRobotStateClient()
+int RL_Real::QueryMotionStatus()
 {
-    this->rsc.SetTimeout(10.0f);
-    this->rsc.Init();
+    std::string robotForm, motionName;
+    int motionStatus;
+    int32_t ret = this->msc.CheckMode(robotForm, motionName);
+    if (ret == 0)
+    {
+        std::cout << "CheckMode succeeded." << std::endl;
+    }
+    else
+    {
+        std::cout << "CheckMode failed. Error code: " << ret << std::endl;
+    }
+    if (motionName.empty())
+    {
+        std::cout << "The motion control-related service is deactivated." << std::endl;
+        motionStatus = 0;
+    }
+    else
+    {
+        std::string serviceName = QueryServiceName(robotForm, motionName);
+        std::cout << "Service: " << serviceName << " is activate" << std::endl;
+        motionStatus = 1;
+    }
+    return motionStatus;
 }
 
-int RL_Real::QueryServiceStatus(const std::string &serviceName)
+std::string RL_Real::QueryServiceName(std::string form, std::string name)
 {
-    std::vector<ServiceState> serviceStateList;
-    int ret, serviceStatus;
-    ret = this->rsc.ServiceList(serviceStateList);
-    size_t i, count = serviceStateList.size();
-    for (i = 0; i < count; ++i)
+    if (form == "0")
     {
-        const ServiceState &serviceState = serviceStateList[i];
-        if (serviceState.name == serviceName)
-        {
-            if (serviceState.status == 0)
-            {
-                std::cout << "name: " << serviceState.name << " is activate" << std::endl;
-                serviceStatus = 1;
-            }
-            else
-            {
-                std::cout << "name:" << serviceState.name << " is deactivate" << std::endl;
-                serviceStatus = 0;
-            }
-        }
+        if (name == "normal" )   return "sport_mode";
+        if (name == "ai" )       return "ai_sport";
+        if (name == "advanced" ) return "advanced_sport";
     }
-    return serviceStatus;
+    else
+    {
+        if (name == "ai-w" )     return "wheeled_sport(go2W)";
+        if (name == "normal-w" ) return "wheeled_sport(b2W)";
+    }
+    return "";
 }
 
 void RL_Real::LowStateMessageHandler(const void *message)
@@ -360,11 +390,11 @@ int main(int argc, char **argv)
 #endif
     if (argc < 2)
     {
-        std::cout << "Usage: " << argv[0] << " networkInterface" << std::endl;
+        std::cout << "Usage: " << argv[0] << " networkInterface [wheel]" << std::endl;
         exit(-1);
     }
     ChannelFactory::Instance()->Init(0, argv[1]);
-    RL_Real rl_sar;
+    RL_Real rl_sar(argc > 2 && std::string(argv[2]) == "wheel");
 #ifdef USE_ROS
     ros::spin();
 #else
