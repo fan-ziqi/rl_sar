@@ -1,3 +1,8 @@
+/*
+* Copyright (c) 2024-2025 Ziqi Fan
+* SPDX-License-Identifier: Apache-2.0
+*/
+
 #ifndef L4W4_SDK_COMM_H
 #define L4W4_SDK_COMM_H
 
@@ -5,9 +10,9 @@
 
 typedef struct
 {
-	float x;
-	float y;
-	float z;
+    float x;
+    float y;
+    float z;
 } Vector3;
 
 typedef struct

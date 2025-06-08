@@ -4,8 +4,6 @@ logs
 .catkin_tools
 .vscode
 *.csv
-*lite3*
-*fldlar*
 .cache
 *.json
 __pycache__

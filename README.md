@@ -9,6 +9,9 @@
 
 **Version Select: [ROS-Noetic](https://github.com/fan-ziqi/rl_sar/tree/main) | [ROS2-Foxy/Humble](https://github.com/fan-ziqi/rl_sar/tree/ros2)**
 
+> [!IMPORTANT]
+> This repository continuously maintains the ROS1 C++ version, while the ROS2 and Python versions have not been updated in sync, which may result in missing or inconsistent features. Therefore, it is recommended to use the ROS1 C++ version to obtain the latest features and bug fixes.
+
 This repository provides a framework for simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
 
 feature:
@@ -102,7 +105,7 @@ catkin build
 
 In the following text, **\<ROBOT\>/\<CONFIG\>** is used to represent different environments, such as `a1/isaacgym` and `go2/himloco`.
 
-Before running, copy the trained pt model file to `rl_sar/src/rl_sar/models/<ROBOT>/<CONFIG>`, and configure the parameters in `config.yaml`.
+Before running, copy the trained pt model file to `rl_sar/src/rl_sar/models/<ROBOT>/<CONFIG>`, and configure the parameters in `<ROBOT>/<CONFIG>/config.yaml` and `<ROBOT>/base.yaml`.
 
 ### Simulation
 
@@ -121,19 +124,25 @@ source devel/setup.bash
 (for python version) rosrun rl_sar rl_sim.py
 ```
 
-Keyboard Controls
+Keyboard Control:
 
-* Press **\<Enter\>** to toggle the simulator between running and stopped.
-* Use **W/S** to control forward/backward movement, **A/D** to control turning, and **J/L** to control lateral movement. Press **\<Space\>** to reset all control commands to zero.
-* If the robot falls, press **R** to reset the Gazebo environment.
-* Press **0** to move the robot from its simulation start posture to `init_pos`, and press **1** to move the robot from `init_pos` back to its simulation start posture.
+- Press **<Enter>** to toggle the simulator between running and stopped.
+- Press **0** to move the robot from the initial simulation pose to the `default_dof_pos` defined in the YAML file using position control interpolation.
+- Press **p** to switch to Reinforcement Learning mode.
+- Use **W/S** to move forward/backward, **J/L** to move left/right, and **A/D** to turn. Press **<Space>** to reset all control commands to zero.
+- Press **n** to switch to Navigation mode, disabling gamepad commands and receiving commands from the `cmd_vel` topic.
+- If the robot falls down, press **R** to reset the Gazebo environment.
+- Press **1** to move the robot from its current position back to the initial simulation pose using position control interpolation.
 
-Gamepad Controls
+Gamepad Control:
 
-* Press **LB** to toggle the simulator between running and stopped.
-* **LY** controls forward/backward movement, **LX** controls lateral movement, and **RX** controls turning.
-* If the robot falls, press **RB+X** to reset the Gazebo environment.
-* Press **RB+Y** to move the robot from its simulation start posture to `init_pos`, and press **RB+A** to move the robot from `init_pos` back to its simulation start posture.
+- Press **LB** to toggle the simulator between running and stopped.
+- Press **RB + Y** to move the robot from the initial simulation pose to the `default_dof_pos` defined in the YAML file using position control interpolation.
+- Press **RB + B** to switch to Reinforcement Learning mode.
+- Use **LY** to move forward/backward, **LX** to move left/right, and **RX** to turn.
+- Press the **down button on the left** to switch to Navigation mode, disabling gamepad commands and receiving commands from the `cmd_vel` topic.
+- If the robot falls down, press **RB + X** to reset the Gazebo environment.
+- Press **RB + A** to move the robot from its current position back to the initial simulation pose using position control interpolation.
 
 ### Real Robots
 
@@ -143,8 +152,8 @@ Gamepad Controls
 
 Unitree A1 can be connected using both wireless and wired methods:
 
-* Wireless: Connect to the Unitree starting with WIFI broadcasted by the robot **(Note: Wireless connection may lead to packet loss, disconnection, or even loss of control, please ensure safety)**
-* Wired: Use an Ethernet cable to connect any port on the computer and the robot, configure the computer IP as 192.168.123.162, and the netmask as 255.255.255.0
+- Wireless: Connect to the Unitree starting with WIFI broadcasted by the robot **(Note: Wireless connection may lead to packet loss, disconnection, or even loss of control, please ensure safety)**
+- Wired: Use an Ethernet cable to connect any port on the computer and the robot, configure the computer IP as 192.168.123.162, and the netmask as 255.255.255.0
 
 Open a new terminal and start the control program
 
@@ -153,9 +162,9 @@ source devel/setup.bash
 rosrun rl_sar rl_real_a1
 ```
 
-Press the **R2** button on the controller to switch the robot to the default standing position, press **R1** to switch to RL control mode, and press **L2** in any state to switch to the initial lying position. The left stick controls x-axis up and down, controls yaw left and right, and the right stick controls y-axis left and right.
+Press **R2** on the gamepad to switch the robot to the default standing pose, **R1** to switch to Reinforcement Learning (RL) control mode, and **L2** in any state to return to the initial lying-down pose. The **left joystick up/down** controls movement along the **x-axis**, **left joystick left/right** controls **yaw**, and **right joystick left/right** controls movement along the **y-axis**.
 
-Or press **0** on the keyboard to switch the robot to the default standing position, press **P** to switch to RL control mode, and press **1** in any state to switch to the initial lying position. WS controls x-axis, AD controls yaw, and JL controls y-axis.
+Alternatively, press **0** on the keyboard to switch the robot to the default standing pose, **P** to switch to RL control mode, and **1** in any state to return to the initial lying-down pose. Use **W/S** to control the **x-axis**, **A/D** to control **yaw**, and **J/L** to control the **y-axis**.
 
 </details>
 
@@ -194,10 +203,10 @@ Take A1 as an example below
 In the following text, **\<ROBOT\>/\<CONFIG\>** is used to represent your robot environment.
 
 1. Create a model package named `<ROBOT>_description` in the `rl_sar/src/robots` directory. Place the robot's URDF file in the `rl_sar/src/robots/<ROBOT>_description/urdf` directory and name it `<ROBOT>.urdf`. Additionally, create a joint configuration file with the namespace `<ROBOT>_gazebo` in the `rl_sar/src/robots/<ROBOT>_description/config` directory.
-2. Place the trained RL model files in the `rl_sar/src/rl_sar/models/<ROBOT>/<CONFIG>` directory, and create a new `config.yaml` file in this path. Refer to the `rl_sar/src/rl_sar/models/a1/isaacgym/config.yaml` file to modify the parameters.
-3. Modify the `forward()` function in the code as needed to adapt to different models.
-4. If you need to run simulations, modify the launch files as needed by referring to those in the `rl_sar/src/rl_sar/launch` directory.
-5. If you need to run on the physical robot, modify the file `rl_sar/src/rl_sar/src/rl_real_a1.cpp` as needed.
+2. Place the trained RL model files in the `rl_sar/src/rl_sar/models/<ROBOT>/<CONFIG>` directory, and create a new `config.yaml` file in this path. Refer to the `rl_sar/src/rl_sar/models/a1/isaacgym/config.yaml` file to modify the parameters. Then, create a `base.yaml` file in the upper-level directory and refer to `rl_sar/src/rl_sar/models/a1/base.yaml` to modify the parameters.
+3. Modify the `forward()` function in the code as needed to adapt to the specific robot model.
+4. If simulation is required, refer to the launch files in `rl_sar/src/rl_sar/launch` and modify them accordingly.
+5. If running on the physical robot, refer to and modify the `rl_sar/src/rl_sar/src/rl_real_a1.cpp` file as needed.
 
 ## Contributing
 

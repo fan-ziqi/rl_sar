@@ -1,3 +1,8 @@
+/*
+* Copyright (c) 2024-2025 Ziqi Fan
+* SPDX-License-Identifier: Apache-2.0
+*/
+
 #ifndef L4W4_SDK_HPP
 #define L4W4_SDK_HPP
 
@@ -39,6 +44,7 @@ private:
     float Angle_vA_2_vB(Vector3 vA, Vector3 vB, Vector3 axle);
     void Vector3_Normalize(Vector3 *v);
     Vector3 Quaternion_Transform(float vx, float vy, float vz, float qx, float qy, float qz, float qw);
+
 public:
     L4W4SDK() {};
     ~L4W4SDK() {};
@@ -52,12 +58,13 @@ public:
     void AnalyzeUDP(unsigned char *recv_buff, LowState &lowState);
     void SendUDP(LowCmd &lowCmd);
     void PrintMCU(int running_state);
-    void InitCmdData(LowCmd& cmd);
+    void InitCmdData(LowCmd &cmd);
 };
 
-void L4W4SDK::InitCmdData(LowCmd& cmd)
+void L4W4SDK::InitCmdData(LowCmd &cmd)
 {
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 20; ++i)
+    {
         cmd.motorCmd[i].mode = 0;
         cmd.motorCmd[i].q = 0.0;
         cmd.motorCmd[i].dq = 0.0;
@@ -71,25 +78,25 @@ void L4W4SDK::InitCmdData(LowCmd& cmd)
 void L4W4SDK::PrintMCU(int running_state)
 {
     float t1 = tmp_time_from_mcu;
-    if(t1 < t0)
+    if (t1 < t0)
         t0 = t1;
 
     float ms = (t1 - t0) * 1000.0;
     n_cpu++;
     n_run++;
 
-    if(ms > 1000)
+    if (ms > 1000)
     {
-        std::cout<<"mcu time = "<< tmp_time_from_mcu<<",   n_cpu = "<<n_cpu<<", runningState= "<< running_state<<std::endl;
+        std::cout << "mcu time = " << tmp_time_from_mcu << ",   n_cpu = " << n_cpu << ", runningState= " << running_state << std::endl;
         t0 = t1;
         n_cpu = 0;
         n_run = 0;
     }
     else
     {
-        if(n_run > 50)
+        if (n_run > 50)
         {
-            std::cout<<"  dull ms= "<<ms<<",  n_cpu = "<<n_cpu<<", runningState= "<< running_state<<std::endl;
+            std::cout << "  dull ms= " << ms << ",  n_cpu = " << n_cpu << ", runningState= " << running_state << std::endl;
             n_run = 0;
         }
     }
@@ -100,107 +107,114 @@ void L4W4SDK::SendUDP(LowCmd &lowCmd)
     int idx = 0;
 
     // front right
-    write_into2bytes(lowCmd.motorCmd[4].q,  sent_buff, &idx, -3.2, 3.2 );
-    write_into2bytes(lowCmd.motorCmd[4].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[4].Kd,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(-lowCmd.motorCmd[5].q,  sent_buff, &idx, -3.2, 3.2 );
-    write_into2bytes(lowCmd.motorCmd[5].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[5].Kd,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(-lowCmd.motorCmd[6].q,  sent_buff, &idx, -3.2, 3.2 );
-    write_into2bytes(lowCmd.motorCmd[6].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[6].Kd,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(-lowCmd.motorCmd[7].dq,  sent_buff, &idx, -200, 200 );
-    write_into2bytes(lowCmd.motorCmd[7].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[7].Kd,  sent_buff, &idx, 0, 1000 );
+    write_into2bytes(lowCmd.motorCmd[4].q, sent_buff, &idx, -3.2, 3.2);
+    write_into2bytes(lowCmd.motorCmd[4].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[4].Kd, sent_buff, &idx, 0, 1000);
+    write_into2bytes(-lowCmd.motorCmd[5].q, sent_buff, &idx, -3.2, 3.2);
+    write_into2bytes(lowCmd.motorCmd[5].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[5].Kd, sent_buff, &idx, 0, 1000);
+    write_into2bytes(-lowCmd.motorCmd[6].q, sent_buff, &idx, -3.2, 3.2);
+    write_into2bytes(lowCmd.motorCmd[6].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[6].Kd, sent_buff, &idx, 0, 1000);
+    write_into2bytes(-lowCmd.motorCmd[7].dq, sent_buff, &idx, -200, 200);
+    write_into2bytes(lowCmd.motorCmd[7].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[7].Kd, sent_buff, &idx, 0, 1000);
 
     // rear right
-    write_into2bytes(lowCmd.motorCmd[12].q,  sent_buff, &idx, -3.2, 3.2 );
-    write_into2bytes(lowCmd.motorCmd[12].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[12].Kd,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(-lowCmd.motorCmd[13].q,  sent_buff, &idx, -3.2, 3.2 );
-    write_into2bytes(lowCmd.motorCmd[13].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[13].Kd,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(-lowCmd.motorCmd[14].q,  sent_buff, &idx, -3.2, 3.2 );
-    write_into2bytes(lowCmd.motorCmd[14].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[14].Kd,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(-lowCmd.motorCmd[15].dq,  sent_buff, &idx, -200, 200 );
-    write_into2bytes(lowCmd.motorCmd[15].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[15].Kd,  sent_buff, &idx, 0, 1000 );
+    write_into2bytes(lowCmd.motorCmd[12].q, sent_buff, &idx, -3.2, 3.2);
+    write_into2bytes(lowCmd.motorCmd[12].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[12].Kd, sent_buff, &idx, 0, 1000);
+    write_into2bytes(-lowCmd.motorCmd[13].q, sent_buff, &idx, -3.2, 3.2);
+    write_into2bytes(lowCmd.motorCmd[13].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[13].Kd, sent_buff, &idx, 0, 1000);
+    write_into2bytes(-lowCmd.motorCmd[14].q, sent_buff, &idx, -3.2, 3.2);
+    write_into2bytes(lowCmd.motorCmd[14].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[14].Kd, sent_buff, &idx, 0, 1000);
+    write_into2bytes(-lowCmd.motorCmd[15].dq, sent_buff, &idx, -200, 200);
+    write_into2bytes(lowCmd.motorCmd[15].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[15].Kd, sent_buff, &idx, 0, 1000);
 
     // rear left
-    write_into2bytes(lowCmd.motorCmd[8].q,  sent_buff, &idx, -3.2, 3.2 );
-    write_into2bytes(lowCmd.motorCmd[8].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[8].Kd,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(-lowCmd.motorCmd[9].q,  sent_buff, &idx, -3.2, 3.2 );
-    write_into2bytes(lowCmd.motorCmd[9].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[9].Kd,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(-lowCmd.motorCmd[10].q,  sent_buff, &idx, -3.2, 3.2 );
-    write_into2bytes(lowCmd.motorCmd[10].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[10].Kd,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(-lowCmd.motorCmd[11].dq,  sent_buff, &idx, -200, 200 );
-    write_into2bytes(lowCmd.motorCmd[11].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[11].Kd,  sent_buff, &idx, 0, 1000 );
+    write_into2bytes(lowCmd.motorCmd[8].q, sent_buff, &idx, -3.2, 3.2);
+    write_into2bytes(lowCmd.motorCmd[8].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[8].Kd, sent_buff, &idx, 0, 1000);
+    write_into2bytes(-lowCmd.motorCmd[9].q, sent_buff, &idx, -3.2, 3.2);
+    write_into2bytes(lowCmd.motorCmd[9].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[9].Kd, sent_buff, &idx, 0, 1000);
+    write_into2bytes(-lowCmd.motorCmd[10].q, sent_buff, &idx, -3.2, 3.2);
+    write_into2bytes(lowCmd.motorCmd[10].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[10].Kd, sent_buff, &idx, 0, 1000);
+    write_into2bytes(-lowCmd.motorCmd[11].dq, sent_buff, &idx, -200, 200);
+    write_into2bytes(lowCmd.motorCmd[11].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[11].Kd, sent_buff, &idx, 0, 1000);
 
     // front left
-    write_into2bytes(lowCmd.motorCmd[0].q,  sent_buff, &idx, -3.2, 3.2 );
-    write_into2bytes(lowCmd.motorCmd[0].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[0].Kd,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(-lowCmd.motorCmd[1].q,  sent_buff, &idx, -3.2, 3.2 );
-    write_into2bytes(lowCmd.motorCmd[1].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[1].Kd,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(-lowCmd.motorCmd[2].q,  sent_buff, &idx, -3.2, 3.2 );
-    write_into2bytes(lowCmd.motorCmd[2].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[2].Kd,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(-lowCmd.motorCmd[3].dq,  sent_buff, &idx, -200, 200 );
-    write_into2bytes(lowCmd.motorCmd[3].Kp,  sent_buff, &idx, 0, 1000 );
-    write_into2bytes(lowCmd.motorCmd[3].Kd,  sent_buff, &idx, 0, 1000 );
+    write_into2bytes(lowCmd.motorCmd[0].q, sent_buff, &idx, -3.2, 3.2);
+    write_into2bytes(lowCmd.motorCmd[0].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[0].Kd, sent_buff, &idx, 0, 1000);
+    write_into2bytes(-lowCmd.motorCmd[1].q, sent_buff, &idx, -3.2, 3.2);
+    write_into2bytes(lowCmd.motorCmd[1].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[1].Kd, sent_buff, &idx, 0, 1000);
+    write_into2bytes(-lowCmd.motorCmd[2].q, sent_buff, &idx, -3.2, 3.2);
+    write_into2bytes(lowCmd.motorCmd[2].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[2].Kd, sent_buff, &idx, 0, 1000);
+    write_into2bytes(-lowCmd.motorCmd[3].dq, sent_buff, &idx, -200, 200);
+    write_into2bytes(lowCmd.motorCmd[3].Kp, sent_buff, &idx, 0, 1000);
+    write_into2bytes(lowCmd.motorCmd[3].Kd, sent_buff, &idx, 0, 1000);
 
-    int sss = sendto(client_socket, sent_buff, idx, 0, (const sockaddr*)& server_addr, sizeof(server_addr));
+    write_into2bytes(0.0f, sent_buff, &idx, -10, 10);
+    write_into2bytes(0.0f, sent_buff, &idx, -10, 10);
+    write_into2bytes(0.0f, sent_buff, &idx, -10, 10);
+
+    int sss = sendto(client_socket, sent_buff, idx, 0, (const sockaddr *)&server_addr, sizeof(server_addr));
 }
 
 void L4W4SDK::InitUDP()
 {
-    struct sockaddr_in client_addr;
+    struct sockaddr_in client_addr, actual_addr;
     client_addr.sin_family = AF_INET;
-    client_addr.sin_addr.s_addr = htons(INADDR_ANY);//INADDR_ANY表示自动获取本机地址       inet_addr("192.168.1.102");
-    client_addr.sin_port = htons(0); //0表示让系统自动分配一个空闲端口
+    client_addr.sin_addr.s_addr = INADDR_ANY; // INADDR_ANY表示自动获取本机地址       inet_addr("192.168.1.102");
+    client_addr.sin_port = htons(0);          // 0表示让系统自动分配一个空闲端口
     client_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if(client_socket < 0)
+    if (client_socket < 0)
     {
-        std::cout <<"socket error" << std::endl;
+        std::cout << "socket error" << std::endl;
         perror("socket error");
         exit(1);
     }
     else
     {
-        std::cout<<"socket created ("<<client_socket<<")"<<std::endl;
+        std::cout << "socket created (" << client_socket << ")" << std::endl;
     }
 
-    int ret = bind(client_socket, (struct sockaddr*)&client_addr, sizeof(client_addr));
-    if(ret >= 0)
+    int ret = bind(client_socket, (struct sockaddr *)&client_addr, sizeof(client_addr));
+    if (ret >= 0)
     {
-        std::cout << "udp bind success (" << ret << ")" <<std::endl;
-        std::cout << "my ip = " << inet_ntoa(client_addr.sin_addr) << std::endl;
-        std::cout << "my port = " << client_addr.sin_port << std::endl;
+        socklen_t addr_len = sizeof(actual_addr);
+        getsockname(client_socket, (struct sockaddr *)&actual_addr, &addr_len);
+        std::cout << "udp bind success (" << ret << ")" << std::endl;
+        std::cout << "my ip = " << inet_ntoa(actual_addr.sin_addr) << std::endl;
+        std::cout << "my port = " << actual_addr.sin_port << std::endl;
     }
     else
-        std::cout << "udp bind failed (" << ret << ")" <<std::endl;
-
+        std::cout << "udp bind failed (" << ret << ")" << std::endl;
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(777);
     server_addr.sin_addr.s_addr = inet_addr("192.168.1.101");
-
-
 }
 
 float L4W4SDK::read_float(unsigned char *buff, int *idx)
 {
     float v = 0;
-    *((unsigned char*)&v + 0) = buff[*idx]; (*idx)++;
-    *((unsigned char*)&v + 1) = buff[*idx]; (*idx)++;
-    *((unsigned char*)&v + 2) = buff[*idx]; (*idx)++;
-    *((unsigned char*)&v + 3) = buff[*idx]; (*idx)++;
+    *((unsigned char *)&v + 0) = buff[*idx];
+    (*idx)++;
+    *((unsigned char *)&v + 1) = buff[*idx];
+    (*idx)++;
+    *((unsigned char *)&v + 2) = buff[*idx];
+    (*idx)++;
+    *((unsigned char *)&v + 3) = buff[*idx];
+    (*idx)++;
 
     return v;
 }
@@ -215,8 +229,10 @@ float L4W4SDK::read_from1byte(unsigned char *buff, int *idx, float v_min, float 
 float L4W4SDK::read_from2bytes(unsigned char *buff, int *idx, float v_min, float v_max)
 {
     unsigned int v = 0;
-    *((unsigned char*)&v + 0) = buff[*idx]; (*idx)++;
-    *((unsigned char*)&v + 1) = buff[*idx]; (*idx)++;
+    *((unsigned char *)&v + 0) = buff[*idx];
+    (*idx)++;
+    *((unsigned char *)&v + 1) = buff[*idx];
+    (*idx)++;
 
     return v / 65535.0 * (v_max - v_min) + v_min;
 }
@@ -224,7 +240,7 @@ float L4W4SDK::read_from2bytes(unsigned char *buff, int *idx, float v_min, float
 void L4W4SDK::write_into2bytes(float value, unsigned char *buff, int *idx, float v_min, float v_max)
 {
     ushort v16 = (value - v_min) / (v_max - v_min) * 65535;
-    buff[*idx] = (v16>>8) & 0xff;
+    buff[*idx] = (v16 >> 8) & 0xff;
     (*idx)++;
     buff[*idx] = v16 & 0xff;
     (*idx)++;
@@ -239,95 +255,97 @@ float L4W4SDK::read_byte(unsigned char *buff, int *idx)
 
 float L4W4SDK::Vector3_Dot(Vector3 v1, Vector3 v2)
 {
-	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+    return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
 Vector3 L4W4SDK::Vector3_Cross(Vector3 u, Vector3 v)
 {
-	Vector3 vn;
-	vn.x = u.y * v.z - u.z * v.y;
-	vn.y = u.z * v.x - u.x * v.z;
-	vn.z = u.x * v.y - u.y * v.x;
-	return vn;
+    Vector3 vn;
+    vn.x = u.y * v.z - u.z * v.y;
+    vn.y = u.z * v.x - u.x * v.z;
+    vn.z = u.x * v.y - u.y * v.x;
+    return vn;
 }
 
 float L4W4SDK::Sign(float value)
 {
-	if(value >= 0)
-		return 1;
-	else
-		return -1;
+    if (value >= 0)
+        return 1;
+    else
+        return -1;
 }
 
 float L4W4SDK::Vector3_invSqrt(Vector3 v)
 {
-	return 1.0 / sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    return 1.0 / sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
 Vector3 L4W4SDK::Vector3_Direction(Vector3 v)
 {
-	float invSqrt = Vector3_invSqrt(v);
-	Vector3 dv = v;
-	dv.x *= invSqrt;
-	dv.y *= invSqrt;
-	dv.z *= invSqrt;
+    float invSqrt = Vector3_invSqrt(v);
+    Vector3 dv = v;
+    dv.x *= invSqrt;
+    dv.y *= invSqrt;
+    dv.z *= invSqrt;
 
-	return dv;
+    return dv;
 }
 
 float L4W4SDK::Clamp(float value, float min, float max)
 {
-	if(min > max)
-	{
-		float tmp = min;
-		min = max;
-		max = tmp;
-	}
+    if (min > max)
+    {
+        float tmp = min;
+        min = max;
+        max = tmp;
+    }
 
-	if(value < min)	return min;
-	else if(value > max) return max;
-	else return value;
+    if (value < min)
+        return min;
+    else if (value > max)
+        return max;
+    else
+        return value;
 }
 
 float L4W4SDK::Angle_vA_2_vB(Vector3 vA, Vector3 vB, Vector3 axle)
 {
-	Vector3 vA_dir = Vector3_Direction(vA);
-	Vector3 vB_dir = Vector3_Direction(vB);
-	Vector3 axle_dir = Vector3_Direction(axle);
+    Vector3 vA_dir = Vector3_Direction(vA);
+    Vector3 vB_dir = Vector3_Direction(vB);
+    Vector3 axle_dir = Vector3_Direction(axle);
 
-	float sinA = Clamp(  Vector3_Dot(axle_dir,   Vector3_Cross(vA_dir, vB_dir)  ), -1, 1);
-	float angle_raw = asinf(sinA);
+    float sinA = Clamp(Vector3_Dot(axle_dir, Vector3_Cross(vA_dir, vB_dir)), -1, 1);
+    float angle_raw = asinf(sinA);
 
-	float angle = Vector3_Dot(vA_dir, vB_dir) > 0 ? angle_raw : Sign(angle_raw) * M_PI - angle_raw;
+    float angle = Vector3_Dot(vA_dir, vB_dir) > 0 ? angle_raw : Sign(angle_raw) * M_PI - angle_raw;
 
-	return angle;
+    return angle;
 }
 
 void L4W4SDK::Vector3_Normalize(Vector3 *v)
 {
-	float invSqrt = Vector3_invSqrt(*v);
-	v->x *= invSqrt;
-	v->y *= invSqrt;
-	v->z *= invSqrt;
+    float invSqrt = Vector3_invSqrt(*v);
+    v->x *= invSqrt;
+    v->y *= invSqrt;
+    v->z *= invSqrt;
 }
 Vector3 L4W4SDK::Quaternion_Transform(float vx, float vy, float vz, float qx, float qy, float qz, float qw)
 {
-	float dot_u_v = qx * vx + qy * vy + qz * vz;
-	float dot_u_u = qx * qx + qy * qy + qz * qz;
-	float x_of_uXv = qy * vz - qz * vy;
-	float y_of_uXv = qz * vx - qx * vz;
-	float z_of_uXv = qx * vy - qy * vx;
-	float k1 = 2.0 * dot_u_v;
-	float k2 = qw * qw - dot_u_u;
-	float k3 = 2.0 * qw;
+    float dot_u_v = qx * vx + qy * vy + qz * vz;
+    float dot_u_u = qx * qx + qy * qy + qz * qz;
+    float x_of_uXv = qy * vz - qz * vy;
+    float y_of_uXv = qz * vx - qx * vz;
+    float z_of_uXv = qx * vy - qy * vx;
+    float k1 = 2.0 * dot_u_v;
+    float k2 = qw * qw - dot_u_u;
+    float k3 = 2.0 * qw;
 
-	Vector3 vout;
-	vout.x = k1 * qx + k2 * vx + k3 * x_of_uXv;
-	vout.y = k1 * qy + k2 * vy + k3 * y_of_uXv;
-	vout.z = k1 * qz + k2 * vz + k3 * z_of_uXv;
-	return vout;
+    Vector3 vout;
+    vout.x = k1 * qx + k2 * vx + k3 * x_of_uXv;
+    vout.y = k1 * qy + k2 * vy + k3 * y_of_uXv;
+    vout.z = k1 * qz + k2 * vz + k3 * z_of_uXv;
+    return vout;
 }
-
 
 void L4W4SDK::AnalyzeUDP(unsigned char *recv_buff, LowState &lowState)
 {
@@ -347,29 +365,26 @@ void L4W4SDK::AnalyzeUDP(unsigned char *recv_buff, LowState &lowState)
     float orientation_z = read_float(recv_buff, &idx);
     float orientation_w = read_float(recv_buff, &idx);
 
-
-
     Vector3 robot_up_w = Quaternion_Transform(0, 1, 0, orientation_x, orientation_y, orientation_z, orientation_w);
     Vector3 current_trunk_front = Quaternion_Transform(1, 0, 0, orientation_x, orientation_y, orientation_z, orientation_w);
     Vector3 current_trunk_right = Quaternion_Transform(0, 0, 1, orientation_x, orientation_y, orientation_z, orientation_w);
     Vector3 trunk_hori_front = current_trunk_front;
     trunk_hori_front.y = 0;
     Vector3_Normalize(&trunk_hori_front);
-    Vector3 trunk_hori_right = Vector3_Cross(trunk_hori_front, {0,1,0});
+    Vector3 trunk_hori_right = Vector3_Cross(trunk_hori_front, {0, 1, 0});
     float r2d = 180.0f / M_PI;
 
-
-    float robot_yaw_deg = Angle_vA_2_vB({1,0,0}, trunk_hori_front, {0,1,0}) * r2d;
+    float robot_yaw_deg = Angle_vA_2_vB({1, 0, 0}, trunk_hori_front, {0, 1, 0}) * r2d;
     float robot_pitch_deg = Angle_vA_2_vB(trunk_hori_front, current_trunk_front, trunk_hori_right) * r2d;
     float robot_roll_deg = Angle_vA_2_vB(trunk_hori_right, current_trunk_right, current_trunk_front) * r2d;
 
-
     read_byte(recv_buff, &idx);
     read_byte(recv_buff, &idx);
 
-    xRockerBtnDataStruct *rockerBtn = (xRockerBtnDataStruct*)(&(lowState.wirelessRemote));
+    xRockerBtnDataStruct *rockerBtn = (xRockerBtnDataStruct *)(&(lowState.wirelessRemote));
 
-    unsigned char key1 = recv_buff[idx]; idx++;
+    unsigned char key1 = recv_buff[idx];
+    idx++;
     rockerBtn->btn.components.R1 = (key1 & 0x80) >> 7;
     rockerBtn->btn.components.L1 = (key1 & 0x40) >> 6;
     rockerBtn->btn.components.start = (key1 & 0x20) >> 5;
@@ -379,7 +394,8 @@ void L4W4SDK::AnalyzeUDP(unsigned char *recv_buff, LowState &lowState)
     rockerBtn->btn.components.F1 = (key1 & 0x02) >> 1;
     rockerBtn->btn.components.F2 = (key1 & 0x01) >> 0;
 
-    unsigned char key2 = recv_buff[idx]; idx++;
+    unsigned char key2 = recv_buff[idx];
+    idx++;
     rockerBtn->btn.components.A = (key2 & 0x80) >> 7;
     rockerBtn->btn.components.B = (key2 & 0x40) >> 6;
     rockerBtn->btn.components.X = (key2 & 0x20) >> 5;
@@ -389,44 +405,43 @@ void L4W4SDK::AnalyzeUDP(unsigned char *recv_buff, LowState &lowState)
     rockerBtn->btn.components.down = (key2 & 0x02) >> 1;
     rockerBtn->btn.components.left = (key2 & 0x01) >> 0;
 
-
     rockerBtn->lx = read_float(recv_buff, &idx);
     rockerBtn->rx = read_float(recv_buff, &idx);
     rockerBtn->ly = read_float(recv_buff, &idx);
     rockerBtn->L2 = read_float(recv_buff, &idx);
     rockerBtn->ry = read_float(recv_buff, &idx);
 
-    if(rockerBtn->btn.components.F1)
+    if (rockerBtn->btn.components.F1)
         show_rc = 1;
     else
         show_rc = 0;
 
-    idx+=4*4;
+    idx += 4 * 4;
 
     float motor_leg1_j0 = read_from2bytes(recv_buff, &idx, -M_PI, M_PI);
     float motor_leg1_j0_dot = read_from2bytes(recv_buff, &idx, -33, 33);
-    float motor_leg1_j1 = read_from2bytes(recv_buff, &idx, -1.3*M_PI, 0.7*M_PI);
+    float motor_leg1_j1 = read_from2bytes(recv_buff, &idx, -1.3 * M_PI, 0.7 * M_PI);
     float motor_leg1_j1_dot = read_from2bytes(recv_buff, &idx, -33, 33);
     float motor_leg1_j2 = read_from2bytes(recv_buff, &idx, -M_PI, M_PI);
     float motor_leg1_j2_dot = read_from2bytes(recv_buff, &idx, -33, 33);
 
     float motor_leg2_j0 = read_from2bytes(recv_buff, &idx, -M_PI, M_PI);
     float motor_leg2_j0_dot = read_from2bytes(recv_buff, &idx, -33, 33);
-    float motor_leg2_j1 = read_from2bytes(recv_buff, &idx, -1.3*M_PI, 0.7*M_PI);
+    float motor_leg2_j1 = read_from2bytes(recv_buff, &idx, -1.3 * M_PI, 0.7 * M_PI);
     float motor_leg2_j1_dot = read_from2bytes(recv_buff, &idx, -33, 33);
     float motor_leg2_j2 = read_from2bytes(recv_buff, &idx, -M_PI, M_PI);
     float motor_leg2_j2_dot = read_from2bytes(recv_buff, &idx, -33, 33);
 
     float motor_leg3_j0 = read_from2bytes(recv_buff, &idx, -M_PI, M_PI);
     float motor_leg3_j0_dot = read_from2bytes(recv_buff, &idx, -33, 33);
-    float motor_leg3_j1 = read_from2bytes(recv_buff, &idx, -1.3*M_PI, 0.7*M_PI);
+    float motor_leg3_j1 = read_from2bytes(recv_buff, &idx, -1.3 * M_PI, 0.7 * M_PI);
     float motor_leg3_j1_dot = read_from2bytes(recv_buff, &idx, -33, 33);
     float motor_leg3_j2 = read_from2bytes(recv_buff, &idx, -M_PI, M_PI);
     float motor_leg3_j2_dot = read_from2bytes(recv_buff, &idx, -33, 33);
 
     float motor_leg4_j0 = read_from2bytes(recv_buff, &idx, -M_PI, M_PI);
     float motor_leg4_j0_dot = read_from2bytes(recv_buff, &idx, -33, 33);
-    float motor_leg4_j1 = read_from2bytes(recv_buff, &idx, -1.3*M_PI, 0.7*M_PI);
+    float motor_leg4_j1 = read_from2bytes(recv_buff, &idx, -1.3 * M_PI, 0.7 * M_PI);
     float motor_leg4_j1_dot = read_from2bytes(recv_buff, &idx, -33, 33);
     float motor_leg4_j2 = read_from2bytes(recv_buff, &idx, -M_PI, M_PI);
     float motor_leg4_j2_dot = read_from2bytes(recv_buff, &idx, -33, 33);
@@ -507,28 +522,25 @@ void L4W4SDK::AnalyzeUDP(unsigned char *recv_buff, LowState &lowState)
     lowState.motorState[15].dq = lowState.motorState[15].dq_raw = -motor_leg2_j3_dot;
     lowState.motorState[15].ddq = lowState.motorState[15].ddq_raw = 0;
 
-    ctr++;
-    if(ctr>=100)
-    {
-        //float r2d = 180.0/M_PI;
-        //std::cout<<"mcu time = "<<tmp_time_from_mcu<<",\tbattery = "<< BatteryVoltage<<std::endl;
-        //std::cout<<"lx = "<<rockerBtn->lx<<",\try = "<<rockerBtn->ry<<",\trx = "<<rockerBtn->rx<<std::endl;
-        //if(show_rc)
-        if(0)
-        {
-            std::cout<< "   rc: " << ((int)(rockerBtn->ly * 100) / 100.0) << "\t" << ((int)(rockerBtn->lx * 100) / 100.0);
-            std::cout<< "\t" << ((int)(rockerBtn->ry * 100) / 100.0) << "\t" << ((int)(rockerBtn->rx * 100) / 100.0)<<std::endl;
-        }
+    // ctr++;
+    // if (ctr >= 100)
+    // {
+    //     // float r2d = 180.0/M_PI;
+    //     // std::cout<<"mcu time = "<<tmp_time_from_mcu<<",\tbattery = "<< BatteryVoltage<<std::endl;
+    //     // std::cout<<"lx = "<<rockerBtn->lx<<",\try = "<<rockerBtn->ry<<",\trx = "<<rockerBtn->rx<<std::endl;
+    //     // if(show_rc)
+    //     if (0)
+    //     {
+    //         std::cout << "   rc: " << ((int)(rockerBtn->ly * 100) / 100.0) << "\t" << ((int)(rockerBtn->lx * 100) / 100.0);
+    //         std::cout << "\t" << ((int)(rockerBtn->ry * 100) / 100.0) << "\t" << ((int)(rockerBtn->rx * 100) / 100.0) << std::endl;
+    //     }
 
-        {
-            std::cout<<"yaw pitch roll = "<<robot_yaw_deg<<"\t"<<robot_pitch_deg<<"\t"<<robot_roll_deg<<std::endl;
-        }
+    //     {
+    //         std::cout<<"                    roll, roll_offset.        vz = "<<robot_roll_deg<<",\t"<< current_roll_offset<<std::endl;
+    //     }
 
-        ctr = 0;
-
-    }
+    //     ctr = 0;
+    // }
 }
 
-
-
-#endif  // L4W4_SDK_HPP
+#endif // L4W4_SDK_HPP

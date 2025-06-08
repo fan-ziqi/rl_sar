@@ -10,44 +10,23 @@
 
 RL_Sim::RL_Sim()
 {
+    this->is_simulation = true;
+
     ros::NodeHandle nh;
 
     // read params from yaml
     nh.param<std::string>("robot_name", this->robot_name, "");
-    nh.param<std::string>("config_name", this->config_name, "");
-    if (this->config_name.empty())
-    {
-        std::cerr << LOGGER::ERROR << "Configuration file not specified. Please provide it using 'cfg:=xxx'" << std::endl
-                  << LOGGER::ERROR << "Example: roslaunch rl_sar gazebo_<ROBOT>.launch cfg:=<CONFIG>" << std::endl;
-        std::abort();  // Abnormally terminate the program (triggers SIGABRT)
-    }
-    std::string robot_path = this->robot_name + "/" + this->config_name;
-    this->ReadYaml(robot_path);
-    for (std::string &observation : this->params.observations)
-    {
-        // In Gazebo, the coordinate system for angular velocity is in the world coordinate system.
-        if (observation == "ang_vel")
-        {
-            observation = "ang_vel_world";
-        }
-    }
+    nh.param<std::string>("config_name", this->default_rl_config, "");
+    this->ReadYamlBase(this->robot_name);
 
-    // init rl
+    // init torch
     torch::autograd::GradMode::set_enabled(false);
     torch::set_num_threads(4);
-    if (this->params.observations_history.size() != 0)
-    {
-        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
-    }
+
+    // init robot
     this->joint_publishers_commands.resize(this->params.num_of_dofs);
-    this->InitObservations();
     this->InitOutputs();
     this->InitControl();
-    running_state = STATE_RL_RUNNING;
-
-    // model
-    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/" + this->params.model_name;
-    this->model = torch::jit::load(model_path);
 
     // publisher
     nh.param<std::string>("ros_namespace", this->ros_namespace, "");
@@ -181,8 +160,7 @@ void RL_Sim::RobotControl()
         set_model_state.request.model_state.pose.position.z = 1.0;
         set_model_state.request.model_state.reference_frame = "world";
         this->gazebo_set_model_state_client.call(set_model_state);
-
-        this->control.control_state = STATE_WAITING;
+        this->control.control_state = this->control.last_control_state;
     }
     if (this->control.control_state == STATE_TOGGLE_SIMULATION)
     {
@@ -198,7 +176,7 @@ void RL_Sim::RobotControl()
             std::cout << std::endl << LOGGER::INFO << "Simulation Start" << std::endl;
         }
         simulation_running = !simulation_running;
-        this->control.control_state = STATE_WAITING;
+        this->control.control_state = this->control.last_control_state;
     }
     if (simulation_running)
     {
@@ -232,24 +210,28 @@ void RL_Sim::JoyCallback(const sensor_msgs::Joy::ConstPtr &msg)
     {
         if (this->joy_msg.buttons[3]) // RB+Y
         {
-            this->control.control_state = STATE_POS_GETUP;
+            this->control.SetControlState(STATE_POS_GETUP);
         }
         else if (this->joy_msg.buttons[0]) // RB+A
         {
-            this->control.control_state = STATE_POS_GETDOWN;
+            this->control.SetControlState(STATE_POS_GETDOWN);
         }
         else if (this->joy_msg.buttons[1]) // RB+B
         {
-            this->control.control_state = STATE_RL_INIT;
+            this->control.SetControlState(STATE_RL_LOCOMOTION);
         }
         else if (this->joy_msg.buttons[2]) // RB+X
         {
-            this->control.control_state = STATE_RESET_SIMULATION;
+            this->control.SetControlState(STATE_RESET_SIMULATION);
+        }
+        else if (this->joy_msg.axes[7] < 0) // DOWN
+        {
+            this->control.SetControlState(STATE_RL_NAVIGATION);
         }
     }
     if (this->joy_msg.buttons[4]) // LB
     {
-        this->control.control_state = STATE_TOGGLE_SIMULATION;
+        this->control.SetControlState(STATE_TOGGLE_SIMULATION);
     }
 
     this->control.x = this->joy_msg.axes[1] * 1.5; // Ly
@@ -266,13 +248,19 @@ void RL_Sim::JointStatesCallback(const robot_msgs::MotorState::ConstPtr &msg, co
 
 void RL_Sim::RunModel()
 {
-    if (this->running_state == STATE_RL_RUNNING && simulation_running)
+    if (this->rl_init_done && simulation_running)
     {
         this->episode_length_buf += 1;
-        this->obs.lin_vel = torch::tensor({{this->vel.linear.x, this->vel.linear.y, this->vel.linear.z}});
+        // this->obs.lin_vel = torch::tensor({{this->vel.linear.x, this->vel.linear.y, this->vel.linear.z}});
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
-        // this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
-        this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
+        if (this->fsm._currentState->getStateName() == "RLFSMStateRL_Navigation")
+        {
+            this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
+        }
+        else
+        {
+            this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
+        }
         this->obs.base_quat = torch::tensor(this->robot_state.imu.quaternion).unsqueeze(0);
         this->obs.dof_pos = torch::tensor(this->robot_state.motor_state.q).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
         this->obs.dof_vel = torch::tensor(this->robot_state.motor_state.dq).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
