@@ -11,14 +11,20 @@ namespace go2
 {
 class ObstaclesAvoidClient : public Client
 {
- public:
-     ObstaclesAvoidClient();
-     ~ObstaclesAvoidClient();
+public:
+    ObstaclesAvoidClient();
+    ~ObstaclesAvoidClient();
 
-     void Init();
+    void Init();
 
-     int32_t SwitchSet(bool enable);
-     int32_t SwitchGet(bool& enable);
+    int32_t SwitchSet(bool enable);
+    int32_t SwitchGet(bool& enable);
+
+    int32_t Move(float x, float y, float yaw);
+    int32_t UseRemoteCommandFromApi(bool isRemoteCommandsFromApi);
+
+    int32_t MoveToAbsolutePosition(float x, float y, float yaw);
+    int32_t MoveToIncrementPosition(float x, float y, float yaw);
 };
 }
 }

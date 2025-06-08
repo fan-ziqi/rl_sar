@@ -6,12 +6,12 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_POINTCLOUD2__HPP
-#define DDSCXX_POINTCLOUD2__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_POINTCLOUD2__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_POINTCLOUD2__HPP
 
-#include "PointField_.hpp"
+#include "unitree/idl/ros2/PointField_.hpp"
 
-#include "Header_.hpp"
+#include "unitree/idl/ros2/Header_.hpp"
 
 #include <cstdint>
 #include <vector>
@@ -758,4 +758,4 @@ bool max(S& str, const ::sensor_msgs::msg::dds_::PointCloud2_& instance, bool as
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_POINTCLOUD2__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_POINTCLOUD2__HPP

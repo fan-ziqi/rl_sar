@@ -6,10 +6,10 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_MOTORSTATES__HPP
-#define DDSCXX_MOTORSTATES__HPP
+#ifndef DDSCXX_UNITREE_IDL_GO2_MOTORSTATES__HPP
+#define DDSCXX_UNITREE_IDL_GO2_MOTORSTATES__HPP
 
-#include "MotorState_.hpp"
+#include "unitree/idl/go2/MotorState_.hpp"
 
 #include <vector>
 
@@ -356,4 +356,4 @@ bool max(S& str, const ::unitree_go::msg::dds_::MotorStates_& instance, bool as_
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_MOTORSTATES__HPP
+#endif // DDSCXX_UNITREE_IDL_GO2_MOTORSTATES__HPP

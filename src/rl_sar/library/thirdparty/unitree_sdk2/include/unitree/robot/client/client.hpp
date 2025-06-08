@@ -7,8 +7,8 @@
 #define UT_ROBOT_CLIENT_REG_API_NO_PROI(apiId) \
     UT_ROBOT_CLIENT_REG_API(apiId, 0)
 
-#define UT_ROBOT_CLIENT_REG_API(apiId, proirity) \
-    RegistApi(apiId, proirity)
+#define UT_ROBOT_CLIENT_REG_API(apiId, priority) \
+    RegistApi(apiId, priority)
 
 namespace unitree
 {
@@ -33,14 +33,18 @@ public:
 protected:
     void SetApiVersion(const std::string& apiVersion);
 
+    int32_t Noop();
+
     int32_t Call(int32_t apiId, const std::string& parameter, std::string& data);
     int32_t Call(int32_t apiId, const std::string& parameter);
 
     int32_t Call(int32_t apiId, const std::vector<uint8_t>& parameter, std::vector<uint8_t>& data);
     int32_t Call(int32_t apiId, const std::vector<uint8_t>& parameter);
 
-    void RegistApi(int32_t apiId, int32_t proirity = 0);
-    int32_t CheckApi(int32_t apiId, int32_t& proirity, int64_t& leaseId);
+    int32_t Call(int32_t apiId, const std::string& parameter, const std::vector<uint8_t>& binary);
+
+    void RegistApi(int32_t apiId, int32_t priority = 0);
+    int32_t CheckApi(int32_t apiId, int32_t& priority, int64_t& leaseId);
 
 private:
     bool mEnableLease;

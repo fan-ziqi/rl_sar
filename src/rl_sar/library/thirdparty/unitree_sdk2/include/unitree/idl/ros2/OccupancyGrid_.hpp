@@ -6,12 +6,12 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_OCCUPANCYGRID__HPP
-#define DDSCXX_OCCUPANCYGRID__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_OCCUPANCYGRID__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_OCCUPANCYGRID__HPP
 
-#include "MapMetaData_.hpp"
+#include "unitree/idl/ros2/MapMetaData_.hpp"
 
-#include "Header_.hpp"
+#include "unitree/idl/ros2/Header_.hpp"
 
 #include <cstdint>
 #include <vector>
@@ -529,4 +529,4 @@ bool max(S& str, const ::nav_msgs::msg::dds_::OccupancyGrid_& instance, bool as_
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_OCCUPANCYGRID__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_OCCUPANCYGRID__HPP

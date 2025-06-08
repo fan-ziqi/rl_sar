@@ -6,10 +6,10 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_POSEWITHCOVARIANCE__HPP
-#define DDSCXX_POSEWITHCOVARIANCE__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_POSEWITHCOVARIANCE__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_POSEWITHCOVARIANCE__HPP
 
-#include "Pose_.hpp"
+#include "unitree/idl/ros2/Pose_.hpp"
 
 #include <array>
 
@@ -385,4 +385,4 @@ bool max(S& str, const ::geometry_msgs::msg::dds_::PoseWithCovariance_& instance
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_POSEWITHCOVARIANCE__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_POSEWITHCOVARIANCE__HPP

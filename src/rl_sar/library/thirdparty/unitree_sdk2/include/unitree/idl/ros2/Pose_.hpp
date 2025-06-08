@@ -6,12 +6,12 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_POSE__HPP
-#define DDSCXX_POSE__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_POSE__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_POSE__HPP
 
-#include "Point_.hpp"
+#include "unitree/idl/ros2/Point_.hpp"
 
-#include "Quaternion_.hpp"
+#include "unitree/idl/ros2/Quaternion_.hpp"
 
 
 namespace geometry_msgs
@@ -348,4 +348,4 @@ bool max(S& str, const ::geometry_msgs::msg::dds_::Pose_& instance, bool as_key)
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_POSE__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_POSE__HPP

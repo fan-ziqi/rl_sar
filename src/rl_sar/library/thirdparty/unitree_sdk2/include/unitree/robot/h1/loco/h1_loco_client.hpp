@@ -10,7 +10,7 @@ namespace unitree {
 namespace robot {
 namespace h1 {
 class LocoClient : public Client {
-public:
+ public:
   LocoClient() : Client(LOCO_SERVICE_NAME, false) {}
   ~LocoClient() {}
 
@@ -22,7 +22,7 @@ public:
     UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_GET_BALANCE_MODE);
     UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_GET_SWING_HEIGHT);
     UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_GET_STAND_HEIGHT);
-    UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_GET_PHASE); // deprecated
+    UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_GET_PHASE);  // deprecated
 
     UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_SET_FSM_ID);
     UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_SET_BALANCE_MODE);
@@ -30,10 +30,16 @@ public:
     UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_SET_STAND_HEIGHT);
     UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_SET_VELOCITY);
     UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_SET_PHASE);
+    UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_SET_ARM_TASK);
+
+    UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_ENABLE_ODOM);
+    UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_DISABLE_ODOM);
+    UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_GET_ODOM);
+    UT_ROBOT_CLIENT_REG_API_NO_PROI(ROBOT_API_ID_LOCO_SET_TARGET_POSITION);
   };
 
   /*Low Level API Call*/
-  int32_t GetFsmId(int &fsm_id) {
+  int32_t GetFsmId(int& fsm_id) {
     std::string parameter, data;
 
     int32_t ret = Call(ROBOT_API_ID_LOCO_GET_FSM_ID, parameter, data);
@@ -45,7 +51,7 @@ public:
     return ret;
   }
 
-  int32_t GetFsmMode(int &fsm_mode) {
+  int32_t GetFsmMode(int& fsm_mode) {
     std::string parameter, data;
 
     int32_t ret = Call(ROBOT_API_ID_LOCO_GET_FSM_MODE, parameter, data);
@@ -57,7 +63,7 @@ public:
     return ret;
   }
 
-  int32_t GetBalanceMode(int &balance_mode) {
+  int32_t GetBalanceMode(int& balance_mode) {
     std::string parameter, data;
 
     int32_t ret = Call(ROBOT_API_ID_LOCO_GET_BALANCE_MODE, parameter, data);
@@ -69,7 +75,7 @@ public:
     return ret;
   }
 
-  int32_t GetSwingHeight(float &swing_height) {
+  int32_t GetSwingHeight(float& swing_height) {
     std::string parameter, data;
 
     int32_t ret = Call(ROBOT_API_ID_LOCO_GET_SWING_HEIGHT, parameter, data);
@@ -81,7 +87,7 @@ public:
     return ret;
   }
 
-  int32_t GetStandHeight(float &stand_height) {
+  int32_t GetStandHeight(float& stand_height) {
     std::string parameter, data;
 
     int32_t ret = Call(ROBOT_API_ID_LOCO_GET_STAND_HEIGHT, parameter, data);
@@ -93,7 +99,7 @@ public:
     return ret;
   }
 
-  int32_t GetPhase(std::vector<float> &phase) {
+  int32_t GetPhase(std::vector<float>& phase) {
     std::string parameter, data;
 
     int32_t ret = Call(ROBOT_API_ID_LOCO_GET_PHASE, parameter, data);
@@ -101,6 +107,30 @@ public:
     JsonizeDataVecFloat json;
     common::FromJsonString(data, json);
     phase = json.data;
+
+    return ret;
+  }
+
+  int32_t EnableOdom() {
+    std::string parameter, data;
+    return Call(ROBOT_API_ID_LOCO_ENABLE_ODOM, parameter, data);
+  }
+
+  int32_t DisableOdom() {
+    std::string parameter, data;
+    return Call(ROBOT_API_ID_LOCO_DISABLE_ODOM, parameter, data);
+  }
+
+  int32_t GetOdom(float& x, float& y, float& yaw) {
+    std::string parameter, data;
+
+    int32_t ret = Call(ROBOT_API_ID_LOCO_GET_ODOM, parameter, data);
+
+    go2::JsonizeVec3 json;
+    common::FromJsonString(data, json);
+    x = json.x;
+    y = json.y;
+    yaw = json.z;
 
     return ret;
   }
@@ -167,6 +197,29 @@ public:
     return Call(ROBOT_API_ID_LOCO_SET_PHASE, parameter, data);
   }
 
+  int32_t SetTargetPos(float x, float y, float yaw, bool relative = true) {
+    std::string parameter, data;
+
+    JsonizeTargetPos json;
+    json.x = x;
+    json.y = y;
+    json.yaw = yaw;
+    json.relative = relative;
+    parameter = common::ToJsonString(json);
+
+    return Call(ROBOT_API_ID_LOCO_SET_TARGET_POSITION, parameter, data);
+  }
+
+  int32_t SetTaskId(int task_id) {
+    std::string parameter, data;
+
+    go2::JsonizeDataInt json;
+    json.data = task_id;
+    parameter = common::ToJsonString(json);
+
+    return Call(ROBOT_API_ID_LOCO_SET_ARM_TASK, parameter, data);
+  }
+
   /*High Level API Call*/
   int32_t Damp() { return SetFsmId(1); }
 
@@ -178,21 +231,15 @@ public:
 
   int32_t StopMove() { return SetVelocity(0.f, 0.f, 0.f); }
 
-  int32_t HighStand() {
-    return SetStandHeight(std::numeric_limits<uint32_t>::max());
-  }
+  int32_t HighStand() { return SetStandHeight(std::numeric_limits<uint32_t>::max()); }
 
-  int32_t LowStand() {
-    return SetStandHeight(std::numeric_limits<uint32_t>::min());
-  }
+  int32_t LowStand() { return SetStandHeight(std::numeric_limits<uint32_t>::min()); }
 
   int32_t Move(float vx, float vy, float vyaw, bool continous_move) {
     return SetVelocity(vx, vy, vyaw, continous_move ? 864000.f : 1.f);
   }
 
-  int32_t Move(float vx, float vy, float vyaw) {
-    return Move(vx, vy, vyaw, continous_move_);
-  }
+  int32_t Move(float vx, float vy, float vyaw) { return Move(vx, vy, vyaw, continous_move_); }
 
   int32_t BalanceStand() { return SetBalanceMode(0); }
 
@@ -204,15 +251,33 @@ public:
   }
 
   int32_t SetNextFoot(bool foot) {
-    return SetPhase(foot ? std::vector<float>({0.f, 1.f})
-                         : std::vector<float>({1.f, 0.f}));
+    return SetPhase(foot ? std::vector<float>({0.f, 1.f}) : std::vector<float>({1.f, 0.f}));
   }
 
-private:
-  bool continous_move_ = false;
-};
-} // namespace h1
+  int32_t WaveHand() { return SetTaskId(0); }
 
-} // namespace robot
-} // namespace unitree
+  int32_t ShakeHand(int stage = -1) {
+    switch (stage) {
+      case 0:
+        first_shake_hand_stage_ = false;
+        return SetTaskId(1);
+
+      case 1:
+        first_shake_hand_stage_ = true;
+        return SetTaskId(2);
+
+      default:
+        first_shake_hand_stage_ = !first_shake_hand_stage_;
+        return SetTaskId(first_shake_hand_stage_ ? 2 : 1);
+    }
+  }
+
+ private:
+  bool continous_move_ = false;
+  bool first_shake_hand_stage_ = true;
+};
+}  // namespace h1
+
+}  // namespace robot
+}  // namespace unitree
 #endif // __UT_ROBOT_H1_LOCO_CLIENT_HPP__

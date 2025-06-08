@@ -6,14 +6,14 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_LOWSTATE__HPP
-#define DDSCXX_LOWSTATE__HPP
+#ifndef DDSCXX_UNITREE_IDL_GO2_LOWSTATE__HPP
+#define DDSCXX_UNITREE_IDL_GO2_LOWSTATE__HPP
 
-#include "BmsState_.hpp"
+#include "unitree/idl/go2/BmsState_.hpp"
 
-#include "IMUState_.hpp"
+#include "unitree/idl/go2/IMUState_.hpp"
 
-#include "MotorState_.hpp"
+#include "unitree/idl/go2/MotorState_.hpp"
 
 #include <cstdint>
 #include <array>
@@ -1424,4 +1424,4 @@ bool max(S& str, const ::unitree_go::msg::dds_::LowState_& instance, bool as_key
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_LOWSTATE__HPP
+#endif // DDSCXX_UNITREE_IDL_GO2_LOWSTATE__HPP

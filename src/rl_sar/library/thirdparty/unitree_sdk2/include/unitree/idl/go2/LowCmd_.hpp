@@ -6,12 +6,12 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_LOWCMD__HPP
-#define DDSCXX_LOWCMD__HPP
+#ifndef DDSCXX_UNITREE_IDL_GO2_LOWCMD__HPP
+#define DDSCXX_UNITREE_IDL_GO2_LOWCMD__HPP
 
-#include "BmsCmd_.hpp"
+#include "unitree/idl/go2/BmsCmd_.hpp"
 
-#include "MotorCmd_.hpp"
+#include "unitree/idl/go2/MotorCmd_.hpp"
 
 #include <cstdint>
 #include <array>
@@ -996,4 +996,4 @@ bool max(S& str, const ::unitree_go::msg::dds_::LowCmd_& instance, bool as_key) 
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_LOWCMD__HPP
+#endif // DDSCXX_UNITREE_IDL_GO2_LOWCMD__HPP

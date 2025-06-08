@@ -6,14 +6,14 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_SPORTMODESTATE__HPP
-#define DDSCXX_SPORTMODESTATE__HPP
+#ifndef DDSCXX_UNITREE_IDL_GO2_SPORTMODESTATE__HPP
+#define DDSCXX_UNITREE_IDL_GO2_SPORTMODESTATE__HPP
 
-#include "IMUState_.hpp"
+#include "unitree/idl/go2/IMUState_.hpp"
 
-#include "PathPoint_.hpp"
+#include "unitree/idl/go2/PathPoint_.hpp"
 
-#include "TimeSpec_.hpp"
+#include "unitree/idl/go2/TimeSpec_.hpp"
 
 #include <cstdint>
 #include <array>
@@ -1118,4 +1118,4 @@ bool max(S& str, const ::unitree_go::msg::dds_::SportModeState_& instance, bool 
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_SPORTMODESTATE__HPP
+#endif // DDSCXX_UNITREE_IDL_GO2_SPORTMODESTATE__HPP

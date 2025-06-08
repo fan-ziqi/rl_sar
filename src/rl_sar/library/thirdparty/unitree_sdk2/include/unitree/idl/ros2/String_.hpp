@@ -6,8 +6,8 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_STRING__HPP
-#define DDSCXX_STRING__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_STRING__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_STRING__HPP
 
 #include <string>
 
@@ -263,4 +263,4 @@ bool max(S& str, const ::std_msgs::msg::dds_::String_& instance, bool as_key) {
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_STRING__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_STRING__HPP

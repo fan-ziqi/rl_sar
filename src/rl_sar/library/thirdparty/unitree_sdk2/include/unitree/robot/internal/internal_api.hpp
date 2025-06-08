@@ -16,10 +16,22 @@ const int32_t ROBOT_INTERNAL_API_ID_MAX             = 100;
 
 ///////////////////////////////////////////////////////////////
 /*
+ * @brief  invailed api id
+ * @value: -1
+ */
+const int32_t ROBOT_API_ID_NONE                     = -1;
+
+/*
  * @brief  Get api version from server.
  * @value: 1
  */
 const int32_t ROBOT_API_ID_INTERNAL_API_VERSION     = 1;
+
+/*
+ * @brief  Noop.
+ * @value: 2
+ */
+const int32_t ROBOT_API_ID_INTERNAL_API_NOOP        = 2;
 
 /*
  * @brief  Apply lease from server.

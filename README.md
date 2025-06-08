@@ -170,16 +170,16 @@ Alternatively, press **0** on the keyboard to switch the robot to the default st
 
 <details>
 
-<summary>Unitree Go2 (Click to expand)</summary>
+<summary>Unitree Go2/Go2W (Click to expand)</summary>
 
-1. Connect one end of the Ethernet cable to the Go2 robot and the other end to the user's computer. Then, enable USB Ethernet on the computer and configure it. The IP address of the onboard computer on the Go2 robot is 192.168.123.161, so the computer's USB Ethernet address should be set to the same network segment as the robot. For example, enter 192.168.123.222 in the "Address" field ("222" can be replaced with another number).
+1. Connect one end of the Ethernet cable to the Go2/Go2W robot and the other end to the user's computer. Then, enable USB Ethernet on the computer and configure it. The IP address of the onboard computer on the Go2 robot is 192.168.123.161, so the computer's USB Ethernet address should be set to the same network segment as the robot. For example, enter 192.168.123.222 in the "Address" field ("222" can be replaced with another number).
 2. Use the `ifconfig` command to find the name of the network interface for the 123 network segment, such as `enxf8e43b808e06`. In the following steps, replace `<YOUR_NETWORK_INTERFACE>` with the actual network interface name.
-3. Open a new terminal and start the control program:
+3. Open a new terminal and start the control program. If you are controlling Go2W, you need to add `wheel` after the command, otherwise leave it blank.
     ```bash
     source devel/setup.bash
-    rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE>
+    rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
     ```
-4. Go2 supports both joy and keyboard control, using the same method as mentioned above for A1.
+4. Go2/Go2W supports both joy and keyboard control, using the same method as mentioned above for A1.
 
 </details>
 

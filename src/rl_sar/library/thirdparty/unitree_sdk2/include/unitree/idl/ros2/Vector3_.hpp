@@ -6,8 +6,8 @@
   Cyclone DDS: v0.10.2
 
 *****************************************************************/
-#ifndef DDSCXX_VECTOR3__HPP
-#define DDSCXX_VECTOR3__HPP
+#ifndef DDSCXX_UNITREE_IDL_ROS2_VECTOR3__HPP
+#define DDSCXX_UNITREE_IDL_ROS2_VECTOR3__HPP
 
 
 namespace geometry_msgs
@@ -338,4 +338,4 @@ bool max(S& str, const ::geometry_msgs::msg::dds_::Vector3_& instance, bool as_k
 } //namespace eclipse
 } //namespace org
 
-#endif // DDSCXX_VECTOR3__HPP
+#endif // DDSCXX_UNITREE_IDL_ROS2_VECTOR3__HPP
