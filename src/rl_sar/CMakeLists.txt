@@ -42,17 +42,30 @@ catkin_package(
 link_directories(/usr/local/lib)
 include_directories(${YAML_CPP_INCLUDE_DIR})
 
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+    set(ARCH_DIR "aarch64")
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64")
+    set(ARCH_DIR "x86_64")
+else()
+    message(FATAL_ERROR "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+endif()
+
 # Unitree A1
 include_directories(library/thirdparty/unitree_legged_sdk_3.2/include)
 link_directories(library/thirdparty/unitree_legged_sdk_3.2/lib)
 set(UNITREE_A1_LIBS -pthread unitree_legged_sdk_amd64 lcm)
+if(ARCH_DIR STREQUAL "aarch64")
+    set(UNITREE_A1_LIBS -pthread unitree_legged_sdk_arm64 lcm)
+elseif(ARCH_DIR STREQUAL "x86_64")
+    set(UNITREE_A1_LIBS -pthread unitree_legged_sdk_amd64 lcm)
+endif()
 
 # Unitree Go2
 include_directories(library/thirdparty/unitree_sdk2/include)
-link_directories(library/thirdparty/unitree_sdk2/lib/x86_64)
+link_directories(library/thirdparty/unitree_sdk2/lib/${ARCH_DIR})
 include_directories(library/thirdparty/unitree_sdk2/thirdparty/include)
 include_directories(library/thirdparty/unitree_sdk2/thirdparty/include/ddscxx)
-link_directories(library/thirdparty/unitree_sdk2/thirdparty/lib/x86_64)
+link_directories(library/thirdparty/unitree_sdk2/thirdparty/lib/${ARCH_DIR})
 set(UNITREE_GO2_LIBS -pthread unitree_sdk2 ddsc ddscxx)
 
 include_directories(
