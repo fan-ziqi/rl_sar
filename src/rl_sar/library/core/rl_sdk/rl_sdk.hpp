@@ -9,6 +9,7 @@
 #include <torch/script.h>
 #include <iostream>
 #include <string>
+#include <exception>
 #include <unistd.h>
 #include <tbb/concurrent_queue.h>
 

@@ -173,9 +173,9 @@ public:
             rl.InitRL(robot_path);
             rl.rl_init_done = true;
         }
-        catch (...)
+        catch (const std::exception& e)
         {
-            std::cout << LOGGER::ERROR << "InitRL() failed." << std::endl;
+            std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
             rl.rl_init_done = false;
             rl.control.control_state = STATE::STATE_POS_GETUP;
         }
@@ -258,9 +258,9 @@ public:
             rl.InitRL(robot_path);
             rl.rl_init_done = true;
         }
-        catch (...)
+        catch (const std::exception& e)
         {
-            std::cout << LOGGER::ERROR << "InitRL() failed." << std::endl;
+            std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
             rl.rl_init_done = false;
             rl.control.control_state = STATE::STATE_POS_GETUP;
         }
