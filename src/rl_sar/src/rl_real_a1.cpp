@@ -15,7 +15,7 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
 
     // read params from yaml
     this->robot_name = "a1";
-    this->default_rl_config = "robot_lab";
+    this->default_rl_config = "legged_gym";
     this->ReadYamlBase(this->robot_name);
 
     // init torch
