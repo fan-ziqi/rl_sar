@@ -1,20 +1,25 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.5)
 project(rl_sar)
 
 set(USE_CATKIN ON CACHE BOOL "Use Catkin build system")
 message(STATUS "USE_CATKIN: ${USE_CATKIN}")
 if(NOT USE_CATKIN)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 endif()
-
-add_definitions(-DCMAKE_CURRENT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug)
+endif()
+string(TOUPPER "${CMAKE_BUILD_TYPE}" UPPER_BUILD_TYPE)
+if(UPPER_BUILD_TYPE STREQUAL "DEBUG")
+  add_compile_options(-g)
+endif()
+
+add_definitions(-DCMAKE_CURRENT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 if(USE_CATKIN)
   find_package(catkin REQUIRED COMPONENTS
@@ -38,47 +43,48 @@ if(USE_CATKIN)
     rospy
   )
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
+  add_compile_options(${GAZEBO_CXX_FLAGS})
   find_package(gazebo REQUIRED)
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 find_package(Torch REQUIRED)
-
 find_package(TBB REQUIRED)
-
+find_package(Threads REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
 link_directories(/usr/local/lib)
 include_directories(${YAML_CPP_INCLUDE_DIR})
 
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64|ARM64")
+    message(STATUS "Current system architecture: ${CMAKE_SYSTEM_PROCESSOR}")
     set(ARCH_DIR "aarch64")
-    message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64")
-  message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
+    set(UNITREE_LIB "libunitree_legged_sdk_arm64")
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64")
+message(STATUS "Current system architecture: ${CMAKE_SYSTEM_PROCESSOR}")
     set(ARCH_DIR "x86_64")
+    set(UNITREE_LIB "libunitree_legged_sdk_amd64")
 else()
-    message(STATUS "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+    message(FATAL_ERROR "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
-# Unitree A1
-include_directories(library/thirdparty/unitree_legged_sdk_3.2/include)
-link_directories(library/thirdparty/unitree_legged_sdk_3.2/lib)
-set(UNITREE_A1_LIBS -pthread unitree_legged_sdk_amd64 lcm)
-if(ARCH_DIR STREQUAL "aarch64")
-    set(UNITREE_A1_LIBS -pthread unitree_legged_sdk_arm64 lcm)
-elseif(ARCH_DIR STREQUAL "x86_64")
-    set(UNITREE_A1_LIBS -pthread unitree_legged_sdk_amd64 lcm)
-endif()
+# unitree_legged_sdk-3.2
+add_library(unitree_legged_sdk SHARED IMPORTED)
+set_target_properties(unitree_legged_sdk PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/unitree_legged_sdk-3.2/include"
+    IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/unitree_legged_sdk-3.2/lib/${UNITREE_LIB}.so"
+)
+set(UNITREE_A1_LIBS Threads::Threads unitree_legged_sdk lcm)
 
-# Unitree Go2
-include_directories(library/thirdparty/unitree_sdk2/include)
-link_directories(library/thirdparty/unitree_sdk2/lib/${ARCH_DIR})
-include_directories(library/thirdparty/unitree_sdk2/thirdparty/include)
-include_directories(library/thirdparty/unitree_sdk2/thirdparty/include/ddscxx)
-link_directories(library/thirdparty/unitree_sdk2/thirdparty/lib/${ARCH_DIR})
-set(UNITREE_GO2_LIBS -pthread unitree_sdk2 ddsc ddscxx)
+# unitree_sdk2-2.0.0
+set(BUILD_EXAMPLES OFF CACHE BOOL "Disable examples build for unitree_sdk2" FORCE)
+add_subdirectory(library/thirdparty/unitree_sdk2-2.0.0)
+
+# l4w4_sdk
+add_library(l4w4_sdk INTERFACE)
+target_include_directories(l4w4_sdk INTERFACE
+    library/thirdparty/l4w4_sdk
+)
+target_link_libraries(l4w4_sdk INTERFACE Threads::Threads)
 
 if(USE_CATKIN)
   include_directories(${catkin_INCLUDE_DIRS})
@@ -94,52 +100,72 @@ include_directories(
 )
 
 add_library(rl_sdk library/core/rl_sdk/rl_sdk.cpp)
-target_link_libraries(rl_sdk "${TORCH_LIBRARIES}" Python3::Python Python3::Module TBB::tbb)
-set_property(TARGET rl_sdk PROPERTY CXX_STANDARD 14)
+set_target_properties(rl_sdk PROPERTIES
+    CXX_STANDARD 14
+    CXX_STANDARD_REQUIRED ON
+)
+target_link_libraries(rl_sdk PUBLIC
+  "${TORCH_LIBRARIES}"
+  Python3::Python
+  Python3::Module
+  TBB::tbb
+)
 find_package(Python3 COMPONENTS NumPy)
 if(Python3_NumPy_FOUND)
-  target_link_libraries(rl_sdk Python3::NumPy)
+  target_link_libraries(rl_sdk PUBLIC Python3::NumPy)
 else()
   target_compile_definitions(rl_sdk PUBLIC WITHOUT_NUMPY)
 endif()
 
 add_library(observation_buffer library/core/observation_buffer/observation_buffer.cpp)
-target_link_libraries(observation_buffer "${TORCH_LIBRARIES}")
-set_property(TARGET observation_buffer PROPERTY CXX_STANDARD 14)
+target_link_libraries(observation_buffer PUBLIC "${TORCH_LIBRARIES}")
+set_target_properties(observation_buffer PROPERTIES
+    CXX_STANDARD 14
+    CXX_STANDARD_REQUIRED ON
+)
 
 if(USE_CATKIN)
-  add_executable(rl_sim src/rl_sim.cpp )
-  target_link_libraries(rl_sim
-    rl_sdk observation_buffer yaml-cpp -pthread
+  add_executable(rl_sim src/rl_sim.cpp)
+  target_link_libraries(rl_sim PRIVATE
+    rl_sdk
+    observation_buffer
+    yaml-cpp
+    Threads::Threads
+    ${catkin_LIBRARIES}
   )
-  target_link_libraries(rl_sim ${catkin_LIBRARIES})
 endif()
 
-add_executable(rl_real_a1 src/rl_real_a1.cpp )
-target_link_libraries(rl_real_a1
+add_executable(rl_real_a1 src/rl_real_a1.cpp)
+target_link_libraries(rl_real_a1 PRIVATE
   ${UNITREE_A1_LIBS}
-  rl_sdk observation_buffer yaml-cpp
+  rl_sdk
+  observation_buffer
+  yaml-cpp
 )
 if(USE_CATKIN)
-  target_link_libraries(rl_real_a1 ${catkin_LIBRARIES})
+  target_link_libraries(rl_real_a1 PRIVATE ${catkin_LIBRARIES})
 endif()
 
-add_executable(rl_real_go2 src/rl_real_go2.cpp )
-target_link_libraries(rl_real_go2
-  ${UNITREE_GO2_LIBS}
-  rl_sdk observation_buffer yaml-cpp
+add_executable(rl_real_go2 src/rl_real_go2.cpp)
+target_link_libraries(rl_real_go2 PRIVATE
+  unitree_sdk2
+  rl_sdk
+  observation_buffer
+  yaml-cpp
 )
 if(USE_CATKIN)
-  target_link_libraries(rl_real_go2 ${catkin_LIBRARIES})
+  target_link_libraries(rl_real_go2 PRIVATE ${catkin_LIBRARIES})
 endif()
 
-include_directories(library/thirdparty/l4w4_sdk)
-add_executable(rl_real_l4w4 src/rl_real_l4w4.cpp )
-target_link_libraries(rl_real_l4w4
-  rl_sdk observation_buffer yaml-cpp -pthread
+add_executable(rl_real_l4w4 src/rl_real_l4w4.cpp)
+target_link_libraries(rl_real_l4w4 PRIVATE
+  l4w4_sdk
+  rl_sdk
+  observation_buffer
+  yaml-cpp
 )
 if(USE_CATKIN)
-  target_link_libraries(rl_real_l4w4 ${catkin_LIBRARIES})
+  target_link_libraries(rl_real_l4w4 PRIVATE ${catkin_LIBRARIES})
 endif()
 
 if(USE_CATKIN)
