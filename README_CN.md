@@ -40,7 +40,7 @@ git clone https://github.com/fan-ziqi/rl_sar.git
 本项目使用`ros-noetic`(Ubuntu20.04)，且需要安装以下的ros依赖包
 
 ```bash
-sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller ros-noetic-joy
+sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller ros-noetic-joy ros-noetic-ros-control ros-noetic-ros-controllers ros-noetic-controller-manager
 ```
 
 在任意位置下载并部署`libtorch`（请修改下面的 **\<YOUR_PATH\>** 为实际路径）
@@ -112,7 +112,7 @@ catkin build
 
 ```bash
 cmake src/rl_sar/ -B cmake_build -DUSE_CATKIN=OFF
-cmake --build cmake_build
+cmake --build cmake_build -j4
 ```
 
 编译生成的可执行文件在`cmake_build/bin`中，库在`cmake_build/lib`中。
@@ -188,14 +188,60 @@ rosrun rl_sar rl_real_a1
 
 <summary>Unitree Go2/Go2W（点击展开）</summary>
 
-1. 用网线的一端连接Go2/Go2W机器人，另一端连接用户电脑，并开启电脑的 USB Ethernet 后进行配置。机器狗机载电脑的 IP 地地址为 192.168.123.161，故需将电脑 USB Ethernet 地址设置为与机器狗同一网段，如在 Address 中输入 192.168.123.222 (“222”可以改成其他)。
-2. 通过`ifconfig`命令查看123网段的网卡名字，如`enxf8e43b808e06`，下文用 \<YOUR_NETWORK_INTERFACE\> 代替
-3. 新建终端，启动控制程序。如果控制Go2W，需要在命令后加`wheel`，否则留空。
-    ```bash
-    source devel/setup.bash
-    rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
-    ```
-4. Go2/Go2W支持手柄与键盘控制，方法与上面a1相同
+#### 网线连接
+
+用网线的一端连接Go2/Go2W机器人，另一端连接你的电脑，并开启电脑的 USB Ethernet 后进行配置。机器狗机载电脑的 IP 地地址为 `192.168.123.161`，故需将电脑 USB Ethernet 地址设置为与机器狗同一网段，如在 Address 中输入 `192.168.123.222` (`222`可以改成其他)。
+
+通过`ifconfig`命令查看123网段的网卡名字，如`enxf8e43b808e06`，下文用 \<YOUR_NETWORK_INTERFACE\> 代替
+
+新建终端，启动控制程序。如果控制Go2W，需要在命令后加`wheel`，否则留空。
+
+```bash
+source devel/setup.bash
+rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
+```
+
+Go2/Go2W支持手柄与键盘控制，方法与上面a1相同
+
+#### 在机载Jetson中部署
+
+使用网线连接电脑和机器狗，登陆Jetson主机，密码123：
+
+```bash
+ssh unitree@192.168.123.18
+```
+
+查看jetpack版本
+
+```bash
+sudo pip install jetson-stats
+sudo jtop
+```
+
+下载并安装对应jetpack版本的pytorch
+
+```bash
+wget https://developer.download.nvidia.cn/compute/redist/jp/v512/pytorch/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl
+sudo apt install python-is-python3 python3.9-dev
+pip install torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl
+```
+
+查看torch路径
+
+```bash
+python -c "import torch; print(torch.__file__)"
+```
+
+自行修改下面路径，手动创建libtorch库
+
+```bash
+mkdir ~/libtorch
+cp -r /home/unitree/.local/lib/python3.8/site-packages/torch/{bin,include,lib,share} ~/libtorch
+echo 'export Torch_DIR=~/libtorch' >> ~/.bashrc
+source ~/.bashrc
+```
+
+拉取代码并编译，见上文
 
 </details>
 
