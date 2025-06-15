@@ -59,6 +59,14 @@ g1_gazebo:
         type: robot_joint_controller/RobotJointController
         joint: waist_yaw_joint
 
+    waist_roll_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: waist_roll_joint
+
+    waist_pitch_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: waist_pitch_joint
+
     # Left Arm Controllers ---------------------------------------
     left_shoulder_pitch_controller:
         type: robot_joint_controller/RobotJointController
@@ -80,6 +88,14 @@ g1_gazebo:
         type: robot_joint_controller/RobotJointController
         joint: left_wrist_roll_joint
 
+    left_wrist_pitch_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: left_wrist_pitch_joint
+
+    left_wrist_yaw_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: left_wrist_yaw_joint
+
     # Right Arm Controllers ---------------------------------------
     right_shoulder_pitch_controller:
         type: robot_joint_controller/RobotJointController
@@ -100,3 +116,11 @@ g1_gazebo:
     right_wrist_roll_controller:
         type: robot_joint_controller/RobotJointController
         joint: right_wrist_roll_joint
+
+    right_wrist_pitch_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: right_wrist_pitch_joint
+
+    right_wrist_yaw_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: right_wrist_yaw_joint
