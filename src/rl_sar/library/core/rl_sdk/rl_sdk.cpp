@@ -416,6 +416,17 @@ torch::Tensor RL::ComputeObservation()
             }, -1);
             obs_list.push_back(phase_tensor);
         }
+        else if (observation == "g1_phase")
+        {
+            torch::Tensor period = torch::tensor({{0.8f}});
+            torch::Tensor count = torch::tensor({{this->episode_length_buf * this->params.dt * this->params.decimation}});
+            torch::Tensor phase = torch::fmod(count, period) / period;
+            torch::Tensor phase_tensor = torch::cat({
+                torch::sin(2 * 3.1415926f * phase),
+                torch::cos(2 * 3.1415926f * phase),
+            }, -1);
+            obs_list.push_back(phase_tensor);
+        }
     }
 
     torch::Tensor obs = torch::cat(obs_list, 1);
@@ -739,8 +750,6 @@ void RL::ReadYamlRL(std::string robot_path)
 
     this->params.model_name = config["model_name"].as<std::string>();
     this->params.framework = config["framework"].as<std::string>();
-    this->params.dt = config["dt"].as<double>();
-    this->params.decimation = config["decimation"].as<int>();
     this->params.num_observations = config["num_observations"].as<int>();
     this->params.observations = ReadVectorFromYaml<std::string>(config["observations"]);
     if (config["observations_history"].IsNull())

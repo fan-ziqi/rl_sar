@@ -27,7 +27,7 @@
     </include>
 
     <!-- Load the URDF into the ROS Parameter Server -->
-    <param name="robot_description" textfile="$(find g1_description)/urdf/g1.urdf"/>
+    <param name="robot_description" textfile="$(find g1_description)/urdf/g1_12dof.urdf"/>
 
     <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
     <!-- Set trunk and joint positions at startup -->
@@ -41,10 +41,7 @@
     <node pkg="controller_manager" type="spawner" name="controller_spawner" respawn="false"
         output="screen" ns="/$(arg rname)_gazebo" args="joint_state_controller
         left_hip_pitch_controller left_hip_roll_controller left_hip_yaw_controller left_knee_controller left_ankle_pitch_controller left_ankle_roll_controller
-        right_hip_pitch_controller right_hip_roll_controller right_hip_yaw_controller right_knee_controller right_ankle_pitch_controller right_ankle_roll_controller
-        waist_yaw_controller
-        left_shoulder_pitch_controller left_shoulder_roll_controller left_shoulder_yaw_controller left_elbow_controller left_wrist_roll_controller
-        right_shoulder_pitch_controller right_shoulder_roll_controller right_shoulder_yaw_controller right_elbow_controller right_wrist_roll_controller"/>
+        right_hip_pitch_controller right_hip_roll_controller right_hip_yaw_controller right_knee_controller right_ankle_pitch_controller right_ankle_roll_controller"/>
 
     <!-- convert joint states to TF transforms for rviz, etc -->
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"
