@@ -4,8 +4,6 @@
 a1/legged_gym:
   model_name: "model.pt"
   framework: "isaacgym"
-  dt: 0.005
-  decimation: 4
   num_observations: 45
   observations: ["ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
   observations_history: [5, 4, 3, 2, 1, 0]  # 0 is the latest observation
