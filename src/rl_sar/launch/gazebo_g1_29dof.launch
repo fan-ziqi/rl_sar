@@ -27,7 +27,7 @@
     </include>
 
     <!-- Load the URDF into the ROS Parameter Server -->
-    <param name="robot_description" textfile="$(find g1_description)/urdf/g1_29dof_rev_1_0.urdf"/>
+    <param name="robot_description" textfile="$(find g1_description)/urdf/g1_29dof_rev_1_0_modify_inertia.urdf"/>
 
     <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
     <!-- Set trunk and joint positions at startup -->
