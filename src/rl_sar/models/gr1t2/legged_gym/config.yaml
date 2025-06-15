@@ -4,8 +4,6 @@
 gr1t2/legged_gym:
   model_name: "model_4000_jit.pt"
   framework: "isaacgym"
-  dt: 0.001
-  decimation: 20
   num_observations: 39
   observations: ["ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
   observations_history: []  # 0 is the latest observation
