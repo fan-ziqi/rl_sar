@@ -15,7 +15,7 @@
 This repository provides a framework for simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
 
 feature:
-- Built-in pre-trained models for multiple robot simulations, including `Unitree-A1`, `Unitree-Go2`, `Unitree-Go2W`, `Unitree-B2`, `Unitree-B2W`, `FFTAI-GR1T1`, `FFTAI-GR1T2`, `GoldenRetriever-L4W0`, `GoldenRetriever-L4W4`;
+- Built-in pre-trained models for multiple robot simulations, including `Unitree-A1`, `Unitree-Go2`, `Unitree-Go2W`, `Unitree-B2`, `Unitree-B2W`, `Unitree-G1`, `FFTAI-GR1T1`, `FFTAI-GR1T2`, `GoldenRetriever-L4W0`, `GoldenRetriever-L4W4`;
 - The training framework supports **IsaacGym** and **IsaacSim**, distinguished by `framework`;
 - The code has **ROS-Noetic** and **ROS2-Foxy/Humble** versions;
 - The code has **cpp** and **python** versions, with the python version located in `src/rl_sar/scripts`;
