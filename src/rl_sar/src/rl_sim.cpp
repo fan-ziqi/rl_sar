@@ -33,14 +33,14 @@ RL_Sim::RL_Sim()
         std::cout << LOGGER::WARNING << "Waiting for param_node service to be available..." << std::endl;
     }
     auto request = std::make_shared<rcl_interfaces::srv::GetParameters::Request>();
-    request->names = {"robot_name", "gazebo_model_name"};
+    request->names = {"robot_name", "gazebo_model_name", "config_name"};
     // Use a timeout for the future
     auto future = param_client->async_send_request(request);
     auto status = rclcpp::spin_until_future_complete(this->get_node_base_interface(), future, std::chrono::seconds(5));
     if (status == rclcpp::FutureReturnCode::SUCCESS)
     {
         auto result = future.get();
-        if (result->values.size() < 2)
+        if (result->values.size() < 3)
         {
             std::cout << LOGGER::ERROR << "Failed to get all parameters from param_node" << std::endl;
         }
@@ -48,8 +48,10 @@ RL_Sim::RL_Sim()
         {
             this->robot_name = result->values[0].string_value;
             this->gazebo_model_name = result->values[1].string_value;
+            this->default_rl_config = result->values[2].string_value;
             std::cout << LOGGER::INFO << "Get param robot_name: " << this->robot_name << std::endl;
             std::cout << LOGGER::INFO << "Get param gazebo_model_name: " << this->gazebo_model_name << std::endl;
+            std::cout << LOGGER::INFO << "Get param config_name: " << this->default_rl_config << std::endl;
         }
     }
     else
@@ -134,6 +136,8 @@ RL_Sim::RL_Sim()
     this->gazebo_set_model_state_client = this->create_client<gazebo_msgs::srv::SetModelState>("/gazebo/set_model_state");
     this->gazebo_pause_physics_client = this->create_client<std_srvs::srv::Empty>("/gazebo/pause_physics");
     this->gazebo_unpause_physics_client = this->create_client<std_srvs::srv::Empty>("/gazebo/unpause_physics");
+
+    simulation_running = true;  // TODO
 #endif
 
     // loop
@@ -176,90 +180,68 @@ RL_Sim::~RL_Sim()
 void RL_Sim::GetState(RobotState<double> *state)
 {
 #if defined(USE_ROS1)
+    const auto &orientation = this->pose.orientation;
+    const auto &angular_velocity = this->vel.angular;
+#elif defined(USE_ROS2)
+    const auto &orientation = this->gazebo_imu.orientation;
+    const auto &angular_velocity = this->gazebo_imu.angular_velocity;
+#endif
+
     if (this->params.framework == "isaacgym")
     {
-        state->imu.quaternion[3] = this->pose.orientation.w;
-        state->imu.quaternion[0] = this->pose.orientation.x;
-        state->imu.quaternion[1] = this->pose.orientation.y;
-        state->imu.quaternion[2] = this->pose.orientation.z;
+        state->imu.quaternion[3] = orientation.w;
+        state->imu.quaternion[0] = orientation.x;
+        state->imu.quaternion[1] = orientation.y;
+        state->imu.quaternion[2] = orientation.z;
     }
     else if (this->params.framework == "isaacsim")
     {
-        state->imu.quaternion[0] = this->pose.orientation.w;
-        state->imu.quaternion[1] = this->pose.orientation.x;
-        state->imu.quaternion[2] = this->pose.orientation.y;
-        state->imu.quaternion[3] = this->pose.orientation.z;
+        state->imu.quaternion[0] = orientation.w;
+        state->imu.quaternion[1] = orientation.x;
+        state->imu.quaternion[2] = orientation.y;
+        state->imu.quaternion[3] = orientation.z;
     }
 
-    state->imu.gyroscope[0] = this->vel.angular.x;
-    state->imu.gyroscope[1] = this->vel.angular.y;
-    state->imu.gyroscope[2] = this->vel.angular.z;
-
-    // state->imu.accelerometer
+    state->imu.gyroscope[0] = angular_velocity.x;
+    state->imu.gyroscope[1] = angular_velocity.y;
+    state->imu.gyroscope[2] = angular_velocity.z;
 
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
+#if defined(USE_ROS1)
         state->motor_state.q[i] = this->joint_positions[this->params.joint_controller_names[i]];
         state->motor_state.dq[i] = this->joint_velocities[this->params.joint_controller_names[i]];
         state->motor_state.tau_est[i] = this->joint_efforts[this->params.joint_controller_names[i]];
-    }
 #elif defined(USE_ROS2)
-    if (this->params.framework == "isaacgym")
-    {
-        state->imu.quaternion[3] = this->gazebo_imu.orientation.w;
-        state->imu.quaternion[0] = this->gazebo_imu.orientation.x;
-        state->imu.quaternion[1] = this->gazebo_imu.orientation.y;
-        state->imu.quaternion[2] = this->gazebo_imu.orientation.z;
-    }
-    else if (this->params.framework == "isaacsim")
-    {
-        state->imu.quaternion[0] = this->gazebo_imu.orientation.w;
-        state->imu.quaternion[1] = this->gazebo_imu.orientation.x;
-        state->imu.quaternion[2] = this->gazebo_imu.orientation.y;
-        state->imu.quaternion[3] = this->gazebo_imu.orientation.z;
-    }
-
-    state->imu.gyroscope[0] = this->gazebo_imu.angular_velocity.x;
-    state->imu.gyroscope[1] = this->gazebo_imu.angular_velocity.y;
-    state->imu.gyroscope[2] = this->gazebo_imu.angular_velocity.z;
-
-    state->imu.accelerometer[0] = this->gazebo_imu.linear_acceleration.x;
-    state->imu.accelerometer[1] = this->gazebo_imu.linear_acceleration.y;
-    state->imu.accelerometer[2] = this->gazebo_imu.linear_acceleration.z;
-
-    for (int i = 0; i < this->params.num_of_dofs; ++i)
-    {
-        state->motor_state.q[i] = this->robot_state_subscriber_msg.motor_state[i].q;
+        state->motor_state.q[i] = this->robot_state_subscriber_msg.motor_state[i].q;  // TODO
         state->motor_state.dq[i] = this->robot_state_subscriber_msg.motor_state[i].dq;
         state->motor_state.tau_est[i] = this->robot_state_subscriber_msg.motor_state[i].tau_est;
-    }
 #endif
+    }
 }
 
 void RL_Sim::SetCommand(const RobotCommand<double> *command)
 {
-#if defined(USE_ROS1)
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
-        this->joint_publishers_commands[i].q = command->motor_command.q[i];
-        this->joint_publishers_commands[i].dq = command->motor_command.dq[i];
-        this->joint_publishers_commands[i].kp = command->motor_command.kp[i];
-        this->joint_publishers_commands[i].kd = command->motor_command.kd[i];
-        this->joint_publishers_commands[i].tau = command->motor_command.tau[i];
+#if defined(USE_ROS1)
+        auto &target = this->joint_publishers_commands[i];
+#elif defined(USE_ROS2)
+        auto &target = this->robot_command_publisher_msg.motor_command[i];
+#endif
+        target.q   = command->motor_command.q[i];
+        target.dq  = command->motor_command.dq[i];
+        target.kp  = command->motor_command.kp[i];
+        target.kd  = command->motor_command.kd[i];
+        target.tau = command->motor_command.tau[i];
     }
+
+#if defined(USE_ROS1)
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
         this->joint_publishers[this->params.joint_controller_names[i]].publish(this->joint_publishers_commands[i]);
     }
 #elif defined(USE_ROS2)
-    for (int i = 0; i < this->params.num_of_dofs; ++i)
-    {
-        this->robot_command_publisher_msg.motor_command[i].q = command->motor_command.q[i];
-        this->robot_command_publisher_msg.motor_command[i].dq = command->motor_command.dq[i];
-        this->robot_command_publisher_msg.motor_command[i].kp = command->motor_command.kp[i];
-        this->robot_command_publisher_msg.motor_command[i].kd = command->motor_command.kd[i];
-        this->robot_command_publisher_msg.motor_command[i].tau = command->motor_command.tau[i];
-    }
     this->robot_command_publisher->publish(this->robot_command_publisher_msg);
 #endif
 }
@@ -328,7 +310,6 @@ void RL_Sim::CmdvelCallback(
     this->cmd_vel = *msg;
 }
 
-// TODO
 void RL_Sim::JoyCallback(
 #if defined(USE_ROS1)
     const sensor_msgs::Joy::ConstPtr &msg

@@ -9,18 +9,19 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     rname = LaunchConfiguration("rname")
-    framework = LaunchConfiguration("framework")
+    cfg = LaunchConfiguration("cfg")
 
-    wname = "stair"
-    robot_name = ParameterValue(Command(["echo -n ", rname, "_", framework]), value_type=str)
+    wname = "stairs"
+    robot_name = ParameterValue(Command(["echo -n ", rname]), value_type=str)
     ros_namespace = ParameterValue(Command(["echo -n ", "/", rname, "_gazebo"]), value_type=str)
     gazebo_model_name = ParameterValue(Command(["echo -n ", rname, "_gazebo"]), value_type=str)
+    config_name = ParameterValue(Command(["echo -n ", cfg]), value_type=str)
 
     robot_description = ParameterValue(
         Command([
             "xacro ",
             Command(["echo -n ", Command(["ros2 pkg prefix ", rname, "_description"])]),
-            "/share/", rname, "_description/xacro/robot.xacro"
+            "/share/", rname, "_description/xacro/robot_ros2.xacro"
         ]),
         value_type=str
     )
@@ -71,6 +72,7 @@ def generate_launch_description():
         parameters=[{
             "robot_name": robot_name,
             "gazebo_model_name": gazebo_model_name,
+            "config_name": config_name,
         }],
     )
 
@@ -81,8 +83,8 @@ def generate_launch_description():
             default_value=TextSubstitution(text=""),
         ),
         DeclareLaunchArgument(
-            "framework",
-            description="Framework (isaacgym or isaacsim)",
+            "cfg",
+            description="Policy cfg",
             default_value=TextSubstitution(text=""),
         ),
         robot_state_publisher_node,

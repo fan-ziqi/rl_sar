@@ -12,7 +12,7 @@ controller_manager:
         robot_joint_controller:
             type: robot_joint_controller/RobotJointControllerGroup
 
-robot_joint_controller:
+robot_joint_controller:  # TODO
     ros__parameters:
         joints:
             - FL_hip_joint

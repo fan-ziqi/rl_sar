@@ -23,7 +23,7 @@ elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
     find_package(robot_state_publisher REQUIRED)
     install(
     DIRECTORY
-        config
+        config_ros2
         launch
         meshes
         urdf

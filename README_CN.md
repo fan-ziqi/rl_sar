@@ -1,24 +1,21 @@
 # rl_sar
 
-[![Ubuntu 20.04/22.04](https://img.shields.io/badge/Ubuntu-20.04/22.04-blue.svg?logo=ubuntu)](https://ubuntu.com/)
+[![Ubuntu 20.04/22.04/24.04](https://img.shields.io/badge/Ubuntu-20.04/22.04/24.04-blue.svg?logo=ubuntu)](https://ubuntu.com/)
 [![ROS Noetic](https://img.shields.io/badge/ros-noetic-brightgreen.svg?logo=ros)](https://wiki.ros.org/noetic)
 [![ROS2 Foxy/Humble](https://img.shields.io/badge/ros2-foxy/humble-brightgreen.svg?logo=ros)](https://wiki.ros.org/foxy)
 [![License](https://img.shields.io/badge/license-Apache2.0-yellow.svg?logo=apache)](https://opensource.org/license/apache-2-0)
 
 [English document](README.md)
 
-**版本选择: [ROS-Noetic](https://github.com/fan-ziqi/rl_sar/tree/main) | [ROS2-Foxy/Humble](https://github.com/fan-ziqi/rl_sar/tree/ros2)**
-
 > [!IMPORTANT]
-> 本仓库持续维护 ROS1 的 C++ 版本，而 ROS2 版本和 Python 版本未能同步更新，部分功能可能缺失或存在差异。因此，建议优先使用 ROS1 的 C++ 版本，以获得最新的功能特性和 bug 修复。
+> Python版本暂时停止维护，如有需要请使用[v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3)版本，后续可能会重新上线。
 
 本仓库提供了机器人强化学习算法的仿真验证与实物部署框架，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
 
 特性：
 - 内置多种机器人仿真的预训练模型，包括 `Unitree-A1`、`Unitree-Go2`、`Unitree-Go2W`、`Unitree-B2`、`Unitree-B2W`、`Unitree-G1`、`FFTAI-GR1T1`、`FFTAI-GR1T2`、`GoldenRetriever-L4W0`、`GoldenRetriever-L4W4`；
 - 训练框架支持**IsaacGym**和**IsaacSim**，用`framework`加以区分；
-- 代码有**ROS-Noetic**和**ROS2-Foxy/Humble**两个版本；
-- 代码有**python**和**cpp**两个版本，其中python版本在`src/rl_sar/scripts`内；
+- 代码同时支持**ROS-Noetic**和**ROS2-Foxy/Humble/Jazzy**；
 
 > [!NOTE]
 > 如果你想使用IsaacLab（IsaacSim）训练策略，请使用 [robot_lab](https://github.com/fan-ziqi/robot_lab) 项目。
@@ -37,10 +34,16 @@ git clone https://github.com/fan-ziqi/rl_sar.git
 
 ## 依赖
 
-本项目使用`ros-noetic`(Ubuntu20.04)，且需要安装以下的ros依赖包
+如果您使用`ros-noetic`(Ubuntu20.04)，需要安装以下的ros依赖包：
 
 ```bash
 sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller ros-noetic-joy ros-noetic-ros-control ros-noetic-ros-controllers ros-noetic-controller-manager
+```
+
+如果您使用`ros2-foxy`(Ubuntu20.04)或`ros2-humble`(Ubuntu22.04)，需要安装以下的ros依赖包：
+
+```bash
+sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-control ros-$ROS_DISTRO-ros2-controllers ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-robot-state-publisher ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-gazebo-ros2-control ros-$ROS_DISTRO-gazebo-ros-pkgs ros-$ROS_DISTRO-xacro
 ```
 
 在任意位置下载并部署`libtorch`（请修改下面的 **\<YOUR_PATH\>** 为实际路径）
@@ -92,30 +95,53 @@ sudo ldconfig
 
 ## 编译
 
-### 使用catkin编译
+由于本项目支持多版本的ROS，需要针对不同版本创建一些软链接，项目根目录中提供了编译脚本供一键编译。
 
-在项目根目录编译
+在项目根目录中执行下面的脚本编译整个项目
 
 ```bash
-cd ..
-catkin build
+./build.sh
 ```
 
-如果需要用到ROS，需要手动打开对应`rl_xxx.hpp`中的宏定义
+若想单独编译某几个包，可以在后面加上包名
+
+```bash
+./build.sh package1 package2
+```
+
+若想删除构建，可以使用下列命令，此命令会删除所有编译产物和创建的软链接
+
+```bash
+./build.sh -c  # or ./build.sh --clean
+```
+
+如果不需要仿真，只在机器人上运行，可以使用CMake进行编译，同时禁用ROS（编译生成的可执行文件在`cmake_build/bin`中，库在`cmake_build/lib`中）
+
+```bash
+./build.sh -m  # or ./build.sh --cmake
+```
+
+详细的使用说明可以通过`./build.sh -h`查看
+
+```bash
+Usage: ./build.sh [OPTIONS] [PACKAGE_NAMES...]
+
+Options:
+  -c, --clean    Clean workspace (remove symlinks and build artifacts)
+  -m, --cmake    Build using CMake (for hardware deployment only)
+  -h, --help     Show this help message
+
+Examples:
+  ./build.sh                    # Build all ROS packages
+  ./build.sh package1 package2  # Build specific ROS packages
+  ./build.sh -c                 # Clean all symlinks and build artifacts
+  ./build.sh --clean package1   # Clean specific package and build artifacts
+  ./build.sh -m                 # Build with CMake for hardware deployment
+```
 
 > [!NOTE]
 > 如果 catkin build 报错: `Unable to find either executable 'empy' or Python module 'em'`, 在`catkin build` 之前执行 `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3`
 
-### 使用Cmake编译
-
-如果不需要仿真，只在机器人上运行，可以不用catkin编译，同时禁用ROS：
-
-```bash
-cmake src/rl_sar/ -B cmake_build -DUSE_CATKIN=OFF
-cmake --build cmake_build -j4
-```
-
-编译生成的可执行文件在`cmake_build/bin`中，库在`cmake_build/lib`中。
 
 ## 运行
 
@@ -128,16 +154,25 @@ cmake --build cmake_build -j4
 打开一个终端，启动gazebo仿真环境
 
 ```bash
+# ROS1
 source devel/setup.bash
 roslaunch rl_sar gazebo_<ROBOT>.launch cfg:=<CONFIG>
+
+# ROS2
+source install/setup.bash
+ros2 launch rl_sar gazebo.launch.py rname:=<ROBOT> cfg:=<CONFIG>  # TODO
 ```
 
 打开一个新终端，启动控制程序
 
 ```bash
+# ROS1
 source devel/setup.bash
-(for cpp version)    rosrun rl_sar rl_sim
-(for python version) rosrun rl_sar rl_sim.py
+rosrun rl_sar rl_sim
+
+# ROS2
+source install/setup.bash
+ros2 run rl_sar rl_sim
 ```
 
 键盘控制：
