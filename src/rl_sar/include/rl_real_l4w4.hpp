@@ -8,7 +8,6 @@
 
 // #define PLOT
 // #define CSV_LOGGER
-// #define USE_ROS
 
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
@@ -16,7 +15,7 @@
 #include "l4w4_sdk.hpp"
 #include <csignal>
 
-#ifdef USE_ROS
+#if defined(USE_ROS1)
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 #endif
@@ -61,7 +60,7 @@ private:
     std::vector<double> mapped_joint_positions;
     std::vector<double> mapped_joint_velocities;
 
-#ifdef USE_ROS
+#if defined(USE_ROS1)
     // ros
     geometry_msgs::Twist cmd_vel;
     ros::Subscriber cmd_vel_subscriber;

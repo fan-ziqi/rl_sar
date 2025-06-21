@@ -9,14 +9,56 @@
 // #define CSV_LOGGER
 
 RL_Sim::RL_Sim()
+#if defined(USE_ROS2)
+    : rclcpp::Node("rl_sim_node")
+#endif
 {
     this->is_simulation = true;
 
+#if defined(USE_ROS1)
     ros::NodeHandle nh;
-
-    // read params from yaml
+    nh.param<std::string>("ros_namespace", this->ros_namespace, "");
     nh.param<std::string>("robot_name", this->robot_name, "");
     nh.param<std::string>("config_name", this->default_rl_config, "");
+#elif defined(USE_ROS2)
+    this->ros_namespace = this->get_namespace();
+    // get params from param_node
+    param_client = this->create_client<rcl_interfaces::srv::GetParameters>("/param_node/get_parameters");
+    while (!param_client->wait_for_service(std::chrono::seconds(1)))
+    {
+        if (!rclcpp::ok()) {
+            std::cout << LOGGER::ERROR << "Interrupted while waiting for param_node service. Exiting." << std::endl;
+            return;
+        }
+        std::cout << LOGGER::WARNING << "Waiting for param_node service to be available..." << std::endl;
+    }
+    auto request = std::make_shared<rcl_interfaces::srv::GetParameters::Request>();
+    request->names = {"robot_name", "gazebo_model_name"};
+    // Use a timeout for the future
+    auto future = param_client->async_send_request(request);
+    auto status = rclcpp::spin_until_future_complete(this->get_node_base_interface(), future, std::chrono::seconds(5));
+    if (status == rclcpp::FutureReturnCode::SUCCESS)
+    {
+        auto result = future.get();
+        if (result->values.size() < 2)
+        {
+            std::cout << LOGGER::ERROR << "Failed to get all parameters from param_node" << std::endl;
+        }
+        else
+        {
+            this->robot_name = result->values[0].string_value;
+            this->gazebo_model_name = result->values[1].string_value;
+            std::cout << LOGGER::INFO << "Get param robot_name: " << this->robot_name << std::endl;
+            std::cout << LOGGER::INFO << "Get param gazebo_model_name: " << this->gazebo_model_name << std::endl;
+        }
+    }
+    else
+    {
+        std::cout << LOGGER::ERROR << "Failed to call param_node service" << std::endl;
+    }
+#endif
+
+    // read params from yaml
     this->ReadYamlBase(this->robot_name);
 
     // init torch
@@ -24,12 +66,17 @@ RL_Sim::RL_Sim()
     torch::set_num_threads(4);
 
     // init robot
+#if defined(USE_ROS1)
     this->joint_publishers_commands.resize(this->params.num_of_dofs);
+#elif defined(USE_ROS2)
+    this->robot_command_publisher_msg.motor_command.resize(this->params.num_of_dofs);
+    this->robot_state_subscriber_msg.motor_state.resize(this->params.num_of_dofs);
+#endif
     this->InitOutputs();
     this->InitControl();
 
+#if defined(USE_ROS1)
     // publisher
-    nh.param<std::string>("ros_namespace", this->ros_namespace, "");
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
         // joint need to rename as xxx_joint
@@ -65,6 +112,29 @@ RL_Sim::RL_Sim()
     this->gazebo_set_model_state_client = nh.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
     this->gazebo_pause_physics_client = nh.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
     this->gazebo_unpause_physics_client = nh.serviceClient<std_srvs::Empty>("/gazebo/unpause_physics");
+#elif defined(USE_ROS2)
+    // publisher
+    this->robot_command_publisher = this->create_publisher<robot_msgs::msg::RobotCommand>(
+        this->ros_namespace + "robot_joint_controller/command", rclcpp::SystemDefaultsQoS());
+
+    // subscriber
+    this->cmd_vel_subscriber = this->create_subscription<geometry_msgs::msg::Twist>(
+        "/cmd_vel", rclcpp::SystemDefaultsQoS(),
+        [this] (const geometry_msgs::msg::Twist::SharedPtr msg) {this->CmdvelCallback(msg);}
+    );
+    this->gazebo_imu_subscriber = this->create_subscription<sensor_msgs::msg::Imu>(
+        "/imu", rclcpp::SystemDefaultsQoS(), [this] (const sensor_msgs::msg::Imu::SharedPtr msg) {this->GazeboImuCallback(msg);}
+    );
+    this->robot_state_subscriber = this->create_subscription<robot_msgs::msg::RobotState>(
+        this->ros_namespace + "robot_joint_controller/state", rclcpp::SystemDefaultsQoS(),
+        [this] (const robot_msgs::msg::RobotState::SharedPtr msg) {this->RobotStateCallback(msg);}
+    );
+
+    // service
+    this->gazebo_set_model_state_client = this->create_client<gazebo_msgs::srv::SetModelState>("/gazebo/set_model_state");
+    this->gazebo_pause_physics_client = this->create_client<std_srvs::srv::Empty>("/gazebo/pause_physics");
+    this->gazebo_unpause_physics_client = this->create_client<std_srvs::srv::Empty>("/gazebo/unpause_physics");
+#endif
 
     // loop
     this->loop_control = std::make_shared<LoopFunc>("loop_control", this->params.dt, std::bind(&RL_Sim::RobotControl, this));
@@ -105,6 +175,7 @@ RL_Sim::~RL_Sim()
 
 void RL_Sim::GetState(RobotState<double> *state)
 {
+#if defined(USE_ROS1)
     if (this->params.framework == "isaacgym")
     {
         state->imu.quaternion[3] = this->pose.orientation.w;
@@ -132,10 +203,42 @@ void RL_Sim::GetState(RobotState<double> *state)
         state->motor_state.dq[i] = this->joint_velocities[this->params.joint_controller_names[i]];
         state->motor_state.tau_est[i] = this->joint_efforts[this->params.joint_controller_names[i]];
     }
+#elif defined(USE_ROS2)
+    if (this->params.framework == "isaacgym")
+    {
+        state->imu.quaternion[3] = this->gazebo_imu.orientation.w;
+        state->imu.quaternion[0] = this->gazebo_imu.orientation.x;
+        state->imu.quaternion[1] = this->gazebo_imu.orientation.y;
+        state->imu.quaternion[2] = this->gazebo_imu.orientation.z;
+    }
+    else if (this->params.framework == "isaacsim")
+    {
+        state->imu.quaternion[0] = this->gazebo_imu.orientation.w;
+        state->imu.quaternion[1] = this->gazebo_imu.orientation.x;
+        state->imu.quaternion[2] = this->gazebo_imu.orientation.y;
+        state->imu.quaternion[3] = this->gazebo_imu.orientation.z;
+    }
+
+    state->imu.gyroscope[0] = this->gazebo_imu.angular_velocity.x;
+    state->imu.gyroscope[1] = this->gazebo_imu.angular_velocity.y;
+    state->imu.gyroscope[2] = this->gazebo_imu.angular_velocity.z;
+
+    state->imu.accelerometer[0] = this->gazebo_imu.linear_acceleration.x;
+    state->imu.accelerometer[1] = this->gazebo_imu.linear_acceleration.y;
+    state->imu.accelerometer[2] = this->gazebo_imu.linear_acceleration.z;
+
+    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    {
+        state->motor_state.q[i] = this->robot_state_subscriber_msg.motor_state[i].q;
+        state->motor_state.dq[i] = this->robot_state_subscriber_msg.motor_state[i].dq;
+        state->motor_state.tau_est[i] = this->robot_state_subscriber_msg.motor_state[i].tau_est;
+    }
+#endif
 }
 
 void RL_Sim::SetCommand(const RobotCommand<double> *command)
 {
+#if defined(USE_ROS1)
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
         this->joint_publishers_commands[i].q = command->motor_command.q[i];
@@ -144,15 +247,26 @@ void RL_Sim::SetCommand(const RobotCommand<double> *command)
         this->joint_publishers_commands[i].kd = command->motor_command.kd[i];
         this->joint_publishers_commands[i].tau = command->motor_command.tau[i];
     }
-
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
         this->joint_publishers[this->params.joint_controller_names[i]].publish(this->joint_publishers_commands[i]);
     }
+#elif defined(USE_ROS2)
+    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    {
+        this->robot_command_publisher_msg.motor_command[i].q = command->motor_command.q[i];
+        this->robot_command_publisher_msg.motor_command[i].dq = command->motor_command.dq[i];
+        this->robot_command_publisher_msg.motor_command[i].kp = command->motor_command.kp[i];
+        this->robot_command_publisher_msg.motor_command[i].kd = command->motor_command.kd[i];
+        this->robot_command_publisher_msg.motor_command[i].tau = command->motor_command.tau[i];
+    }
+    this->robot_command_publisher->publish(this->robot_command_publisher_msg);
+#endif
 }
 
 void RL_Sim::RobotControl()
 {
+#if defined(USE_ROS1)
     if (this->control.control_state == STATE_RESET_SIMULATION)
     {
         gazebo_msgs::SetModelState set_model_state;
@@ -178,6 +292,9 @@ void RL_Sim::RobotControl()
         simulation_running = !simulation_running;
         this->control.control_state = this->control.last_control_state;
     }
+#elif defined(USE_ROS2)
+    // TODO
+#endif
     if (simulation_running)
     {
         this->motiontime++;
@@ -187,18 +304,38 @@ void RL_Sim::RobotControl()
     }
 }
 
+#if defined(USE_ROS1)
 void RL_Sim::ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg)
 {
     this->vel = msg->twist[2];
     this->pose = msg->pose[2];
 }
+#elif defined(USE_ROS2)
+void RL_Sim::GazeboImuCallback(const sensor_msgs::msg::Imu::SharedPtr msg)
+{
+    this->gazebo_imu = *msg;
+}
+#endif
 
-void RL_Sim::CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg)
+void RL_Sim::CmdvelCallback(
+#if defined(USE_ROS1)
+    const geometry_msgs::Twist::ConstPtr &msg
+#elif defined(USE_ROS2)
+    const geometry_msgs::msg::Twist::SharedPtr msg
+#endif
+)
 {
     this->cmd_vel = *msg;
 }
 
-void RL_Sim::JoyCallback(const sensor_msgs::Joy::ConstPtr &msg)
+// TODO
+void RL_Sim::JoyCallback(
+#if defined(USE_ROS1)
+    const sensor_msgs::Joy::ConstPtr &msg
+#elif defined(USE_ROS2)
+    const sensor_msgs::msg::Joy::SharedPtr msg
+#endif
+)
 {
     this->joy_msg = *msg;
 
@@ -239,12 +376,19 @@ void RL_Sim::JoyCallback(const sensor_msgs::Joy::ConstPtr &msg)
     this->control.yaw = this->joy_msg.axes[3] * 1.5; // Rx
 }
 
+#if defined(USE_ROS1)
 void RL_Sim::JointStatesCallback(const robot_msgs::MotorState::ConstPtr &msg, const std::string &joint_name)
 {
     this->joint_positions[joint_name] = msg->q;
     this->joint_velocities[joint_name] = msg->dq;
     this->joint_efforts[joint_name] = msg->tau_est;
 }
+#elif defined(USE_ROS2)
+void RL_Sim::RobotStateCallback(const robot_msgs::msg::RobotState::SharedPtr msg)
+{
+    this->robot_state_subscriber_msg = *msg;
+}
+#endif
 
 void RL_Sim::RunModel()
 {
@@ -332,8 +476,13 @@ void RL_Sim::Plot()
     {
         this->plot_real_joint_pos[i].erase(this->plot_real_joint_pos[i].begin());
         this->plot_target_joint_pos[i].erase(this->plot_target_joint_pos[i].begin());
+#if defined(USE_ROS1)
         this->plot_real_joint_pos[i].push_back(this->joint_positions[this->params.joint_controller_names[i]]);
         this->plot_target_joint_pos[i].push_back(this->joint_publishers_commands[i].q);
+#elif defined(USE_ROS2)
+        this->plot_real_joint_pos[i].push_back(this->robot_state_subscriber_msg.motor_state[i].q);
+        this->plot_target_joint_pos[i].push_back(this->robot_command_publisher_msg.motor_command[i].q);
+#endif
         plt::subplot(4, 3, i + 1);
         plt::named_plot("_real_joint_pos", this->plot_t, this->plot_real_joint_pos[i], "r");
         plt::named_plot("_target_joint_pos", this->plot_t, this->plot_target_joint_pos[i], "b");
@@ -343,17 +492,25 @@ void RL_Sim::Plot()
     plt::pause(0.01);
 }
 
+#if defined(USE_ROS1)
 void signalHandler(int signum)
 {
     ros::shutdown();
     exit(0);
 }
+#endif
 
 int main(int argc, char **argv)
 {
+#if defined(USE_ROS1)
     signal(SIGINT, signalHandler);
     ros::init(argc, argv, "rl_sar");
     RL_Sim rl_sar;
     ros::spin();
+#elif defined(USE_ROS2)
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<RL_Sim>());
+    rclcpp::shutdown();
+#endif
     return 0;
 }

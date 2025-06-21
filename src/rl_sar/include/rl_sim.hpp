@@ -11,6 +11,7 @@
 #include "loop.hpp"
 #include <csignal>
 
+#if defined(USE_ROS1)
 #include <ros/ros.h>
 #include "std_srvs/Empty.h"
 #include <sensor_msgs/Joy.h>
@@ -19,11 +20,26 @@
 #include <gazebo_msgs/SetModelState.h>
 #include "robot_msgs/MotorCommand.h"
 #include "robot_msgs/MotorState.h"
+#elif defined(USE_ROS2)
+#include "robot_msgs/msg/robot_command.hpp"
+#include "robot_msgs/msg/robot_state.hpp"
+#include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/joint_state.hpp>
+#include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/joy.hpp>
+#include <geometry_msgs/msg/twist.hpp>
+#include <std_srvs/srv/empty.hpp>
+#include <gazebo_msgs/srv/set_model_state.hpp>
+#include <rcl_interfaces/srv/get_parameters.hpp>
+#endif
 
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
 
 class RL_Sim : public RL
+#if defined(USE_ROS2)
+    , public rclcpp::Node
+#endif
 {
 public:
     RL_Sim();
@@ -51,6 +67,7 @@ private:
 
     // ros interface
     std::string ros_namespace;
+#if defined(USE_ROS1)
     geometry_msgs::Twist vel;
     geometry_msgs::Pose pose;
     geometry_msgs::Twist cmd_vel;
@@ -68,6 +85,26 @@ private:
     void JointStatesCallback(const robot_msgs::MotorState::ConstPtr &msg, const std::string &joint_name);
     void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
     void JoyCallback(const sensor_msgs::Joy::ConstPtr &msg);
+#elif defined(USE_ROS2)
+    sensor_msgs::msg::Imu gazebo_imu;
+    geometry_msgs::msg::Twist cmd_vel;
+    sensor_msgs::msg::Joy joy_msg;
+    robot_msgs::msg::RobotCommand robot_command_publisher_msg;
+    robot_msgs::msg::RobotState robot_state_subscriber_msg;
+    rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr gazebo_imu_subscriber;
+    rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_subscriber;
+    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscriber;
+    rclcpp::Client<gazebo_msgs::srv::SetModelState>::SharedPtr gazebo_set_model_state_client;
+    rclcpp::Client<std_srvs::srv::Empty>::SharedPtr gazebo_pause_physics_client;
+    rclcpp::Client<std_srvs::srv::Empty>::SharedPtr gazebo_unpause_physics_client;
+    rclcpp::Publisher<robot_msgs::msg::RobotCommand>::SharedPtr robot_command_publisher;
+    rclcpp::Subscription<robot_msgs::msg::RobotState>::SharedPtr robot_state_subscriber;
+    rclcpp::Client<rcl_interfaces::srv::GetParameters>::SharedPtr param_client;
+    void GazeboImuCallback(const sensor_msgs::msg::Imu::SharedPtr msg);
+    void CmdvelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
+    void RobotStateCallback(const robot_msgs::msg::RobotState::SharedPtr msg);
+    void JoyCallback(const sensor_msgs::msg::Joy::SharedPtr msg);
+#endif
 
     // others
     std::string gazebo_model_name;

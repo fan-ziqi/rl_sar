@@ -7,7 +7,7 @@
 
 RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_udp(UNITREE_LEGGED_SDK::LOWLEVEL)
 {
-#ifdef USE_ROS
+#if defined(USE_ROS1)
     // init ros
     ros::NodeHandle nh;
     this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Real::CmdvelCallback, this);
@@ -149,7 +149,7 @@ void RL_Real::RunModel()
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
         if (this->fsm._currentState->getStateName() == "RLFSMStateRL_Navigation")
         {
-#ifdef USE_ROS
+#if defined(USE_ROS1)
             this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
 #endif
         }
@@ -236,31 +236,30 @@ void RL_Real::Plot()
     plt::pause(0.0001);
 }
 
-#ifdef USE_ROS
+#if defined(USE_ROS1)
 void RL_Real::CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg)
 {
     this->cmd_vel = *msg;
 }
 #endif
 
+#if defined(USE_ROS1)
 void signalHandler(int signum)
 {
-#ifdef USE_ROS
     ros::shutdown();
-#endif
     exit(0);
 }
+#endif
 
 int main(int argc, char **argv)
 {
+#if defined(USE_ROS1)
     signal(SIGINT, signalHandler);
-#ifdef USE_ROS
     ros::init(argc, argv, "rl_sar");
-#endif
     RL_Real rl_sar;
-#ifdef USE_ROS
     ros::spin();
-#else
+#elif defined(NO_ROS)
+    RL_Real rl_sar;
     while (1) { sleep(10); }
 #endif
     return 0;
