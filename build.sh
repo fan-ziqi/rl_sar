@@ -255,7 +255,7 @@ create_symlinks_for_package() {
             if [[ "$ROS_DISTRO" == "noetic" ]]; then
                 ln -s package.ros1.xml "$package_dir/package.xml"
                 return 0
-            elif [[ "$ROS_DISTRO" == "foxy" || "$ROS_DISTRO" == "humble" || "$ROS_DISTRO" == "jazzy" ]]; then
+            elif [[ "$ROS_DISTRO" == "foxy" || "$ROS_DISTRO" == "humble" ]]; then
                 ln -s package.ros2.xml "$package_dir/package.xml"
                 return 0
             else

@@ -12,7 +12,7 @@ endif()
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         add_compile_definitions(USE_ROS1)
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
+    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         add_compile_definitions(USE_ROS2)
     endif()
 else()
@@ -53,7 +53,7 @@ if(NOT USE_CMAKE)
             robot_joint_controller
             rospy
         )
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
+    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         find_package(ament_cmake REQUIRED)
         find_package(joint_state_broadcaster REQUIRED)
         find_package(robot_state_publisher REQUIRED)
@@ -98,7 +98,7 @@ set_target_properties(unitree_legged_sdk PROPERTIES
     IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/unitree_legged_sdk-3.2/lib/${UNITREE_LIB}.so"
 )
 set(UNITREE_A1_LIBS Threads::Threads unitree_legged_sdk lcm)
-if($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
+if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
   file(GLOB GLOB_UNITREE_LEGGED_SDK "${CMAKE_CURRENT_SOURCE_DIR}/library/unitree_legged_sdk-3.2/lib/${UNITREE_LIB}.so")
   install(FILES
     ${GLOB_UNITREE_LEGGED_SDK}
@@ -150,7 +150,7 @@ else()
     target_compile_definitions(rl_sdk PUBLIC WITHOUT_NUMPY)
 endif()
 if(NOT USE_CMAKE)
-    if($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
+    if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         install(TARGETS rl_sdk DESTINATION lib/${PROJECT_NAME})
     endif()
 endif()
@@ -162,7 +162,7 @@ set_target_properties(observation_buffer PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 if(NOT USE_CMAKE)
-    if($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
+    if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         install(TARGETS observation_buffer DESTINATION lib/${PROJECT_NAME})
     endif()
 endif()
@@ -177,7 +177,7 @@ if(NOT USE_CMAKE)
     )
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         target_link_libraries(rl_sim ${catkin_LIBRARIES})
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
+    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         ament_target_dependencies(rl_sim
             joint_state_broadcaster
             robot_state_publisher
@@ -204,7 +204,7 @@ target_link_libraries(rl_real_a1
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         target_link_libraries(rl_real_a1 ${catkin_LIBRARIES})
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
+    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         install(TARGETS rl_real_a1 DESTINATION lib/${PROJECT_NAME})
     endif()
 endif()
@@ -219,7 +219,7 @@ target_link_libraries(rl_real_go2
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         target_link_libraries(rl_real_go2 ${catkin_LIBRARIES})
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
+    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         install(TARGETS rl_real_go2 DESTINATION lib/${PROJECT_NAME})
     endif()
 endif()
@@ -234,7 +234,7 @@ target_link_libraries(rl_real_l4w4
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         target_link_libraries(rl_real_l4w4 ${catkin_LIBRARIES})
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
+    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         install(TARGETS rl_real_l4w4 DESTINATION lib/${PROJECT_NAME})
     endif()
 endif()
@@ -246,7 +246,7 @@ if(NOT USE_CMAKE)
             scripts/actuator_net.py
             DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         )
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
+    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         install(PROGRAMS
             # scripts/rl_sim.py
             scripts/actuator_net.py
@@ -256,7 +256,7 @@ if(NOT USE_CMAKE)
 endif()
 
 if(NOT USE_CMAKE)
-    if($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
+    if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         install(
             DIRECTORY launch worlds policy
             DESTINATION share/${PROJECT_NAME}/

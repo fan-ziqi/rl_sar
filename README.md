@@ -1,6 +1,6 @@
 # rl_sar
 
-[![Ubuntu 20.04/22.04/24.04](https://img.shields.io/badge/Ubuntu-20.04/22.04/24.04-blue.svg?logo=ubuntu)](https://ubuntu.com/)
+[![Ubuntu 20.04/22.04](https://img.shields.io/badge/Ubuntu-20.04/22.04-blue.svg?logo=ubuntu)](https://ubuntu.com/)
 [![ROS Noetic](https://img.shields.io/badge/ros-noetic-brightgreen.svg?logo=ros)](https://wiki.ros.org/noetic)
 [![ROS2 Foxy/Humble](https://img.shields.io/badge/ros2-foxy/humble-brightgreen.svg?logo=ros)](https://wiki.ros.org/foxy)
 [![License](https://img.shields.io/badge/license-Apache2.0-yellow.svg?logo=apache)](https://opensource.org/license/apache-2-0)
@@ -11,7 +11,7 @@ This repository provides a framework for simulation verification and physical de
 
 > Supports both **IsaacGym** and **IsaacSim**(distinguished by `framework`)
 >
-> Supports both **ROS-Noetic** and **ROS2-Foxy/Humble/Jazzy**
+> Supports both **ROS-Noetic** and **ROS2-Foxy/Humble**
 
 Support List：
 

@@ -13,7 +13,7 @@ if($ENV{ROS_DISTRO} MATCHES "noetic")
 		install(DIRECTORY ${dir}/
 			DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
 	endforeach(dir)
-elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
+elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
     find_package(ament_cmake REQUIRED)
     find_package(ament_lint_auto REQUIRED)
     find_package(urdf REQUIRED)
