@@ -29,7 +29,7 @@ CallbackReturn RobotJointController::on_configure(const rclcpp_lifecycle::State 
 {
     name_space_ = get_node()->get_namespace();
 
-    if (!get_node()->get_parameter("joints", joint_name_))
+    if (!get_node()->get_parameter("joint", joint_name_))
     {
         RCLCPP_ERROR(get_node()->get_logger(), "No joint given in namespace: '%s'", name_space_.c_str());
         return CallbackReturn::ERROR;

@@ -13,7 +13,7 @@
 This repository provides a framework for simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
 
 feature:
-- Built-in pre-trained models for multiple robot simulations, including `Unitree-A1`, `Unitree-Go2`, `Unitree-Go2W`, `Unitree-B2`, `Unitree-B2W`, `Unitree-G1`, `FFTAI-GR1T1`, `FFTAI-GR1T2`, `GoldenRetriever-L4W0`, `GoldenRetriever-L4W4`;
+- Built-in pre-trained policy for multiple robot simulations, including `Unitree-A1`, `Unitree-Go2`, `Unitree-Go2W`, `Unitree-B2`, `Unitree-B2W`, `Unitree-G1`, `FFTAI-GR1T1`, `FFTAI-GR1T2`, `GoldenRetriever-L4W0`, `GoldenRetriever-L4W4`;
 - The training framework supports **IsaacGym** and **IsaacSim**, distinguished by `framework`;
 - The code supports both **ROS-Noetic** and **ROS2-Foxy/Humble/Jazzy**;
 
@@ -138,11 +138,15 @@ Examples:
 
 ## Running
 
-In the following text, **\<ROBOT\>/\<CONFIG\>** is used to represent different environments, such as `a1/isaacgym` and `go2/himloco`.
+In the following text, **\<ROBOT\>/\<CONFIG\>** is used to represent different environments, such as `go2/himloco` and `go2w/robot_lab`.
 
-Before running, copy the trained pt model file to `rl_sar/src/rl_sar/models/<ROBOT>/<CONFIG>`, and configure the parameters in `<ROBOT>/<CONFIG>/config.yaml` and `<ROBOT>/base.yaml`.
+Before running, copy the trained pt model file to `rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>`, and configure the parameters in `<ROBOT>/<CONFIG>/config.yaml` and `<ROBOT>/base.yaml`.
 
 ### Simulation
+
+> [!NOTE]
+> For ROS1 simulation, the joint order is already defined in `rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml` and does not require manual modification.
+> For ROS2 simulation, before running the simulation, you need to manually copy the joint order defined in `rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml` to `rl_sar/src/robots/<ROBOT>_description/config/robot_control_group.yaml`.
 
 Open a terminal, launch the gazebo simulation environment
 
@@ -153,7 +157,7 @@ roslaunch rl_sar gazebo_<ROBOT>.launch cfg:=<CONFIG>
 
 # ROS2
 source install/setup.bash
-ros2 launch rl_sar gazebo.launch.py rname:=<ROBOT> framework:=<PLATFORM>  # TODO
+ros2 launch rl_sar gazebo.launch.py rname:=<ROBOT> cfg:=<CONFIG>
 ```
 
 Open a new terminal, launch the control program
@@ -279,7 +283,7 @@ Take A1 as an example below
 
 1. Uncomment `#define CSV_LOGGER` in the top of `rl_real_a1.hpp`. You can also modify the corresponding part in the simulation program to collect simulation data for testing the training process.
 2. Run the control program, and the program will log all data after execution.
-3. Stop the control program and start training the actuator network. Note that `rl_sar/src/rl_sar/models/` is omitted before the following paths.
+3. Stop the control program and start training the actuator network. Note that `rl_sar/src/rl_sar/policy/` is omitted before the following paths.
     ```bash
     rosrun rl_sar actuator_net.py --mode train --data a1/motor.csv --output a1/motor.pt
     ```
@@ -290,13 +294,13 @@ Take A1 as an example below
 
 ## Add Your Robot
 
-In the following text, **\<ROBOT\>/\<CONFIG\>** is used to represent your robot environment.
+In the following context, use **\<ROBOT\>/\<CONFIG\>** to represent your robot environment:
 
-1. Create a model package named `<ROBOT>_description` in the `rl_sar/src/robots` directory. Place the robot's URDF file in the `rl_sar/src/robots/<ROBOT>_description/urdf` directory and name it `<ROBOT>.urdf`. Additionally, create a joint configuration file with the namespace `<ROBOT>_gazebo` in the `rl_sar/src/robots/<ROBOT>_description/config` directory.
-2. Place the trained RL model files in the `rl_sar/src/rl_sar/models/<ROBOT>/<CONFIG>` directory, and create a new `config.yaml` file in this path. Refer to the `rl_sar/src/rl_sar/models/a1/isaacgym/config.yaml` file to modify the parameters. Then, create a `base.yaml` file in the upper-level directory and refer to `rl_sar/src/rl_sar/models/a1/base.yaml` to modify the parameters.
-3. Modify the `forward()` function in the code as needed to adapt to the specific robot model.
-4. If simulation is required, refer to the launch files in `rl_sar/src/rl_sar/launch` and modify them accordingly.
-5. If running on the physical robot, refer to and modify the `rl_sar/src/rl_sar/src/rl_real_a1.cpp` file as needed.
+1. Under the path `rl_sar/src/robots`, create a model package named `<ROBOT>_description`, and create joint configuration files under the path `rl_sar/src/robots/<ROBOT>_description/config/`. Please refer to existing files for specific details.
+2. Place the trained RL policy files under the path `rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/`. Create a config.yaml file in this path and create a base.yaml file in its parent directory. Please refer to existing files for specific details.
+3. Modify the `forward()` function in the code as needed to adapt to different policies.
+4. If you need to run simulation, refer to the launch files under the path `rl_sar/src/rl_sar/launch/` and modify accordingly.
+5. If you need to run on physical hardware, refer to the file `rl_sar/src/rl_sar/src/rl_real_go2.cpp` and modify accordingly.
 
 ## Contributing
 

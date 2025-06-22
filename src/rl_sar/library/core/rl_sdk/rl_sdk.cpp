@@ -486,7 +486,7 @@ void RL::InitRL(std::string robot_path)
         this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
     }
     // model
-    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/" + this->params.model_name;
+    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/" + this->params.model_name;
     this->model = torch::jit::load(model_path);
 
     this->InitObservations();
@@ -707,8 +707,8 @@ std::vector<T> ReadVectorFromYaml(const YAML::Node &node)
 
 void RL::ReadYamlBase(std::string robot_path)
 {
-    // The config file is located at "rl_sar/src/rl_sar/models/<robot_path>/base.yaml"
-    std::string config_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/base.yaml";
+    // The config file is located at "rl_sar/src/rl_sar/policy/<robot_path>/base.yaml"
+    std::string config_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/base.yaml";
     YAML::Node config;
     try
     {
@@ -735,8 +735,8 @@ void RL::ReadYamlBase(std::string robot_path)
 
 void RL::ReadYamlRL(std::string robot_path)
 {
-    // The config file is located at "rl_sar/src/rl_sar/models/<robot_path>/config.yaml"
-    std::string config_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/config.yaml";
+    // The config file is located at "rl_sar/src/rl_sar/policy/<robot_path>/config.yaml"
+    std::string config_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/config.yaml";
     YAML::Node config;
     try
     {
@@ -793,7 +793,7 @@ void RL::ReadYamlRL(std::string robot_path)
 
 void RL::CSVInit(std::string robot_path)
 {
-    csv_filename = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/models/" + robot_path + "/motor";
+    csv_filename = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/motor";
 
     // Uncomment these lines if need timestamp for file name
     // auto now = std::chrono::system_clock::now();

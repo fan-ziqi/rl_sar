@@ -7,6 +7,8 @@ from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from ament_index_python.packages import get_package_share_directory
 
+
+
 def generate_launch_description():
     rname = LaunchConfiguration("rname")
     cfg = LaunchConfiguration("cfg")
@@ -21,7 +23,7 @@ def generate_launch_description():
         Command([
             "xacro ",
             Command(["echo -n ", Command(["ros2 pkg prefix ", rname, "_description"])]),
-            "/share/", rname, "_description/xacro/robot_ros2.xacro"
+            "/share/", rname, "_description/xacro/robot.xacro"
         ]),
         value_type=str
     )
@@ -51,19 +53,34 @@ def generate_launch_description():
         output="screen",
     )
 
-    joint_state_broadcaster_node = Node(
-        package="controller_manager",
-        executable='spawner.py' if os.environ.get('ROS_DISTRO', '') == 'foxy' else 'spawner',
-        arguments=["joint_state_broadcaster"],
-        output="screen",
-    )
+    controller_names = [
+        "joint_state_broadcaster",
+        "FL_hip_controller", "FL_thigh_controller", "FL_calf_controller",
+        "FR_hip_controller", "FR_thigh_controller", "FR_calf_controller",
+        "RL_hip_controller", "RL_thigh_controller", "RL_calf_controller",
+        "RR_hip_controller", "RR_thigh_controller", "RR_calf_controller"
+    ]
 
-    robot_joint_controller_node = Node(
+    controller_nodes = [Node(
         package="controller_manager",
         executable='spawner.py' if os.environ.get('ROS_DISTRO', '') == 'foxy' else 'spawner',
-        arguments=["robot_joint_controller"],
-        output="screen",
-    )
+        arguments=[name],
+        output='screen',
+    ) for name in controller_names]
+
+    # joint_state_broadcaster_node = Node(
+    #     package="controller_manager",
+    #     executable='spawner.py' if os.environ.get('ROS_DISTRO', '') == 'foxy' else 'spawner',
+    #     arguments=["joint_state_broadcaster"],
+    #     output="screen",
+    # )
+
+    # robot_joint_controller_node = Node(
+    #     package="controller_manager",
+    #     executable='spawner.py' if os.environ.get('ROS_DISTRO', '') == 'foxy' else 'spawner',
+    #     arguments=["robot_joint_controller"],
+    #     output="screen",
+    # )
 
     param_node = Node(
         package="demo_nodes_cpp",
@@ -90,7 +107,8 @@ def generate_launch_description():
         robot_state_publisher_node,
         gazebo,
         spawn_entity,
-        joint_state_broadcaster_node,
-        robot_joint_controller_node,
+        # joint_state_broadcaster_node,
+        # robot_joint_controller_node,
+        *controller_nodes,
         param_node,
     ])

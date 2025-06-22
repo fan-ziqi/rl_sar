@@ -26,7 +26,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('gazebo_ros'), 'launch', 'gazebo.launch.py')
         ),
-        launch_arguments={'verbose': 'true'}.items()
+        launch_arguments={'verbose': 'false'}.items()
     )
 
     spawn_entity = Node(
@@ -36,24 +36,24 @@ def generate_launch_description():
         output='screen',
     )
 
-    joint_state_broadcaster_node = Node(
-        package="controller_manager",
-        executable='spawner.py' if os.environ.get('ROS_DISTRO', '') == 'foxy' else 'spawner',
-        arguments=["joint_state_broadcaster"],
-        output='screen',
-    )
+    controller_names = [
+        "joint_state_broadcaster",
+        "FL_hip_controller", "FL_thigh_controller", "FL_calf_controller",
+        "FR_hip_controller", "FR_thigh_controller", "FR_calf_controller",
+        "RL_hip_controller", "RL_thigh_controller", "RL_calf_controller",
+        "RR_hip_controller", "RR_thigh_controller", "RR_calf_controller"
+    ]
 
-    robot_joint_controller_node = Node(
+    controller_nodes = [Node(
         package="controller_manager",
         executable='spawner.py' if os.environ.get('ROS_DISTRO', '') == 'foxy' else 'spawner',
-        arguments=["robot_joint_controller"],
+        arguments=[name],
         output='screen',
-    )
+    ) for name in controller_names]
 
     return LaunchDescription([
         robot_state_publisher_node,
         gazebo,
         spawn_entity,
-        joint_state_broadcaster_node,
-        robot_joint_controller_node,
+        *controller_nodes,
     ])

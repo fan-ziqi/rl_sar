@@ -1,5 +1,9 @@
 <?xml version="1.0"?>
-<robot>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:property name="ros_version" value="$(env ROS_VERSION)" />
+
+    <xacro:if value="${int(ros_version) == 1}">
+
     <!-- ros_control plugin -->
     <gazebo>
         <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
@@ -126,6 +130,214 @@
             </plugin>
         </visual>
     </gazebo> -->
+
+    </xacro:if>
+
+    <xacro:if value="${int(ros_version) == 2}">
+
+    <gazebo reference="imu_link">
+      <sensor name="imu_sensor" type="imu">
+      <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+          <ros>
+            <namespace>/</namespace>
+            <remapping>~/out:=imu</remapping>
+          </ros>
+          <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        </plugin>
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <visualize>true</visualize>
+        <imu>
+          <angular_velocity>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </gazebo>
+
+    <ros2_control name="GazeboSystem" type="system">
+        <hardware>
+            <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+        </hardware>
+
+        <joint name="FR_hip_joint">
+            <command_interface name="effort">
+                <param name="min">-${hip_torque_max}</param>
+                <param name="max">${hip_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="FL_hip_joint">
+            <command_interface name="effort">
+                <param name="min">-${hip_torque_max}</param>
+                <param name="max">${hip_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="RR_hip_joint">
+            <command_interface name="effort">
+                <param name="min">-${hip_torque_max}</param>
+                <param name="max">${hip_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="RL_hip_joint">
+            <command_interface name="effort">
+                <param name="min">-${hip_torque_max}</param>
+                <param name="max">${hip_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="FR_thigh_joint">
+            <command_interface name="effort">
+                <param name="min">-${thigh_torque_max}</param>
+                <param name="max">${thigh_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="FL_thigh_joint">
+            <command_interface name="effort">
+                <param name="min">-${thigh_torque_max}</param>
+                <param name="max">${thigh_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="RR_thigh_joint">
+            <command_interface name="effort">
+                <param name="min">-${thigh_torque_max}</param>
+                <param name="max">${thigh_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="RL_thigh_joint">
+            <command_interface name="effort">
+                <param name="min">-${thigh_torque_max}</param>
+                <param name="max">${thigh_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="FR_calf_joint">
+            <command_interface name="effort">
+                <param name="min">-${calf_torque_max}</param>
+                <param name="max">${calf_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="FL_calf_joint">
+            <command_interface name="effort">
+                <param name="min">-${calf_torque_max}</param>
+                <param name="max">${calf_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="RR_calf_joint">
+            <command_interface name="effort">
+                <param name="min">-${calf_torque_max}</param>
+                <param name="max">${calf_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="RL_calf_joint">
+            <command_interface name="effort">
+                <param name="min">-${calf_torque_max}</param>
+                <param name="max">${calf_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+    </ros2_control>
+
+    <gazebo>
+        <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+            <parameters>$(find a1_description)/config/robot_control_ros2.yaml</parameters>
+        </plugin>
+    </gazebo>
+
+    </xacro:if>
 
     <gazebo reference="base">
         <material>Gazebo/Green</material>

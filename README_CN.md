@@ -145,11 +145,16 @@ Examples:
 
 ## 运行
 
-下文中使用 **\<ROBOT\>/\<CONFIG\>** 代替表示不同的环境，如 `a1/isaacgym` 、 `go2/himloco`。
+下文中使用 **\<ROBOT\>/\<CONFIG\>** 代替表示不同的环境，如 `go2/himloco` 、 `go2w/robot_lab`。
 
-运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/models/<ROBOT>/<CONFIG>`中，并配置`<ROBOT>/<CONFIG>/config.yaml`和`<ROBOT>/base.yaml`中的参数。
+运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>`中，并配置`<ROBOT>/<CONFIG>/config.yaml`和`<ROBOT>/base.yaml`中的参数。
 
 ### 仿真
+
+> [!NOTE]
+> 对于ROS1仿真，关节顺序已经在`rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml`中定义，无需手动更改。
+> 对于ROS2仿真，运行仿真前需要将`rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml`中定义的关节顺序手动填写到`rl_sar/src/robots/<ROBOT>_description/config/robot_control_group.yaml`中。
+
 
 打开一个终端，启动gazebo仿真环境
 
@@ -160,7 +165,7 @@ roslaunch rl_sar gazebo_<ROBOT>.launch cfg:=<CONFIG>
 
 # ROS2
 source install/setup.bash
-ros2 launch rl_sar gazebo.launch.py rname:=<ROBOT> cfg:=<CONFIG>  # TODO
+ros2 launch rl_sar gazebo.launch.py rname:=<ROBOT> cfg:=<CONFIG>
 ```
 
 打开一个新终端，启动控制程序
@@ -286,7 +291,7 @@ source ~/.bashrc
 
 1. 取消注释`rl_real_a1.hpp`中最上面的`#define CSV_LOGGER`，你也可以在仿真程序中修改对应部分采集仿真数据用来测试训练过程。
 2. 运行控制程序，程序会在执行后记录所有数据。
-3. 停止控制程序，开始训练执行器网络。注意，下面的路径前均省略了`rl_sar/src/rl_sar/models/`。
+3. 停止控制程序，开始训练执行器网络。注意，下面的路径前均省略了`rl_sar/src/rl_sar/policy/`。
     ```bash
     rosrun rl_sar actuator_net.py --mode train --data a1/motor.csv --output a1/motor.pt
     ```
@@ -299,11 +304,11 @@ source ~/.bashrc
 
 下文中使用 **\<ROBOT\>/\<CONFIG\>** 代替表示你的机器人环境
 
-1. 在`rl_sar/src/robots`路径下创建名为`<ROBOT>_description`的模型包，将模型的urdf放到`rl_sar/src/robots/<ROBOT>_description/urdf`路径下并命名为`<ROBOT>.urdf`，并在`rl_sar/src/robots/<ROBOT>_description/config`路径下创建命名空间为`<ROBOT>_gazebo`的关节配置文件。
-2. 将训练好的RL模型文件放到`rl_sar/src/rl_sar/models/<ROBOT>/<CONFIG>`路径下，在此路径中新建config.yaml文件，参考`rl_sar/src/rl_sar/models/a1/isaacgym/config.yaml`文件修改其中参数；在其上级目录新建base.yaml文件，参考`rl_sar/src/rl_sar/models/a1/base.yaml`文件修改其中参数。
-3. 按需修改代码中的`forward()`函数，以适配不同的模型。
-4. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch`路径下的launch文件自行修改。
-5. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_a1.cpp`文件自行修改。
+1. 在`rl_sar/src/robots`路径下创建名为`<ROBOT>_description`的模型包，并在`rl_sar/src/robots/<ROBOT>_description/config/`路径下创建关节配置文件，具体请参考已有文件。
+2. 将训练好的RL策略文件放到`rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/`路径下，在此路径中创建config.yaml文件，在其上级目录新建base.yaml文件，具体请参考已有文件。
+3. 按需修改代码中的`forward()`函数，以适配不同的策略。
+4. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch/`路径下的launch文件自行修改。
+5. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_go2.cpp`文件自行修改。
 
 ## 贡献
 

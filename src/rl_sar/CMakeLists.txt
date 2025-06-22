@@ -258,7 +258,7 @@ endif()
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
         install(
-            DIRECTORY launch worlds models
+            DIRECTORY launch worlds policy
             DESTINATION share/${PROJECT_NAME}/
         )
     endif()
