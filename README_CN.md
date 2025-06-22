@@ -15,17 +15,17 @@
 
 支持列表：
 
-| Robot Name   | Policy (IsaacGym) | Policy (IsaacSim) | ROS1 Support | ROS2 Support |
+| Robot Name   | Policy (IsaacGym) | Policy (IsaacSim) | ROS1 | ROS2 |
 |------------|----------------------|----------------------|----------|----------|
-| a1         | legged_gym            | ⚪                    | ✅       | ✅       |
-| go2        | himloco               | robot_lab            | ✅       | ✅       |
-| go2w       | ⚪                    | robot_lab            | ✅       | ✅       |
-| b2         | ⚪                    | robot_lab            | ✅       | ✅       |
-| b2w        | ⚪                    | robot_lab            | ✅       | ✅       |
-| g1         | unitree_ros           | ⚪                    | ✅       | ❌       |
-| gr1t1      | legged_gym            | ⚪                    | ✅       | ❌       |
-| gr2t2      | legged_gym            | ⚪                    | ✅       | ❌       |
-| l4w4       | legged_gym            | robot_lab            | ✅       | ✅       |
+| Unitree-A1           | legged_gym            | ⚪                    | ✅       | ✅       |
+| Unitree-Go2          | himloco               | robot_lab             | ✅       | ✅       |
+| Unitree-Go2W         | ⚪                    | robot_lab             | ✅       | ✅       |
+| Unitree-B2           | ⚪                    | robot_lab             | ✅       | ✅       |
+| Unitree-B2W          | ⚪                    | robot_lab             | ✅       | ✅       |
+| Unitree-G1           | unitree_ros           | ⚪                    | ✅       | ✅       |
+| FFTAI-GR1T1          | legged_gym            | ⚪                    | ✅       | ❌       |
+| FFTAI-GR1T2          | legged_gym            | ⚪                    | ✅       | ❌       |
+| GoldenRetriever-L4W4 | legged_gym            | robot_lab             | ✅       | ✅       |
 
 > [!IMPORTANT]
 > Python版本暂时停止维护，如有需要请使用[v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3)版本，后续可能会重新上线。
@@ -195,22 +195,22 @@ ros2 run rl_sar rl_sim
 
 键盘控制：
 
-- 按 **\<Enter\>** 切换仿真器运行/停止。
+- 按 **\<Enter\>** 切换仿真器运行/停止。(Only for ROS1)
 - 按 **0** 让机器人从仿真开始的姿态以位控插值运动到yaml中定义的`default_dof_pos`。
 - 按 **p** 切换到强化学习模式。
 - **W/S** 控制前后移动，**J/L** 控制左右移动，**A/D** 控制转向，按 **\<Space\>** 将所有控制指令设置为零。
 - 按 **n** 切换到导航模式，屏蔽手柄命令，接收`cmd_vel`话题。
-- 如果机器人摔倒，按 **R** 重置Gazebo环境。
+- 如果机器人摔倒，按 **R** 重置Gazebo环境。(Only for ROS1)
 - 按 **1** 让机器人从当前位置以位控插值运动到仿真开始的姿态。
 
 手柄控制：
 
-- 按 **LB** 切换仿真器运行/停止。
+- 按 **LB** 切换仿真器运行/停止。(Only for ROS1)
 - 按 **RB+Y** 让机器人从仿真开始的姿态以位控插值运动到yaml中定义的`default_dof_pos`。
 - 按 **RB+B** 切换到强化学习模式。
 - **LY** 控制前后移动，**LX** 控制左右移动，**RX** 控制转向。
 - 按 **左面的下键** 切换到导航模式，屏蔽手柄命令，接收`cmd_vel`话题。
-- 如果机器人摔倒，按 **RB+X** 重置Gazebo环境。
+- 如果机器人摔倒，按 **RB+X** 重置Gazebo环境。(Only for ROS1)
 - 按 **RB+A** 让机器人从当前位置以位控插值运动到仿真开始的姿态。
 
 ### 真实机器人

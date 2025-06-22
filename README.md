@@ -15,17 +15,17 @@ This repository provides a framework for simulation verification and physical de
 
 Support List：
 
-| Robot Name   | Policy (IsaacGym) | Policy (IsaacSim) | ROS1 Support | ROS2 Support |
+| Robot Name   | Policy (IsaacGym) | Policy (IsaacSim) | ROS1 | ROS2 |
 |------------|----------------------|----------------------|----------|----------|
-| a1         | legged_gym            | ⚪                    | ✅       | ✅       |
-| go2        | himloco               | robot_lab            | ✅       | ✅       |
-| go2w       | ⚪                    | robot_lab            | ✅       | ✅       |
-| b2         | ⚪                    | robot_lab            | ✅       | ✅       |
-| b2w        | ⚪                    | robot_lab            | ✅       | ✅       |
-| g1         | unitree_ros           | ⚪                    | ✅       | ✅       |
-| gr1t1      | legged_gym            | ⚪                    | ✅       | ❌       |
-| gr2t2      | legged_gym            | ⚪                    | ✅       | ❌       |
-| l4w4       | legged_gym            | robot_lab            | ✅       | ✅       |
+| Unitree-A1           | legged_gym            | ⚪                    | ✅       | ✅       |
+| Unitree-Go2          | himloco               | robot_lab             | ✅       | ✅       |
+| Unitree-Go2W         | ⚪                    | robot_lab             | ✅       | ✅       |
+| Unitree-B2           | ⚪                    | robot_lab             | ✅       | ✅       |
+| Unitree-B2W          | ⚪                    | robot_lab             | ✅       | ✅       |
+| Unitree-G1           | unitree_ros           | ⚪                    | ✅       | ✅       |
+| FFTAI-GR1T1          | legged_gym            | ⚪                    | ✅       | ❌       |
+| FFTAI-GR1T2          | legged_gym            | ⚪                    | ✅       | ❌       |
+| GoldenRetriever-L4W4 | legged_gym            | robot_lab             | ✅       | ✅       |
 
 > [!IMPORTANT]
 > Python version temporarily suspended maintenance, please use [v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3) if necessary, may be re-released in the future.
@@ -47,11 +47,16 @@ git clone https://github.com/fan-ziqi/rl_sar.git
 
 ## Dependency
 
-This project uses `ros-noetic` (Ubuntu 20.04) and requires the installation of the following ROS dependency packages:
+If you are using `ros-noetic` (Ubuntu 20.04), you need to install the following ROS packages:
 
 ```bash
 sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller ros-noetic-joy ros-noetic-ros-control ros-noetic-ros-controllers ros-noetic-controller-manager
 ```
+
+If you are using `ros2-foxy` (Ubuntu 20.04) or `ros2-humble` (Ubuntu 22.04), you need to install the following ROS2 packages:
+
+```bash
+sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-control ros-$ROS_DISTRO-ros2-controllers ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-robot-state-publisher ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-gazebo-ros2-control ros-$ROS_DISTRO-gazebo-ros-pkgs ros-$ROS_DISTRO-xacro
 
 Download and deploy `libtorch` at any location (Please modify **\<YOUR_PATH\>** below to the actual path)
 
@@ -187,22 +192,22 @@ ros2 run rl_sar rl_sim
 
 Keyboard Control:
 
-- Press **<Enter>** to toggle the simulator between running and stopped.
+- Press **<Enter>** to toggle the simulator between running and stopped.(Only for ROS1)
 - Press **0** to move the robot from the initial simulation pose to the `default_dof_pos` defined in the YAML file using position control interpolation.
 - Press **p** to switch to Reinforcement Learning mode.
 - Use **W/S** to move forward/backward, **J/L** to move left/right, and **A/D** to turn. Press **<Space>** to reset all control commands to zero.
 - Press **n** to switch to Navigation mode, disabling gamepad commands and receiving commands from the `cmd_vel` topic.
-- If the robot falls down, press **R** to reset the Gazebo environment.
+- If the robot falls down, press **R** to reset the Gazebo environment.(Only for ROS1)
 - Press **1** to move the robot from its current position back to the initial simulation pose using position control interpolation.
 
 Gamepad Control:
 
-- Press **LB** to toggle the simulator between running and stopped.
+- Press **LB** to toggle the simulator between running and stopped.(Only for ROS1)
 - Press **RB + Y** to move the robot from the initial simulation pose to the `default_dof_pos` defined in the YAML file using position control interpolation.
 - Press **RB + B** to switch to Reinforcement Learning mode.
 - Use **LY** to move forward/backward, **LX** to move left/right, and **RX** to turn.
 - Press the **down button on the left** to switch to Navigation mode, disabling gamepad commands and receiving commands from the `cmd_vel` topic.
-- If the robot falls down, press **RB + X** to reset the Gazebo environment.
+- If the robot falls down, press **RB + X** to reset the Gazebo environment.(Only for ROS1)
 - Press **RB + A** to move the robot from its current position back to the initial simulation pose using position control interpolation.
 
 ### Real Robots
