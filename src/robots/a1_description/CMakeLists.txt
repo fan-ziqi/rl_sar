@@ -2,19 +2,16 @@ cmake_minimum_required(VERSION 3.5)
 project(a1_description)
 
 if($ENV{ROS_DISTRO} MATCHES "noetic")
-    find_package(catkin REQUIRED COMPONENTS
-        genmsg
-        roscpp
-        std_msgs
-        tf
-    )
-    catkin_package(
-        CATKIN_DEPENDS
-    )
-    include_directories(
-        # include
-        ${catkin_INCLUDE_DIRS}
-    )
+	find_package(catkin REQUIRED)
+
+	catkin_package()
+
+	find_package(roslaunch)
+
+	foreach(dir config launch meshes urdf)
+		install(DIRECTORY ${dir}/
+			DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
+	endforeach(dir)
 elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
     find_package(ament_cmake REQUIRED)
     find_package(ament_lint_auto REQUIRED)
@@ -23,7 +20,7 @@ elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
     find_package(robot_state_publisher REQUIRED)
     install(
     DIRECTORY
-        config_ros2
+        config
         launch
         meshes
         urdf

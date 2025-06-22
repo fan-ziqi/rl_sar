@@ -7,15 +7,28 @@
 
 [中文文档](README_CN.md)
 
-> [!IMPORTANT]
-> Python version temporarily suspended maintenance, please use [v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3) if necessary, may be re-released in the future.
-
 This repository provides a framework for simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
 
-feature:
-- Built-in pre-trained policy for multiple robot simulations, including `Unitree-A1`, `Unitree-Go2`, `Unitree-Go2W`, `Unitree-B2`, `Unitree-B2W`, `Unitree-G1`, `FFTAI-GR1T1`, `FFTAI-GR1T2`, `GoldenRetriever-L4W0`, `GoldenRetriever-L4W4`;
-- The training framework supports **IsaacGym** and **IsaacSim**, distinguished by `framework`;
-- The code supports both **ROS-Noetic** and **ROS2-Foxy/Humble/Jazzy**;
+> Supports both **IsaacGym** and **IsaacSim**(distinguished by `framework`)
+>
+> Supports both **ROS-Noetic** and **ROS2-Foxy/Humble/Jazzy**
+
+Support List：
+
+| Robot Name   | Policy (IsaacGym) | Policy (IsaacSim) | ROS1 Support | ROS2 Support |
+|------------|----------------------|----------------------|----------|----------|
+| a1         | legged_gym            | ⚪                    | ✅       | ✅       |
+| go2        | himloco               | robot_lab            | ✅       | ✅       |
+| go2w       | ⚪                    | robot_lab            | ✅       | ✅       |
+| b2         | ⚪                    | robot_lab            | ✅       | ✅       |
+| b2w        | ⚪                    | robot_lab            | ✅       | ✅       |
+| g1         | unitree_ros           | ⚪                    | ✅       | ✅       |
+| gr1t1      | legged_gym            | ⚪                    | ✅       | ❌       |
+| gr2t2      | legged_gym            | ⚪                    | ✅       | ❌       |
+| l4w4       | legged_gym            | robot_lab            | ✅       | ✅       |
+
+> [!IMPORTANT]
+> Python version temporarily suspended maintenance, please use [v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3) if necessary, may be re-released in the future.
 
 > [!NOTE]
 > If you want to train policy using IsaacLab(IsaacSim), please use [robot_lab](https://github.com/fan-ziqi/robot_lab) project.

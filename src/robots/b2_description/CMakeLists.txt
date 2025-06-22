@@ -1,14 +1,33 @@
-cmake_minimum_required(VERSION 2.8.3)
-
+cmake_minimum_required(VERSION 3.5)
 project(b2_description)
 
-find_package(catkin REQUIRED)
+if($ENV{ROS_DISTRO} MATCHES "noetic")
 
-catkin_package()
+	find_package(catkin REQUIRED)
 
-find_package(roslaunch)
+	catkin_package()
 
-foreach(dir config launch meshes urdf)
-	install(DIRECTORY ${dir}/
-		DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
-endforeach(dir)
+	find_package(roslaunch)
+
+	foreach(dir config launch meshes urdf)
+		install(DIRECTORY ${dir}/
+			DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
+	endforeach(dir)
+elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble|jazzy")
+    find_package(ament_cmake REQUIRED)
+    find_package(ament_lint_auto REQUIRED)
+    find_package(urdf REQUIRED)
+    find_package(xacro REQUIRED)
+    find_package(robot_state_publisher REQUIRED)
+    install(
+    DIRECTORY
+        config
+        launch
+        meshes
+        urdf
+        xacro
+    DESTINATION
+        share/${PROJECT_NAME}/
+    )
+    ament_package()
+endif()

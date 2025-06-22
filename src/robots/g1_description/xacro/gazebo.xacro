@@ -6,136 +6,43 @@
 
     <!-- ros_control plugin -->
     <gazebo>
-        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-            <robotNamespace>/b2_gazebo</robotNamespace>
-            <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+        <plugin filename="libgazebo_ros_control.so" name="gazebo_ros_control">
+        <robotNamespace>/g1_gazebo</robotNamespace>
+        <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
         </plugin>
     </gazebo>
 
-    <!-- Show the trajectory of trunk center. -->
-    <gazebo>
-        <plugin name="3dplot" filename="libLinkPlot3DPlugin.so">
-            <frequency>10</frequency>
-            <plot>
-                <link>base</link>
-                <pose>0 0 0 0 0 0</pose>
-                <material>Gazebo/Yellow</material>
-            </plot>
-        </plugin>
-    </gazebo>
-
-    <!-- Show the trajectory of foot. You can add another trajectory about another foot. -->
-    <!-- <gazebo>
-        <plugin name="3dplot" filename="libLinkPlot3DPlugin.so">
-            <frequency>100</frequency>
-            <plot>
-                <link>FL_foot</link>
-                <pose>0 0 0 0 0 0</pose>
-                <material>Gazebo/Green</material>
-            </plot>
-        </plugin>
-    </gazebo> -->
-
-    <gazebo>
-        <plugin filename="libgazebo_ros_force.so" name="gazebo_ros_force">
-            <bodyName>trunk</bodyName>
-            <topicName>/apply_force/trunk</topicName>
-        </plugin>
-    </gazebo>
-
-    <gazebo reference="imu_link">
+    <gazebo reference="imu_in_torso">
         <gravity>true</gravity>
         <sensor name="imu_sensor" type="imu">
-            <always_on>true</always_on>
-            <update_rate>1000</update_rate>
-            <visualize>true</visualize>
-            <topic>__default_topic__</topic>
-            <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
-                <topicName>trunk_imu</topicName>
-                <bodyName>imu_link</bodyName>
-                <updateRateHZ>1000.0</updateRateHZ>
-                <gaussianNoise>0.0</gaussianNoise>
-                <xyzOffset>0 0 0</xyzOffset>
-                <rpyOffset>0 0 0</rpyOffset>
-                <frameName>imu_link</frameName>
-            </plugin>
-            <pose>0 0 0 0 0 0</pose>
+        <always_on>true</always_on>
+        <update_rate>1000</update_rate>
+        <visualize>true</visualize>
+        <topic>__default_topic__</topic>
+        <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+            <topicName>imu_in_torso</topicName>
+            <bodyName>imu_in_torso</bodyName>
+            <updateRateHZ>1000.0</updateRateHZ>
+            <gaussianNoise>0.0</gaussianNoise>
+            <xyzOffset>0 0 0</xyzOffset>
+            <rpyOffset>0 0 0</rpyOffset>
+            <frameName>imu_in_torso</frameName>
+        </plugin>
+        <pose>0 0 0 0 0 0</pose>
         </sensor>
     </gazebo>
 
-    <!-- Foot contacts. -->
-    <gazebo reference="FR_calf">
-        <sensor name="FR_foot_contact" type="contact">
-        <update_rate>100</update_rate>
-        <plugin name="contactPlugin" filename="libunitreeFootContactPlugin.so"/>
-        <contact>
-            <collision>FR_calf_fixed_joint_lump__FR_foot_collision_1</collision>
-        </contact>
-        </sensor>
+    <gazebo reference="">
+        <mu1>0.5</mu1>
+        <mu2>0.5</mu2>
+        <self_collide>1</self_collide>
     </gazebo>
-    <gazebo reference="FL_calf">
-        <sensor name="FL_foot_contact" type="contact">
-        <update_rate>100</update_rate>
-        <plugin name="contactPlugin" filename="libunitreeFootContactPlugin.so"/>
-        <contact>
-            <collision>FL_calf_fixed_joint_lump__FL_foot_collision_1</collision>
-        </contact>
-        </sensor>
-    </gazebo>
-    <gazebo reference="RR_calf">
-        <sensor name="RR_foot_contact" type="contact">
-        <update_rate>100</update_rate>
-        <plugin name="contactPlugin" filename="libunitreeFootContactPlugin.so"/>
-        <contact>
-            <collision>RR_calf_fixed_joint_lump__RR_foot_collision_1</collision>
-        </contact>
-        </sensor>
-    </gazebo>
-    <gazebo reference="RL_calf">
-        <sensor name="RL_foot_contact" type="contact">
-        <update_rate>100</update_rate>
-        <plugin name="contactPlugin" filename="libunitreeFootContactPlugin.so"/>
-        <contact>
-            <collision>RL_calf_fixed_joint_lump__RL_foot_collision_1</collision>
-        </contact>
-        </sensor>
-    </gazebo>
-
-    <!-- Visualization of Foot contacts. -->
-    <!-- <gazebo reference="FR_foot">
-        <visual>
-            <plugin name="drawForcePlugin" filename="libunitreeDrawForcePlugin.so">
-                <topicName>FR_foot_contact</topicName>
-            </plugin>
-        </visual>
-    </gazebo>
-    <gazebo reference="FL_foot">
-        <visual>
-            <plugin name="drawForcePlugin" filename="libunitreeDrawForcePlugin.so">
-                <topicName>FL_foot_contact</topicName>
-            </plugin>
-        </visual>
-    </gazebo>
-    <gazebo reference="RR_foot">
-        <visual>
-            <plugin name="drawForcePlugin" filename="libunitreeDrawForcePlugin.so">
-                <topicName>RR_foot_contact</topicName>
-            </plugin>
-        </visual>
-    </gazebo>
-    <gazebo reference="RL_foot">
-        <visual>
-            <plugin name="drawForcePlugin" filename="libunitreeDrawForcePlugin.so">
-                <topicName>RL_foot_contact</topicName>
-            </plugin>
-        </visual>
-    </gazebo> -->
 
     </xacro:if>
 
     <xacro:if value="${int(ros_version) == 2}">
 
-    <gazebo reference="imu_link">
+    <gazebo reference="imu_in_torso">
       <sensor name="imu_sensor" type="imu">
       <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
           <ros>
@@ -209,120 +116,290 @@
             <plugin>gazebo_ros2_control/GazeboSystem</plugin>
         </hardware>
 
-        <joint name="FR_hip_joint">
+        <joint name="left_hip_pitch_joint">
             <command_interface name="effort">
-                <param name="min">-${hip_torque_max}</param>
-                <param name="max">${hip_torque_max}</param>
+                <param name="min">-88</param>
+                <param name="max">88</param>
             </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
         </joint>
 
-        <joint name="FL_hip_joint">
+        <joint name="left_hip_roll_joint">
             <command_interface name="effort">
-                <param name="min">-${hip_torque_max}</param>
-                <param name="max">${hip_torque_max}</param>
+                <param name="min">-139</param>
+                <param name="max">139</param>
             </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
         </joint>
 
-        <joint name="RR_hip_joint">
+        <joint name="left_hip_yaw_joint">
             <command_interface name="effort">
-                <param name="min">-${hip_torque_max}</param>
-                <param name="max">${hip_torque_max}</param>
+                <param name="min">-88</param>
+                <param name="max">88</param>
             </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
         </joint>
 
-        <joint name="RL_hip_joint">
+        <joint name="left_knee_joint">
             <command_interface name="effort">
-                <param name="min">-${hip_torque_max}</param>
-                <param name="max">${hip_torque_max}</param>
+                <param name="min">-139</param>
+                <param name="max">139</param>
             </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
         </joint>
 
-        <joint name="FR_thigh_joint">
+        <joint name="left_ankle_pitch_joint">
             <command_interface name="effort">
-                <param name="min">-${thigh_torque_max}</param>
-                <param name="max">${thigh_torque_max}</param>
+                <param name="min">-35</param>
+                <param name="max">35</param>
             </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
         </joint>
 
-        <joint name="FL_thigh_joint">
+        <joint name="left_ankle_roll_joint">
             <command_interface name="effort">
-                <param name="min">-${thigh_torque_max}</param>
-                <param name="max">${thigh_torque_max}</param>
+                <param name="min">-35</param>
+                <param name="max">35</param>
             </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
         </joint>
 
-        <joint name="RR_thigh_joint">
+        <joint name="right_hip_pitch_joint">
             <command_interface name="effort">
-                <param name="min">-${thigh_torque_max}</param>
-                <param name="max">${thigh_torque_max}</param>
+                <param name="min">-88</param>
+                <param name="max">88</param>
             </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
         </joint>
 
-        <joint name="RL_thigh_joint">
+        <joint name="right_hip_roll_joint">
             <command_interface name="effort">
-                <param name="min">-${thigh_torque_max}</param>
-                <param name="max">${thigh_torque_max}</param>
+                <param name="min">-139</param>
+                <param name="max">139</param>
             </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
         </joint>
 
-        <joint name="FR_calf_joint">
+        <joint name="right_hip_yaw_joint">
             <command_interface name="effort">
-                <param name="min">-${calf_torque_max}</param>
-                <param name="max">${calf_torque_max}</param>
+                <param name="min">-88</param>
+                <param name="max">88</param>
             </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
         </joint>
 
-        <joint name="FL_calf_joint">
+        <joint name="right_knee_joint">
             <command_interface name="effort">
-                <param name="min">-${calf_torque_max}</param>
-                <param name="max">${calf_torque_max}</param>
+                <param name="min">-139</param>
+                <param name="max">139</param>
             </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
         </joint>
 
-        <joint name="RR_calf_joint">
+        <joint name="right_ankle_pitch_joint">
             <command_interface name="effort">
-                <param name="min">-${calf_torque_max}</param>
-                <param name="max">${calf_torque_max}</param>
+                <param name="min">-35</param>
+                <param name="max">35</param>
             </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
         </joint>
 
-        <joint name="RL_calf_joint">
+        <joint name="right_ankle_roll_joint">
             <command_interface name="effort">
-                <param name="min">-${calf_torque_max}</param>
-                <param name="max">${calf_torque_max}</param>
+                <param name="min">-35</param>
+                <param name="max">35</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="waist_yaw_joint">
+            <command_interface name="effort">
+                <param name="min">-88</param>
+                <param name="max">88</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="waist_roll_joint">
+            <command_interface name="effort">
+                <param name="min">-35</param>
+                <param name="max">35</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="waist_pitch_joint">
+            <command_interface name="effort">
+                <param name="min">-35</param>
+                <param name="max">35</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="left_shoulder_pitch_joint">
+            <command_interface name="effort">
+                <param name="min">-25</param>
+                <param name="max">25</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="left_shoulder_roll_joint">
+            <command_interface name="effort">
+                <param name="min">-25</param>
+                <param name="max">25</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="left_shoulder_yaw_joint">
+            <command_interface name="effort">
+                <param name="min">-25</param>
+                <param name="max">25</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="left_elbow_joint">
+            <command_interface name="effort">
+                <param name="min">-25</param>
+                <param name="max">25</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="left_wrist_roll_joint">
+            <command_interface name="effort">
+                <param name="min">-25</param>
+                <param name="max">25</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="left_wrist_pitch_joint">
+            <command_interface name="effort">
+                <param name="min">-5</param>
+                <param name="max">5</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="left_wrist_yaw_joint">
+            <command_interface name="effort">
+                <param name="min">-5</param>
+                <param name="max">5</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="right_shoulder_pitch_joint">
+            <command_interface name="effort">
+                <param name="min">-25</param>
+                <param name="max">25</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="right_shoulder_roll_joint">
+            <command_interface name="effort">
+                <param name="min">-25</param>
+                <param name="max">25</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="right_shoulder_yaw_joint">
+            <command_interface name="effort">
+                <param name="min">-25</param>
+                <param name="max">25</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="right_elbow_joint">
+            <command_interface name="effort">
+                <param name="min">-25</param>
+                <param name="max">25</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="right_wrist_roll_joint">
+            <command_interface name="effort">
+                <param name="min">-25</param>
+                <param name="max">25</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="right_wrist_pitch_joint">
+            <command_interface name="effort">
+                <param name="min">-5</param>
+                <param name="max">5</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="right_wrist_yaw_joint">
+            <command_interface name="effort">
+                <param name="min">-5</param>
+                <param name="max">5</param>
             </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
@@ -333,7 +410,7 @@
 
     <gazebo>
         <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
-            <parameters>$(find b2_description)/config/robot_control_ros2.yaml</parameters>
+            <parameters>$(find g1_description)/config/robot_control_ros2.yaml</parameters>
         </plugin>
     </gazebo>
 

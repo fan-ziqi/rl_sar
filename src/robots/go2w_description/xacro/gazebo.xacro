@@ -1,5 +1,20 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:property name="damping" value="0.0"/>
+    <xacro:property name="friction" value="0.0"/>
+    <xacro:property name="hip_position_max" value="1.0472"/>
+    <xacro:property name="hip_position_min" value="-1.0472"/>
+    <xacro:property name="hip_velocity_max" value="30.1"/>
+    <xacro:property name="hip_torque_max" value="23.7"/>
+    <xacro:property name="thigh_position_max" value="3.4907"/>
+    <xacro:property name="thigh_position_min" value="-1.5708"/>
+    <xacro:property name="thigh_velocity_max" value="30.1"/>
+    <xacro:property name="thigh_torque_max" value="23.7"/>
+    <xacro:property name="calf_position_max" value="-0.83776"/>
+    <xacro:property name="calf_position_min" value="-2.7227"/>
+    <xacro:property name="calf_velocity_max" value="20.06"/>
+    <xacro:property name="calf_torque_max" value="35.55"/>
+
     <xacro:property name="ros_version" value="$(env ROS_VERSION)" />
 
     <xacro:if value="${int(ros_version) == 1}">
@@ -7,7 +22,7 @@
     <!-- ros_control plugin -->
     <gazebo>
         <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-            <robotNamespace>/b2_gazebo</robotNamespace>
+            <robotNamespace>/go2w_gazebo</robotNamespace>
             <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
         </plugin>
     </gazebo>
@@ -329,11 +344,51 @@
             <state_interface name="effort"/>
         </joint>
 
+        <joint name="FR_foot_joint">
+            <command_interface name="effort">
+                <param name="min">-${calf_torque_max}</param>
+                <param name="max">${calf_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="FL_foot_joint">
+            <command_interface name="effort">
+                <param name="min">-${calf_torque_max}</param>
+                <param name="max">${calf_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="RR_foot_joint">
+            <command_interface name="effort">
+                <param name="min">-${calf_torque_max}</param>
+                <param name="max">${calf_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
+        <joint name="RL_foot_joint">
+            <command_interface name="effort">
+                <param name="min">-${calf_torque_max}</param>
+                <param name="max">${calf_torque_max}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+        </joint>
+
     </ros2_control>
 
     <gazebo>
         <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
-            <parameters>$(find b2_description)/config/robot_control_ros2.yaml</parameters>
+            <parameters>$(find go2w_description)/config/robot_control_ros2.yaml</parameters>
         </plugin>
     </gazebo>
 

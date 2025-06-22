@@ -7,15 +7,28 @@
 
 [English document](README.md)
 
-> [!IMPORTANT]
-> Python版本暂时停止维护，如有需要请使用[v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3)版本，后续可能会重新上线。
-
 本仓库提供了机器人强化学习算法的仿真验证与实物部署框架，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
 
-特性：
-- 内置多种机器人仿真的预训练模型，包括 `Unitree-A1`、`Unitree-Go2`、`Unitree-Go2W`、`Unitree-B2`、`Unitree-B2W`、`Unitree-G1`、`FFTAI-GR1T1`、`FFTAI-GR1T2`、`GoldenRetriever-L4W0`、`GoldenRetriever-L4W4`；
-- 训练框架支持**IsaacGym**和**IsaacSim**，用`framework`加以区分；
-- 代码同时支持**ROS-Noetic**和**ROS2-Foxy/Humble/Jazzy**；
+> 支持**IsaacGym**和**IsaacSim**(用`framework`区分)
+>
+> 支持**ROS-Noetic**和**ROS2-Foxy/Humble/Jazzy**
+
+支持列表：
+
+| Robot Name   | Policy (IsaacGym) | Policy (IsaacSim) | ROS1 Support | ROS2 Support |
+|------------|----------------------|----------------------|----------|----------|
+| a1         | legged_gym            | ⚪                    | ✅       | ✅       |
+| go2        | himloco               | robot_lab            | ✅       | ✅       |
+| go2w       | ⚪                    | robot_lab            | ✅       | ✅       |
+| b2         | ⚪                    | robot_lab            | ✅       | ✅       |
+| b2w        | ⚪                    | robot_lab            | ✅       | ✅       |
+| g1         | unitree_ros           | ⚪                    | ✅       | ❌       |
+| gr1t1      | legged_gym            | ⚪                    | ✅       | ❌       |
+| gr2t2      | legged_gym            | ⚪                    | ✅       | ❌       |
+| l4w4       | legged_gym            | robot_lab            | ✅       | ✅       |
+
+> [!IMPORTANT]
+> Python版本暂时停止维护，如有需要请使用[v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3)版本，后续可能会重新上线。
 
 > [!NOTE]
 > 如果你想使用IsaacLab（IsaacSim）训练策略，请使用 [robot_lab](https://github.com/fan-ziqi/robot_lab) 项目。
