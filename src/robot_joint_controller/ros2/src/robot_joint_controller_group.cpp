@@ -27,18 +27,44 @@ CallbackReturn RobotJointControllerGroup::on_configure(const rclcpp_lifecycle::S
 {
     name_space_ = get_node()->get_namespace();
 
-    joint_names_ = get_node()->get_parameter("joints").as_string_array();
+    // joint_names_ = get_node()->get_parameter("joints").as_string_array();
 
-    if (joint_names_.empty())
+    // if (joint_names_.empty())
+    // {
+    //     RCLCPP_ERROR(get_node()->get_logger(), "'joints' parameter was empty");
+    //     return CallbackReturn::ERROR;
+    // }
+    // else
+    // {
+    //     for (const auto& joint_name : joint_names_)
+    //     {
+    //         RCLCPP_WARN(get_node()->get_logger(), "joint_name: %s", joint_name.c_str());
+    //     }
+    // }
+
+    while (rclcpp::ok())
     {
-        RCLCPP_ERROR(get_node()->get_logger(), "'joints' parameter was empty");
-        return CallbackReturn::ERROR;
-    }
-    else
-    {
-        for (const auto& joint_name : joint_names_)
+        if (!get_node()->has_parameter("joints"))
         {
-            RCLCPP_WARN(get_node()->get_logger(), "joint_name: %s", joint_name.c_str());
+            RCLCPP_WARN(get_node()->get_logger(), "Waiting for 'joints' parameter to be set...");
+            std::this_thread::sleep_for(std::chrono::seconds(1));  // 每秒检查一次
+            continue;
+        }
+
+        joint_names_ = get_node()->get_parameter("joints").as_string_array();
+
+        if (joint_names_.empty())
+        {
+            RCLCPP_WARN(get_node()->get_logger(), "'joints' parameter is empty, waiting...");
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+        else
+        {
+            for (const auto& joint_name : joint_names_)
+            {
+                RCLCPP_INFO(get_node()->get_logger(), "Configured joint: %s", joint_name.c_str());
+            }
+            break;
         }
     }
 

@@ -1,6 +1,6 @@
 <launch>
     <arg name="wname" default="stairs"/>
-    <arg name="rname" default="go2w"/>
+    <arg name="rname" default=""/>
     <arg name="cfg" default=""/>
     <param name="robot_name" type="str" value="$(arg rname)"/>
     <param name="config_name" type="str" value="$(arg cfg)"/>
@@ -34,18 +34,10 @@
     <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
     <!-- Set trunk and joint positions at startup -->
     <node pkg="gazebo_ros" type="spawn_model" name="urdf_spawner" respawn="false" output="screen"
-          args="-urdf -z 0.8 -model $(arg rname)_gazebo -param robot_description"/>
+          args="-urdf -z 1.0 -model $(arg rname)_gazebo -param robot_description"/>
 
     <!-- Load joint controller configurations from YAML file to parameter server -->
     <rosparam file="$(arg dollar)$(arg robot_path)/config/robot_control.yaml" command="load"/>
-
-    <!-- load the controllers -->
-    <node pkg="controller_manager" type="spawner" name="controller_spawner" respawn="false"
-          output="screen" ns="/$(arg rname)_gazebo" args="joint_state_controller
-          FL_hip_controller FL_thigh_controller FL_calf_controller FL_foot_controller
-          FR_hip_controller FR_thigh_controller FR_calf_controller FR_foot_controller
-          RL_hip_controller RL_thigh_controller RL_calf_controller RL_foot_controller
-          RR_hip_controller RR_thigh_controller RR_calf_controller RR_foot_controller "/>
 
     <!-- convert joint states to TF transforms for rviz, etc -->
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"

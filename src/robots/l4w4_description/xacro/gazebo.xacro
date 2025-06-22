@@ -11,7 +11,7 @@
     <!-- ros_control plugin -->
     <gazebo>
         <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-            <robotNamespace>/go2w_gazebo</robotNamespace>
+            <robotNamespace>/l4w4_gazebo</robotNamespace>
             <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
         </plugin>
     </gazebo>
@@ -377,7 +377,7 @@
 
     <gazebo>
         <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
-            <parameters>$(find go2w_description)/config/robot_control_ros2.yaml</parameters>
+            <parameters>$(find l4w4_description)/config/robot_control_ros2.yaml</parameters>
         </plugin>
     </gazebo>
 

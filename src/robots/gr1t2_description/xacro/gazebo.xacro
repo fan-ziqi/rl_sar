@@ -7,7 +7,7 @@
     <!-- ros_control plugin -->
     <gazebo>
         <plugin filename="libgazebo_ros_control.so" name="gazebo_ros_control">
-        <robotNamespace>/gr1t1_gazebo</robotNamespace>
+        <robotNamespace>/gr1t2_gazebo</robotNamespace>
         <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
         </plugin>
     </gazebo>

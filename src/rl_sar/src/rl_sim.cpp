@@ -77,6 +77,8 @@ RL_Sim::RL_Sim()
     this->InitOutputs();
     this->InitControl();
 
+    // this->StartJointController(this->ros_namespace, this->params.joint_controller_names);
+
 #if defined(USE_ROS1)
     // publisher
     for (int i = 0; i < this->params.num_of_dofs; ++i)
@@ -175,6 +177,79 @@ RL_Sim::~RL_Sim()
     this->loop_plot->shutdown();
 #endif
     std::cout << LOGGER::INFO << "RL_Sim exit" << std::endl;
+}
+
+void RL_Sim::StartJointController(const std::string& ros_namespace, const std::vector<std::string>& joint_names)
+{
+#if defined(USE_ROS1)
+    pid_t pid = fork();
+    if (pid == 0)
+    {
+        std::string cmd = "rosrun controller_manager spawner joint_state_controller ";
+        for (const auto& name : joint_names) {
+            cmd += name + " ";
+        }
+        cmd += "__ns:=" + ros_namespace;
+        // cmd += " > /dev/null 2>&1";
+        execlp("sh", "sh", "-c", cmd.c_str(), nullptr);
+        exit(1);
+    }
+#elif defined(USE_ROS2)
+    const char* ros_distro = std::getenv("ROS_DISTRO");
+    std::string spawner = (ros_distro && std::string(ros_distro) == "foxy") ? "spawner.py" : "spawner";
+
+    std::filesystem::path tmp_path = std::filesystem::temp_directory_path() / "robot_joint_controller_params.yaml";
+    {
+        std::ofstream tmp_file(tmp_path);
+        if (!tmp_file) {
+            throw std::runtime_error("Failed to create temporary parameter file");
+        }
+
+        tmp_file << "/controller_manager:\n";
+        tmp_file << "    ros__parameters:\n";
+        tmp_file << "        update_rate: 1000  # Hz\n";
+        tmp_file << "        # use_sim_time: true  # If running in simulation\n\n";
+        tmp_file << "        joint_state_broadcaster:\n";
+        tmp_file << "            type: joint_state_broadcaster/JointStateBroadcaster\n\n";
+        tmp_file << "        imu_sensor_broadcaster:\n";
+        tmp_file << "            type: imu_sensor_broadcaster/ImuSensorBroadcaster\n\n";
+        tmp_file << "        robot_joint_controller:\n";
+        tmp_file << "            type: robot_joint_controller/RobotJointControllerGroup\n\n";
+
+        tmp_file << "/imu_sensor_broadcaster:\n";
+        tmp_file << "    ros__parameters:\n";
+        tmp_file << "        sensor_name: \"imu_sensor\"\n";
+        tmp_file << "        frame_id: imu_link\n\n";
+
+        tmp_file << "/robot_joint_controller:\n";
+        tmp_file << "    ros__parameters:\n";
+        tmp_file << "        joints:\n";
+        for (const auto& joint : joint_names) {
+            tmp_file << "            - " << joint << "\n";
+        }
+    }
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        std::string cmd = "ros2 run controller_manager " + spawner + " robot_joint_controller ";
+        cmd += "-p " + tmp_path.string() + " ";
+        // cmd += " > /dev/null 2>&1";
+        execlp("sh", "sh", "-c", cmd.c_str(), nullptr);
+        exit(1);
+    }
+    else if (pid > 0) {
+        int status;
+        waitpid(pid, &status, 0);
+        std::filesystem::remove(tmp_path);
+
+        if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+            throw std::runtime_error("Failed to start joint controller");
+        }
+    }
+    else {
+        throw std::runtime_error("fork() failed");
+    }
+#endif
 }
 
 void RL_Sim::GetState(RobotState<double> *state)

@@ -10,6 +10,14 @@
 #include "observation_buffer.hpp"
 #include "loop.hpp"
 #include <csignal>
+#include <vector>
+#include <string>
+#include <cstdlib>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <filesystem>
+#include <fstream>
+#include <stdexcept>
 
 #if defined(USE_ROS1)
 #include <ros/ros.h>
@@ -112,6 +120,7 @@ private:
     std::map<std::string, double> joint_positions;
     std::map<std::string, double> joint_velocities;
     std::map<std::string, double> joint_efforts;
+    void StartJointController(const std::string& ros_namespace, const std::vector<std::string>& joint_names);
 };
 
 #endif // RL_SIM_HPP
