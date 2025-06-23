@@ -155,7 +155,6 @@ Examples:
 > [!NOTE]
 > 如果 catkin build 报错: `Unable to find either executable 'empy' or Python module 'em'`, 在`catkin build` 之前执行 `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3`
 
-
 ## 运行
 
 下文中使用 **\<ROBOT\>/\<CONFIG\>** 代替表示不同的环境，如 `go2/himloco` 、 `go2w/robot_lab`。
@@ -313,7 +312,7 @@ source ~/.bashrc
 下文中使用 **\<ROBOT\>/\<CONFIG\>** 代替表示你的机器人环境
 
 1. 在`rl_sar/src/robots`路径下创建名为`<ROBOT>_description`的模型包，并在`rl_sar/src/robots/<ROBOT>_description/config/`路径下创建关节配置文件，具体请参考已有文件。
-2. 将训练好的RL策略文件放到`rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/`路径下，在此路径中创建config.yaml文件，在其上级目录新建base.yaml文件，具体请参考已有文件。
+2. 将训练好的RL策略文件放到`rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/`路径下，在此路径中创建`config.yaml`文件，在其上级目录新建`base.yaml`文件，具体请参考已有文件。注意：`base.yaml`中必须遵守实物机器人的关节顺序，`config.yaml`的关节顺序可以按照训练顺序自定义。
 3. 按需修改代码中的`forward()`函数，以适配不同的策略。
 4. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch/`路径下的launch文件自行修改。
 5. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_go2.cpp`文件自行修改。
@@ -344,4 +343,3 @@ source ~/.bashrc
 - [unitreerobotics/unitree_guide](https://github.com/unitreerobotics/unitree_guide)
 - [mertgungor/unitree_model_control](https://github.com/mertgungor/unitree_model_control)
 - [src/rl_sar/scripts/actuator_net.py](src/rl_sar/scripts/actuator_net.py) 中的代码修改自 [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways) 仓库中的 [scripts/actuator_net](https://github.com/Improbable-AI/walk-these-ways/tree/master/scripts/actuator_net)
-

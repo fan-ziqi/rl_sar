@@ -13,14 +13,14 @@ RL_Sim::RL_Sim()
     : rclcpp::Node("rl_sim_node")
 #endif
 {
-    this->is_simulation = true;
-
 #if defined(USE_ROS1)
+    this->ang_vel_type = "ang_vel_world";
     ros::NodeHandle nh;
     nh.param<std::string>("ros_namespace", this->ros_namespace, "");
     nh.param<std::string>("robot_name", this->robot_name, "");
     nh.param<std::string>("config_name", this->default_rl_config, "");
 #elif defined(USE_ROS2)
+    this->ang_vel_type = "ang_vel_body";
     this->ros_namespace = this->get_namespace();
     // get params from param_node
     param_client = this->create_client<rcl_interfaces::srv::GetParameters>("/param_node/get_parameters");
@@ -83,7 +83,6 @@ RL_Sim::RL_Sim()
     // publisher
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
-        // joint need to rename as xxx_joint
         const std::string &joint_name = this->params.joint_controller_names[i];
         const std::string topic_name = this->ros_namespace + joint_name + "/command";
         this->joint_publishers[joint_name] =
@@ -96,7 +95,6 @@ RL_Sim::RL_Sim()
     this->model_state_subscriber = nh.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 10, &RL_Sim::ModelStatesCallback, this);
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
-        // joint need to rename as xxx_joint
         const std::string &joint_name = this->params.joint_controller_names[i];
         const std::string topic_name = this->ros_namespace + joint_name + "/state";
         this->joint_subscribers[joint_name] =
@@ -218,21 +216,23 @@ void RL_Sim::StartJointController(const std::string& ros_namespace, const std::v
         tmp_file << "    ros__parameters:\n";
         tmp_file << "        update_rate: 1000  # Hz\n";
         tmp_file << "        # use_sim_time: true  # If running in simulation\n\n";
-        tmp_file << "        joint_state_broadcaster:\n";
-        tmp_file << "            type: joint_state_broadcaster/JointStateBroadcaster\n\n";
-        tmp_file << "        imu_sensor_broadcaster:\n";
-        tmp_file << "            type: imu_sensor_broadcaster/ImuSensorBroadcaster\n\n";
+        // tmp_file << "        joint_state_broadcaster:\n";
+        // tmp_file << "            type: joint_state_broadcaster/JointStateBroadcaster\n\n";
+        // tmp_file << "        imu_sensor_broadcaster:\n";
+        // tmp_file << "            type: imu_sensor_broadcaster/ImuSensorBroadcaster\n\n";
         tmp_file << "        robot_joint_controller:\n";
         tmp_file << "            type: robot_joint_controller/RobotJointControllerGroup\n\n";
 
-        tmp_file << "/imu_sensor_broadcaster:\n";
-        tmp_file << "    ros__parameters:\n";
-        tmp_file << "        sensor_name: \"imu_sensor\"\n";
-        tmp_file << "        frame_id: imu_link\n\n";
+        // tmp_file << "/imu_sensor_broadcaster:\n";
+        // tmp_file << "    ros__parameters:\n";
+        // tmp_file << "        sensor_name: \"imu_sensor\"\n";
+        // tmp_file << "        frame_id: imu_link\n\n";
 
         tmp_file << "/robot_joint_controller:\n";
         tmp_file << "    ros__parameters:\n";
         tmp_file << "        joints:\n";
+
+        // joint need to rename as xxx_joint
         for (const auto& joint_controller_name : joint_controller_names)
         {
             std::string joint_name = joint_controller_name;
@@ -308,9 +308,9 @@ void RL_Sim::GetState(RobotState<double> *state)
         state->motor_state.dq[i] = this->joint_velocities[this->params.joint_controller_names[i]];
         state->motor_state.tau_est[i] = this->joint_efforts[this->params.joint_controller_names[i]];
 #elif defined(USE_ROS2)
-        state->motor_state.q[i] = this->robot_state_subscriber_msg.motor_state[i].q;  // TODO
-        state->motor_state.dq[i] = this->robot_state_subscriber_msg.motor_state[i].dq;
-        state->motor_state.tau_est[i] = this->robot_state_subscriber_msg.motor_state[i].tau_est;
+        state->motor_state.q[i] = this->robot_state_subscriber_msg.motor_state[this->params.state_mapping[i]].q;
+        state->motor_state.dq[i] = this->robot_state_subscriber_msg.motor_state[this->params.state_mapping[i]].dq;
+        state->motor_state.tau_est[i] = this->robot_state_subscriber_msg.motor_state[this->params.state_mapping[i]].tau_est;
 #endif
     }
 }
@@ -320,15 +320,18 @@ void RL_Sim::SetCommand(const RobotCommand<double> *command)
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
 #if defined(USE_ROS1)
-        auto &target = this->joint_publishers_commands[i];
+        this->joint_publishers_commands[i].q = command->motor_command.q[i];
+        this->joint_publishers_commands[i].dq = command->motor_command.dq[i];
+        this->joint_publishers_commands[i].kp = command->motor_command.kp[i];
+        this->joint_publishers_commands[i].kd = command->motor_command.kd[i];
+        this->joint_publishers_commands[i].tau = command->motor_command.tau[i];
 #elif defined(USE_ROS2)
-        auto &target = this->robot_command_publisher_msg.motor_command[i];
+        this->robot_command_publisher_msg.motor_command[i].q = command->motor_command.q[this->params.command_mapping[i]];
+        this->robot_command_publisher_msg.motor_command[i].dq = command->motor_command.dq[this->params.command_mapping[i]];
+        this->robot_command_publisher_msg.motor_command[i].kp = command->motor_command.kp[this->params.command_mapping[i]];
+        this->robot_command_publisher_msg.motor_command[i].kd = command->motor_command.kd[this->params.command_mapping[i]];
+        this->robot_command_publisher_msg.motor_command[i].tau = command->motor_command.tau[this->params.command_mapping[i]];
 #endif
-        target.q   = command->motor_command.q[i];
-        target.dq  = command->motor_command.dq[i];
-        target.kp  = command->motor_command.kp[i];
-        target.kd  = command->motor_command.kd[i];
-        target.tau = command->motor_command.tau[i];
     }
 
 #if defined(USE_ROS1)

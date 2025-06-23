@@ -14,6 +14,7 @@ RL_Real::RL_Real()
 #endif
 
     // read params from yaml
+    this->ang_vel_type = "ang_vel_body";
     this->robot_name = "l4w4";
     this->default_rl_config = "legged_gym";
     this->ReadYamlBase(this->robot_name);

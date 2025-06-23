@@ -75,6 +75,11 @@ def generate_launch_description():
         executable='joy_node',
         name='joy_node',
         output='screen',
+        parameters=[{
+            'deadzone': 0.1,
+            'autorepeat_rate': 1.0,
+            'coalesce_interval_ms': 10
+        }],
     )
 
     param_node = Node(

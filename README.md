@@ -57,6 +57,7 @@ If you are using `ros2-foxy` (Ubuntu 20.04) or `ros2-humble` (Ubuntu 22.04), you
 
 ```bash
 sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-control ros-$ROS_DISTRO-ros2-controllers ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-robot-state-publisher ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-gazebo-ros2-control ros-$ROS_DISTRO-gazebo-ros-pkgs ros-$ROS_DISTRO-xacro
+```
 
 Download and deploy `libtorch` at any location (Please modify **\<YOUR_PATH\>** below to the actual path)
 
@@ -311,7 +312,7 @@ Take A1 as an example below
 In the following context, use **\<ROBOT\>/\<CONFIG\>** to represent your robot environment:
 
 1. Under the path `rl_sar/src/robots`, create a model package named `<ROBOT>_description`, and create joint configuration files under the path `rl_sar/src/robots/<ROBOT>_description/config/`. Please refer to existing files for specific details.
-2. Place the trained RL policy files under the path `rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/`. Create a config.yaml file in this path and create a base.yaml file in its parent directory. Please refer to existing files for specific details.
+2. Place the trained RL policy files under the path `rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/`. Create a `config.yaml` file in this path and create a `base.yaml` file in its parent directory. Please refer to existing files for specific details. Note: The joint order of the physical robot must be followed in `base.yaml`, and the joint order of `config.yaml` can be customized according to the training order.
 3. Modify the `forward()` function in the code as needed to adapt to different policies.
 4. If you need to run simulation, refer to the launch files under the path `rl_sar/src/rl_sar/launch/` and modify accordingly.
 5. If you need to run on physical hardware, refer to the file `rl_sar/src/rl_sar/src/rl_real_go2.cpp` and modify accordingly.

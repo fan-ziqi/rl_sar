@@ -14,6 +14,7 @@ RL_Real::RL_Real(bool wheel_mode)
 #endif
 
     // read params from yaml
+    this->ang_vel_type = "ang_vel_body";
     if (wheel_mode)
     {
         this->robot_name = "go2w";
