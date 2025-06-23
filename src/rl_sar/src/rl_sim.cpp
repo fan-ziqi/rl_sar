@@ -196,10 +196,6 @@ void RL_Sim::StartJointController(const std::string& ros_namespace, const std::v
         execlp("sh", "sh", "-c", cmd.c_str(), nullptr);
         exit(1);
     }
-    else
-    {
-        throw std::runtime_error("fork() failed");
-    }
 #elif defined(USE_ROS2)
     const char* ros_distro = std::getenv("ROS_DISTRO");
     std::string spawner = (ros_distro && std::string(ros_distro) == "foxy") ? "spawner.py" : "spawner";

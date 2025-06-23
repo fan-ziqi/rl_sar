@@ -1,16 +1,17 @@
 cmake_minimum_required(VERSION 3.5)
-project(b2w_description)
+project(b2w_description VERSION 3.0.0 LANGUAGES CXX)
 
 if($ENV{ROS_DISTRO} MATCHES "noetic")
 	find_package(catkin REQUIRED)
-
 	catkin_package()
-
 	find_package(roslaunch)
-
-	foreach(dir config launch meshes urdf)
-		install(DIRECTORY ${dir}/
-			DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir})
+	foreach(dir config launch meshes urdf xacro)
+        if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${dir})
+            install(
+                DIRECTORY ${dir}/
+                DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir}
+            )
+        endif()
 	endforeach(dir)
 elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
     find_package(ament_cmake REQUIRED)
@@ -18,15 +19,13 @@ elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
     find_package(urdf REQUIRED)
     find_package(xacro REQUIRED)
     find_package(robot_state_publisher REQUIRED)
-    install(
-    DIRECTORY
-        config
-        launch
-        meshes
-        urdf
-        xacro
-    DESTINATION
-        share/${PROJECT_NAME}/
-    )
+    foreach(dir config launch meshes urdf xacro)
+        if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${dir})
+            install(
+                DIRECTORY ${dir}/
+                DESTINATION share/${PROJECT_NAME}/${dir}
+            )
+        endif()
+    endforeach()
     ament_package()
 endif()

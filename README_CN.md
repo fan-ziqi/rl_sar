@@ -309,13 +309,35 @@ source ~/.bashrc
 
 ## 添加你的机器人
 
-下文中使用 **\<ROBOT\>/\<CONFIG\>** 代替表示你的机器人环境
+下文使用 **\<ROBOT\>/\<CONFIG\>** 代替表示你的机器人环境，且路径均在`rl_sar/src/`下
 
-1. 在`rl_sar/src/robots`路径下创建名为`<ROBOT>_description`的模型包，并在`rl_sar/src/robots/<ROBOT>_description/config/`路径下创建关节配置文件，具体请参考已有文件。
-2. 将训练好的RL策略文件放到`rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/`路径下，在此路径中创建`config.yaml`文件，在其上级目录新建`base.yaml`文件，具体请参考已有文件。注意：`base.yaml`中必须遵守实物机器人的关节顺序，`config.yaml`的关节顺序可以按照训练顺序自定义。
+1. 在`robots`路径下创建名为`<ROBOT>_description`的模型包，机器人描述文件必须命名为`robots/<ROBOT>_description/xacro/robot.xacro`，如您使用urdf，可以在xacro中引用urdf。然后需要在`robots/<ROBOT>_description/config/`路径下创建关节配置文件，具体请参考已有文件。
+2. 将训练好的RL策略文件放到`rl_sar/policy/<ROBOT>/<CONFIG>/`路径下，在此路径中创建`config.yaml`文件，在其上级目录新建`base.yaml`文件，具体请参考已有文件。注意：`base.yaml`中必须遵守实物机器人的关节顺序，`config.yaml`的关节顺序可以按照训练顺序自定义。
 3. 按需修改代码中的`forward()`函数，以适配不同的策略。
-4. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch/`路径下的launch文件自行修改。
-5. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_go2.cpp`文件自行修改。
+4. 若需要运行实物机器人，则参考`rl_sar/src/rl_real_go2.cpp`文件自行修改。
+
+没看懂？让我帮您总结一下，您只需要修改下述文件，命名必须跟下面一样
+
+```
+# your robot description
+robots/<ROBOT>_description/CMakeLists.txt
+robots/<ROBOT>_description/package.ros1.xml
+robots/<ROBOT>_description/package.ros2.xml
+robots/<ROBOT>_description/xacro/robot.xacro
+robots/<ROBOT>_description/xacro/gazebo.xacro
+robots/<ROBOT>_description/config/robot_control.yaml
+robots/<ROBOT>_description/config/robot_control_ros2.yaml
+
+# your policy
+rl_sar/policy/<ROBOT>/base.yaml  # 此文件中必须遵守实物机器人的关节顺序
+rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml  # 此文件中可以是训练时指定的关节顺序
+rl_sar/policy/<ROBOT>/<CONFIG>/<POLICY>.pt  # 必须导出jit才可使用
+
+# your real robot code
+rl_sar/src/rl_real_<ROBOT>.cpp  # 可以按需自定义forward()函数以适配您的policy
+```
+
+还是不会？请参考go2w的所有上述文件。
 
 ## 贡献
 

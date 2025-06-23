@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(robot_msgs)
+project(robot_msgs VERSION 3.0.0 LANGUAGES CXX)
 
 if($ENV{ROS_DISTRO} MATCHES "noetic")
   find_package(catkin REQUIRED COMPONENTS

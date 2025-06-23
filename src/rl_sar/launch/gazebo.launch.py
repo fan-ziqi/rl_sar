@@ -1,3 +1,6 @@
+# Copyright (c) 2024-2025 Ziqi Fan
+# SPDX-License-Identifier: Apache-2.0
+
 import os
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
@@ -41,6 +44,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             "verbose": "false",
+            # "pause": "true",  # Not Available
             "world": os.path.join(get_package_share_directory("rl_sar"), "worlds", wname + ".world"),
         }.items(),
     )
@@ -63,12 +67,12 @@ def generate_launch_description():
         output="screen",
     )
 
-    # robot_joint_controller_node = Node(
-    #     package="controller_manager",
-    #     executable='spawner.py' if os.environ.get('ROS_DISTRO', '') == 'foxy' else 'spawner',
-    #     arguments=["robot_joint_controller"],
-    #     output="screen",
-    # )
+    robot_joint_controller_node = Node(
+        package="controller_manager",
+        executable='spawner.py' if os.environ.get('ROS_DISTRO', '') == 'foxy' else 'spawner',
+        arguments=["robot_joint_controller"],
+        output="screen",
+    )
 
     joy_node = Node(
         package='joy',
@@ -77,8 +81,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'deadzone': 0.1,
-            'autorepeat_rate': 1.0,
-            'coalesce_interval_ms': 10
+            'autorepeat_rate': 0.0,
         }],
     )
 
@@ -108,7 +111,7 @@ def generate_launch_description():
         gazebo,
         spawn_entity,
         joint_state_broadcaster_node,
-        # robot_joint_controller_node,
+        # robot_joint_controller_node,  # Spawn in rl_sim.cpp
         joy_node,
         param_node,
     ])

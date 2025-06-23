@@ -2,7 +2,7 @@
 <package format="3">
   <name>b2_description</name>
   <version>2.0.0</version>
-  <description>TODO: Package description</description>
+  <description>The b2_description package</description>
   <maintainer email="fanziqi614@gmail.com">Ziqi Fan</maintainer>
   <license>Apache-2.0</license>
 
