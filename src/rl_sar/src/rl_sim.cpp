@@ -77,7 +77,7 @@ RL_Sim::RL_Sim()
     this->InitOutputs();
     this->InitControl();
 
-    // this->StartJointController(this->ros_namespace, this->params.joint_controller_names);
+    this->StartJointController(this->ros_namespace, this->params.joint_controller_names);
 
 #if defined(USE_ROS1)
     // publisher
@@ -126,6 +126,10 @@ RL_Sim::RL_Sim()
         "/cmd_vel", rclcpp::SystemDefaultsQoS(),
         [this] (const geometry_msgs::msg::Twist::SharedPtr msg) {this->CmdvelCallback(msg);}
     );
+    this->joy_subscriber = this->create_subscription<sensor_msgs::msg::Joy>(
+        "/joy", rclcpp::SystemDefaultsQoS(),
+        [this] (const sensor_msgs::msg::Joy::SharedPtr msg) {this->JoyCallback(msg);}
+    );
     this->gazebo_imu_subscriber = this->create_subscription<sensor_msgs::msg::Imu>(
         "/imu", rclcpp::SystemDefaultsQoS(), [this] (const sensor_msgs::msg::Imu::SharedPtr msg) {this->GazeboImuCallback(msg);}
     );
@@ -136,10 +140,9 @@ RL_Sim::RL_Sim()
 
     // service
     this->gazebo_set_model_state_client = this->create_client<gazebo_msgs::srv::SetModelState>("/gazebo/set_model_state");
-    this->gazebo_pause_physics_client = this->create_client<std_srvs::srv::Empty>("/gazebo/pause_physics");
-    this->gazebo_unpause_physics_client = this->create_client<std_srvs::srv::Empty>("/gazebo/unpause_physics");
-
-    simulation_running = true;  // TODO
+    this->gazebo_pause_physics_client = this->create_client<std_srvs::srv::Empty>("/pause_physics");
+    this->gazebo_unpause_physics_client = this->create_client<std_srvs::srv::Empty>("/unpause_physics");
+    this->gazebo_reset_world_client = this->create_client<std_srvs::srv::Empty>("/reset_world");
 #endif
 
     // loop
@@ -179,20 +182,25 @@ RL_Sim::~RL_Sim()
     std::cout << LOGGER::INFO << "RL_Sim exit" << std::endl;
 }
 
-void RL_Sim::StartJointController(const std::string& ros_namespace, const std::vector<std::string>& joint_names)
+void RL_Sim::StartJointController(const std::string& ros_namespace, const std::vector<std::string>& joint_controller_names)
 {
 #if defined(USE_ROS1)
     pid_t pid = fork();
     if (pid == 0)
     {
         std::string cmd = "rosrun controller_manager spawner joint_state_controller ";
-        for (const auto& name : joint_names) {
+        for (const auto& name : joint_controller_names)
+        {
             cmd += name + " ";
         }
         cmd += "__ns:=" + ros_namespace;
-        // cmd += " > /dev/null 2>&1";
+        // cmd += " > /dev/null 2>&1";  // Comment this line to see the output
         execlp("sh", "sh", "-c", cmd.c_str(), nullptr);
         exit(1);
+    }
+    else
+    {
+        throw std::runtime_error("fork() failed");
     }
 #elif defined(USE_ROS2)
     const char* ros_distro = std::getenv("ROS_DISTRO");
@@ -201,7 +209,8 @@ void RL_Sim::StartJointController(const std::string& ros_namespace, const std::v
     std::filesystem::path tmp_path = std::filesystem::temp_directory_path() / "robot_joint_controller_params.yaml";
     {
         std::ofstream tmp_file(tmp_path);
-        if (!tmp_file) {
+        if (!tmp_file)
+        {
             throw std::runtime_error("Failed to create temporary parameter file");
         }
 
@@ -224,29 +233,40 @@ void RL_Sim::StartJointController(const std::string& ros_namespace, const std::v
         tmp_file << "/robot_joint_controller:\n";
         tmp_file << "    ros__parameters:\n";
         tmp_file << "        joints:\n";
-        for (const auto& joint : joint_names) {
-            tmp_file << "            - " << joint << "\n";
+        for (const auto& joint_controller_name : joint_controller_names)
+        {
+            std::string joint_name = joint_controller_name;
+            size_t pos = joint_name.find("_controller");
+            if (pos != std::string::npos)
+            {
+                joint_name.replace(pos, std::string("_controller").length(), "_joint");
+            }
+            tmp_file << "            - " << joint_name << "\n";
         }
     }
 
     pid_t pid = fork();
-    if (pid == 0) {
+    if (pid == 0)
+    {
         std::string cmd = "ros2 run controller_manager " + spawner + " robot_joint_controller ";
         cmd += "-p " + tmp_path.string() + " ";
-        // cmd += " > /dev/null 2>&1";
+        // cmd += " > /dev/null 2>&1";  // Comment this line to see the output
         execlp("sh", "sh", "-c", cmd.c_str(), nullptr);
         exit(1);
     }
-    else if (pid > 0) {
+    else if (pid > 0)
+    {
         int status;
         waitpid(pid, &status, 0);
         std::filesystem::remove(tmp_path);
 
-        if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+        if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+        {
             throw std::runtime_error("Failed to start joint controller");
         }
     }
-    else {
+    else
+    {
         throw std::runtime_error("fork() failed");
     }
 #endif
@@ -323,35 +343,49 @@ void RL_Sim::SetCommand(const RobotCommand<double> *command)
 
 void RL_Sim::RobotControl()
 {
-#if defined(USE_ROS1)
+
     if (this->control.control_state == STATE_RESET_SIMULATION)
     {
+#if defined(USE_ROS1)
         gazebo_msgs::SetModelState set_model_state;
         set_model_state.request.model_state.model_name = this->gazebo_model_name;
         set_model_state.request.model_state.pose.position.z = 1.0;
         set_model_state.request.model_state.reference_frame = "world";
         this->gazebo_set_model_state_client.call(set_model_state);
+#elif defined(USE_ROS2)
+        auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
+        auto result = this->gazebo_reset_world_client->async_send_request(empty_request);
+#endif
         this->control.control_state = this->control.last_control_state;
     }
     if (this->control.control_state == STATE_TOGGLE_SIMULATION)
     {
-        std_srvs::Empty empty;
         if (simulation_running)
         {
+#if defined(USE_ROS1)
+            std_srvs::Empty empty;
             this->gazebo_pause_physics_client.call(empty);
+#elif defined(USE_ROS2)
+            auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
+            auto result = this->gazebo_pause_physics_client->async_send_request(empty_request);
+#endif
             std::cout << std::endl << LOGGER::INFO << "Simulation Stop" << std::endl;
         }
         else
         {
+#if defined(USE_ROS1)
+            std_srvs::Empty empty;
             this->gazebo_unpause_physics_client.call(empty);
+#elif defined(USE_ROS2)
+            auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
+            auto result = this->gazebo_unpause_physics_client->async_send_request(empty_request);
+#endif
             std::cout << std::endl << LOGGER::INFO << "Simulation Start" << std::endl;
         }
         simulation_running = !simulation_running;
         this->control.control_state = this->control.last_control_state;
     }
-#elif defined(USE_ROS2)
-    // TODO
-#endif
+
     if (simulation_running)
     {
         this->motiontime++;

@@ -164,17 +164,12 @@ Examples:
 
 ### 仿真
 
-> [!NOTE]
-> 对于ROS1仿真，关节顺序已经在`rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml`中定义，无需手动更改。
-> 对于ROS2仿真，运行仿真前需要将`rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml`中定义的关节顺序手动填写到`rl_sar/src/robots/<ROBOT>_description/config/robot_control_group.yaml`中。
-
-
 打开一个终端，启动gazebo仿真环境
 
 ```bash
 # ROS1
 source devel/setup.bash
-roslaunch rl_sar gazebo_<ROBOT>.launch cfg:=<CONFIG>
+roslaunch rl_sar gazebo.launch rname:=<ROBOT> cfg:=<CONFIG>
 
 # ROS2
 source install/setup.bash
@@ -195,22 +190,22 @@ ros2 run rl_sar rl_sim
 
 键盘控制：
 
-- 按 **\<Enter\>** 切换仿真器运行/停止。(Only for ROS1)
+- 按 **\<Enter\>** 切换仿真器运行/停止。
 - 按 **0** 让机器人从仿真开始的姿态以位控插值运动到yaml中定义的`default_dof_pos`。
 - 按 **p** 切换到强化学习模式。
 - **W/S** 控制前后移动，**J/L** 控制左右移动，**A/D** 控制转向，按 **\<Space\>** 将所有控制指令设置为零。
 - 按 **n** 切换到导航模式，屏蔽手柄命令，接收`cmd_vel`话题。
-- 如果机器人摔倒，按 **R** 重置Gazebo环境。(Only for ROS1)
+- 如果机器人摔倒，按 **R** 重置Gazebo环境。
 - 按 **1** 让机器人从当前位置以位控插值运动到仿真开始的姿态。
 
 手柄控制：
 
-- 按 **LB** 切换仿真器运行/停止。(Only for ROS1)
+- 按 **LB** 切换仿真器运行/停止。
 - 按 **RB+Y** 让机器人从仿真开始的姿态以位控插值运动到yaml中定义的`default_dof_pos`。
 - 按 **RB+B** 切换到强化学习模式。
 - **LY** 控制前后移动，**LX** 控制左右移动，**RX** 控制转向。
 - 按 **左面的下键** 切换到导航模式，屏蔽手柄命令，接收`cmd_vel`话题。
-- 如果机器人摔倒，按 **RB+X** 重置Gazebo环境。(Only for ROS1)
+- 如果机器人摔倒，按 **RB+X** 重置Gazebo环境。
 - 按 **RB+A** 让机器人从当前位置以位控插值运动到仿真开始的姿态。
 
 ### 真实机器人

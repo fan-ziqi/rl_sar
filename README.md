@@ -162,16 +162,12 @@ Before running, copy the trained pt model file to `rl_sar/src/rl_sar/policy/<ROB
 
 ### Simulation
 
-> [!NOTE]
-> For ROS1 simulation, the joint order is already defined in `rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml` and does not require manual modification.
-> For ROS2 simulation, before running the simulation, you need to manually copy the joint order defined in `rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml` to `rl_sar/src/robots/<ROBOT>_description/config/robot_control_group.yaml`.
-
 Open a terminal, launch the gazebo simulation environment
 
 ```bash
 # ROS1
 source devel/setup.bash
-roslaunch rl_sar gazebo_<ROBOT>.launch cfg:=<CONFIG>
+roslaunch rl_sar gazebo.launch rname:=<ROBOT> cfg:=<CONFIG>
 
 # ROS2
 source install/setup.bash
@@ -192,22 +188,22 @@ ros2 run rl_sar rl_sim
 
 Keyboard Control:
 
-- Press **<Enter>** to toggle the simulator between running and stopped.(Only for ROS1)
+- Press **<Enter>** to toggle the simulator between running and stopped.
 - Press **0** to move the robot from the initial simulation pose to the `default_dof_pos` defined in the YAML file using position control interpolation.
 - Press **p** to switch to Reinforcement Learning mode.
 - Use **W/S** to move forward/backward, **J/L** to move left/right, and **A/D** to turn. Press **<Space>** to reset all control commands to zero.
 - Press **n** to switch to Navigation mode, disabling gamepad commands and receiving commands from the `cmd_vel` topic.
-- If the robot falls down, press **R** to reset the Gazebo environment.(Only for ROS1)
+- If the robot falls down, press **R** to reset the Gazebo environment.
 - Press **1** to move the robot from its current position back to the initial simulation pose using position control interpolation.
 
 Gamepad Control:
 
-- Press **LB** to toggle the simulator between running and stopped.(Only for ROS1)
+- Press **LB** to toggle the simulator between running and stopped.
 - Press **RB + Y** to move the robot from the initial simulation pose to the `default_dof_pos` defined in the YAML file using position control interpolation.
 - Press **RB + B** to switch to Reinforcement Learning mode.
 - Use **LY** to move forward/backward, **LX** to move left/right, and **RX** to turn.
 - Press the **down button on the left** to switch to Navigation mode, disabling gamepad commands and receiving commands from the `cmd_vel` topic.
-- If the robot falls down, press **RB + X** to reset the Gazebo environment.(Only for ROS1)
+- If the robot falls down, press **RB + X** to reset the Gazebo environment.
 - Press **RB + A** to move the robot from its current position back to the initial simulation pose using position control interpolation.
 
 ### Real Robots

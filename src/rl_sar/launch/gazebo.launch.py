@@ -48,7 +48,11 @@ def generate_launch_description():
     spawn_entity = Node(
         package="gazebo_ros",
         executable="spawn_entity.py",
-        arguments=["-topic", "/robot_description", "-entity", "robot_model"],
+        arguments=[
+            "-topic", "/robot_description",
+            "-entity", "robot_model",
+            "-z", "1.0"
+        ],
         output="screen",
     )
 
@@ -59,11 +63,18 @@ def generate_launch_description():
         output="screen",
     )
 
-    robot_joint_controller_node = Node(
-        package="controller_manager",
-        executable='spawner.py' if os.environ.get('ROS_DISTRO', '') == 'foxy' else 'spawner',
-        arguments=["robot_joint_controller"],
-        output="screen",
+    # robot_joint_controller_node = Node(
+    #     package="controller_manager",
+    #     executable='spawner.py' if os.environ.get('ROS_DISTRO', '') == 'foxy' else 'spawner',
+    #     arguments=["robot_joint_controller"],
+    #     output="screen",
+    # )
+
+    joy_node = Node(
+        package='joy',
+        executable='joy_node',
+        name='joy_node',
+        output='screen',
     )
 
     param_node = Node(
@@ -92,6 +103,7 @@ def generate_launch_description():
         gazebo,
         spawn_entity,
         joint_state_broadcaster_node,
-        robot_joint_controller_node,
+        # robot_joint_controller_node,
+        joy_node,
         param_node,
     ])
