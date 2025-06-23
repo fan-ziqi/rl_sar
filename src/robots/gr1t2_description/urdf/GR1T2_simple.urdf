@@ -923,7 +923,7 @@
 
   <!-- ############################################################ -->
 
-  <link name="z_link_imu">
+  <link name="imu_link">
     <visual>
       <geometry>
         <box size="0.05 0.05 0.02"/>
@@ -936,7 +936,7 @@
   <joint name="z_joint_imu" type="fixed">
     <origin xyz="-0.0645 0 -0.102" rpy="0 0 0"/>
     <parent link="base_link"/>
-    <child link="z_link_imu"/>
+    <child link="imu_link"/>
   </joint>
 
   <!-- ############################################################ -->

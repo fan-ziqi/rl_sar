@@ -51,9 +51,13 @@ a1/legged_gym:
                     -0.1000, 0.8000, -1.5000,
                      0.1000, 1.0000, -1.5000,
                     -0.1000, 1.0000, -1.5000]
+  joint_names: ["FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
+                "FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
+                "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint",
+                "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint"]
   joint_controller_names: ["FL_hip_controller", "FL_thigh_controller", "FL_calf_controller",
                            "FR_hip_controller", "FR_thigh_controller", "FR_calf_controller",
                            "RL_hip_controller", "RL_thigh_controller", "RL_calf_controller",
                            "RR_hip_controller", "RR_thigh_controller", "RR_calf_controller"]
-  command_mapping: [3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8]
-  state_mapping: [3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8]
+  command_mapping: [3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8]  # find the robot order from the policy order
+  state_mapping: [3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8]  # find the policy order from the robot order

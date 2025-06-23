@@ -77,15 +77,14 @@ RL_Sim::RL_Sim()
     this->InitOutputs();
     this->InitControl();
 
-    this->StartJointController(this->ros_namespace, this->params.joint_controller_names);
-
 #if defined(USE_ROS1)
+    this->StartJointController(this->ros_namespace, this->params.joint_controller_names);
     // publisher
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
-        const std::string &joint_name = this->params.joint_controller_names[i];
-        const std::string topic_name = this->ros_namespace + joint_name + "/command";
-        this->joint_publishers[joint_name] =
+        const std::string &joint_controller_name = this->params.joint_controller_names[i];
+        const std::string topic_name = this->ros_namespace + joint_controller_name + "/command";
+        this->joint_publishers[joint_controller_name] =
             nh.advertise<robot_msgs::MotorCommand>(topic_name, 10);
     }
 
@@ -95,26 +94,27 @@ RL_Sim::RL_Sim()
     this->model_state_subscriber = nh.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 10, &RL_Sim::ModelStatesCallback, this);
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
-        const std::string &joint_name = this->params.joint_controller_names[i];
-        const std::string topic_name = this->ros_namespace + joint_name + "/state";
-        this->joint_subscribers[joint_name] =
+        const std::string &joint_controller_name = this->params.joint_controller_names[i];
+        const std::string topic_name = this->ros_namespace + joint_controller_name + "/state";
+        this->joint_subscribers[joint_controller_name] =
             nh.subscribe<robot_msgs::MotorState>(topic_name, 10,
-                [this, joint_name](const robot_msgs::MotorState::ConstPtr &msg)
+                [this, joint_controller_name](const robot_msgs::MotorState::ConstPtr &msg)
                 {
-                    this->JointStatesCallback(msg, joint_name);
+                    this->JointStatesCallback(msg, joint_controller_name);
                 }
             );
-        this->joint_positions[joint_name] = 0.0;
-        this->joint_velocities[joint_name] = 0.0;
-        this->joint_efforts[joint_name] = 0.0;
+        this->joint_positions[joint_controller_name] = 0.0;
+        this->joint_velocities[joint_controller_name] = 0.0;
+        this->joint_efforts[joint_controller_name] = 0.0;
     }
 
     // service
     nh.param<std::string>("gazebo_model_name", this->gazebo_model_name, "");
-    this->gazebo_set_model_state_client = nh.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
     this->gazebo_pause_physics_client = nh.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
     this->gazebo_unpause_physics_client = nh.serviceClient<std_srvs::Empty>("/gazebo/unpause_physics");
+    this->gazebo_reset_world_client = nh.serviceClient<std_srvs::Empty>("/gazebo/reset_world");
 #elif defined(USE_ROS2)
+    this->StartJointController(this->ros_namespace, this->params.joint_names);
     // publisher
     this->robot_command_publisher = this->create_publisher<robot_msgs::msg::RobotCommand>(
         this->ros_namespace + "robot_joint_controller/command", rclcpp::SystemDefaultsQoS());
@@ -137,7 +137,6 @@ RL_Sim::RL_Sim()
     );
 
     // service
-    this->gazebo_set_model_state_client = this->create_client<gazebo_msgs::srv::SetModelState>("/gazebo/set_model_state");
     this->gazebo_pause_physics_client = this->create_client<std_srvs::srv::Empty>("/pause_physics");
     this->gazebo_unpause_physics_client = this->create_client<std_srvs::srv::Empty>("/unpause_physics");
     this->gazebo_reset_world_client = this->create_client<std_srvs::srv::Empty>("/reset_world");
@@ -180,14 +179,14 @@ RL_Sim::~RL_Sim()
     std::cout << LOGGER::INFO << "RL_Sim exit" << std::endl;
 }
 
-void RL_Sim::StartJointController(const std::string& ros_namespace, const std::vector<std::string>& joint_controller_names)
+void RL_Sim::StartJointController(const std::string& ros_namespace, const std::vector<std::string>& names)
 {
 #if defined(USE_ROS1)
     pid_t pid = fork();
     if (pid == 0)
     {
         std::string cmd = "rosrun controller_manager spawner joint_state_controller ";
-        for (const auto& name : joint_controller_names)
+        for (const auto& name : names)
         {
             cmd += name + " ";
         }
@@ -211,33 +210,17 @@ void RL_Sim::StartJointController(const std::string& ros_namespace, const std::v
         tmp_file << "/controller_manager:\n";
         tmp_file << "    ros__parameters:\n";
         tmp_file << "        update_rate: 1000  # Hz\n";
-        tmp_file << "        # use_sim_time: true  # If running in simulation\n\n";
-        // tmp_file << "        joint_state_broadcaster:\n";
-        // tmp_file << "            type: joint_state_broadcaster/JointStateBroadcaster\n\n";
-        // tmp_file << "        imu_sensor_broadcaster:\n";
-        // tmp_file << "            type: imu_sensor_broadcaster/ImuSensorBroadcaster\n\n";
+        tmp_file << "        use_sim_time: true  # If running in simulation\n\n";
         tmp_file << "        robot_joint_controller:\n";
         tmp_file << "            type: robot_joint_controller/RobotJointControllerGroup\n\n";
-
-        // tmp_file << "/imu_sensor_broadcaster:\n";
-        // tmp_file << "    ros__parameters:\n";
-        // tmp_file << "        sensor_name: \"imu_sensor\"\n";
-        // tmp_file << "        frame_id: imu_link\n\n";
 
         tmp_file << "/robot_joint_controller:\n";
         tmp_file << "    ros__parameters:\n";
         tmp_file << "        joints:\n";
 
-        // joint need to rename as xxx_joint
-        for (const auto& joint_controller_name : joint_controller_names)
+        for (const auto& name : names)
         {
-            std::string joint_name = joint_controller_name;
-            size_t pos = joint_name.find("_controller");
-            if (pos != std::string::npos)
-            {
-                joint_name.replace(pos, std::string("_controller").length(), "_joint");
-            }
-            tmp_file << "            - " << joint_name << "\n";
+            tmp_file << "            - " << name << "\n";
         }
     }
 
@@ -346,11 +329,8 @@ void RL_Sim::RobotControl()
     if (this->control.control_state == STATE_RESET_SIMULATION)
     {
 #if defined(USE_ROS1)
-        gazebo_msgs::SetModelState set_model_state;
-        set_model_state.request.model_state.model_name = this->gazebo_model_name;
-        set_model_state.request.model_state.pose.position.z = 1.0;
-        set_model_state.request.model_state.reference_frame = "world";
-        this->gazebo_set_model_state_client.call(set_model_state);
+        std_srvs::Empty empty;
+        this->gazebo_reset_world_client.call(empty);
 #elif defined(USE_ROS2)
         auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
         auto result = this->gazebo_reset_world_client->async_send_request(empty_request);
@@ -466,11 +446,11 @@ void RL_Sim::JoyCallback(
 }
 
 #if defined(USE_ROS1)
-void RL_Sim::JointStatesCallback(const robot_msgs::MotorState::ConstPtr &msg, const std::string &joint_name)
+void RL_Sim::JointStatesCallback(const robot_msgs::MotorState::ConstPtr &msg, const std::string &joint_controller_name)
 {
-    this->joint_positions[joint_name] = msg->q;
-    this->joint_velocities[joint_name] = msg->dq;
-    this->joint_efforts[joint_name] = msg->tau_est;
+    this->joint_positions[joint_controller_name] = msg->q;
+    this->joint_velocities[joint_controller_name] = msg->dq;
+    this->joint_efforts[joint_controller_name] = msg->tau_est;
 }
 #elif defined(USE_ROS2)
 void RL_Sim::RobotStateCallback(const robot_msgs::msg::RobotState::SharedPtr msg)

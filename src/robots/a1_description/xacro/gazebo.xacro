@@ -13,7 +13,7 @@
     </gazebo>
 
     <!-- Show the trajectory of trunk center. -->
-    <gazebo>
+    <!-- <gazebo>
         <plugin name="3dplot" filename="libLinkPlot3DPlugin.so">
             <frequency>10</frequency>
             <plot>
@@ -22,7 +22,7 @@
                 <material>Gazebo/Yellow</material>
             </plot>
         </plugin>
-    </gazebo>
+    </gazebo> -->
 
     <!-- Show the trajectory of foot. You can add another trajectory about another foot. -->
     <!-- <gazebo>
@@ -209,125 +209,28 @@
             <plugin>gazebo_ros2_control/GazeboSystem</plugin>
         </hardware>
 
-        <joint name="FR_hip_joint">
+        <xacro:macro name="joint_interface" params="joint_name torque_limit">
+            <joint name="${joint_name}">
             <command_interface name="effort">
-                <param name="min">-${hip_torque_max}</param>
-                <param name="max">${hip_torque_max}</param>
+                <param name="min">-${torque_limit}</param>
+                <param name="max">${torque_limit}</param>
             </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
             <state_interface name="effort"/>
-        </joint>
+            </joint>
+        </xacro:macro>
 
-        <joint name="FL_hip_joint">
-            <command_interface name="effort">
-                <param name="min">-${hip_torque_max}</param>
-                <param name="max">${hip_torque_max}</param>
-            </command_interface>
-            <state_interface name="position"/>
-            <state_interface name="velocity"/>
-            <state_interface name="effort"/>
-        </joint>
+        <xacro:macro name="leg_joints" params="prefix">
+            <xacro:joint_interface joint_name="${prefix}_hip_joint" torque_limit="${hip_torque_max}"/>
+            <xacro:joint_interface joint_name="${prefix}_thigh_joint" torque_limit="${thigh_torque_max}"/>
+            <xacro:joint_interface joint_name="${prefix}_calf_joint" torque_limit="${calf_torque_max}"/>
+        </xacro:macro>
 
-        <joint name="RR_hip_joint">
-            <command_interface name="effort">
-                <param name="min">-${hip_torque_max}</param>
-                <param name="max">${hip_torque_max}</param>
-            </command_interface>
-            <state_interface name="position"/>
-            <state_interface name="velocity"/>
-            <state_interface name="effort"/>
-        </joint>
-
-        <joint name="RL_hip_joint">
-            <command_interface name="effort">
-                <param name="min">-${hip_torque_max}</param>
-                <param name="max">${hip_torque_max}</param>
-            </command_interface>
-            <state_interface name="position"/>
-            <state_interface name="velocity"/>
-            <state_interface name="effort"/>
-        </joint>
-
-        <joint name="FR_thigh_joint">
-            <command_interface name="effort">
-                <param name="min">-${thigh_torque_max}</param>
-                <param name="max">${thigh_torque_max}</param>
-            </command_interface>
-            <state_interface name="position"/>
-            <state_interface name="velocity"/>
-            <state_interface name="effort"/>
-        </joint>
-
-        <joint name="FL_thigh_joint">
-            <command_interface name="effort">
-                <param name="min">-${thigh_torque_max}</param>
-                <param name="max">${thigh_torque_max}</param>
-            </command_interface>
-            <state_interface name="position"/>
-            <state_interface name="velocity"/>
-            <state_interface name="effort"/>
-        </joint>
-
-        <joint name="RR_thigh_joint">
-            <command_interface name="effort">
-                <param name="min">-${thigh_torque_max}</param>
-                <param name="max">${thigh_torque_max}</param>
-            </command_interface>
-            <state_interface name="position"/>
-            <state_interface name="velocity"/>
-            <state_interface name="effort"/>
-        </joint>
-
-        <joint name="RL_thigh_joint">
-            <command_interface name="effort">
-                <param name="min">-${thigh_torque_max}</param>
-                <param name="max">${thigh_torque_max}</param>
-            </command_interface>
-            <state_interface name="position"/>
-            <state_interface name="velocity"/>
-            <state_interface name="effort"/>
-        </joint>
-
-        <joint name="FR_calf_joint">
-            <command_interface name="effort">
-                <param name="min">-${calf_torque_max}</param>
-                <param name="max">${calf_torque_max}</param>
-            </command_interface>
-            <state_interface name="position"/>
-            <state_interface name="velocity"/>
-            <state_interface name="effort"/>
-        </joint>
-
-        <joint name="FL_calf_joint">
-            <command_interface name="effort">
-                <param name="min">-${calf_torque_max}</param>
-                <param name="max">${calf_torque_max}</param>
-            </command_interface>
-            <state_interface name="position"/>
-            <state_interface name="velocity"/>
-            <state_interface name="effort"/>
-        </joint>
-
-        <joint name="RR_calf_joint">
-            <command_interface name="effort">
-                <param name="min">-${calf_torque_max}</param>
-                <param name="max">${calf_torque_max}</param>
-            </command_interface>
-            <state_interface name="position"/>
-            <state_interface name="velocity"/>
-            <state_interface name="effort"/>
-        </joint>
-
-        <joint name="RL_calf_joint">
-            <command_interface name="effort">
-                <param name="min">-${calf_torque_max}</param>
-                <param name="max">${calf_torque_max}</param>
-            </command_interface>
-            <state_interface name="position"/>
-            <state_interface name="velocity"/>
-            <state_interface name="effort"/>
-        </joint>
+        <xacro:leg_joints prefix="FR"/>
+        <xacro:leg_joints prefix="FL"/>
+        <xacro:leg_joints prefix="RR"/>
+        <xacro:leg_joints prefix="RL"/>
 
     </ros2_control>
 

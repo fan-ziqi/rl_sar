@@ -25,7 +25,6 @@
 #include <sensor_msgs/Joy.h>
 #include <geometry_msgs/Twist.h>
 #include <gazebo_msgs/ModelStates.h>
-#include <gazebo_msgs/SetModelState.h>
 #include "robot_msgs/MotorCommand.h"
 #include "robot_msgs/MotorState.h"
 #elif defined(USE_ROS2)
@@ -37,7 +36,6 @@
 #include <sensor_msgs/msg/joy.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <std_srvs/srv/empty.hpp>
-#include <gazebo_msgs/srv/set_model_state.hpp>
 #include <rcl_interfaces/srv/get_parameters.hpp>
 #endif
 
@@ -83,14 +81,14 @@ private:
     ros::Subscriber model_state_subscriber;
     ros::Subscriber cmd_vel_subscriber;
     ros::Subscriber joy_subscriber;
-    ros::ServiceClient gazebo_set_model_state_client;
     ros::ServiceClient gazebo_pause_physics_client;
     ros::ServiceClient gazebo_unpause_physics_client;
+    ros::ServiceClient gazebo_reset_world_client;
     std::map<std::string, ros::Publisher> joint_publishers;
     std::map<std::string, ros::Subscriber> joint_subscribers;
     std::vector<robot_msgs::MotorCommand> joint_publishers_commands;
     void ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg);
-    void JointStatesCallback(const robot_msgs::MotorState::ConstPtr &msg, const std::string &joint_name);
+    void JointStatesCallback(const robot_msgs::MotorState::ConstPtr &msg, const std::string &joint_controller_name);
     void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
     void JoyCallback(const sensor_msgs::Joy::ConstPtr &msg);
 #elif defined(USE_ROS2)
@@ -103,7 +101,6 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_subscriber;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscriber;
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_subscriber;
-    rclcpp::Client<gazebo_msgs::srv::SetModelState>::SharedPtr gazebo_set_model_state_client;
     rclcpp::Client<std_srvs::srv::Empty>::SharedPtr gazebo_pause_physics_client;
     rclcpp::Client<std_srvs::srv::Empty>::SharedPtr gazebo_unpause_physics_client;
     rclcpp::Client<std_srvs::srv::Empty>::SharedPtr gazebo_reset_world_client;
@@ -122,7 +119,7 @@ private:
     std::map<std::string, double> joint_positions;
     std::map<std::string, double> joint_velocities;
     std::map<std::string, double> joint_efforts;
-    void StartJointController(const std::string& ros_namespace, const std::vector<std::string>& joint_controller_names);
+    void StartJointController(const std::string& ros_namespace, const std::vector<std::string>& names);
 };
 
 #endif // RL_SIM_HPP

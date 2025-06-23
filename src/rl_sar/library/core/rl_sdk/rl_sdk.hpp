@@ -116,6 +116,7 @@ struct ModelParams
     torch::Tensor commands_scale;
     torch::Tensor default_dof_pos;
     std::vector<std::string> joint_controller_names;
+    std::vector<std::string> joint_names;
     std::vector<int> command_mapping;
     std::vector<int> state_mapping;
 };

@@ -60,6 +60,11 @@ l4w4/robot_lab:
                      0.042, 0.9576, -1.4933,
                     -0.042, 0.9576, -1.4933,
                     0.0, 0.0, 0.0, 0.0]
+  joint_names: ["FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
+                "FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
+                "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint",
+                "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint",
+                "FR_foot_joint", "FL_foot_joint", "RR_foot_joint", "RL_foot_joint"]
   joint_controller_names: ["FR_hip_controller", "FR_thigh_controller", "FR_calf_controller",
                            "FL_hip_controller", "FL_thigh_controller", "FL_calf_controller",
                            "RR_hip_controller", "RR_thigh_controller", "RR_calf_controller",

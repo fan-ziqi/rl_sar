@@ -713,6 +713,7 @@ void RL::ReadYamlBase(std::string robot_path)
     this->params.fixed_kd = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kd"])).view({1, -1});
     this->params.torque_limits = torch::tensor(ReadVectorFromYaml<double>(config["torque_limits"])).view({1, -1});
     this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<double>(config["default_dof_pos"])).view({1, -1});
+    this->params.joint_names = ReadVectorFromYaml<std::string>(config["joint_names"]);
     this->params.joint_controller_names = ReadVectorFromYaml<std::string>(config["joint_controller_names"]);
     this->params.command_mapping = ReadVectorFromYaml<int>(config["command_mapping"]);
     this->params.state_mapping = ReadVectorFromYaml<int>(config["state_mapping"]);
@@ -771,6 +772,7 @@ void RL::ReadYamlRL(std::string robot_path)
     this->params.fixed_kd = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kd"])).view({1, -1});
     this->params.torque_limits = torch::tensor(ReadVectorFromYaml<double>(config["torque_limits"])).view({1, -1});
     this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<double>(config["default_dof_pos"])).view({1, -1});
+    this->params.joint_names = ReadVectorFromYaml<std::string>(config["joint_names"]);
     this->params.joint_controller_names = ReadVectorFromYaml<std::string>(config["joint_controller_names"]);
     this->params.command_mapping = ReadVectorFromYaml<int>(config["command_mapping"]);
     this->params.state_mapping = ReadVectorFromYaml<int>(config["state_mapping"]);
@@ -791,11 +793,11 @@ void RL::CSVInit(std::string robot_path)
     csv_filename += ".csv";
     std::ofstream file(csv_filename.c_str());
 
-    for(int i = 0; i < 12; ++i) { file << "tau_cal_" << i << ","; }
-    for(int i = 0; i < 12; ++i) { file << "tau_est_" << i << ","; }
-    for(int i = 0; i < 12; ++i) { file << "joint_pos_" << i << ","; }
-    for(int i = 0; i < 12; ++i) { file << "joint_pos_target_" << i << ","; }
-    for(int i = 0; i < 12; ++i) { file << "joint_vel_" << i << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << "tau_cal_" << i << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << "tau_est_" << i << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << "joint_pos_" << i << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << "joint_pos_target_" << i << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << "joint_vel_" << i << ","; }
 
     file << std::endl;
 
@@ -806,11 +808,11 @@ void RL::CSVLogger(torch::Tensor torque, torch::Tensor tau_est, torch::Tensor jo
 {
     std::ofstream file(csv_filename.c_str(), std::ios_base::app);
 
-    for(int i = 0; i < 12; ++i) { file << torque[0][i].item<double>() << ","; }
-    for(int i = 0; i < 12; ++i) { file << tau_est[0][i].item<double>() << ","; }
-    for(int i = 0; i < 12; ++i) { file << joint_pos[0][i].item<double>() << ","; }
-    for(int i = 0; i < 12; ++i) { file << joint_pos_target[0][i].item<double>() << ","; }
-    for(int i = 0; i < 12; ++i) { file << joint_vel[0][i].item<double>() << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << torque[0][i].item<double>() << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << tau_est[0][i].item<double>() << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << joint_pos[0][i].item<double>() << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << joint_pos_target[0][i].item<double>() << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << joint_vel[0][i].item<double>() << ","; }
 
     file << std::endl;
 
