@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(b2_description VERSION 3.0.0 LANGUAGES CXX)
+project(b2_description VERSION 3.0.0)
 
 if($ENV{ROS_DISTRO} MATCHES "noetic")
 

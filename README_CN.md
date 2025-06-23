@@ -189,7 +189,7 @@ ros2 run rl_sar rl_sim
 
 键盘控制：
 
-- 按 **\<Enter\>** 切换仿真器运行/停止。
+- 按 **\<Enter\>** 切换仿真器运行/停止。（默认为运行状态）
 - 按 **0** 让机器人从仿真开始的姿态以位控插值运动到yaml中定义的`default_dof_pos`。
 - 按 **p** 切换到强化学习模式。
 - **W/S** 控制前后移动，**J/L** 控制左右移动，**A/D** 控制转向，按 **\<Space\>** 将所有控制指令设置为零。
@@ -199,7 +199,7 @@ ros2 run rl_sar rl_sim
 
 手柄控制：
 
-- 按 **LB** 切换仿真器运行/停止。
+- 按 **LB** 切换仿真器运行/停止。（默认为运行状态）
 - 按 **RB+Y** 让机器人从仿真开始的姿态以位控插值运动到yaml中定义的`default_dof_pos`。
 - 按 **RB+B** 切换到强化学习模式。
 - **LY** 控制前后移动，**LX** 控制左右移动，**RX** 控制转向。
@@ -221,8 +221,16 @@ ros2 run rl_sar rl_sim
 新建终端，启动控制程序
 
 ```bash
+# ROS1
 source devel/setup.bash
 rosrun rl_sar rl_real_a1
+
+# ROS2
+source install/setup.bash
+ros2 run rl_sar rl_real_a1
+
+# CMake
+./cmake_build/bin/rl_real_a1
 ```
 
 按下遥控器的**R2**键让机器人切换到默认站起姿态，按下**R1**键切换到RL控制模式，任意状态按下**L2**切换到最初的趴下姿态。左摇杆上下控制x，左摇杆左右控制yaw，右摇杆左右控制y。
@@ -244,8 +252,16 @@ rosrun rl_sar rl_real_a1
 新建终端，启动控制程序。如果控制Go2W，需要在命令后加`wheel`，否则留空。
 
 ```bash
+# ROS1
 source devel/setup.bash
 rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
+
+# ROS2
+source install/setup.bash
+ros2 run rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
+
+# CMake
+./cmake_build/bin/rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
 ```
 
 Go2/Go2W支持手柄与键盘控制，方法与上面a1相同
@@ -288,7 +304,7 @@ echo 'export Torch_DIR=~/libtorch' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-拉取代码并编译，见上文
+拉取代码并编译，流程与上文相同。
 
 </details>
 
@@ -309,17 +325,10 @@ source ~/.bashrc
 
 ## 添加你的机器人
 
-下文使用 **\<ROBOT\>/\<CONFIG\>** 代替表示你的机器人环境，且路径均在`rl_sar/src/`下
+下面使用 **\<ROBOT\>/\<CONFIG\>** 代替表示你的机器人环境，且路径均在`rl_sar/src/`下。您只需要创建或修改下述文件，命名必须跟下面一样。（你可以参考go2w对应的文件）
 
-1. 在`robots`路径下创建名为`<ROBOT>_description`的模型包，机器人描述文件必须命名为`robots/<ROBOT>_description/xacro/robot.xacro`，如您使用urdf，可以在xacro中引用urdf。然后需要在`robots/<ROBOT>_description/config/`路径下创建关节配置文件，具体请参考已有文件。
-2. 将训练好的RL策略文件放到`rl_sar/policy/<ROBOT>/<CONFIG>/`路径下，在此路径中创建`config.yaml`文件，在其上级目录新建`base.yaml`文件，具体请参考已有文件。注意：`base.yaml`中必须遵守实物机器人的关节顺序，`config.yaml`的关节顺序可以按照训练顺序自定义。
-3. 按需修改代码中的`forward()`函数，以适配不同的策略。
-4. 若需要运行实物机器人，则参考`rl_sar/src/rl_real_go2.cpp`文件自行修改。
-
-没看懂？让我帮您总结一下，您只需要修改下述文件，命名必须跟下面一样
-
-```
-# your robot description
+```yaml
+# 你的机器人description
 robots/<ROBOT>_description/CMakeLists.txt
 robots/<ROBOT>_description/package.ros1.xml
 robots/<ROBOT>_description/package.ros2.xml
@@ -328,16 +337,14 @@ robots/<ROBOT>_description/xacro/gazebo.xacro
 robots/<ROBOT>_description/config/robot_control.yaml
 robots/<ROBOT>_description/config/robot_control_ros2.yaml
 
-# your policy
+# 你训练的policy
 rl_sar/policy/<ROBOT>/base.yaml  # 此文件中必须遵守实物机器人的关节顺序
 rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml  # 此文件中可以是训练时指定的关节顺序
 rl_sar/policy/<ROBOT>/<CONFIG>/<POLICY>.pt  # 必须导出jit才可使用
 
-# your real robot code
+# 你实物机器人的代码
 rl_sar/src/rl_real_<ROBOT>.cpp  # 可以按需自定义forward()函数以适配您的policy
 ```
-
-还是不会？请参考go2w的所有上述文件。
 
 ## 贡献
 

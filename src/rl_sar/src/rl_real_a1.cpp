@@ -6,11 +6,18 @@
 #include "rl_real_a1.hpp"
 
 RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_udp(UNITREE_LEGGED_SDK::LOWLEVEL)
+#if defined(USE_ROS2)
+    , rclcpp::Node("rl_real_node")
+#endif
 {
 #if defined(USE_ROS1)
-    // init ros
     ros::NodeHandle nh;
     this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Real::CmdvelCallback, this);
+#elif defined(USE_ROS2)
+    this->cmd_vel_subscriber = this->create_subscription<geometry_msgs::msg::Twist>(
+        "/cmd_vel", rclcpp::SystemDefaultsQoS(),
+        [this] (const geometry_msgs::msg::Twist::SharedPtr msg) {this->CmdvelCallback(msg);}
+    );
 #endif
 
     // read params from yaml
@@ -150,7 +157,7 @@ void RL_Real::RunModel()
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
         if (this->fsm._currentState->getStateName() == "RLFSMStateRL_Navigation")
         {
-#if defined(USE_ROS1)
+#if !defined(USE_CMAKE)
             this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
 #endif
         }
@@ -237,8 +244,14 @@ void RL_Real::Plot()
     plt::pause(0.0001);
 }
 
+#if !defined(USE_CMAKE)
+void RL_Real::CmdvelCallback(
 #if defined(USE_ROS1)
-void RL_Real::CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg)
+    const geometry_msgs::Twist::ConstPtr &msg
+#elif defined(USE_ROS2)
+    const geometry_msgs::msg::Twist::SharedPtr msg
+#endif
+)
 {
     this->cmd_vel = *msg;
 }
@@ -259,7 +272,11 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "rl_sar");
     RL_Real rl_sar;
     ros::spin();
-#elif defined(NO_ROS)
+#elif defined(USE_ROS2)
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<RL_Real>());
+    rclcpp::shutdown();
+#elif defined(USE_CMAKE)
     RL_Real rl_sar;
     while (1) { sleep(10); }
 #endif

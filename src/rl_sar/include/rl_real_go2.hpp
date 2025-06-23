@@ -25,6 +25,9 @@
 #if defined(USE_ROS1)
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
+#elif defined(USE_ROS2)
+#include <rclcpp/rclcpp.hpp>
+#include <geometry_msgs/msg/twist.hpp>
 #endif
 
 #include "matplotlibcpp.h"
@@ -65,6 +68,9 @@ typedef union
 } xKeySwitchUnion;
 
 class RL_Real : public RL
+#if defined(USE_ROS2)
+    , public rclcpp::Node
+#endif
 {
 public:
     RL_Real(bool wheel_mode);
@@ -112,10 +118,13 @@ private:
     std::vector<double> mapped_joint_velocities;
 
 #if defined(USE_ROS1)
-    // ros
     geometry_msgs::Twist cmd_vel;
     ros::Subscriber cmd_vel_subscriber;
     void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
+#elif defined(USE_ROS2)
+    geometry_msgs::msg::Twist cmd_vel;
+    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscriber;
+    void CmdvelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
 #endif
 };
 

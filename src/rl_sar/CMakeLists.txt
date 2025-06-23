@@ -17,7 +17,7 @@ if(NOT USE_CMAKE)
     endif()
 else()
     message(WARNING "ROS_DISTRO not set, assuming non-ROS mode")
-    add_compile_definitions(NO_ROS)
+    add_compile_definitions(USE_CMAKE)
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -65,6 +65,7 @@ if(NOT USE_CMAKE)
         find_package(rclpy REQUIRED)
         find_package(gazebo_msgs REQUIRED)
         find_package(std_srvs REQUIRED)
+        find_package(geometry_msgs REQUIRED)
         ament_package()
     endif()
     add_compile_options(${GAZEBO_CXX_FLAGS})
@@ -189,6 +190,7 @@ if(NOT USE_CMAKE)
             rclpy
             gazebo_msgs
             std_srvs
+            geometry_msgs
         )
         install(TARGETS rl_sim DESTINATION lib/${PROJECT_NAME})
     endif()
@@ -205,6 +207,10 @@ if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         target_link_libraries(rl_real_a1 ${catkin_LIBRARIES})
     elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+        ament_target_dependencies(rl_real_a1
+            rclcpp
+            geometry_msgs
+        )
         install(TARGETS rl_real_a1 DESTINATION lib/${PROJECT_NAME})
     endif()
 endif()
@@ -220,6 +226,10 @@ if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         target_link_libraries(rl_real_go2 ${catkin_LIBRARIES})
     elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+        ament_target_dependencies(rl_real_go2
+            rclcpp
+            geometry_msgs
+        )
         install(TARGETS rl_real_go2 DESTINATION lib/${PROJECT_NAME})
     endif()
 endif()
@@ -235,6 +245,10 @@ if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         target_link_libraries(rl_real_l4w4 ${catkin_LIBRARIES})
     elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+        ament_target_dependencies(rl_real_l4w4
+            rclcpp
+            geometry_msgs
+        )
         install(TARGETS rl_real_l4w4 DESTINATION lib/${PROJECT_NAME})
     endif()
 endif()

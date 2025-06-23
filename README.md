@@ -189,7 +189,7 @@ ros2 run rl_sar rl_sim
 
 Keyboard Control:
 
-- Press **<Enter>** to toggle the simulator between running and stopped.
+- Press **<Enter>** to toggle the simulator between running and stopped. (Default is running state)
 - Press **0** to move the robot from the initial simulation pose to the `default_dof_pos` defined in the YAML file using position control interpolation.
 - Press **p** to switch to Reinforcement Learning mode.
 - Use **W/S** to move forward/backward, **J/L** to move left/right, and **A/D** to turn. Press **<Space>** to reset all control commands to zero.
@@ -199,7 +199,7 @@ Keyboard Control:
 
 Gamepad Control:
 
-- Press **LB** to toggle the simulator between running and stopped.
+- Press **LB** to toggle the simulator between running and stopped. (Default is running state)
 - Press **RB + Y** to move the robot from the initial simulation pose to the `default_dof_pos` defined in the YAML file using position control interpolation.
 - Press **RB + B** to switch to Reinforcement Learning mode.
 - Use **LY** to move forward/backward, **LX** to move left/right, and **RX** to turn.
@@ -221,8 +221,16 @@ Unitree A1 can be connected using both wireless and wired methods:
 Open a new terminal and start the control program
 
 ```bash
+# ROS1
 source devel/setup.bash
 rosrun rl_sar rl_real_a1
+
+# ROS2
+source install/setup.bash
+ros2 run rl_sar rl_real_a1
+
+# CMake
+./cmake_build/bin/rl_real_a1
 ```
 
 Press **R2** on the gamepad to switch the robot to the default standing pose, **R1** to switch to Reinforcement Learning (RL) control mode, and **L2** in any state to return to the initial lying-down pose. The **left joystick up/down** controls movement along the **x-axis**, **left joystick left/right** controls **yaw**, and **right joystick left/right** controls movement along the **y-axis**.
@@ -244,8 +252,16 @@ Use the `ifconfig` command to find the name of the network interface for the 123
 Open a new terminal and start the control program. If you are controlling Go2W, you need to add `wheel` after the command, otherwise leave it blank.
 
 ```bash
+# ROS1
 source devel/setup.bash
 rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
+
+# ROS2
+source install/setup.bash
+ros2 run rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
+
+# CMake
+./cmake_build/bin/rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
 ```
 
 Go2/Go2W supports both joy and keyboard control, following the same method as described for A1.
@@ -288,7 +304,7 @@ echo 'export Torch_DIR=~/libtorch' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-Clone the source code and compile it as described in the previous sections.
+Pull the code and compile it. The process is the same as above.
 
 </details>
 
@@ -309,13 +325,26 @@ Take A1 as an example below
 
 ## Add Your Robot
 
-In the following context, use **\<ROBOT\>/\<CONFIG\>** to represent your robot environment:
+The following uses **\<ROBOT\>/\<CONFIG\>** to represent your robot environment, with all paths relative to `rl_sar/src/`. You only need to create or modify the following files, and the names must exactly match those shown below. (You can refer to the corresponding files in go2w as examples.)
 
-1. Under the path `rl_sar/src/robots`, create a model package named `<ROBOT>_description`, and create joint configuration files under the path `rl_sar/src/robots/<ROBOT>_description/config/`. Please refer to existing files for specific details.
-2. Place the trained RL policy files under the path `rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>/`. Create a `config.yaml` file in this path and create a `base.yaml` file in its parent directory. Please refer to existing files for specific details. Note: The joint order of the physical robot must be followed in `base.yaml`, and the joint order of `config.yaml` can be customized according to the training order.
-3. Modify the `forward()` function in the code as needed to adapt to different policies.
-4. If you need to run simulation, refer to the launch files under the path `rl_sar/src/rl_sar/launch/` and modify accordingly.
-5. If you need to run on physical hardware, refer to the file `rl_sar/src/rl_sar/src/rl_real_go2.cpp` and modify accordingly.
+```yaml
+# your robot description
+robots/<ROBOT>_description/CMakeLists.txt
+robots/<ROBOT>_description/package.ros1.xml
+robots/<ROBOT>_description/package.ros2.xml
+robots/<ROBOT>_description/xacro/robot.xacro
+robots/<ROBOT>_description/xacro/gazebo.xacro
+robots/<ROBOT>_description/config/robot_control.yaml
+robots/<ROBOT>_description/config/robot_control_ros2.yaml
+
+# your policy
+rl_sar/policy/<ROBOT>/base.yaml  # This file must follow the physical robot's joint order
+rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml  # This file can use the joint order specified during training
+rl_sar/policy/<ROBOT>/<CONFIG>/<POLICY>.pt  # Must be exported as JIT to be usable
+
+# your real robot code
+rl_sar/src/rl_real_<ROBOT>.cpp  # You can customize the forward() function as needed to adapt to your policy
+```
 
 ## Contributing
 
