@@ -210,7 +210,7 @@ void RL_Sim::StartJointController(const std::string& ros_namespace, const std::v
         tmp_file << "/controller_manager:\n";
         tmp_file << "    ros__parameters:\n";
         tmp_file << "        update_rate: 1000  # Hz\n";
-        tmp_file << "        use_sim_time: true  # If running in simulation\n\n";
+        tmp_file << "        # use_sim_time: true  # If running in simulation\n\n";
         tmp_file << "        robot_joint_controller:\n";
         tmp_file << "            type: robot_joint_controller/RobotJointControllerGroup\n\n";
 
