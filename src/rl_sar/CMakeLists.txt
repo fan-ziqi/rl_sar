@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(rl_sar VERSION 3.0.0 LANGUAGES CXX)
+project(rl_sar VERSION 3.0 LANGUAGES CXX)
 
 set(USE_CMAKE OFF CACHE BOOL "Use Cmake build system")
 message(STATUS "USE_CMAKE: ${USE_CMAKE}")
