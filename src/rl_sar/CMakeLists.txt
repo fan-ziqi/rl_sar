@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(rl_sar VERSION 3.0 LANGUAGES CXX)
+project(rl_sar VERSION 3.0.0 LANGUAGES CXX)
 
 set(USE_CMAKE OFF CACHE BOOL "Use Cmake build system")
 message(STATUS "USE_CMAKE: ${USE_CMAKE}")
@@ -231,6 +231,25 @@ if(NOT USE_CMAKE)
             geometry_msgs
         )
         install(TARGETS rl_real_go2 DESTINATION lib/${PROJECT_NAME})
+    endif()
+endif()
+
+add_executable(rl_real_g1 src/rl_real_g1.cpp)
+target_link_libraries(rl_real_g1
+    unitree_sdk2
+    rl_sdk
+    observation_buffer
+    yaml-cpp
+)
+if(NOT USE_CMAKE)
+    if($ENV{ROS_DISTRO} MATCHES "noetic")
+        target_link_libraries(rl_real_g1 ${catkin_LIBRARIES})
+    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+        ament_target_dependencies(rl_real_g1
+            rclcpp
+            geometry_msgs
+        )
+        install(TARGETS rl_real_g1 DESTINATION lib/${PROJECT_NAME})
     endif()
 endif()
 

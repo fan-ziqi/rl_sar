@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="3">
     <name>rl_sar</name>
-    <version>3.0</version>
+    <version>3.0.0</version>
     <description>The rl_sar package</description>
 
     <maintainer email="fanziqi614@gmail.com">Ziqi Fan</maintainer>

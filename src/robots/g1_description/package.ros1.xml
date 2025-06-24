@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
     <name>g1_description</name>
-    <version>3.0</version>
+    <version>3.0.0</version>
     <description>The g1_description package</description>
 
     <maintainer email="fanziqi614@gmail.com">Ziqi Fan</maintainer>

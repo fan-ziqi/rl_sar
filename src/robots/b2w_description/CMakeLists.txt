@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(b2w_description VERSION 3.0)
+project(b2w_description VERSION 3.0.0)
 
 if($ENV{ROS_DISTRO} MATCHES "noetic")
 	find_package(catkin REQUIRED)
