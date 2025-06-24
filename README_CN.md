@@ -15,17 +15,17 @@
 
 支持列表：
 
-| Robot Name   | Policy (IsaacGym) | Policy (IsaacSim) |
-|------------|----------------------|----------------------|
-| Unitree-A1           | legged_gym            | ⚪                    |
-| Unitree-Go2          | himloco               | robot_lab             |
-| Unitree-Go2W         | ⚪                    | robot_lab             |
-| Unitree-B2           | ⚪                    | robot_lab             |
-| Unitree-B2W          | ⚪                    | robot_lab             |
-| Unitree-G1           | unitree_ros           | ⚪                    |
-| FFTAI-GR1T1          | legged_gym            | ⚪                    |
-| FFTAI-GR1T2          | legged_gym            | ⚪                    |
-| GoldenRetriever-L4W4 | legged_gym            | robot_lab             |
+| Robot Name   | Policy (IsaacGym) | Policy (IsaacSim) | Sim2Real |
+|------------|----------------------|----------------------|-|
+| Unitree-A1           | legged_gym            | ⚪                    |✅|
+| Unitree-Go2          | himloco               | robot_lab             |✅|
+| Unitree-Go2W         | ⚪                    | robot_lab             |✅|
+| Unitree-B2           | ⚪                    | robot_lab             |⚪|
+| Unitree-B2W          | ⚪                    | robot_lab             |⚪|
+| Unitree-G1           | unitree_rl_gym        | ⚪                    |✅|
+| FFTAI-GR1T1          | legged_gym            | ⚪                    |⚪|
+| FFTAI-GR1T2          | legged_gym            | ⚪                    |⚪|
+| GoldenRetriever-L4W4 | legged_gym            | robot_lab             |✅|
 
 > [!IMPORTANT]
 > Python版本暂时停止维护，如有需要请使用[v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3)版本，后续可能会重新上线。

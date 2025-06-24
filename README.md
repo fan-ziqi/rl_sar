@@ -15,17 +15,17 @@ This repository provides a framework for simulation verification and physical de
 
 Support List：
 
-| Robot Name   | Policy (IsaacGym) | Policy (IsaacSim) |
-|------------|----------------------|----------------------|
-| Unitree-A1           | legged_gym            | ⚪                    |
-| Unitree-Go2          | himloco               | robot_lab             |
-| Unitree-Go2W         | ⚪                    | robot_lab             |
-| Unitree-B2           | ⚪                    | robot_lab             |
-| Unitree-B2W          | ⚪                    | robot_lab             |
-| Unitree-G1           | unitree_ros           | ⚪                    |
-| FFTAI-GR1T1          | legged_gym            | ⚪                    |
-| FFTAI-GR1T2          | legged_gym            | ⚪                    |
-| GoldenRetriever-L4W4 | legged_gym            | robot_lab             |
+| Robot Name   | Policy (IsaacGym) | Policy (IsaacSim) | Sim2Real |
+|------------|----------------------|----------------------|-|
+| Unitree-A1           | legged_gym            | ⚪                    |✅|
+| Unitree-Go2          | himloco               | robot_lab             |✅|
+| Unitree-Go2W         | ⚪                    | robot_lab             |✅|
+| Unitree-B2           | ⚪                    | robot_lab             |⚪|
+| Unitree-B2W          | ⚪                    | robot_lab             |⚪|
+| Unitree-G1           | unitree_rl_gym        | ⚪                    |✅|
+| FFTAI-GR1T1          | legged_gym            | ⚪                    |⚪|
+| FFTAI-GR1T2          | legged_gym            | ⚪                    |⚪|
+| GoldenRetriever-L4W4 | legged_gym            | robot_lab             |✅|
 
 > [!IMPORTANT]
 > Python version temporarily suspended maintenance, please use [v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3) if necessary, may be re-released in the future.
