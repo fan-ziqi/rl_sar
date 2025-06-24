@@ -62,7 +62,7 @@ sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-cont
 在任意位置下载并部署`libtorch`（请修改下面的 **\<YOUR_PATH\>** 为实际路径）
 
 ```bash
-cd <YOUR_PATH>/libtorch
+cd <YOUR_PATH>
 wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip
 unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
 echo 'export Torch_DIR=<YOUR_PATH>/libtorch' >> ~/.bashrc
@@ -73,12 +73,6 @@ source ~/.bashrc
 
 ```bash
 sudo apt install liblcm-dev libyaml-cpp-dev
-```
-
-本项目使用Intel TBB（Threading Building Blocks）库进行线程间数据交换，若您使用Ubuntu，可直接使用包管理器进行安装
-
-```bash
-sudo apt install libtbb-dev
 ```
 
 <details>
@@ -185,6 +179,12 @@ rosrun rl_sar rl_sim
 # ROS2
 source install/setup.bash
 ros2 run rl_sar rl_sim
+```
+
+如果第一次启动Gazebo无法打开则需要下载模型包
+
+```bash
+git clone https://github.com/osrf/gazebo_models.git ~/.gazebo/models
 ```
 
 键盘控制：

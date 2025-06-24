@@ -62,7 +62,7 @@ sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-cont
 Download and deploy `libtorch` at any location (Please modify **\<YOUR_PATH\>** below to the actual path)
 
 ```bash
-cd <YOUR_PATH>/libtorch
+cd <YOUR_PATH>
 wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip
 unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
 echo 'export Torch_DIR=<YOUR_PATH>/libtorch' >> ~/.bashrc
@@ -73,12 +73,6 @@ Install `yaml-cpp` and `lcm`. If you are using Ubuntu, you can directly use the 
 
 ```bash
 sudo apt install liblcm-dev libyaml-cpp-dev
-```
-
-This project uses the Intel TBB (Threading Building Blocks) library to implement data exchange between different threads. If you use Ubuntu, you can directly use the package manager to install it
-
-```bash
-sudo apt install libtbb-dev
 ```
 
 <details>
@@ -185,6 +179,13 @@ rosrun rl_sar rl_sim
 # ROS2
 source install/setup.bash
 ros2 run rl_sar rl_sim
+```
+
+If Gazebo cannot be opened when you start it for the first time, you need to download the model package
+
+```bash
+~/.gazebo/models
+git clone https://github.com/osrf/gazebo_models.git ~/.gazebo/models
 ```
 
 Keyboard Control:
