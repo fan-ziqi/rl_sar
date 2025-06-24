@@ -6,14 +6,19 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include <urdf/model.h>
-#include <realtime_tools/realtime_publisher.h>
-#include <realtime_tools/realtime_buffer.h>
 #include "controller_interface/controller_interface.hpp"
 #include <std_msgs/msg/float64.hpp>
 #include <rcl_interfaces/srv/get_parameters.hpp>
 #include "robot_msgs/msg/motor_command.hpp"
 #include "robot_msgs/msg/motor_state.hpp"
 #include "visibility_control.h"
+#if defined(ROS_DISTRO_FOXY)
+#include <realtime_tools/realtime_publisher.h>
+#include <realtime_tools/realtime_buffer.h>
+#elif defined(ROS_DISTRO_HUMBLE)
+#include <realtime_tools/realtime_publisher.hpp>
+#include <realtime_tools/realtime_buffer.hpp>
+#endif
 
 #include <stdio.h>
 #include <stdint.h>
