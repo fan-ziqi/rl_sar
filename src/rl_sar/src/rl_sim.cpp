@@ -182,8 +182,8 @@ RL_Sim::~RL_Sim()
 void RL_Sim::StartJointController(const std::string& ros_namespace, const std::vector<std::string>& names)
 {
 #if defined(USE_ROS1)
-    pid_t pid = fork();
-    if (pid == 0)
+    pid_t pid0 = fork();
+    if (pid0 == 0)
     {
         std::string cmd = "rosrun controller_manager spawner joint_state_controller ";
         for (const auto& name : names)
@@ -207,17 +207,9 @@ void RL_Sim::StartJointController(const std::string& ros_namespace, const std::v
             throw std::runtime_error("Failed to create temporary parameter file");
         }
 
-        tmp_file << "/controller_manager:\n";
-        tmp_file << "    ros__parameters:\n";
-        tmp_file << "        update_rate: 1000  # Hz\n";
-        tmp_file << "        # use_sim_time: true  # If running in simulation\n\n";
-        tmp_file << "        robot_joint_controller:\n";
-        tmp_file << "            type: robot_joint_controller/RobotJointControllerGroup\n\n";
-
         tmp_file << "/robot_joint_controller:\n";
         tmp_file << "    ros__parameters:\n";
         tmp_file << "        joints:\n";
-
         for (const auto& name : names)
         {
             tmp_file << "            - " << name << "\n";
@@ -237,12 +229,13 @@ void RL_Sim::StartJointController(const std::string& ros_namespace, const std::v
     {
         int status;
         waitpid(pid, &status, 0);
-        std::filesystem::remove(tmp_path);
 
         if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
         {
             throw std::runtime_error("Failed to start joint controller");
         }
+
+        std::filesystem::remove(tmp_path);
     }
     else
     {
