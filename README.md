@@ -15,17 +15,17 @@ This repository provides a framework for simulation verification and physical de
 
 Support List：
 
-| Robot Name   | Policy (IsaacGym) | Policy (IsaacSim) | Sim2Real |
+| Robot Name</br>(rname:=)|Pre-Trained Policy</br>via IsaacGym (cfg:=)|Pre-Trained Policy</br>via IsaacSim (cfg:=)|Sim2Real|
 |------------|----------------------|----------------------|-|
-| Unitree-A1           | legged_gym            | ⚪                    |✅|
-| Unitree-Go2          | himloco               | robot_lab             |✅|
-| Unitree-Go2W         | ⚪                    | robot_lab             |✅|
-| Unitree-B2           | ⚪                    | robot_lab             |⚪|
-| Unitree-B2W          | ⚪                    | robot_lab             |⚪|
-| Unitree-G1           | unitree_rl_gym        | ⚪                    |✅|
-| FFTAI-GR1T1          | legged_gym            | ⚪                    |⚪|
-| FFTAI-GR1T2          | legged_gym            | ⚪                    |⚪|
-| GoldenRetriever-L4W4 | legged_gym            | robot_lab             |✅|
+| Unitree-A1 (a1)              | legged_gym            | ⚪                    |✅|
+| Unitree-Go2 (go2)            | himloco               | robot_lab             |✅|
+| Unitree-Go2W (go2w)          | ⚪                    | robot_lab             |✅|
+| Unitree-B2 (b2)              | ⚪                    | robot_lab             |⚪|
+| Unitree-B2W (b2w)            | ⚪                    | robot_lab             |⚪|
+| Unitree-G1 (g1)              | unitree_rl_gym        | ⚪                    |✅|
+| FFTAI-GR1T1 (gr1t1)          | legged_gym            | ⚪                    |⚪|
+| FFTAI-GR1T2 (gr1t2)          | legged_gym            | ⚪                    |⚪|
+| GoldenRetriever-L4W4 (l4w4)  | legged_gym            | robot_lab             |✅|
 
 > [!IMPORTANT]
 > Python version temporarily suspended maintenance, please use [v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3) if necessary, may be re-released in the future.
