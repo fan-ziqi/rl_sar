@@ -12,6 +12,8 @@
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
 #include "loop.hpp"
+#include "fsm.hpp"
+
 #include "l4w4_sdk.hpp"
 #include <csignal>
 

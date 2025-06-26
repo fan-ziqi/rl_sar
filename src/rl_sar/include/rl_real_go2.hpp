@@ -12,6 +12,8 @@
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
 #include "loop.hpp"
+#include "fsm.hpp"
+
 #include <unitree/robot/channel/channel_publisher.hpp>
 #include <unitree/robot/channel/channel_subscriber.hpp>
 #include <unitree/idl/go2/LowState_.hpp>

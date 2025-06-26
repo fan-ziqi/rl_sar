@@ -3,7 +3,7 @@
 
 l4w4/legged_gym:
   model_name: "policy.pt"
-  framework: "isaacgym"
+  quaternion: "xyzw"
   num_observations: 57
   observations: ["ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
   observations_history: [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]  # 0 is the latest observation

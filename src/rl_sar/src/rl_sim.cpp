@@ -63,6 +63,20 @@ RL_Sim::RL_Sim()
     // read params from yaml
     this->ReadYamlBase(this->robot_name);
 
+    // auto load FSM by robot_name
+    if (FSMManager::getInstance().isTypeSupported(this->robot_name))
+    {
+        auto fsm_ptr = FSMManager::getInstance().createFSM(this->robot_name, this);
+        if (fsm_ptr)
+        {
+            this->fsm = *fsm_ptr;
+        }
+    }
+    else
+    {
+        std::cout << LOGGER::ERROR << "No FSM registered for robot: " << this->robot_name << std::endl;
+    }
+
     // init torch
     torch::autograd::GradMode::set_enabled(false);
     torch::set_num_threads(4);
@@ -254,14 +268,14 @@ void RL_Sim::GetState(RobotState<double> *state)
     const auto &angular_velocity = this->gazebo_imu.angular_velocity;
 #endif
 
-    if (this->params.framework == "isaacgym")
+    if (this->params.quaternion == "xyzw")
     {
         state->imu.quaternion[3] = orientation.w;
         state->imu.quaternion[0] = orientation.x;
         state->imu.quaternion[1] = orientation.y;
         state->imu.quaternion[2] = orientation.z;
     }
-    else if (this->params.framework == "isaacsim")
+    else if (this->params.quaternion == "wxyz")
     {
         state->imu.quaternion[0] = orientation.w;
         state->imu.quaternion[1] = orientation.x;

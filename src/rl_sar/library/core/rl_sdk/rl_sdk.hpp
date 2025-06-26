@@ -90,7 +90,7 @@ struct Control
 struct ModelParams
 {
     std::string model_name;
-    std::string framework;
+    std::string quaternion;
     double dt;
     int decimation;
     int num_observations;
@@ -136,7 +136,7 @@ struct Observations
 class RL
 {
 public:
-    RL();
+    RL() {};
     ~RL() {};
 
     ModelParams params;
@@ -167,7 +167,7 @@ public:
     virtual void SetCommand(const RobotCommand<double> *command) = 0;
     void StateController(const RobotState<double> *state, RobotCommand<double> *command);
     void ComputeOutput(const torch::Tensor &actions, torch::Tensor &output_dof_pos, torch::Tensor &output_dof_vel, torch::Tensor &output_dof_tau);
-    torch::Tensor QuatRotateInverse(torch::Tensor q, torch::Tensor v, const std::string &framework);
+    torch::Tensor QuatRotateInverse(torch::Tensor q, torch::Tensor v, const std::string &quaternion);
 
     // yaml params
     void ReadYamlBase(std::string robot_name);
@@ -207,9 +207,8 @@ public:
 class RLFSMState : public FSMState
 {
 public:
-    RLFSMState(RL& rl, const RobotState<double>* state, RobotCommand<double>* command, const std::string& name)
-        : FSMState(name), rl(rl), fsm_state(state), fsm_command(command) {}
-
+    RLFSMState(RL& rl, const std::string& name)
+        : FSMState(name), rl(rl), fsm_state(nullptr), fsm_command(nullptr) {}
     RL& rl;
     const RobotState<double>* fsm_state;
     RobotCommand<double>* fsm_command;

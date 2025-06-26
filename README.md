@@ -9,7 +9,7 @@
 
 This repository provides a framework for simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
 
-> Supports both **IsaacGym** and **IsaacSim**(distinguished by `framework`)
+> Supports both **IsaacGym** and **IsaacSim**
 >
 > Supports both **ROS-Noetic** and **ROS2-Foxy/Humble**
 
@@ -339,6 +339,8 @@ robots/<ROBOT>_description/config/robot_control.yaml
 robots/<ROBOT>_description/config/robot_control_ros2.yaml
 
 # your policy
+rl_sar/policy/fsm.hpp
+rl_sar/policy/<ROBOT>/fsm.hpp
 rl_sar/policy/<ROBOT>/base.yaml  # This file must follow the physical robot's joint order
 rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml  # This file can use the joint order specified during training
 rl_sar/policy/<ROBOT>/<CONFIG>/<POLICY>.pt  # Must be exported as JIT to be usable

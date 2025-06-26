@@ -9,6 +9,8 @@
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
 #include "loop.hpp"
+#include "fsm.hpp"
+
 #include <csignal>
 #include <vector>
 #include <string>

@@ -9,7 +9,7 @@
 
 本仓库提供了机器人强化学习算法的仿真验证与实物部署框架，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
 
-> 支持**IsaacGym**和**IsaacSim**(用`framework`区分)
+> 支持**IsaacGym**和**IsaacSim**
 >
 > 支持**ROS-Noetic**和**ROS2-Foxy/Humble**
 
@@ -338,6 +338,8 @@ robots/<ROBOT>_description/config/robot_control.yaml
 robots/<ROBOT>_description/config/robot_control_ros2.yaml
 
 # 你训练的policy
+rl_sar/policy/fsm.hpp
+rl_sar/policy/<ROBOT>/fsm.hpp
 rl_sar/policy/<ROBOT>/base.yaml  # 此文件中必须遵守实物机器人的关节顺序
 rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml  # 此文件中可以是训练时指定的关节顺序
 rl_sar/policy/<ROBOT>/<CONFIG>/<POLICY>.pt  # 必须导出jit才可使用

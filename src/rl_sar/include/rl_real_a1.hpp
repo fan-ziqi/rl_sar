@@ -12,6 +12,8 @@
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
 #include "loop.hpp"
+#include "fsm.hpp"
+
 #include "unitree_legged_sdk/unitree_legged_sdk.h"
 #include "unitree_legged_sdk/unitree_joystick.h"
 #include <csignal>

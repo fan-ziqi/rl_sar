@@ -3,7 +3,7 @@
 
 g1/unitree_rl_gym:
   model_name: "motion.pt"
-  framework: "isaacgym"
+  quaternion: "xyzw"
   num_observations: 47
   observations: ["ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions", "g1_phase"]
   observations_history: []  # 0 is the latest observation

@@ -26,6 +26,20 @@ RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_u
     this->default_rl_config = "legged_gym";
     this->ReadYamlBase(this->robot_name);
 
+    // auto load FSM by robot_name
+    if (FSMManager::getInstance().isTypeSupported(this->robot_name))
+    {
+        auto fsm_ptr = FSMManager::getInstance().createFSM(this->robot_name, this);
+        if (fsm_ptr)
+        {
+            this->fsm = *fsm_ptr;
+        }
+    }
+    else
+    {
+        std::cout << LOGGER::ERROR << "No FSM registered for robot: " << this->robot_name << std::endl;
+    }
+
     // init torch
     torch::autograd::GradMode::set_enabled(false);
     torch::set_num_threads(4);
@@ -96,14 +110,14 @@ void RL_Real::GetState(RobotState<double> *state)
         this->control.SetControlState(STATE_POS_GETDOWN);
     }
 
-    if (this->params.framework == "isaacgym")
+    if (this->params.quaternion == "xyzw")
     {
         state->imu.quaternion[3] = this->unitree_low_state.imu.quaternion[0]; // w
         state->imu.quaternion[0] = this->unitree_low_state.imu.quaternion[1]; // x
         state->imu.quaternion[1] = this->unitree_low_state.imu.quaternion[2]; // y
         state->imu.quaternion[2] = this->unitree_low_state.imu.quaternion[3]; // z
     }
-    else if (this->params.framework == "isaacsim")
+    else if (this->params.quaternion == "wxyz")
     {
         state->imu.quaternion[0] = this->unitree_low_state.imu.quaternion[0]; // w
         state->imu.quaternion[1] = this->unitree_low_state.imu.quaternion[1]; // x
