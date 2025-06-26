@@ -5,17 +5,6 @@
 
 #include "rl_sdk.hpp"
 
-/* You may need to override this Forward() function
-torch::Tensor RL_XXX::Forward()
-{
-    torch::autograd::GradMode::set_enabled(false);
-    torch::Tensor clamped_obs = this->ComputeObservation();
-    torch::Tensor actions = this->model.forward({clamped_obs}).toTensor();
-    torch::Tensor clamped_actions = torch::clamp(actions, this->params.clip_actions_lower, this->params.clip_actions_upper);
-    return clamped_actions;
-}
-*/
-
 void RL::StateController(const RobotState<double>* state, RobotCommand<double>* command)
 {
     auto updateState = [&](std::shared_ptr<FSMState> statePtr)
