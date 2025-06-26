@@ -89,10 +89,10 @@ public:
     Mode mode_;
 };
 
-class FSMStateFactory
+class FSMFactory
 {
 public:
-    virtual ~FSMStateFactory() = default;
+    virtual ~FSMFactory() = default;
     virtual std::shared_ptr<FSMState> CreateState(void *context, const std::string &state_name) = 0;
     virtual std::string GetType() const = 0;
     virtual std::vector<std::string> GetSupportedStates() const = 0;
@@ -108,7 +108,7 @@ public:
         return instance;
     }
 
-    void RegisterFactory(std::shared_ptr<FSMStateFactory> factory)
+    void RegisterFactory(std::shared_ptr<FSMFactory> factory)
     {
         if (factory)
         {
@@ -160,7 +160,7 @@ public:
 
 private:
     FSMManager() = default;
-    std::unordered_map<std::string, std::shared_ptr<FSMStateFactory>> factories_;
+    std::unordered_map<std::string, std::shared_ptr<FSMFactory>> factories_;
 };
 
 #define CONCATENATE_DETAIL(x, y) x##y

@@ -220,7 +220,7 @@ public:
 
 } // namespace go2_fsm
 
-class Go2FSMFactory : public FSMStateFactory
+class Go2FSMFactory : public FSMFactory
 {
 public:
     Go2FSMFactory(const std::string& initial) : initial_state_(initial) {}

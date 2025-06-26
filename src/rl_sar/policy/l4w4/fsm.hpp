@@ -220,7 +220,7 @@ public:
 
 } // namespace l4w4_fsm
 
-class L4w4FSMFactory : public FSMStateFactory
+class L4w4FSMFactory : public FSMFactory
 {
 public:
     L4w4FSMFactory(const std::string& initial) : initial_state_(initial) {}

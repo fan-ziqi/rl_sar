@@ -220,7 +220,7 @@ public:
 
 } // namespace g1_fsm
 
-class G1FSMFactory : public FSMStateFactory
+class G1FSMFactory : public FSMFactory
 {
 public:
     G1FSMFactory(const std::string& initial) : initial_state_(initial) {}
