@@ -83,10 +83,6 @@ public:
             {
                 return "RLFSMStateRL_Locomotion";
             }
-            // else if (rl.control.control_state == STATE::STATE_RL_CLIMB)
-            // {
-            //     return "RLFSMStateRL_Climb";
-            // }
             else if (rl.control.control_state == STATE::STATE_POS_GETDOWN)
             {
                 return "RLFSMStateGetDown";
@@ -214,10 +210,6 @@ public:
         {
             return "RLFSMStateRL_Locomotion";
         }
-        // else if (rl.control.control_state == STATE::STATE_RL_CLIMB)
-        // {
-        //     return "RLFSMStateRL_Climb";
-        // }
         else if (rl.control.control_state == STATE::STATE_WAITING)
         {
             return "RLFSMStateWaiting";
