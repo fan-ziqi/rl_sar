@@ -1,5 +1,5 @@
-#ifndef FSM_HPP
-#define FSM_HPP
+#ifndef FSM_CORE_HPP
+#define FSM_CORE_HPP
 
 #include <iostream>
 #include <string>
@@ -78,4 +78,4 @@ public:
     Mode _mode;
 };
 
-#endif // FSM_HPP
+#endif // FSM_CORE_HPP

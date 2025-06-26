@@ -14,7 +14,7 @@
 #include <tbb/concurrent_queue.h>
 
 #include <yaml-cpp/yaml.h>
-#include "fsm.hpp"
+#include "fsm_core.hpp"
 #include "observation_buffer.hpp"
 
 namespace LOGGER
