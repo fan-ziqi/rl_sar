@@ -10,60 +10,70 @@
 class FSMState
 {
 public:
-    FSMState(std::string name) : _stateName(std::move(name)) {}
+    FSMState(std::string name) : state_name_(std::move(name)) {}
     virtual ~FSMState() = default;
 
-    virtual void enter() = 0;
-    virtual void run() = 0;
-    virtual void exit() = 0;
-    virtual std::string checkChange() { return _stateName; }
+    virtual void Enter() = 0;
+    virtual void Run() = 0;
+    virtual void Exit() = 0;
+    virtual std::string CheckChange() { return state_name_; }
 
-    const std::string &getStateName() const { return _stateName; }
+    const std::string &GetStateName() const { return state_name_; }
 
 protected:
-    std::string _stateName;
+    std::string state_name_;
 };
 
 class FSM
 {
 public:
-    FSM() : _currentState(nullptr), _nextState(nullptr), _mode(Mode::NORMAL) {}
+    FSM() : current_state_(nullptr), next_state_(nullptr), mode_(Mode::NORMAL) {}
 
-    void addState(std::shared_ptr<FSMState> state)
+    void AddState(std::shared_ptr<FSMState> state)
     {
-        _states[state->getStateName()] = state;
+        states_[state->GetStateName()] = state;
     }
 
-    void setInitialState(const std::string &name)
+    void SetInitialState(const std::string &name)
     {
-        _currentState = _states.at(name);
-        _currentState->enter();
-        _nextState = _currentState;
+        current_state_ = states_.at(name);
+        current_state_->Enter();
+        next_state_ = current_state_;
     }
 
-    void run()
+    void Run()
     {
-        if (!_currentState)
+        if (!current_state_)
             return;
 
-        if (_mode == Mode::NORMAL)
+        if (mode_ == Mode::NORMAL)
         {
-            _currentState->run();
-            std::string next = _currentState->checkChange();
-            if (next != _currentState->getStateName())
+            current_state_->Run();
+            std::string next = current_state_->CheckChange();
+            if (next != current_state_->GetStateName())
             {
-                _mode = Mode::CHANGE;
-                _nextState = _states.at(next);
-                std::cout << std::endl << "[FSM]  Switch from " << _currentState->getStateName() << " to " << _nextState->getStateName() << std::endl;
+                mode_ = Mode::CHANGE;
+                next_state_ = states_.at(next);
+                std::cout << std::endl << "[FSM]  Switch from " << current_state_->GetStateName() << " to " << next_state_->GetStateName() << std::endl;
             }
         }
-        else if (_mode == Mode::CHANGE)
+        else if (mode_ == Mode::CHANGE)
         {
-            _currentState->exit();
-            _currentState = _nextState;
-            _currentState->enter();
-            _mode = Mode::NORMAL;
-            _currentState->run();
+            current_state_->Exit();
+            current_state_ = next_state_;
+            current_state_->Enter();
+            mode_ = Mode::NORMAL;
+            current_state_->Run();
+        }
+    }
+
+    void RequestStateChange(const std::string& state_name)
+    {
+        if (states_.find(state_name) != states_.end() && current_state_ && current_state_->GetStateName() != state_name)
+        {
+            next_state_ = states_.at(state_name);
+            mode_ = Mode::CHANGE;
+            std::cout << std::endl << "[FSM]  Request switch from " << current_state_->GetStateName() << " to " << next_state_->GetStateName() << std::endl;
         }
     }
 
@@ -73,42 +83,42 @@ public:
         CHANGE
     };
 
-    std::unordered_map<std::string, std::shared_ptr<FSMState>> _states;
-    std::shared_ptr<FSMState> _currentState;
-    std::shared_ptr<FSMState> _nextState;
-    Mode _mode;
+    std::unordered_map<std::string, std::shared_ptr<FSMState>> states_;
+    std::shared_ptr<FSMState> current_state_;
+    std::shared_ptr<FSMState> next_state_;
+    Mode mode_;
 };
 
 class FSMStateFactory
 {
 public:
     virtual ~FSMStateFactory() = default;
-    virtual std::shared_ptr<FSMState> createState(void *context, const std::string &stateName) = 0;
-    virtual std::string getType() const = 0;
-    virtual std::vector<std::string> getSupportedStates() const = 0;
-    virtual std::string getInitialState() const = 0;
+    virtual std::shared_ptr<FSMState> CreateState(void *context, const std::string &state_name) = 0;
+    virtual std::string GetType() const = 0;
+    virtual std::vector<std::string> GetSupportedStates() const = 0;
+    virtual std::string GetInitialState() const = 0;
 };
 
 class FSMManager
 {
 public:
-    static FSMManager &getInstance()
+    static FSMManager &GetInstance()
     {
         static FSMManager instance;
         return instance;
     }
 
-    void registerFactory(std::shared_ptr<FSMStateFactory> factory)
+    void RegisterFactory(std::shared_ptr<FSMStateFactory> factory)
     {
         if (factory)
         {
-            std::string type = factory->getType();
+            std::string type = factory->GetType();
             factories_[type] = factory;
             std::cout << "[FSMManager] Registered type: " << type << std::endl;
         }
     }
 
-    std::shared_ptr<FSM> createFSM(const std::string &type, void *context)
+    std::shared_ptr<FSM> CreateFSM(const std::string &type, void *context)
     {
         auto it = factories_.find(type);
         if (it == factories_.end())
@@ -117,30 +127,30 @@ public:
             return nullptr;
         }
         auto factory = it->second;
-        auto stateNames = factory->getSupportedStates();
-        if (stateNames.empty())
+        auto state_names = factory->GetSupportedStates();
+        if (state_names.empty())
         {
             std::cout << "[FSMManager] Error: No states registered for type: " << type << std::endl;
             return nullptr;
         }
         auto fsm = std::make_shared<FSM>();
-        for (const auto &stateName : stateNames)
+        for (const auto &state_name : state_names)
         {
-            auto state = factory->createState(context, stateName);
+            auto state = factory->CreateState(context, state_name);
             if (state)
-                fsm->addState(state);
+                fsm->AddState(state);
         }
-        fsm->setInitialState(factory->getInitialState());
+        fsm->SetInitialState(factory->GetInitialState());
         std::cout << "[FSMManager] FSM created for type: " << type << std::endl;
         return fsm;
     }
 
-    bool isTypeSupported(const std::string &type) const
+    bool IsTypeSupported(const std::string &type) const
     {
         return factories_.find(type) != factories_.end();
     }
 
-    std::vector<std::string> getSupportedTypes() const
+    std::vector<std::string> GetSupportedTypes() const
     {
         std::vector<std::string> types;
         for (const auto &pair : factories_)
@@ -158,7 +168,7 @@ private:
 #define REGISTER_FSM_FACTORY(FactoryClass, initialStateName) \
     namespace { \
         const bool CONCATENATE(registered_fsm_factory_, __COUNTER__) = []() { \
-            FSMManager::getInstance().registerFactory(std::make_shared<FactoryClass>(initialStateName)); \
+            FSMManager::GetInstance().RegisterFactory(std::make_shared<FactoryClass>(initialStateName)); \
             return true; \
         }(); \
     }

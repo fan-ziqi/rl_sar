@@ -17,12 +17,12 @@ class RLFSMStateWaiting : public RLFSMState
 public:
     RLFSMStateWaiting(RL *rl) : RLFSMState(*rl, "RLFSMStateWaiting") {}
 
-    void enter() override
+    void Enter() override
     {
         rl.running_percent = 0.0f;
     }
 
-    void run() override
+    void Run() override
     {
         for (int i = 0; i < rl.params.num_of_dofs; ++i)
         {
@@ -30,15 +30,15 @@ public:
         }
     }
 
-    void exit() override {}
+    void Exit() override {}
 
-    std::string checkChange() override
+    std::string CheckChange() override
     {
         if (rl.control.control_state == STATE::STATE_POS_GETUP)
         {
             return "RLFSMStateGetUp";
         }
-        return _stateName;
+        return state_name_;
     }
 };
 
@@ -47,14 +47,14 @@ class RLFSMStateGetUp : public RLFSMState
 public:
     RLFSMStateGetUp(RL *rl) : RLFSMState(*rl, "RLFSMStateGetUp") {}
 
-    void enter() override
+    void Enter() override
     {
         rl.running_percent = 0.0f;
         rl.now_state = *fsm_state;
         rl.start_state = rl.now_state;
     }
 
-    void run() override
+    void Run() override
     {
         if (rl.running_percent < 1.0f)
         {
@@ -73,9 +73,9 @@ public:
         }
     }
 
-    void exit() override {}
+    void Exit() override {}
 
-    std::string checkChange() override
+    std::string CheckChange() override
     {
         if (rl.running_percent >= 1.0f)
         {
@@ -92,7 +92,7 @@ public:
                 return "RLFSMStateWaiting";
             }
         }
-        return _stateName;
+        return state_name_;
     }
 };
 
@@ -101,13 +101,13 @@ class RLFSMStateGetDown : public RLFSMState
 public:
     RLFSMStateGetDown(RL *rl) : RLFSMState(*rl, "RLFSMStateGetDown") {}
 
-    void enter() override
+    void Enter() override
     {
         rl.running_percent = 0.0f;
         rl.now_state = *fsm_state;
     }
 
-    void run() override
+    void Run() override
     {
         if (rl.running_percent < 1.0f)
         {
@@ -126,9 +126,9 @@ public:
         }
     }
 
-    void exit() override {}
+    void Exit() override {}
 
-    std::string checkChange() override
+    std::string CheckChange() override
     {
         if (rl.running_percent >= 1.0f)
         {
@@ -138,7 +138,7 @@ public:
         {
             return "RLFSMStateGetUp";
         }
-        return _stateName;
+        return state_name_;
     }
 };
 
@@ -147,7 +147,7 @@ class RLFSMStateRL_Locomotion : public RLFSMState
 public:
     RLFSMStateRL_Locomotion(RL *rl) : RLFSMState(*rl, "RLFSMStateRL_Locomotion") {}
 
-    void enter() override
+    void Enter() override
     {
         // read params from yaml
         rl.config_name = rl.default_rl_config;
@@ -167,7 +167,7 @@ public:
         // pos init
     }
 
-    void run() override
+    void Run() override
     {
         std::cout << "\r" << std::flush << LOGGER::INFO << "RL Controller x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
 
@@ -191,12 +191,12 @@ public:
         }
     }
 
-    void exit() override
+    void Exit() override
     {
         rl.rl_init_done = false;
     }
 
-    std::string checkChange() override
+    std::string CheckChange() override
     {
         if (rl.control.control_state == STATE::STATE_POS_GETDOWN)
         {
@@ -214,7 +214,7 @@ public:
         {
             return "RLFSMStateWaiting";
         }
-        return _stateName;
+        return state_name_;
     }
 };
 
@@ -223,22 +223,22 @@ public:
 class A1FSMFactory : public FSMStateFactory
 {
 public:
-    A1FSMFactory(const std::string& initial) : initialState(initial) {}
-    std::shared_ptr<FSMState> createState(void *context, const std::string &stateName) override
+    A1FSMFactory(const std::string& initial) : initial_state_(initial) {}
+    std::shared_ptr<FSMState> CreateState(void *context, const std::string &state_name) override
     {
         RL *rl = static_cast<RL *>(context);
-        if (stateName == "RLFSMStateWaiting")
+        if (state_name == "RLFSMStateWaiting")
             return std::make_shared<a1_fsm::RLFSMStateWaiting>(rl);
-        else if (stateName == "RLFSMStateGetUp")
+        else if (state_name == "RLFSMStateGetUp")
             return std::make_shared<a1_fsm::RLFSMStateGetUp>(rl);
-        else if (stateName == "RLFSMStateGetDown")
+        else if (state_name == "RLFSMStateGetDown")
             return std::make_shared<a1_fsm::RLFSMStateGetDown>(rl);
-        else if (stateName == "RLFSMStateRL_Locomotion")
+        else if (state_name == "RLFSMStateRL_Locomotion")
             return std::make_shared<a1_fsm::RLFSMStateRL_Locomotion>(rl);
         return nullptr;
     }
-    std::string getType() const override { return "a1"; }
-    std::vector<std::string> getSupportedStates() const override
+    std::string GetType() const override { return "a1"; }
+    std::vector<std::string> GetSupportedStates() const override
     {
         return {
             "RLFSMStateWaiting",
@@ -247,9 +247,9 @@ public:
             "RLFSMStateRL_Locomotion"
         };
     }
-    std::string getInitialState() const override { return initialState; }
+    std::string GetInitialState() const override { return initial_state_; }
 private:
-    std::string initialState;
+    std::string initial_state_;
 };
 
 REGISTER_FSM_FACTORY(A1FSMFactory, "RLFSMStateWaiting")

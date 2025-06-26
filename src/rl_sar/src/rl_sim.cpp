@@ -64,9 +64,9 @@ RL_Sim::RL_Sim()
     this->ReadYamlBase(this->robot_name);
 
     // auto load FSM by robot_name
-    if (FSMManager::getInstance().isTypeSupported(this->robot_name))
+    if (FSMManager::GetInstance().IsTypeSupported(this->robot_name))
     {
-        auto fsm_ptr = FSMManager::getInstance().createFSM(this->robot_name, this);
+        auto fsm_ptr = FSMManager::GetInstance().CreateFSM(this->robot_name, this);
         if (fsm_ptr)
         {
             this->fsm = *fsm_ptr;

@@ -26,12 +26,12 @@ void RL::StateController(const RobotState<double>* state, RobotCommand<double>* 
             rl_fsm_state->fsm_command = command;
         }
     };
-    for (auto& pair : fsm._states)
+    for (auto& pair : fsm.states_)
     {
         updateState(pair.second);
     }
 
-    fsm.run();
+    fsm.Run();
 }
 
 torch::Tensor RL::ComputeObservation()

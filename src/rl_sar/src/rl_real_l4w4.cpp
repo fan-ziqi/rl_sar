@@ -27,9 +27,9 @@ RL_Real::RL_Real()
     this->ReadYamlBase(this->robot_name);
 
     // auto load FSM by robot_name
-    if (FSMManager::getInstance().isTypeSupported(this->robot_name))
+    if (FSMManager::GetInstance().IsTypeSupported(this->robot_name))
     {
-        auto fsm_ptr = FSMManager::getInstance().createFSM(this->robot_name, this);
+        auto fsm_ptr = FSMManager::GetInstance().CreateFSM(this->robot_name, this);
         if (fsm_ptr)
         {
             this->fsm = *fsm_ptr;
@@ -244,7 +244,7 @@ torch::Tensor RL_Real::Forward()
     {
         this->history_obs_buf.insert(clamped_obs);
         this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
-        if (this->fsm._currentState->getStateName() != "RLFSMStateRL_LocomotionLab")
+        if (this->fsm.current_state_->GetStateName() != "RLFSMStateRL_LocomotionLab")
         {
             torch::Tensor myTensor = history_obs.view({1,10,57});
             actions = this->model.forward({clamped_obs, myTensor}).toTensor();
