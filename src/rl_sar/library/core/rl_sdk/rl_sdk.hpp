@@ -64,7 +64,6 @@ enum STATE
     STATE_WAITING = 0,
     STATE_POS_GETUP,
     STATE_RL_LOCOMOTION,
-    STATE_RL_NAVIGATION,
     STATE_POS_GETDOWN,
     STATE_RESET_SIMULATION,
     STATE_TOGGLE_SIMULATION,
@@ -77,6 +76,7 @@ struct Control
     double y = 0.0;
     double yaw = 0.0;
     double wheel = 0.0;
+    bool navigation_mode = false;
     void SetControlState(STATE new_state)
     {
         if (control_state != new_state)

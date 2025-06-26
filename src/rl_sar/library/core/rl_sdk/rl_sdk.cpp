@@ -314,7 +314,8 @@ void RL::KeyboardInterface()
             this->control.SetControlState(STATE_RL_LOCOMOTION);
             break;
         case 'n':
-            this->control.SetControlState(STATE_RL_NAVIGATION);
+            this->control.navigation_mode = !this->control.navigation_mode;
+            std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
             break;
         case '1':
             this->control.SetControlState(STATE_POS_GETDOWN);

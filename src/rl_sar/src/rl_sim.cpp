@@ -439,7 +439,8 @@ void RL_Sim::JoyCallback(
         }
         else if (this->joy_msg.axes[7] < 0) // DOWN
         {
-            this->control.SetControlState(STATE_RL_NAVIGATION);
+            this->control.navigation_mode = !this->control.navigation_mode;
+            std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
         }
     }
     if (this->joy_msg.buttons[4]) // LB
@@ -473,7 +474,7 @@ void RL_Sim::RunModel()
         this->episode_length_buf += 1;
         // this->obs.lin_vel = torch::tensor({{this->vel.linear.x, this->vel.linear.y, this->vel.linear.z}});
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
-        if (this->fsm._currentState->getStateName() == "RLFSMStateRL_Navigation")
+        if (this->control.navigation_mode)
         {
             this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
         }

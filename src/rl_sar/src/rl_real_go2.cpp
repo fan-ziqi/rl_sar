@@ -135,6 +135,11 @@ void RL_Real::GetState(RobotState<double> *state)
     {
         this->control.SetControlState(STATE_POS_GETDOWN);
     }
+    else if ((int)this->unitree_joy.components.down == 1)
+    {
+        this->control.navigation_mode = !this->control.navigation_mode;
+        std::cout << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
+    }
 
     if (this->params.quaternion == "xyzw")
     {
@@ -194,7 +199,7 @@ void RL_Real::RunModel()
     {
         this->episode_length_buf += 1;
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
-        if (this->fsm._currentState->getStateName() == "RLFSMStateRL_Navigation")
+        if (this->control.navigation_mode)
         {
 #if !defined(USE_CMAKE)
             this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
