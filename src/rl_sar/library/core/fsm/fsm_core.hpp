@@ -41,6 +41,16 @@ public:
         next_state_ = current_state_;
     }
 
+    void RequestStateChange(const std::string& state_name)
+    {
+        if (states_.find(state_name) != states_.end() && current_state_ && current_state_->GetStateName() != state_name)
+        {
+            next_state_ = states_.at(state_name);
+            mode_ = Mode::CHANGE;
+            std::cout << std::endl << "[FSM]  Request switch from " << current_state_->GetStateName() << " to " << next_state_->GetStateName() << std::endl;
+        }
+    }
+
     void Run()
     {
         if (!current_state_)
@@ -64,16 +74,6 @@ public:
             current_state_->Enter();
             mode_ = Mode::NORMAL;
             current_state_->Run();
-        }
-    }
-
-    void RequestStateChange(const std::string& state_name)
-    {
-        if (states_.find(state_name) != states_.end() && current_state_ && current_state_->GetStateName() != state_name)
-        {
-            next_state_ = states_.at(state_name);
-            mode_ = Mode::CHANGE;
-            std::cout << std::endl << "[FSM]  Request switch from " << current_state_->GetStateName() << " to " << next_state_->GetStateName() << std::endl;
         }
     }
 
