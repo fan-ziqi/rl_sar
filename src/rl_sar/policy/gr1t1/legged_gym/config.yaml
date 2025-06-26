@@ -3,7 +3,7 @@
 
 gr1t1/legged_gym:
   model_name: "model_4000_jit.pt"
-  quaternion: "xyzw"
+  quaternion: "xyzw"  # should be wxyz or xyzw
   num_observations: 39
   observations: ["ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
   observations_history: []  # 0 is the latest observation

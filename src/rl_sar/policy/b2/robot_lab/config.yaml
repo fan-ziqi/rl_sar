@@ -3,7 +3,7 @@
 
 b2/robot_lab:
   model_name: "policy.pt"
-  quaternion: "wxyz"
+  quaternion: "wxyz"  # should be wxyz or xyzw
   num_observations: 45
   observations: ["ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
   observations_history: []  # 0 is the latest observation
