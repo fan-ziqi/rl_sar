@@ -13,7 +13,7 @@ This repository provides a framework for simulation verification and physical de
 >
 > Supports both **ROS-Noetic** and **ROS2-Foxy/Humble**
 
-Support List：
+Support List:
 
 | Robot Name</br>(rname:=)|Pre-Trained Policy</br>via IsaacGym (cfg:=)|Pre-Trained Policy</br>via IsaacSim (cfg:=)|Sim2Real|
 |------------|----------------------|----------------------|-|
