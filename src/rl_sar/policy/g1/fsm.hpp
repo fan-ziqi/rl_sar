@@ -83,6 +83,18 @@ public:
             {
                 return "RLFSMStateRL_Locomotion";
             }
+            else if (rl.control.control_state == STATE::STATE_RL_SKILL_1)
+            {
+                return "RLFSMStateRL_Dance";
+            }
+            else if (rl.control.control_state == STATE::STATE_RL_SKILL_2)
+            {
+                return "RLFSMStateRL_KungFu";
+            }
+            else if (rl.control.control_state == STATE::STATE_RL_SKILL_3)
+            {
+                return "RLFSMStateRL_Kick";
+            }
             else if (rl.control.control_state == STATE::STATE_POS_GETDOWN)
             {
                 return "RLFSMStateGetDown";
@@ -210,6 +222,279 @@ public:
         {
             return "RLFSMStateRL_Locomotion";
         }
+        else if (rl.control.control_state == STATE::STATE_RL_SKILL_1)
+        {
+            return "RLFSMStateRL_Dance";
+        }
+        else if (rl.control.control_state == STATE::STATE_RL_SKILL_2)
+        {
+            return "RLFSMStateRL_KungFu";
+        }
+        else if (rl.control.control_state == STATE::STATE_RL_SKILL_3)
+        {
+            return "RLFSMStateRL_Kick";
+        }
+        else if (rl.control.control_state == STATE::STATE_WAITING)
+        {
+            return "RLFSMStateWaiting";
+        }
+        return state_name_;
+    }
+};
+
+class RLFSMStateRL_Dance : public RLFSMState
+{
+public:
+    RLFSMStateRL_Dance(RL *rl) : RLFSMState(*rl, "RLFSMStateRL_Dance") {}
+
+    void Enter() override
+    {
+        // read params from yaml
+        rl.config_name = "robomimic_dance";
+        std::string robot_path = rl.robot_name + "/" + rl.config_name;
+        try
+        {
+            rl.InitRL(robot_path);
+            rl.rl_init_done = true;
+        }
+        catch (const std::exception& e)
+        {
+            std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
+            rl.rl_init_done = false;
+            rl.control.control_state = STATE::STATE_POS_GETUP;
+        }
+
+        rl.episode_length_buf = 0;
+        rl.motion_length = 18.0;
+
+        // pos init
+    }
+
+    void Run() override
+    {
+        float motion_time = rl.episode_length_buf * rl.params.dt * rl.params.decimation;
+        motion_time = fmin(motion_time, rl.motion_length);
+        float running_progress = motion_time / rl.motion_length * 100.0f;
+        std::cout << "\r" << std::flush << LOGGER::INFO << "Running progress "<< std::fixed << std::setprecision(2) << running_progress << "%" << std::flush;
+
+        torch::Tensor _output_dof_pos, _output_dof_vel;
+        if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
+        {
+            for (int i = 0; i < rl.params.num_of_dofs; ++i)
+            {
+                if (_output_dof_pos.defined() && _output_dof_pos.numel() > 0)
+                {
+                    fsm_command->motor_command.q[i] = rl.output_dof_pos[0][i].item<double>();
+                }
+                if (_output_dof_vel.defined() && _output_dof_vel.numel() > 0)
+                {
+                    fsm_command->motor_command.dq[i] = rl.output_dof_vel[0][i].item<double>();
+                }
+                fsm_command->motor_command.kp[i] = rl.params.rl_kp[0][i].item<double>();
+                fsm_command->motor_command.kd[i] = rl.params.rl_kd[0][i].item<double>();
+                fsm_command->motor_command.tau[i] = 0;
+            }
+        }
+
+        if (motion_time / rl.motion_length == 1)
+        {
+            rl.control.SetControlState(STATE::STATE_POS_GETUP);
+        }
+    }
+
+    void Exit() override
+    {
+        rl.rl_init_done = false;
+    }
+
+    std::string CheckChange() override
+    {
+        if (rl.control.control_state == STATE::STATE_POS_GETDOWN)
+        {
+            return "RLFSMStateGetDown";
+        }
+        else if (rl.control.control_state == STATE::STATE_POS_GETUP)
+        {
+            return "RLFSMStateGetUp";
+        }
+        else if (rl.control.control_state == STATE::STATE_RL_LOCOMOTION)
+        {
+            return "RLFSMStateRL_Locomotion";
+        }
+        else if (rl.control.control_state == STATE::STATE_WAITING)
+        {
+            return "RLFSMStateWaiting";
+        }
+        return state_name_;
+    }
+};
+
+class RLFSMStateRL_KungFu : public RLFSMState
+{
+public:
+    RLFSMStateRL_KungFu(RL *rl) : RLFSMState(*rl, "RLFSMStateRL_KungFu") {}
+
+    void Enter() override
+    {
+        // read params from yaml
+        rl.config_name = "robomimic_kungfu";
+        std::string robot_path = rl.robot_name + "/" + rl.config_name;
+        try
+        {
+            rl.InitRL(robot_path);
+            rl.rl_init_done = true;
+        }
+        catch (const std::exception& e)
+        {
+            std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
+            rl.rl_init_done = false;
+            rl.control.control_state = STATE::STATE_POS_GETUP;
+        }
+
+        rl.episode_length_buf = 0;
+        rl.motion_length = 17.433;
+
+        // pos init
+    }
+
+    void Run() override
+    {
+        float motion_time = rl.episode_length_buf * rl.params.dt * rl.params.decimation;
+        motion_time = fmin(motion_time, rl.motion_length);
+        float running_progress = motion_time / rl.motion_length * 100.0f;
+        std::cout << "\r" << std::flush << LOGGER::INFO << "Running progress "<< std::fixed << std::setprecision(2) << running_progress << "%" << std::flush;
+
+        torch::Tensor _output_dof_pos, _output_dof_vel;
+        if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
+        {
+            for (int i = 0; i < rl.params.num_of_dofs; ++i)
+            {
+                if (_output_dof_pos.defined() && _output_dof_pos.numel() > 0)
+                {
+                    fsm_command->motor_command.q[i] = rl.output_dof_pos[0][i].item<double>();
+                }
+                if (_output_dof_vel.defined() && _output_dof_vel.numel() > 0)
+                {
+                    fsm_command->motor_command.dq[i] = rl.output_dof_vel[0][i].item<double>();
+                }
+                fsm_command->motor_command.kp[i] = rl.params.rl_kp[0][i].item<double>();
+                fsm_command->motor_command.kd[i] = rl.params.rl_kd[0][i].item<double>();
+                fsm_command->motor_command.tau[i] = 0;
+            }
+        }
+
+        if (motion_time / rl.motion_length == 1)
+        {
+            rl.control.SetControlState(STATE::STATE_POS_GETUP);
+        }
+    }
+
+    void Exit() override
+    {
+        rl.rl_init_done = false;
+    }
+
+    std::string CheckChange() override
+    {
+        if (rl.control.control_state == STATE::STATE_POS_GETDOWN)
+        {
+            return "RLFSMStateGetDown";
+        }
+        else if (rl.control.control_state == STATE::STATE_POS_GETUP)
+        {
+            return "RLFSMStateGetUp";
+        }
+        else if (rl.control.control_state == STATE::STATE_RL_LOCOMOTION)
+        {
+            return "RLFSMStateRL_Locomotion";
+        }
+        else if (rl.control.control_state == STATE::STATE_WAITING)
+        {
+            return "RLFSMStateWaiting";
+        }
+        return state_name_;
+    }
+};
+
+class RLFSMStateRL_Kick : public RLFSMState
+{
+public:
+    RLFSMStateRL_Kick(RL *rl) : RLFSMState(*rl, "RLFSMStateRL_Kick") {}
+
+    void Enter() override
+    {
+        // read params from yaml
+        rl.config_name = "robomimic_kick";
+        std::string robot_path = rl.robot_name + "/" + rl.config_name;
+        try
+        {
+            rl.InitRL(robot_path);
+            rl.rl_init_done = true;
+        }
+        catch (const std::exception& e)
+        {
+            std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
+            rl.rl_init_done = false;
+            rl.control.control_state = STATE::STATE_POS_GETUP;
+        }
+
+        rl.episode_length_buf = 0;
+        rl.motion_length = 3.633;
+
+        // pos init
+    }
+
+    void Run() override
+    {
+        float motion_time = rl.episode_length_buf * rl.params.dt * rl.params.decimation;
+        motion_time = fmin(motion_time, rl.motion_length);
+        float running_progress = motion_time / rl.motion_length * 100.0f;
+        std::cout << "\r" << std::flush << LOGGER::INFO << "Running progress "<< std::fixed << std::setprecision(2) << running_progress << "%" << std::flush;
+
+        torch::Tensor _output_dof_pos, _output_dof_vel;
+        if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
+        {
+            for (int i = 0; i < rl.params.num_of_dofs; ++i)
+            {
+                if (_output_dof_pos.defined() && _output_dof_pos.numel() > 0)
+                {
+                    fsm_command->motor_command.q[i] = rl.output_dof_pos[0][i].item<double>();
+                }
+                if (_output_dof_vel.defined() && _output_dof_vel.numel() > 0)
+                {
+                    fsm_command->motor_command.dq[i] = rl.output_dof_vel[0][i].item<double>();
+                }
+                fsm_command->motor_command.kp[i] = rl.params.rl_kp[0][i].item<double>();
+                fsm_command->motor_command.kd[i] = rl.params.rl_kd[0][i].item<double>();
+                fsm_command->motor_command.tau[i] = 0;
+            }
+        }
+
+        if (motion_time / rl.motion_length == 1)
+        {
+            rl.control.SetControlState(STATE::STATE_POS_GETUP);
+        }
+    }
+
+    void Exit() override
+    {
+        rl.rl_init_done = false;
+    }
+
+    std::string CheckChange() override
+    {
+        if (rl.control.control_state == STATE::STATE_POS_GETDOWN)
+        {
+            return "RLFSMStateGetDown";
+        }
+        else if (rl.control.control_state == STATE::STATE_POS_GETUP)
+        {
+            return "RLFSMStateGetUp";
+        }
+        else if (rl.control.control_state == STATE::STATE_RL_LOCOMOTION)
+        {
+            return "RLFSMStateRL_Locomotion";
+        }
         else if (rl.control.control_state == STATE::STATE_WAITING)
         {
             return "RLFSMStateWaiting";
@@ -235,6 +520,12 @@ public:
             return std::make_shared<g1_fsm::RLFSMStateGetDown>(rl);
         else if (state_name == "RLFSMStateRL_Locomotion")
             return std::make_shared<g1_fsm::RLFSMStateRL_Locomotion>(rl);
+        else if (state_name == "RLFSMStateRL_Dance")
+            return std::make_shared<g1_fsm::RLFSMStateRL_Dance>(rl);
+        else if (state_name == "RLFSMStateRL_KungFu")
+            return std::make_shared<g1_fsm::RLFSMStateRL_KungFu>(rl);
+        else if (state_name == "RLFSMStateRL_Kick")
+            return std::make_shared<g1_fsm::RLFSMStateRL_Kick>(rl);
         return nullptr;
     }
     std::string GetType() const override { return "g1"; }
@@ -244,7 +535,10 @@ public:
             "RLFSMStateWaiting",
             "RLFSMStateGetUp",
             "RLFSMStateGetDown",
-            "RLFSMStateRL_Locomotion"
+            "RLFSMStateRL_Locomotion",
+            "RLFSMStateRL_Dance",
+            "RLFSMStateRL_KungFu",
+            "RLFSMStateRL_Kick"
         };
     }
     std::string GetInitialState() const override { return initial_state_; }

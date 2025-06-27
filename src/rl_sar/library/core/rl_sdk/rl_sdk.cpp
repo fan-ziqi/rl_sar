@@ -68,7 +68,8 @@ torch::Tensor RL::ComputeObservation()
         }
         else if (observation == "phase")
         {
-            torch::Tensor phase = torch::tensor({{3.1415926 * this->episode_length_buf * this->params.dt * this->params.decimation / 2}});
+            float motion_time = this->episode_length_buf * this->params.dt * this->params.decimation;
+            torch::Tensor phase = torch::tensor({{3.1415926 * motion_time / 2}});
             torch::Tensor phase_tensor = torch::cat({
                 torch::sin(phase),
                 torch::cos(phase),
@@ -81,14 +82,22 @@ torch::Tensor RL::ComputeObservation()
         }
         else if (observation == "g1_phase")
         {
+            float motion_time = this->episode_length_buf * this->params.dt * this->params.decimation;
             torch::Tensor period = torch::tensor({{0.8f}});
-            torch::Tensor count = torch::tensor({{this->episode_length_buf * this->params.dt * this->params.decimation}});
+            torch::Tensor count = torch::tensor({{motion_time}});
             torch::Tensor phase = torch::fmod(count, period) / period;
             torch::Tensor phase_tensor = torch::cat({
                 torch::sin(2 * 3.1415926f * phase),
                 torch::cos(2 * 3.1415926f * phase),
             }, -1);
             obs_list.push_back(phase_tensor);
+        }
+        else if (observation == "g1_mimic_phase")
+        {
+            float motion_time = this->episode_length_buf * this->params.dt * this->params.decimation;
+            torch::Tensor count = torch::tensor({{motion_time}});
+            torch::Tensor phase = count / this->motion_length;
+            obs_list.push_back(phase);
         }
     }
 
@@ -306,8 +315,17 @@ void RL::KeyboardInterface()
             this->control.navigation_mode = !this->control.navigation_mode;
             std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
             break;
+        // case '1':
+        //     this->control.SetControlState(STATE_POS_GETDOWN);
+        //     break;
         case '1':
-            this->control.SetControlState(STATE_POS_GETDOWN);
+            this->control.SetControlState(STATE_RL_SKILL_1);
+            break;
+        case '2':
+            this->control.SetControlState(STATE_RL_SKILL_2);
+            break;
+        case '3':
+            this->control.SetControlState(STATE_RL_SKILL_3);
             break;
         case 'q':
             break;

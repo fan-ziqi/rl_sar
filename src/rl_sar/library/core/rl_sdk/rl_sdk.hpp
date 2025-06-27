@@ -64,6 +64,9 @@ enum STATE
     STATE_WAITING = 0,
     STATE_POS_GETUP,
     STATE_RL_LOCOMOTION,
+    STATE_RL_SKILL_1,
+    STATE_RL_SKILL_2,
+    STATE_RL_SKILL_3,
     STATE_POS_GETDOWN,
     STATE_RESET_SIMULATION,
     STATE_TOGGLE_SIMULATION,
@@ -191,6 +194,7 @@ public:
     bool simulation_running = true;
     std::string ang_vel_type = "ang_vel_body";  // "ang_vel_world" or "ang_vel_body"
     unsigned long long episode_length_buf = 0;
+    float motion_length = 0.0;
 
     // protect func
     void TorqueProtect(torch::Tensor origin_output_dof_tau);
