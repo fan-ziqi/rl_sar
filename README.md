@@ -184,7 +184,6 @@ ros2 run rl_sar rl_sim
 If Gazebo cannot be opened when you start it for the first time, you need to download the model package
 
 ```bash
-~/.gazebo/models
 git clone https://github.com/osrf/gazebo_models.git ~/.gazebo/models
 ```
 
