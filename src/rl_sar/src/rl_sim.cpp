@@ -268,20 +268,10 @@ void RL_Sim::GetState(RobotState<double> *state)
     const auto &angular_velocity = this->gazebo_imu.angular_velocity;
 #endif
 
-    if (this->params.quaternion == "xyzw")
-    {
-        state->imu.quaternion[3] = orientation.w;
-        state->imu.quaternion[0] = orientation.x;
-        state->imu.quaternion[1] = orientation.y;
-        state->imu.quaternion[2] = orientation.z;
-    }
-    else if (this->params.quaternion == "wxyz")
-    {
-        state->imu.quaternion[0] = orientation.w;
-        state->imu.quaternion[1] = orientation.x;
-        state->imu.quaternion[2] = orientation.y;
-        state->imu.quaternion[3] = orientation.z;
-    }
+    state->imu.quaternion[0] = orientation.w;
+    state->imu.quaternion[1] = orientation.x;
+    state->imu.quaternion[2] = orientation.y;
+    state->imu.quaternion[3] = orientation.z;
 
     state->imu.gyroscope[0] = angular_velocity.x;
     state->imu.gyroscope[1] = angular_velocity.y;
@@ -560,7 +550,7 @@ void RL_Sim::Plot()
         this->plot_real_joint_pos[i].push_back(this->robot_state_subscriber_msg.motor_state[i].q);
         this->plot_target_joint_pos[i].push_back(this->robot_command_publisher_msg.motor_command[i].q);
 #endif
-        plt::subplot(4, 3, i + 1);
+        plt::subplot(this->params.num_of_dofs, 1, i + 1);
         plt::named_plot("_real_joint_pos", this->plot_t, this->plot_real_joint_pos[i], "r");
         plt::named_plot("_target_joint_pos", this->plot_t, this->plot_target_joint_pos[i], "b");
         plt::xlim(this->plot_t.front(), this->plot_t.back());

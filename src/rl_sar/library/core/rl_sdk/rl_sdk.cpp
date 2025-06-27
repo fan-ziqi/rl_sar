@@ -39,11 +39,11 @@ torch::Tensor RL::ComputeObservation()
         }
         else if (observation == "ang_vel_world")
         {
-            obs_list.push_back(this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel, this->params.quaternion) * this->params.ang_vel_scale);
+            obs_list.push_back(this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale);
         }
         else if (observation == "gravity_vec")
         {
-            obs_list.push_back(this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec, this->params.quaternion));
+            obs_list.push_back(this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec));
         }
         else if (observation == "commands")
         {
@@ -175,20 +175,15 @@ void RL::ComputeOutput(const torch::Tensor &actions, torch::Tensor &output_dof_p
     output_dof_tau = torch::clamp(output_dof_tau, -(this->params.torque_limits), this->params.torque_limits);
 }
 
-torch::Tensor RL::QuatRotateInverse(torch::Tensor q, torch::Tensor v, const std::string &quaternion)
+torch::Tensor RL::QuatRotateInverse(torch::Tensor q, torch::Tensor v)
 {
     torch::Tensor q_w;
     torch::Tensor q_vec;
-    if (quaternion == "wxyz")
-    {
-        q_w = q.index({torch::indexing::Slice(), 0});
-        q_vec = q.index({torch::indexing::Slice(), torch::indexing::Slice(1, 4)});
-    }
-    else if (quaternion == "xyzw")
-    {
-        q_w = q.index({torch::indexing::Slice(), 3});
-        q_vec = q.index({torch::indexing::Slice(), torch::indexing::Slice(0, 3)});
-    }
+
+    // wxyz
+    q_w = q.index({torch::indexing::Slice(), 0});
+    q_vec = q.index({torch::indexing::Slice(), torch::indexing::Slice(1, 4)});
+
     c10::IntArrayRef shape = q.sizes();
 
     torch::Tensor a = v * (2.0 * torch::pow(q_w, 2) - 1.0).unsqueeze(-1);
@@ -235,20 +230,10 @@ void RL::AttitudeProtect(const std::vector<double> &quaternion, float pitch_thre
     float rad2deg = 57.2958;
     float w, x, y, z;
 
-    if (this->params.quaternion == "xyzw")
-    {
-        w = quaternion[3];
-        x = quaternion[0];
-        y = quaternion[1];
-        z = quaternion[2];
-    }
-    else if (this->params.quaternion == "wxyz")
-    {
-        w = quaternion[0];
-        x = quaternion[1];
-        y = quaternion[2];
-        z = quaternion[3];
-    }
+    w = quaternion[0];
+    x = quaternion[1];
+    y = quaternion[2];
+    z = quaternion[3];
 
     // Calculate roll (rotation around the X-axis)
     float sinr_cosp = 2 * (w * x + y * z);
@@ -424,7 +409,6 @@ void RL::ReadYamlRL(std::string robot_path)
     }
 
     this->params.model_name = config["model_name"].as<std::string>();
-    this->params.quaternion = config["quaternion"].as<std::string>();
     this->params.num_observations = config["num_observations"].as<int>();
     this->params.observations = ReadVectorFromYaml<std::string>(config["observations"]);
     if (config["observations_history"].IsNull())

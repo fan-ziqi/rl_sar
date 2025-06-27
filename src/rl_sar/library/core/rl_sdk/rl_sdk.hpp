@@ -93,7 +93,6 @@ struct Control
 struct ModelParams
 {
     std::string model_name;
-    std::string quaternion;
     double dt;
     int decimation;
     int num_observations;
@@ -170,7 +169,7 @@ public:
     virtual void SetCommand(const RobotCommand<double> *command) = 0;
     void StateController(const RobotState<double> *state, RobotCommand<double> *command);
     void ComputeOutput(const torch::Tensor &actions, torch::Tensor &output_dof_pos, torch::Tensor &output_dof_vel, torch::Tensor &output_dof_tau);
-    torch::Tensor QuatRotateInverse(torch::Tensor q, torch::Tensor v, const std::string &quaternion);
+    torch::Tensor QuatRotateInverse(torch::Tensor q, torch::Tensor v);
 
     // yaml params
     void ReadYamlBase(std::string robot_name);

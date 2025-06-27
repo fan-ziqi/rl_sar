@@ -148,20 +148,10 @@ void RL_Real::GetState(RobotState<double> *state)
         std::cout << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
     }
 
-    if (this->params.quaternion == "xyzw")
-    {
-        state->imu.quaternion[3] = this->unitree_low_state.imu_state().quaternion()[0]; // w
-        state->imu.quaternion[0] = this->unitree_low_state.imu_state().quaternion()[1]; // x
-        state->imu.quaternion[1] = this->unitree_low_state.imu_state().quaternion()[2]; // y
-        state->imu.quaternion[2] = this->unitree_low_state.imu_state().quaternion()[3]; // z
-    }
-    else if (this->params.quaternion == "wxyz")
-    {
-        state->imu.quaternion[0] = this->unitree_low_state.imu_state().quaternion()[0]; // w
-        state->imu.quaternion[1] = this->unitree_low_state.imu_state().quaternion()[1]; // x
-        state->imu.quaternion[2] = this->unitree_low_state.imu_state().quaternion()[2]; // y
-        state->imu.quaternion[3] = this->unitree_low_state.imu_state().quaternion()[3]; // z
-    }
+    state->imu.quaternion[0] = this->unitree_low_state.imu_state().quaternion()[0]; // w
+    state->imu.quaternion[1] = this->unitree_low_state.imu_state().quaternion()[1]; // x
+    state->imu.quaternion[2] = this->unitree_low_state.imu_state().quaternion()[2]; // y
+    state->imu.quaternion[3] = this->unitree_low_state.imu_state().quaternion()[3]; // z
 
     for (int i = 0; i < 3; ++i)
     {
@@ -289,7 +279,7 @@ void RL_Real::Plot()
         this->plot_target_joint_pos[i].erase(this->plot_target_joint_pos[i].begin());
         this->plot_real_joint_pos[i].push_back(this->unitree_low_state.motor_state()[i].q());
         this->plot_target_joint_pos[i].push_back(this->unitree_low_command.motor_cmd()[i].q());
-        plt::subplot(4, 3, i + 1);
+        plt::subplot(this->params.num_of_dofs, 1, i + 1);
         plt::named_plot("_real_joint_pos", this->plot_t, this->plot_real_joint_pos[i], "r");
         plt::named_plot("_target_joint_pos", this->plot_t, this->plot_target_joint_pos[i], "b");
         plt::xlim(this->plot_t.front(), this->plot_t.back());
