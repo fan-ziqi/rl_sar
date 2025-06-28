@@ -18,7 +18,6 @@ RL_Sim::RL_Sim()
     ros::NodeHandle nh;
     nh.param<std::string>("ros_namespace", this->ros_namespace, "");
     nh.param<std::string>("robot_name", this->robot_name, "");
-    nh.param<std::string>("config_name", this->default_rl_config, "");
 #elif defined(USE_ROS2)
     this->ang_vel_type = "ang_vel_body";
     this->ros_namespace = this->get_namespace();
@@ -33,14 +32,14 @@ RL_Sim::RL_Sim()
         std::cout << LOGGER::WARNING << "Waiting for param_node service to be available..." << std::endl;
     }
     auto request = std::make_shared<rcl_interfaces::srv::GetParameters::Request>();
-    request->names = {"robot_name", "gazebo_model_name", "config_name"};
+    request->names = {"robot_name", "gazebo_model_name"};
     // Use a timeout for the future
     auto future = param_client->async_send_request(request);
     auto status = rclcpp::spin_until_future_complete(this->get_node_base_interface(), future, std::chrono::seconds(5));
     if (status == rclcpp::FutureReturnCode::SUCCESS)
     {
         auto result = future.get();
-        if (result->values.size() < 3)
+        if (result->values.size() < 2)
         {
             std::cout << LOGGER::ERROR << "Failed to get all parameters from param_node" << std::endl;
         }
@@ -48,10 +47,8 @@ RL_Sim::RL_Sim()
         {
             this->robot_name = result->values[0].string_value;
             this->gazebo_model_name = result->values[1].string_value;
-            this->default_rl_config = result->values[2].string_value;
             std::cout << LOGGER::INFO << "Get param robot_name: " << this->robot_name << std::endl;
             std::cout << LOGGER::INFO << "Get param gazebo_model_name: " << this->gazebo_model_name << std::endl;
-            std::cout << LOGGER::INFO << "Get param config_name: " << this->default_rl_config << std::endl;
         }
     }
     else

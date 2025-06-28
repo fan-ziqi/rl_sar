@@ -15,7 +15,7 @@ This repository provides a framework for simulation verification and physical de
 
 Support List:
 
-|Robot Name (rname:=)|Pre-Trained Policy (cfg:=)|Real|
+|Robot Name (rname:=)|Pre-Trained Policy|Real|
 |-|-|-|
 |Unitree-A1 (a1)|legged_gym (IsaacGym)|✅|
 |Unitree-Go2 (go2)|himloco (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
@@ -162,11 +162,11 @@ Open a terminal, launch the gazebo simulation environment
 ```bash
 # ROS1
 source devel/setup.bash
-roslaunch rl_sar gazebo.launch rname:=<ROBOT> cfg:=<CONFIG>
+roslaunch rl_sar gazebo.launch rname:=<ROBOT>
 
 # ROS2
 source install/setup.bash
-ros2 launch rl_sar gazebo.launch.py rname:=<ROBOT> cfg:=<CONFIG>
+ros2 launch rl_sar gazebo.launch.py rname:=<ROBOT>
 ```
 
 Open a new terminal, launch the control program

@@ -189,7 +189,7 @@ public:
     torch::Tensor history_obs;
 
     // others
-    std::string robot_name, config_name, default_rl_config;
+    std::string robot_name, config_name;
     bool simulation_running = true;
     std::string ang_vel_type = "ang_vel_body";  // "ang_vel_world" or "ang_vel_body"
     unsigned long long episode_length_buf = 0;

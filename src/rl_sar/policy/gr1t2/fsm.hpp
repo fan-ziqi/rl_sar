@@ -150,7 +150,7 @@ public:
     void Enter() override
     {
         // read params from yaml
-        rl.config_name = rl.default_rl_config;
+        rl.config_name = "legged_gym";
         std::string robot_path = rl.robot_name + "/" + rl.config_name;
         try
         {

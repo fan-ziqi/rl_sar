@@ -23,7 +23,6 @@ RL_Real::RL_Real()
     // read params from yaml
     this->ang_vel_type = "ang_vel_body";
     this->robot_name = "g1";
-    this->default_rl_config = "unitree_rl_gym";
     this->ReadYamlBase(this->robot_name);
 
     // auto load FSM by robot_name

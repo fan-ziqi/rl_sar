@@ -22,16 +22,7 @@ RL_Real::RL_Real(bool wheel_mode)
 
     // read params from yaml
     this->ang_vel_type = "ang_vel_body";
-    if (wheel_mode)
-    {
-        this->robot_name = "go2w";
-        this->default_rl_config = "robot_lab";
-    }
-    else
-    {
-        this->robot_name = "go2";
-        this->default_rl_config = "himloco";
-    }
+    this->robot_name = wheel_mode ? "go2w" : "go2";
     this->ReadYamlBase(this->robot_name);
 
     // auto load FSM by robot_name

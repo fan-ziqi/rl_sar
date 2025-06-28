@@ -15,7 +15,7 @@
 
 支持列表：
 
-|Robot Name (rname:=)|Pre-Trained Policy (cfg:=)|Real|
+|Robot Name (rname:=)|Pre-Trained Policy|Real|
 |-|-|-|
 |Unitree-A1 (a1)|legged_gym (IsaacGym)|✅|
 |Unitree-Go2 (go2)|himloco (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
@@ -162,11 +162,11 @@ Examples:
 ```bash
 # ROS1
 source devel/setup.bash
-roslaunch rl_sar gazebo.launch rname:=<ROBOT> cfg:=<CONFIG>
+roslaunch rl_sar gazebo.launch rname:=<ROBOT>
 
 # ROS2
 source install/setup.bash
-ros2 launch rl_sar gazebo.launch.py rname:=<ROBOT> cfg:=<CONFIG>
+ros2 launch rl_sar gazebo.launch.py rname:=<ROBOT>
 ```
 
 打开一个新终端，启动控制程序

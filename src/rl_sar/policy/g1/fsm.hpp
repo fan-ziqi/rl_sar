@@ -162,7 +162,7 @@ public:
     void Enter() override
     {
         // read params from yaml
-        rl.config_name = rl.default_rl_config;
+        rl.config_name = "unitree_rl_gym";
         std::string robot_path = rl.robot_name + "/" + rl.config_name;
         try
         {
@@ -250,7 +250,7 @@ public:
     void Enter() override
     {
         // read params from yaml
-        rl.config_name = "robomimic_dance";
+        rl.config_name = "robomimic/dance";
         std::string robot_path = rl.robot_name + "/" + rl.config_name;
         try
         {
@@ -337,7 +337,7 @@ public:
     void Enter() override
     {
         // read params from yaml
-        rl.config_name = "robomimic_kungfu";
+        rl.config_name = "robomimic/kungfu";
         std::string robot_path = rl.robot_name + "/" + rl.config_name;
         try
         {
@@ -424,7 +424,7 @@ public:
     void Enter() override
     {
         // read params from yaml
-        rl.config_name = "robomimic_kick";
+        rl.config_name = "robomimic/kick";
         std::string robot_path = rl.robot_name + "/" + rl.config_name;
         try
         {
