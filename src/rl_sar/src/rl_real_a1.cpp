@@ -141,9 +141,9 @@ void RL_Real::GetState(RobotState<double> *state)
     }
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
-        state->motor_state.q[i] = this->unitree_low_state.motorState[this->params.state_mapping[i]].q;
-        state->motor_state.dq[i] = this->unitree_low_state.motorState[this->params.state_mapping[i]].dq;
-        state->motor_state.tau_est[i] = this->unitree_low_state.motorState[this->params.state_mapping[i]].tauEst;
+        state->motor_state.q[i] = this->unitree_low_state.motorState[this->params.joint_mapping[i]].q;
+        state->motor_state.dq[i] = this->unitree_low_state.motorState[this->params.joint_mapping[i]].dq;
+        state->motor_state.tau_est[i] = this->unitree_low_state.motorState[this->params.joint_mapping[i]].tauEst;
     }
 }
 
@@ -151,12 +151,12 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
 {
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
-        this->unitree_low_command.motorCmd[i].mode = 0x0A;
-        this->unitree_low_command.motorCmd[i].q = command->motor_command.q[this->params.command_mapping[i]];
-        this->unitree_low_command.motorCmd[i].dq = command->motor_command.dq[this->params.command_mapping[i]];
-        this->unitree_low_command.motorCmd[i].Kp = command->motor_command.kp[this->params.command_mapping[i]];
-        this->unitree_low_command.motorCmd[i].Kd = command->motor_command.kd[this->params.command_mapping[i]];
-        this->unitree_low_command.motorCmd[i].tau = command->motor_command.tau[this->params.command_mapping[i]];
+        this->unitree_low_command.motorCmd[this->params.joint_mapping[i]].mode = 0x0A;
+        this->unitree_low_command.motorCmd[this->params.joint_mapping[i]].q = command->motor_command.q[i];
+        this->unitree_low_command.motorCmd[this->params.joint_mapping[i]].dq = command->motor_command.dq[i];
+        this->unitree_low_command.motorCmd[this->params.joint_mapping[i]].Kp = command->motor_command.kp[i];
+        this->unitree_low_command.motorCmd[this->params.joint_mapping[i]].Kd = command->motor_command.kd[i];
+        this->unitree_low_command.motorCmd[this->params.joint_mapping[i]].tau = command->motor_command.tau[i];
     }
 
     this->unitree_safe.PowerProtect(this->unitree_low_command, this->unitree_low_state, 8);

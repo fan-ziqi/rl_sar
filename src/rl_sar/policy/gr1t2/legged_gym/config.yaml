@@ -34,5 +34,4 @@ gr1t2/legged_gym:
                     0.0, 0.0, -0.2618, 0.5236, -0.2618]
   joint_controller_names: ["l_hip_roll_controller", "l_hip_yaw_controller", "l_hip_pitch_controller", "l_knee_pitch_controller", "l_ankle_pitch_controller",
                            "r_hip_roll_controller", "r_hip_yaw_controller", "r_hip_pitch_controller", "r_knee_pitch_controller", "r_ankle_pitch_controller"]
-  command_mapping: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-  state_mapping: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  joint_mapping: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]

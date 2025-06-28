@@ -252,13 +252,15 @@ ros2 run rl_sar rl_real_a1
 
 <details>
 
-<summary>Unitree Go2/Go2W（点击展开）</summary>
+<summary>Unitree Go2/Go2W/G1(29dofs)（点击展开）</summary>
 
 #### 网线连接
 
-用网线的一端连接Go2/Go2W机器人，另一端连接你的电脑，并开启电脑的 USB Ethernet 后进行配置。机器狗机载电脑的 IP 地地址为 `192.168.123.161`，故需将电脑 USB Ethernet 地址设置为与机器狗同一网段，如在 Address 中输入 `192.168.123.222` (`222`可以改成其他)。
+用网线的一端连接Go2/Go2W/G1(29dofs)机器人，另一端连接你的电脑，并开启电脑的 USB Ethernet 后进行配置。机器狗机载电脑的 IP 地地址为 `192.168.123.161`，故需将电脑 USB Ethernet 地址设置为与机器狗同一网段，如在 Address 中输入 `192.168.123.222` (`222`可以改成其他)。
 
 通过`ifconfig`命令查看123网段的网卡名字，如`enxf8e43b808e06`，下文用 \<YOUR_NETWORK_INTERFACE\> 代替
+
+Go2:
 
 新建终端，启动控制程序。如果控制Go2W，需要在命令后加`wheel`，否则留空。
 
@@ -273,6 +275,23 @@ ros2 run rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
 
 # CMake
 ./cmake_build/bin/rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
+```
+
+G1(29dofs):
+
+开机后将机器人吊起来，按L2+R2进入调试模式，然后新建终端，启动控制程序。
+
+```bash
+# ROS1
+source devel/setup.bash
+rosrun rl_sar rl_real_g1 <YOUR_NETWORK_INTERFACE>
+
+# ROS2
+source install/setup.bash
+ros2 run rl_sar rl_real_g1 <YOUR_NETWORK_INTERFACE>
+
+# CMake
+./cmake_build/bin/rl_real_g1 <YOUR_NETWORK_INTERFACE>
 ```
 
 #### 在机载Jetson中部署

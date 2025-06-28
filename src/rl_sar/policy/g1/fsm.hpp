@@ -91,17 +91,21 @@ public:
             {
                 return "RLFSMStateRL_Locomotion";
             }
-            else if (rl.control.current_keyboard == Input::Keyboard::Num2 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
+            else if (rl.control.current_keyboard == Input::Keyboard::Num2 || rl.control.current_gamepad == Input::Gamepad::RB_DPadDown)
             {
-                return "RLFSMStateRL_Dance";
+                return "RLFSMStateRL_RoboMimicLoco";
             }
-            else if (rl.control.current_keyboard == Input::Keyboard::Num3 || rl.control.current_gamepad == Input::Gamepad::RB_DPadDown)
+            else if (rl.control.current_keyboard == Input::Keyboard::Num3 || rl.control.current_gamepad == Input::Gamepad::RB_DPadLeft)
             {
-                return "RLFSMStateRL_KungFu";
+                return "RLFSMStateRL_RoboMimicDance";
             }
-            else if (rl.control.current_keyboard == Input::Keyboard::Num4 || rl.control.current_gamepad == Input::Gamepad::RB_DPadLeft)
+            else if (rl.control.current_keyboard == Input::Keyboard::Num4 || rl.control.current_gamepad == Input::Gamepad::RB_DPadRight)
             {
-                return "RLFSMStateRL_Kick";
+                return "RLFSMStateRL_RoboMimicKungFu";
+            }
+            else if (rl.control.current_keyboard == Input::Keyboard::Num5 || rl.control.current_gamepad == Input::Gamepad::LB_DPadUp)
+            {
+                return "RLFSMStateRL_RoboMimicKick";
             }
             else if (rl.control.current_keyboard == Input::Keyboard::Num9 || rl.control.current_gamepad == Input::Gamepad::B)
             {
@@ -232,26 +236,124 @@ public:
         {
             return "RLFSMStateRL_Locomotion";
         }
-        else if (rl.control.current_keyboard == Input::Keyboard::Num2 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num2 || rl.control.current_gamepad == Input::Gamepad::RB_DPadDown)
         {
-            return "RLFSMStateRL_Dance";
+            return "RLFSMStateRL_RoboMimicLoco";
         }
-        else if (rl.control.current_keyboard == Input::Keyboard::Num3 || rl.control.current_gamepad == Input::Gamepad::RB_DPadDown)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num3 || rl.control.current_gamepad == Input::Gamepad::RB_DPadLeft)
         {
-            return "RLFSMStateRL_KungFu";
+            return "RLFSMStateRL_RoboMimicDance";
         }
-        else if (rl.control.current_keyboard == Input::Keyboard::Num4 || rl.control.current_gamepad == Input::Gamepad::RB_DPadLeft)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num4 || rl.control.current_gamepad == Input::Gamepad::RB_DPadRight)
         {
-            return "RLFSMStateRL_Kick";
+            return "RLFSMStateRL_RoboMimicKungFu";
+        }
+        else if (rl.control.current_keyboard == Input::Keyboard::Num5 || rl.control.current_gamepad == Input::Gamepad::LB_DPadUp)
+        {
+            return "RLFSMStateRL_RoboMimicKick";
         }
         return state_name_;
     }
 };
 
-class RLFSMStateRL_Dance : public RLFSMState
+class RLFSMStateRL_RoboMimicLoco : public RLFSMState
 {
 public:
-    RLFSMStateRL_Dance(RL *rl) : RLFSMState(*rl, "RLFSMStateRL_Dance") {}
+    RLFSMStateRL_RoboMimicLoco(RL *rl) : RLFSMState(*rl, "RLFSMStateRL_RoboMimicLoco") {}
+
+    void Enter() override
+    {
+        rl.episode_length_buf = 0;
+
+        // read params from yaml
+        rl.config_name = "robomimic/loco";
+        std::string robot_path = rl.robot_name + "/" + rl.config_name;
+        try
+        {
+            rl.InitRL(robot_path);
+            rl.rl_init_done = true;
+        }
+        catch (const std::exception& e)
+        {
+            std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
+            rl.rl_init_done = false;
+            rl.control.current_keyboard = Input::Keyboard::Num0;
+        }
+
+        // pos init
+    }
+
+    void Run() override
+    {
+        std::cout << "\r" << std::flush << LOGGER::INFO << "RL Controller x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
+
+        torch::Tensor _output_dof_pos, _output_dof_vel;
+        if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
+        {
+            for (int i = 0; i < rl.params.num_of_dofs; ++i)
+            {
+                if (_output_dof_pos.defined() && _output_dof_pos.numel() > 0)
+                {
+                    fsm_command->motor_command.q[i] = rl.output_dof_pos[0][i].item<double>();
+                }
+                if (_output_dof_vel.defined() && _output_dof_vel.numel() > 0)
+                {
+                    fsm_command->motor_command.dq[i] = rl.output_dof_vel[0][i].item<double>();
+                }
+                fsm_command->motor_command.kp[i] = rl.params.rl_kp[0][i].item<double>();
+                fsm_command->motor_command.kd[i] = rl.params.rl_kd[0][i].item<double>();
+                fsm_command->motor_command.tau[i] = 0;
+            }
+        }
+    }
+
+    void Exit() override
+    {
+        rl.rl_init_done = false;
+    }
+
+    std::string CheckChange() override
+    {
+        if (rl.control.current_keyboard == Input::Keyboard::P || rl.control.current_gamepad == Input::Gamepad::LB_X)
+        {
+            return "RLFSMStatePassive";
+        }
+        else if (rl.control.current_keyboard == Input::Keyboard::Num9 || rl.control.current_gamepad == Input::Gamepad::B)
+        {
+            return "RLFSMStateGetDown";
+        }
+        else if (rl.control.current_keyboard == Input::Keyboard::Num0 || rl.control.current_gamepad == Input::Gamepad::Y)
+        {
+            return "RLFSMStateGetUp";
+        }
+        else if (rl.control.current_keyboard == Input::Keyboard::Num1 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
+        {
+            return "RLFSMStateRL_Locomotion";
+        }
+        else if (rl.control.current_keyboard == Input::Keyboard::Num2 || rl.control.current_gamepad == Input::Gamepad::RB_DPadDown)
+        {
+            return "RLFSMStateRL_RoboMimicLoco";
+        }
+        else if (rl.control.current_keyboard == Input::Keyboard::Num3 || rl.control.current_gamepad == Input::Gamepad::RB_DPadLeft)
+        {
+            return "RLFSMStateRL_RoboMimicDance";
+        }
+        else if (rl.control.current_keyboard == Input::Keyboard::Num4 || rl.control.current_gamepad == Input::Gamepad::RB_DPadRight)
+        {
+            return "RLFSMStateRL_RoboMimicKungFu";
+        }
+        else if (rl.control.current_keyboard == Input::Keyboard::Num5 || rl.control.current_gamepad == Input::Gamepad::LB_DPadUp)
+        {
+            return "RLFSMStateRL_RoboMimicKick";
+        }
+        return state_name_;
+    }
+};
+
+class RLFSMStateRL_RoboMimicDance : public RLFSMState
+{
+public:
+    RLFSMStateRL_RoboMimicDance(RL *rl) : RLFSMState(*rl, "RLFSMStateRL_RoboMimicDance") {}
 
     void Enter() override
     {
@@ -336,10 +438,10 @@ public:
     }
 };
 
-class RLFSMStateRL_KungFu : public RLFSMState
+class RLFSMStateRL_RoboMimicKungFu : public RLFSMState
 {
 public:
-    RLFSMStateRL_KungFu(RL *rl) : RLFSMState(*rl, "RLFSMStateRL_KungFu") {}
+    RLFSMStateRL_RoboMimicKungFu(RL *rl) : RLFSMState(*rl, "RLFSMStateRL_RoboMimicKungFu") {}
 
     void Enter() override
     {
@@ -424,10 +526,10 @@ public:
     }
 };
 
-class RLFSMStateRL_Kick : public RLFSMState
+class RLFSMStateRL_RoboMimicKick : public RLFSMState
 {
 public:
-    RLFSMStateRL_Kick(RL *rl) : RLFSMState(*rl, "RLFSMStateRL_Kick") {}
+    RLFSMStateRL_RoboMimicKick(RL *rl) : RLFSMState(*rl, "RLFSMStateRL_RoboMimicKick") {}
 
     void Enter() override
     {
@@ -529,12 +631,14 @@ public:
             return std::make_shared<g1_fsm::RLFSMStateGetDown>(rl);
         else if (state_name == "RLFSMStateRL_Locomotion")
             return std::make_shared<g1_fsm::RLFSMStateRL_Locomotion>(rl);
-        else if (state_name == "RLFSMStateRL_Dance")
-            return std::make_shared<g1_fsm::RLFSMStateRL_Dance>(rl);
-        else if (state_name == "RLFSMStateRL_KungFu")
-            return std::make_shared<g1_fsm::RLFSMStateRL_KungFu>(rl);
-        else if (state_name == "RLFSMStateRL_Kick")
-            return std::make_shared<g1_fsm::RLFSMStateRL_Kick>(rl);
+        else if (state_name == "RLFSMStateRL_RoboMimicLoco")
+            return std::make_shared<g1_fsm::RLFSMStateRL_RoboMimicLoco>(rl);
+        else if (state_name == "RLFSMStateRL_RoboMimicDance")
+            return std::make_shared<g1_fsm::RLFSMStateRL_RoboMimicDance>(rl);
+        else if (state_name == "RLFSMStateRL_RoboMimicKungFu")
+            return std::make_shared<g1_fsm::RLFSMStateRL_RoboMimicKungFu>(rl);
+        else if (state_name == "RLFSMStateRL_RoboMimicKick")
+            return std::make_shared<g1_fsm::RLFSMStateRL_RoboMimicKick>(rl);
         return nullptr;
     }
     std::string GetType() const override { return "g1"; }
@@ -545,9 +649,10 @@ public:
             "RLFSMStateGetUp",
             "RLFSMStateGetDown",
             "RLFSMStateRL_Locomotion",
-            "RLFSMStateRL_Dance",
-            "RLFSMStateRL_KungFu",
-            "RLFSMStateRL_Kick"
+            "RLFSMStateRL_RoboMimicLoco",
+            "RLFSMStateRL_RoboMimicDance",
+            "RLFSMStateRL_RoboMimicKungFu",
+            "RLFSMStateRL_RoboMimicKick"
         };
     }
     std::string GetInitialState() const override { return initial_state_; }

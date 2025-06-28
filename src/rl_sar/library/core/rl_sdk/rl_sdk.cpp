@@ -382,8 +382,7 @@ void RL::ReadYamlBase(std::string robot_path)
     this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<double>(config["default_dof_pos"])).view({1, -1});
     this->params.joint_names = ReadVectorFromYaml<std::string>(config["joint_names"]);
     this->params.joint_controller_names = ReadVectorFromYaml<std::string>(config["joint_controller_names"]);
-    this->params.command_mapping = ReadVectorFromYaml<int>(config["command_mapping"]);
-    this->params.state_mapping = ReadVectorFromYaml<int>(config["state_mapping"]);
+    this->params.joint_mapping = ReadVectorFromYaml<int>(config["joint_mapping"]);
 }
 
 void RL::ReadYamlRL(std::string robot_path)
@@ -440,8 +439,7 @@ void RL::ReadYamlRL(std::string robot_path)
     this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<double>(config["default_dof_pos"])).view({1, -1});
     this->params.joint_names = ReadVectorFromYaml<std::string>(config["joint_names"]);
     this->params.joint_controller_names = ReadVectorFromYaml<std::string>(config["joint_controller_names"]);
-    this->params.command_mapping = ReadVectorFromYaml<int>(config["command_mapping"]);
-    this->params.state_mapping = ReadVectorFromYaml<int>(config["state_mapping"]);
+    this->params.joint_mapping = ReadVectorFromYaml<int>(config["joint_mapping"]);
 }
 
 void RL::CSVInit(std::string robot_path)
