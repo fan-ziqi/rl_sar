@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<robot name="go2w_description" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:include filename="$(find go2w_description)/urdf/go2w_description.urdf"/>
+    <xacro:include filename="$(find go2w_description)/xacro/gazebo.xacro"/>
+
+</robot>

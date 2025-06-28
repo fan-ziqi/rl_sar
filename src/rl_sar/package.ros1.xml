@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package format="2">
+    <name>rl_sar</name>
+    <version>3.0.0</version>
+    <description>The rl_sar package</description>
+
+    <maintainer email="fanziqi614@gmail.com">Ziqi Fan</maintainer>
+
+    <license>Apache-2.0</license>
+
+    <buildtool_depend>catkin</buildtool_depend>
+    <buildtool_depend>genmsg</buildtool_depend>
+    <build_depend>controller_manager</build_depend>
+    <build_depend>joint_state_controller</build_depend>
+    <build_depend>robot_state_publisher</build_depend>
+    <build_depend>roscpp</build_depend>
+    <build_depend>std_msgs</build_depend>
+    <build_export_depend>controller_manager</build_export_depend>
+    <build_export_depend>joint_state_controller</build_export_depend>
+    <build_export_depend>robot_state_publisher</build_export_depend>
+    <build_export_depend>roscpp</build_export_depend>
+    <build_export_depend>std_msgs</build_export_depend>
+    <exec_depend>controller_manager</exec_depend>
+    <exec_depend>joint_state_controller</exec_depend>
+    <exec_depend>robot_state_publisher</exec_depend>
+    <exec_depend>roscpp</exec_depend>
+    <exec_depend>std_msgs</exec_depend>
+    <build_depend>rospy</build_depend>
+    <exec_depend>rospy</exec_depend>
+    <depend>robot_msgs</depend>
+    <depend>robot_joint_controller</depend>
+
+    <export>
+
+    </export>
+</package>

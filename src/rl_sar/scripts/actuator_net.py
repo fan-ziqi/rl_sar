@@ -240,8 +240,8 @@ def main():
 
     args = parser.parse_args()
 
-    data_path = os.path.join(BASE_PATH, "models", args.data)
-    output_path = os.path.join(BASE_PATH, "models", args.output)
+    data_path = os.path.join(BASE_PATH, "policy", args.data)
+    output_path = os.path.join(BASE_PATH, "policy", args.output)
 
     config = Config()
 

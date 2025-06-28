@@ -1,0 +1,296 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:property name="ros_version" value="$(env ROS_VERSION)" />
+
+    <xacro:if value="${int(ros_version) == 1}">
+
+    <!-- ros_control plugin -->
+    <gazebo>
+        <plugin filename="libgazebo_ros_control.so" name="gazebo_ros_control">
+        <robotNamespace>/gr1t1_gazebo</robotNamespace>
+        <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+        </plugin>
+    </gazebo>
+    <!-- Show the trajectory of base_link center. -->
+    <!-- <gazebo>
+            <plugin name="3dplot" filename="libLinkPlot3DPlugin.so">
+                <frequency>10</frequency>
+                <plot>
+                    <link>base</link>
+                    <pose>0 0 0 0 0 0</pose>
+                    <material>Gazebo/Yellow</material>
+                </plot>
+            </plugin>
+        </gazebo> -->
+    <!-- Show the trajectory of foot. You can add another trajectory about another foot. -->
+    <!-- <gazebo>
+            <plugin name="3dplot" filename="libLinkPlot3DPlugin.so">
+                <frequency>100</frequency>
+                <plot>
+                    <link>FL_foot</link>
+                    <pose>0 0 0 0 0 0</pose>
+                    <material>Gazebo/Green</material>
+                </plot>
+            </plugin>
+        </gazebo> -->
+    <gazebo>
+        <plugin filename="libgazebo_ros_force.so" name="gazebo_ros_force">
+        <bodyName>base_link</bodyName>
+        <topicName>/apply_force/base_link</topicName>
+        </plugin>
+    </gazebo>
+    <gazebo reference="imu_link">
+        <gravity>true</gravity>
+        <sensor name="imu_sensor" type="imu">
+        <always_on>true</always_on>
+        <update_rate>1000</update_rate>
+        <visualize>true</visualize>
+        <topic>__default_topic__</topic>
+        <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+            <topicName>base_link_imu</topicName>
+            <bodyName>imu_link</bodyName>
+            <updateRateHZ>1000.0</updateRateHZ>
+            <gaussianNoise>0.0</gaussianNoise>
+            <xyzOffset>0 0 0</xyzOffset>
+            <rpyOffset>0 0 0</rpyOffset>
+            <frameName>imu_link</frameName>
+        </plugin>
+        <pose>0 0 0 0 0 0</pose>
+        </sensor>
+    </gazebo>
+
+    </xacro:if>
+
+    <xacro:if value="${int(ros_version) == 2}">
+
+    <gazebo reference="imu_link">
+      <sensor name="imu_sensor" type="imu">
+      <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+          <ros>
+            <namespace>/</namespace>
+            <remapping>~/out:=imu</remapping>
+          </ros>
+          <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        </plugin>
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <visualize>true</visualize>
+        <imu>
+          <angular_velocity>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </gazebo>
+
+    <ros2_control name="GazeboSystem" type="system">
+        <hardware>
+            <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+        </hardware>
+
+        <xacro:macro name="joint_interface" params="joint_name effort_limit">
+            <joint name="${joint_name}">
+            <command_interface name="effort">
+                <param name="min">-${effort_limit}</param>
+                <param name="max">${effort_limit}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+            </joint>
+        </xacro:macro>
+
+        <xacro:macro name="leg_joints" params="prefix">
+            <xacro:joint_interface joint_name="${prefix}_hip_roll" effort_limit="60"/>
+            <xacro:joint_interface joint_name="${prefix}_hip_yaw" effort_limit="45"/>
+            <xacro:joint_interface joint_name="${prefix}_hip_pitch" effort_limit="130"/>
+            <xacro:joint_interface joint_name="${prefix}_knee_pitch" effort_limit="130"/>
+            <xacro:joint_interface joint_name="${prefix}_ankle_pitch" effort_limit="16"/>
+            <xacro:joint_interface joint_name="${prefix}_ankle_roll" effort_limit="8"/>
+        </xacro:macro>
+
+        <xacro:macro name="arm_joints" params="prefix">
+            <xacro:joint_interface joint_name="${prefix}_shoulder_pitch" effort_limit="18"/>
+            <xacro:joint_interface joint_name="${prefix}_shoulder_roll" effort_limit="18"/>
+            <xacro:joint_interface joint_name="${prefix}_shoulder_yaw" effort_limit="18"/>
+            <xacro:joint_interface joint_name="${prefix}_elbow_pitch" effort_limit="18"/>
+            <xacro:joint_interface joint_name="${prefix}_wrist_yaw" effort_limit="10.2"/>
+            <xacro:joint_interface joint_name="${prefix}_wrist_roll" effort_limit="3.95"/>
+            <xacro:joint_interface joint_name="${prefix}_wrist_pitch" effort_limit="3.95"/>
+        </xacro:macro>
+
+        <xacro:macro name="body_joints">
+            <xacro:joint_interface joint_name="waist_yaw" effort_limit="45"/>
+            <xacro:joint_interface joint_name="waist_pitch" effort_limit="45"/>
+            <xacro:joint_interface joint_name="waist_roll" effort_limit="45"/>
+            <xacro:joint_interface joint_name="head_yaw" effort_limit="10.2"/>
+            <xacro:joint_interface joint_name="head_roll" effort_limit="3.95"/>
+            <xacro:joint_interface joint_name="head_pitch" effort_limit="3.95"/>
+        </xacro:macro>
+
+        <xacro:leg_joints prefix="l"/>
+        <xacro:leg_joints prefix="r"/>
+        <xacro:arm_joints prefix="l"/>
+        <xacro:arm_joints prefix="r"/>
+        <xacro:body_joints/>
+
+    </ros2_control>
+
+    <gazebo>
+        <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+            <parameters>$(find gr1t1_description)/config/robot_control_ros2.yaml</parameters>
+        </plugin>
+    </gazebo>
+
+    </xacro:if>
+
+    <gazebo reference="base">
+        <material>Gazebo/DarkGrey</material>
+        <turnGravityOff>false</turnGravityOff>
+    </gazebo>
+    <gazebo reference="base_link">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <kp value="1000000.0"/>
+        <kd value="1.0"/>
+    </gazebo>
+    <gazebo reference="imu_link">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <material>Gazebo/Red</material>
+    </gazebo>
+
+    <!-- left leg -->
+    <gazebo reference="l_thigh_roll">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+    <gazebo reference="l_thigh_yaw">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+    <gazebo reference="l_thigh_pitch">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+    <gazebo reference="l_shank_pitch">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+    <gazebo reference="l_foot_pitch">
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+        <self_collide>1</self_collide>
+        <kp value="1000000.0"/>
+        <kd value="1.0"/>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+    <gazebo reference="l_foot_roll">
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+        <self_collide>1</self_collide>
+        <kp value="1000000.0"/>
+        <kd value="1.0"/>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+
+    <!-- right leg -->
+    <gazebo reference="r_thigh_roll">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+    <gazebo reference="r_thigh_yaw">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+    <gazebo reference="r_thigh_pitch">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+    <gazebo reference="r_shank_pitch">
+        <mu1>0.2</mu1>
+        <mu2>0.2</mu2>
+        <self_collide>1</self_collide>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+    <gazebo reference="r_foot_pitch">
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+        <self_collide>1</self_collide>
+        <kp value="1000000.0"/>
+        <kd value="1.0"/>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+    <gazebo reference="r_foot_roll">
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+        <self_collide>1</self_collide>
+        <kp value="1000000.0"/>
+        <kd value="1.0"/>
+        <material>Gazebo/DarkGrey</material>
+    </gazebo>
+
+</robot>

@@ -1,0 +1,12 @@
+<library path="robot_joint_controller">
+  <class name="robot_joint_controller/RobotJointController"
+         type="robot_joint_controller::RobotJointController"
+         base_class_type="controller_interface::ControllerInterface">
+    <description>The robot joint single controller</description>
+  </class>
+  <class name="robot_joint_controller/RobotJointControllerGroup"
+         type="robot_joint_controller::RobotJointControllerGroup"
+         base_class_type="controller_interface::ControllerInterface">
+    <description>The robot joint group controller</description>
+  </class>
+</library>

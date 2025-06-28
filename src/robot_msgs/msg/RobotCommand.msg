@@ -1,1 +1,1 @@
-MotorCommand[32] motor_command
+MotorCommand[] motor_command

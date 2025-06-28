@@ -7,18 +7,28 @@
 
 [English document](README.md)
 
-**版本选择: [ROS-Noetic](https://github.com/fan-ziqi/rl_sar/tree/main) | [ROS2-Foxy/Humble](https://github.com/fan-ziqi/rl_sar/tree/ros2)**
-
-> [!IMPORTANT]
-> 本仓库持续维护 ROS1 的 C++ 版本，而 ROS2 版本和 Python 版本未能同步更新，部分功能可能缺失或存在差异。因此，建议优先使用 ROS1 的 C++ 版本，以获得最新的功能特性和 bug 修复。
-
 本仓库提供了机器人强化学习算法的仿真验证与实物部署框架，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
 
-特性：
-- 内置多种机器人仿真的预训练模型，包括 `Unitree-A1`、`Unitree-Go2`、`Unitree-Go2W`、`Unitree-B2`、`Unitree-B2W`、`Unitree-G1`、`FFTAI-GR1T1`、`FFTAI-GR1T2`、`GoldenRetriever-L4W0`、`GoldenRetriever-L4W4`；
-- 训练框架支持**IsaacGym**和**IsaacSim**，用`framework`加以区分；
-- 代码有**ROS-Noetic**和**ROS2-Foxy/Humble**两个版本；
-- 代码有**python**和**cpp**两个版本，其中python版本在`src/rl_sar/scripts`内；
+> 支持**IsaacGym**和**IsaacSim**
+>
+> 支持**ROS-Noetic**和**ROS2-Foxy/Humble**
+
+支持列表：
+
+|Robot Name (rname:=)|Pre-Trained Policy|Real|
+|-|-|-|
+|Unitree-A1 (a1)|legged_gym (IsaacGym)|✅|
+|Unitree-Go2 (go2)|himloco (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
+|Unitree-Go2W (go2w)|robot_lab (IsaacSim)|✅|
+|Unitree-B2 (b2)|robot_lab (IsaacSim)|⚪|
+|Unitree-B2W (b2w)|robot_lab (IsaacSim)|⚪|
+|Unitree-G1 (g1)|unitree_rl_gym (IsaacGym)</br>robomimic pre-loco (IsaacGym)</br>robomimic_dance (IsaacGym)</br>robomimic_kick (IsaacGym)</br>robomimic_kungfu (IsaacGym)|✅</br>✅</br>✅</br>🚫</br>🚫|
+|FFTAI-GR1T1 (gr1t1)|legged_gym (IsaacGym)|⚪|
+|FFTAI-GR1T2 (gr1t2)|legged_gym (IsaacGym)|⚪|
+|GoldenRetriever-L4W4 (l4w4)|legged_gym (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
+
+> [!IMPORTANT]
+> Python版本暂时停止维护，如有需要请使用[v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3)版本，后续可能会重新上线。
 
 > [!NOTE]
 > 如果你想使用IsaacLab（IsaacSim）训练策略，请使用 [robot_lab](https://github.com/fan-ziqi/robot_lab) 项目。
@@ -26,6 +36,9 @@
 > robot_lab配置文件中的关节顺序 `joint_names` 与本项目代码中 `xxx/robot_lab/config.yaml` 中定义的相同。
 >
 > 在 [Github Discussion](https://github.com/fan-ziqi/rl_sar/discussions) 或 [Discord](https://discord.gg/MC9KguQHtt) 中讨论
+
+> [!CAUTION]
+> **免责声明：使用者确认使用本代码产生的所有风险及后果均由使用者自行承担，作者不承担任何直接或间接责任，操作前必须确保已采取充分安全防护措施。**
 
 ## 准备
 
@@ -37,16 +50,22 @@ git clone https://github.com/fan-ziqi/rl_sar.git
 
 ## 依赖
 
-本项目使用`ros-noetic`(Ubuntu20.04)，且需要安装以下的ros依赖包
+如果您使用`ros-noetic`(Ubuntu20.04)，需要安装以下的ros依赖包：
 
 ```bash
 sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller ros-noetic-joy ros-noetic-ros-control ros-noetic-ros-controllers ros-noetic-controller-manager
 ```
 
+如果您使用`ros2-foxy`(Ubuntu20.04)或`ros2-humble`(Ubuntu22.04)，需要安装以下的ros依赖包：
+
+```bash
+sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-control ros-$ROS_DISTRO-ros2-controllers ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-robot-state-publisher ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-gazebo-ros2-control ros-$ROS_DISTRO-gazebo-ros-pkgs ros-$ROS_DISTRO-xacro
+```
+
 在任意位置下载并部署`libtorch`（请修改下面的 **\<YOUR_PATH\>** 为实际路径）
 
 ```bash
-cd <YOUR_PATH>/libtorch
+cd <YOUR_PATH>
 wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip
 unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
 echo 'export Torch_DIR=<YOUR_PATH>/libtorch' >> ~/.bashrc
@@ -57,12 +76,6 @@ source ~/.bashrc
 
 ```bash
 sudo apt install liblcm-dev libyaml-cpp-dev
-```
-
-本项目使用Intel TBB（Threading Building Blocks）库进行线程间数据交换，若您使用Ubuntu，可直接使用包管理器进行安装
-
-```bash
-sudo apt install libtbb-dev
 ```
 
 <details>
@@ -92,73 +105,122 @@ sudo ldconfig
 
 ## 编译
 
-### 使用catkin编译
+由于本项目支持多版本的ROS，需要针对不同版本创建一些软链接，项目根目录中提供了编译脚本供一键编译。
 
-在项目根目录编译
+在项目根目录中执行下面的脚本编译整个项目
 
 ```bash
-cd ..
-catkin build
+./build.sh
 ```
 
-如果需要用到ROS，需要手动打开对应`rl_xxx.hpp`中的宏定义
+若想单独编译某几个包，可以在后面加上包名
 
-> [!NOTE]
+```bash
+./build.sh package1 package2
+```
+
+若想删除构建，可以使用下列命令，此命令会删除所有编译产物和创建的软链接
+
+```bash
+./build.sh -c  # or ./build.sh --clean
+```
+
+如果不需要仿真，只在机器人上运行，可以使用CMake进行编译，同时禁用ROS（编译生成的可执行文件在`cmake_build/bin`中，库在`cmake_build/lib`中）
+
+```bash
+./build.sh -m  # or ./build.sh --cmake
+```
+
+详细的使用说明可以通过`./build.sh -h`查看
+
+```bash
+Usage: ./build.sh [OPTIONS] [PACKAGE_NAMES...]
+
+Options:
+  -c, --clean    Clean workspace (remove symlinks and build artifacts)
+  -m, --cmake    Build using CMake (for hardware deployment only)
+  -h, --help     Show this help message
+
+Examples:
+  ./build.sh                    # Build all ROS packages
+  ./build.sh package1 package2  # Build specific ROS packages
+  ./build.sh -c                 # Clean all symlinks and build artifacts
+  ./build.sh --clean package1   # Clean specific package and build artifacts
+  ./build.sh -m                 # Build with CMake for hardware deployment
+```
+
+> [!TIP]
 > 如果 catkin build 报错: `Unable to find either executable 'empy' or Python module 'em'`, 在`catkin build` 之前执行 `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3`
-
-### 使用Cmake编译
-
-如果不需要仿真，只在机器人上运行，可以不用catkin编译，同时禁用ROS：
-
-```bash
-cmake src/rl_sar/ -B cmake_build -DUSE_CATKIN=OFF
-cmake --build cmake_build -j4
-```
-
-编译生成的可执行文件在`cmake_build/bin`中，库在`cmake_build/lib`中。
 
 ## 运行
 
-下文中使用 **\<ROBOT\>/\<CONFIG\>** 代替表示不同的环境，如 `a1/isaacgym` 、 `go2/himloco`。
+下文中使用 **\<ROBOT\>/\<CONFIG\>** 代替表示不同的环境，如 `go2/himloco` 、 `go2w/robot_lab`。
 
-运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/models/<ROBOT>/<CONFIG>`中，并配置`<ROBOT>/<CONFIG>/config.yaml`和`<ROBOT>/base.yaml`中的参数。
+运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>`中，并配置`<ROBOT>/<CONFIG>/config.yaml`和`<ROBOT>/base.yaml`中的参数。
 
 ### 仿真
 
 打开一个终端，启动gazebo仿真环境
 
 ```bash
+# ROS1
 source devel/setup.bash
-roslaunch rl_sar gazebo_<ROBOT>.launch cfg:=<CONFIG>
+roslaunch rl_sar gazebo.launch rname:=<ROBOT>
+
+# ROS2
+source install/setup.bash
+ros2 launch rl_sar gazebo.launch.py rname:=<ROBOT>
 ```
 
 打开一个新终端，启动控制程序
 
 ```bash
+# ROS1
 source devel/setup.bash
-(for cpp version)    rosrun rl_sar rl_sim
-(for python version) rosrun rl_sar rl_sim.py
+rosrun rl_sar rl_sim
+
+# ROS2
+source install/setup.bash
+ros2 run rl_sar rl_sim
 ```
 
-键盘控制：
+如果第一次启动Gazebo无法打开则需要下载模型包
 
-- 按 **\<Enter\>** 切换仿真器运行/停止。
-- 按 **0** 让机器人从仿真开始的姿态以位控插值运动到yaml中定义的`default_dof_pos`。
-- 按 **p** 切换到强化学习模式。
-- **W/S** 控制前后移动，**J/L** 控制左右移动，**A/D** 控制转向，按 **\<Space\>** 将所有控制指令设置为零。
-- 按 **n** 切换到导航模式，屏蔽手柄命令，接收`cmd_vel`话题。
-- 如果机器人摔倒，按 **R** 重置Gazebo环境。
-- 按 **1** 让机器人从当前位置以位控插值运动到仿真开始的姿态。
+```bash
+git clone https://github.com/osrf/gazebo_models.git ~/.gazebo/models
+```
 
-手柄控制：
+### 手柄与键盘控制
 
-- 按 **LB** 切换仿真器运行/停止。
-- 按 **RB+Y** 让机器人从仿真开始的姿态以位控插值运动到yaml中定义的`default_dof_pos`。
-- 按 **RB+B** 切换到强化学习模式。
-- **LY** 控制前后移动，**LX** 控制左右移动，**RX** 控制转向。
-- 按 **左面的下键** 切换到导航模式，屏蔽手柄命令，接收`cmd_vel`话题。
-- 如果机器人摔倒，按 **RB+X** 重置Gazebo环境。
-- 按 **RB+A** 让机器人从当前位置以位控插值运动到仿真开始的姿态。
+|手柄控制|键盘控制|功能描述|
+|---|---|---|
+|**基础**|||
+|A|Num0|让机器人从程序开始运行时的姿态以位控插值运动到`base.yaml`中定义的`default_dof_pos`|
+|B|Num9|让机器人从当前位置以位控插值运动到程序开始运行时的姿态|
+|X|N|切换导航模式 (导航模式屏蔽速度命令，接收`cmd_vel`话题)|
+|Y|N/A|N/A|
+|**仿真**|||
+|RB+Y|R|重置Gazebo环境 (让摔倒的机器人站起来)|
+|RB+X|Enter|切换Gazebo运行/停止 (默认为运行状态)|
+|**电机**|||
+|LB+A|M|N/A (推荐设置为电机使能)|
+|LB+B|K|N/A (推荐设置为电机失能)|
+|LB+X|P|电机Passive模式 (`kp=0, kd=8`)|
+|LB+RB|N/A|N/A (推荐设置为急停保护)|
+|**技能**|||
+|RB+DPadUp|Num1|基础Locomotion|
+|RB+DPadDown|Num2|技能2|
+|RB+DPadLeft|Num3|技能3|
+|RB+DPadRight|Num4|技能4|
+|LB+DPadUp|Num5|技能5|
+|LB+DPadDown|Num6|技能6|
+|LB+DPadLeft|Num7|技能7|
+|LB+DPadRight|Num8|技能8|
+|**移动**|||
+|LY轴|W/S|前后移动 (X轴)|
+|LX轴|A/D|左右移动 (Y轴)|
+|RX轴|Q/E|偏航旋转 (Yaw)|
+|N/A(松开摇杆)|Space|将所有控制指令设置为零|
 
 ### 真实机器人
 
@@ -174,34 +236,63 @@ source devel/setup.bash
 新建终端，启动控制程序
 
 ```bash
+# ROS1
 source devel/setup.bash
 rosrun rl_sar rl_real_a1
+
+# ROS2
+source install/setup.bash
+ros2 run rl_sar rl_real_a1
+
+# CMake
+./cmake_build/bin/rl_real_a1
 ```
-
-按下遥控器的**R2**键让机器人切换到默认站起姿态，按下**R1**键切换到RL控制模式，任意状态按下**L2**切换到最初的趴下姿态。左摇杆上下控制x，左摇杆左右控制yaw，右摇杆左右控制y。
-
-或者按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P**键切换到RL控制模式，任意状态按下**1**键切换到最初的趴下姿态。WS控制x，AD控制yaw，JL控制y。
 
 </details>
 
 <details>
 
-<summary>Unitree Go2/Go2W（点击展开）</summary>
+<summary>Unitree Go2/Go2W/G1(29dofs)（点击展开）</summary>
 
 #### 网线连接
 
-用网线的一端连接Go2/Go2W机器人，另一端连接你的电脑，并开启电脑的 USB Ethernet 后进行配置。机器狗机载电脑的 IP 地地址为 `192.168.123.161`，故需将电脑 USB Ethernet 地址设置为与机器狗同一网段，如在 Address 中输入 `192.168.123.222` (`222`可以改成其他)。
+用网线的一端连接Go2/Go2W/G1(29dofs)机器人，另一端连接你的电脑，并开启电脑的 USB Ethernet 后进行配置。机器狗机载电脑的 IP 地地址为 `192.168.123.161`，故需将电脑 USB Ethernet 地址设置为与机器狗同一网段，如在 Address 中输入 `192.168.123.222` (`222`可以改成其他)。
 
 通过`ifconfig`命令查看123网段的网卡名字，如`enxf8e43b808e06`，下文用 \<YOUR_NETWORK_INTERFACE\> 代替
+
+Go2:
 
 新建终端，启动控制程序。如果控制Go2W，需要在命令后加`wheel`，否则留空。
 
 ```bash
+# ROS1
 source devel/setup.bash
 rosrun rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
+
+# ROS2
+source install/setup.bash
+ros2 run rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
+
+# CMake
+./cmake_build/bin/rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
 ```
 
-Go2/Go2W支持手柄与键盘控制，方法与上面a1相同
+G1(29dofs):
+
+开机后将机器人吊起来，按L2+R2进入调试模式，然后新建终端，启动控制程序。
+
+```bash
+# ROS1
+source devel/setup.bash
+rosrun rl_sar rl_real_g1 <YOUR_NETWORK_INTERFACE>
+
+# ROS2
+source install/setup.bash
+ros2 run rl_sar rl_real_g1 <YOUR_NETWORK_INTERFACE>
+
+# CMake
+./cmake_build/bin/rl_real_g1 <YOUR_NETWORK_INTERFACE>
+```
 
 #### 在机载Jetson中部署
 
@@ -241,7 +332,7 @@ echo 'export Torch_DIR=~/libtorch' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-拉取代码并编译，见上文
+拉取代码并编译，流程与上文相同。
 
 </details>
 
@@ -251,7 +342,7 @@ source ~/.bashrc
 
 1. 取消注释`rl_real_a1.hpp`中最上面的`#define CSV_LOGGER`，你也可以在仿真程序中修改对应部分采集仿真数据用来测试训练过程。
 2. 运行控制程序，程序会在执行后记录所有数据。
-3. 停止控制程序，开始训练执行器网络。注意，下面的路径前均省略了`rl_sar/src/rl_sar/models/`。
+3. 停止控制程序，开始训练执行器网络。注意，下面的路径前均省略了`rl_sar/src/rl_sar/policy/`。
     ```bash
     rosrun rl_sar actuator_net.py --mode train --data a1/motor.csv --output a1/motor.pt
     ```
@@ -262,13 +353,28 @@ source ~/.bashrc
 
 ## 添加你的机器人
 
-下文中使用 **\<ROBOT\>/\<CONFIG\>** 代替表示你的机器人环境
+下面使用 **\<ROBOT\>/\<CONFIG\>** 代替表示你的机器人环境，且路径均在`rl_sar/src/`下。您只需要创建或修改下述文件，命名必须跟下面一样。（你可以参考go2w对应的文件）
 
-1. 在`rl_sar/src/robots`路径下创建名为`<ROBOT>_description`的模型包，将模型的urdf放到`rl_sar/src/robots/<ROBOT>_description/urdf`路径下并命名为`<ROBOT>.urdf`，并在`rl_sar/src/robots/<ROBOT>_description/config`路径下创建命名空间为`<ROBOT>_gazebo`的关节配置文件。
-2. 将训练好的RL模型文件放到`rl_sar/src/rl_sar/models/<ROBOT>/<CONFIG>`路径下，在此路径中新建config.yaml文件，参考`rl_sar/src/rl_sar/models/a1/isaacgym/config.yaml`文件修改其中参数；在其上级目录新建base.yaml文件，参考`rl_sar/src/rl_sar/models/a1/base.yaml`文件修改其中参数。
-3. 按需修改代码中的`forward()`函数，以适配不同的模型。
-4. 若需要运行仿真，则参考`rl_sar/src/rl_sar/launch`路径下的launch文件自行修改。
-5. 若需要运行实物，则参考`rl_sar/src/rl_sar/src/rl_real_a1.cpp`文件自行修改。
+```yaml
+# 你的机器人description
+robots/<ROBOT>_description/CMakeLists.txt
+robots/<ROBOT>_description/package.ros1.xml
+robots/<ROBOT>_description/package.ros2.xml
+robots/<ROBOT>_description/xacro/robot.xacro
+robots/<ROBOT>_description/xacro/gazebo.xacro
+robots/<ROBOT>_description/config/robot_control.yaml
+robots/<ROBOT>_description/config/robot_control_ros2.yaml
+
+# 你训练的policy
+rl_sar/policy/fsm.hpp
+rl_sar/policy/<ROBOT>/fsm.hpp
+rl_sar/policy/<ROBOT>/base.yaml  # 此文件中必须遵守实物机器人的关节顺序
+rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml  # 此文件中可以是训练时指定的关节顺序
+rl_sar/policy/<ROBOT>/<CONFIG>/<POLICY>.pt  # 必须导出jit才可使用
+
+# 你实物机器人的代码
+rl_sar/src/rl_real_<ROBOT>.cpp  # 可以按需自定义forward()函数以适配您的policy
+```
 
 ## 贡献
 
@@ -296,4 +402,4 @@ source ~/.bashrc
 - [unitreerobotics/unitree_guide](https://github.com/unitreerobotics/unitree_guide)
 - [mertgungor/unitree_model_control](https://github.com/mertgungor/unitree_model_control)
 - [src/rl_sar/scripts/actuator_net.py](src/rl_sar/scripts/actuator_net.py) 中的代码修改自 [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways) 仓库中的 [scripts/actuator_net](https://github.com/Improbable-AI/walk-these-ways/tree/master/scripts/actuator_net)
-
+- - Unitree-G1 RoboMimic pre-trained policies from [ccrpRepo/RoboMimic_Deploy](https://github.com/ccrpRepo/RoboMimic_Deploy)

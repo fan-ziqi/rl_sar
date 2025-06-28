@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>robot_joint_controller</name>
+  <version>3.0.0</version>
+  <description>The robot_joint_controller package</description>
+
+  <maintainer email="fanziqi614@gmail.com">Ziqi Fan</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>urdf</depend>
+  <depend>control_toolbox</depend>
+  <depend>realtime_tools</depend>
+  <depend>hardware_interface</depend>
+  <depend>controller_interface</depend>
+  <depend>pluginlib</depend>
+  <depend>robot_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>rcl_interfaces</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <pluginlib plugin="${prefix}/share/${PROJECT_NAME}/robot_joint_controller_plugins.xml"/>
+  </export>
+</package>

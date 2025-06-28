@@ -1,0 +1,113 @@
+controller_manager:
+    ros__parameters:
+        update_rate: 1000  # Hz
+        # use_sim_time: true  # If running in simulation
+
+        joint_state_broadcaster:
+            type: joint_state_broadcaster/JointStateBroadcaster
+
+        imu_sensor_broadcaster:
+            type: imu_sensor_broadcaster/ImuSensorBroadcaster
+
+        # FL Controllers ---------------------------------------
+        FL_hip_controller:
+            type: robot_joint_controller/RobotJointController
+        FL_thigh_controller:
+            type: robot_joint_controller/RobotJointController
+        FL_calf_controller:
+            type: robot_joint_controller/RobotJointController
+
+        # FR Controllers ---------------------------------------
+        FR_hip_controller:
+            type: robot_joint_controller/RobotJointController
+        FR_thigh_controller:
+            type: robot_joint_controller/RobotJointController
+        FR_calf_controller:
+            type: robot_joint_controller/RobotJointController
+
+        # RL Controllers ---------------------------------------
+        RL_hip_controller:
+            type: robot_joint_controller/RobotJointController
+        RL_thigh_controller:
+            type: robot_joint_controller/RobotJointController
+        RL_calf_controller:
+            type: robot_joint_controller/RobotJointController
+
+        # RR Controllers ---------------------------------------
+        RR_hip_controller:
+            type: robot_joint_controller/RobotJointController
+        RR_thigh_controller:
+            type: robot_joint_controller/RobotJointController
+        RR_calf_controller:
+            type: robot_joint_controller/RobotJointController
+
+
+# FL Controllers ---------------------------------------
+FL_hip_controller:
+    ros__parameters:
+        joint: FL_hip_joint
+        pid: {p: 100.0, i: 0.0, d: 5.0}
+
+FL_thigh_controller:
+    ros__parameters:
+        joint: FL_thigh_joint
+        pid: {p: 300.0, i: 0.0, d: 8.0}
+
+FL_calf_controller:
+    ros__parameters:
+        joint: FL_calf_joint
+        pid: {p: 300.0, i: 0.0, d: 8.0}
+
+# FR Controllers ---------------------------------------
+FR_hip_controller:
+    ros__parameters:
+        joint: FR_hip_joint
+        pid: {p: 100.0, i: 0.0, d: 5.0}
+
+FR_thigh_controller:
+    ros__parameters:
+        joint: FR_thigh_joint
+        pid: {p: 300.0, i: 0.0, d: 8.0}
+
+FR_calf_controller:
+    ros__parameters:
+        joint: FR_calf_joint
+        pid: {p: 300.0, i: 0.0, d: 8.0}
+
+# RL Controllers ---------------------------------------
+RL_hip_controller:
+    ros__parameters:
+        joint: RL_hip_joint
+        pid: {p: 100.0, i: 0.0, d: 5.0}
+
+RL_thigh_controller:
+    ros__parameters:
+        joint: RL_thigh_joint
+        pid: {p: 300.0, i: 0.0, d: 8.0}
+
+RL_calf_controller:
+    ros__parameters:
+        joint: RL_calf_joint
+        pid: {p: 300.0, i: 0.0, d: 8.0}
+
+# RR Controllers ---------------------------------------
+RR_hip_controller:
+    ros__parameters:
+        joint: RR_hip_joint
+        pid: {p: 100.0, i: 0.0, d: 5.0}
+
+RR_thigh_controller:
+    ros__parameters:
+        joint: RR_thigh_joint
+        pid: {p: 300.0, i: 0.0, d: 8.0}
+
+RR_calf_controller:
+    ros__parameters:
+        joint: RR_calf_joint
+        pid: {p: 300.0, i: 0.0, d: 8.0}
+
+imu_sensor_broadcaster:
+    ros__parameters:
+        sensor_name: "imu_sensor"
+        frame_id: imu_link
+

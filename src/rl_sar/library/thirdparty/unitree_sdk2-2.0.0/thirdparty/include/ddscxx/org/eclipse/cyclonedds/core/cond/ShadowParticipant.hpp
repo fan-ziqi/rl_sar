@@ -36,7 +36,7 @@ namespace cond
 {
     class ShadowParticipant {
     public:
-        static ShadowParticipant& getInstance()
+        static ShadowParticipant& GetInstance()
         {
             org::eclipse::cyclonedds::core::ScopedMutexLock scopedLock(mutex_);
 
