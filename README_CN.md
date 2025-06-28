@@ -22,7 +22,7 @@
 |Unitree-Go2W (go2w)|robot_lab (IsaacSim)|✅|
 |Unitree-B2 (b2)|robot_lab (IsaacSim)|⚪|
 |Unitree-B2W (b2w)|robot_lab (IsaacSim)|⚪|
-|Unitree-G1 (g1)|unitree_rl_gym (IsaacGym)</br>robomimic_dance (IsaacGym)</br>robomimic_kick (IsaacGym)</br>robomimic_kungfu (IsaacGym)|✅</br>⚪</br>⚪</br>⚪|
+|Unitree-G1 (g1)|unitree_rl_gym (IsaacGym)</br>robomimic pre-loco (IsaacGym)</br>robomimic_dance (IsaacGym)</br>robomimic_kick (IsaacGym)</br>robomimic_kungfu (IsaacGym)|✅</br>✅</br>✅</br>🚫</br>🚫|
 |FFTAI-GR1T1 (gr1t1)|legged_gym (IsaacGym)|⚪|
 |FFTAI-GR1T2 (gr1t2)|legged_gym (IsaacGym)|⚪|
 |GoldenRetriever-L4W4 (l4w4)|legged_gym (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
