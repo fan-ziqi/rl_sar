@@ -6,17 +6,38 @@
 #include "rl_real_l4w4.hpp"
 
 RL_Real::RL_Real()
+#if defined(USE_ROS2)
+    : rclcpp::Node("rl_real_node")
+#endif
 {
-#ifdef USE_ROS
-    // init ros
+#if defined(USE_ROS1)
     ros::NodeHandle nh;
     this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Real::CmdvelCallback, this);
+#elif defined(USE_ROS2)
+    this->cmd_vel_subscriber = this->create_subscription<geometry_msgs::msg::Twist>(
+        "/cmd_vel", rclcpp::SystemDefaultsQoS(),
+        [this] (const geometry_msgs::msg::Twist::SharedPtr msg) {this->CmdvelCallback(msg);}
+    );
 #endif
 
     // read params from yaml
+    this->ang_vel_type = "ang_vel_body";
     this->robot_name = "l4w4";
-    this->default_rl_config = "legged_gym";
     this->ReadYamlBase(this->robot_name);
+
+    // auto load FSM by robot_name
+    if (FSMManager::GetInstance().IsTypeSupported(this->robot_name))
+    {
+        auto fsm_ptr = FSMManager::GetInstance().CreateFSM(this->robot_name, this);
+        if (fsm_ptr)
+        {
+            this->fsm = *fsm_ptr;
+        }
+    }
+    else
+    {
+        std::cout << LOGGER::ERROR << "No FSM registered for robot: " << this->robot_name << std::endl;
+    }
 
     // init torch
     torch::autograd::GradMode::set_enabled(false);
@@ -86,37 +107,48 @@ void RL_Real::GetState(RobotState<double> *state)
 
         memcpy(&this->l4w4_joy, this->l4w4_low_state.wirelessRemote, 40);
 
+        if (this->l4w4_joy.btn.components.A) this->control.SetGamepad(Input::Gamepad::A);
+        if (this->l4w4_joy.btn.components.B) this->control.SetGamepad(Input::Gamepad::B);
+        if (this->l4w4_joy.btn.components.X) this->control.SetGamepad(Input::Gamepad::X);
+        if (this->l4w4_joy.btn.components.Y) this->control.SetGamepad(Input::Gamepad::Y);
+        if (this->l4w4_joy.btn.components.L1) this->control.SetGamepad(Input::Gamepad::LB);
+        if (this->l4w4_joy.btn.components.R1) this->control.SetGamepad(Input::Gamepad::RB);
+        if (this->l4w4_joy.btn.components.F1) this->control.SetGamepad(Input::Gamepad::LStick);
+        if (this->l4w4_joy.btn.components.F2) this->control.SetGamepad(Input::Gamepad::RStick);
+        if (this->l4w4_joy.btn.components.up) this->control.SetGamepad(Input::Gamepad::DPadUp);
+        if (this->l4w4_joy.btn.components.down) this->control.SetGamepad(Input::Gamepad::DPadDown);
+        if (this->l4w4_joy.btn.components.left) this->control.SetGamepad(Input::Gamepad::DPadLeft);
+        if (this->l4w4_joy.btn.components.right) this->control.SetGamepad(Input::Gamepad::DPadRight);
+        if (this->l4w4_joy.btn.components.L1 && this->l4w4_joy.btn.components.A) this->control.SetGamepad(Input::Gamepad::LB_A);
+        if (this->l4w4_joy.btn.components.L1 && this->l4w4_joy.btn.components.B) this->control.SetGamepad(Input::Gamepad::LB_B);
+        if (this->l4w4_joy.btn.components.L1 && this->l4w4_joy.btn.components.X) this->control.SetGamepad(Input::Gamepad::LB_X);
+        if (this->l4w4_joy.btn.components.L1 && this->l4w4_joy.btn.components.Y) this->control.SetGamepad(Input::Gamepad::LB_Y);
+        if (this->l4w4_joy.btn.components.L1 && this->l4w4_joy.btn.components.F1) this->control.SetGamepad(Input::Gamepad::LB_LStick);
+        if (this->l4w4_joy.btn.components.L1 && this->l4w4_joy.btn.components.F2) this->control.SetGamepad(Input::Gamepad::LB_RStick);
+        if (this->l4w4_joy.btn.components.L1 && this->l4w4_joy.btn.components.up) this->control.SetGamepad(Input::Gamepad::LB_DPadUp);
+        if (this->l4w4_joy.btn.components.L1 && this->l4w4_joy.btn.components.down) this->control.SetGamepad(Input::Gamepad::LB_DPadDown);
+        if (this->l4w4_joy.btn.components.L1 && this->l4w4_joy.btn.components.left) this->control.SetGamepad(Input::Gamepad::LB_DPadLeft);
+        if (this->l4w4_joy.btn.components.L1 && this->l4w4_joy.btn.components.right) this->control.SetGamepad(Input::Gamepad::LB_DPadRight);
+        if (this->l4w4_joy.btn.components.R1 && this->l4w4_joy.btn.components.A) this->control.SetGamepad(Input::Gamepad::RB_A);
+        if (this->l4w4_joy.btn.components.R1 && this->l4w4_joy.btn.components.B) this->control.SetGamepad(Input::Gamepad::RB_B);
+        if (this->l4w4_joy.btn.components.R1 && this->l4w4_joy.btn.components.X) this->control.SetGamepad(Input::Gamepad::RB_X);
+        if (this->l4w4_joy.btn.components.R1 && this->l4w4_joy.btn.components.Y) this->control.SetGamepad(Input::Gamepad::RB_Y);
+        if (this->l4w4_joy.btn.components.R1 && this->l4w4_joy.btn.components.F1) this->control.SetGamepad(Input::Gamepad::RB_LStick);
+        if (this->l4w4_joy.btn.components.R1 && this->l4w4_joy.btn.components.F2) this->control.SetGamepad(Input::Gamepad::RB_RStick);
+        if (this->l4w4_joy.btn.components.R1 && this->l4w4_joy.btn.components.up) this->control.SetGamepad(Input::Gamepad::RB_DPadUp);
+        if (this->l4w4_joy.btn.components.R1 && this->l4w4_joy.btn.components.down) this->control.SetGamepad(Input::Gamepad::RB_DPadDown);
+        if (this->l4w4_joy.btn.components.R1 && this->l4w4_joy.btn.components.left) this->control.SetGamepad(Input::Gamepad::RB_DPadLeft);
+        if (this->l4w4_joy.btn.components.R1 && this->l4w4_joy.btn.components.right) this->control.SetGamepad(Input::Gamepad::RB_DPadRight);
+        if (this->l4w4_joy.btn.components.L1 && this->l4w4_joy.btn.components.R1) this->control.SetGamepad(Input::Gamepad::LB_RB);
+
         this->control.x = this->l4w4_joy.ly * 1.5f;
         this->control.y = -this->l4w4_joy.lx * 1.5f;
         this->control.yaw = -this->l4w4_joy.rx * 2.0f;
 
-        if ((int)this->l4w4_joy.btn.components.R2 == 1)
-        {
-            this->control.SetControlState(STATE_POS_GETUP);
-        }
-        else if ((int)this->l4w4_joy.btn.components.R1 == 1)
-        {
-            this->control.SetControlState(STATE_RL_LOCOMOTION);
-        }
-        else if ((int)this->l4w4_joy.btn.components.L2 == 1)
-        {
-            this->control.SetControlState(STATE_POS_GETDOWN);
-        }
-
-        if (this->params.framework == "isaacgym")
-        {
-            state->imu.quaternion[3] = this->l4w4_low_state.imu.quaternion[0]; // w
-            state->imu.quaternion[0] = this->l4w4_low_state.imu.quaternion[1]; // x
-            state->imu.quaternion[1] = this->l4w4_low_state.imu.quaternion[2]; // y
-            state->imu.quaternion[2] = this->l4w4_low_state.imu.quaternion[3]; // z
-        }
-        else if (this->params.framework == "isaacsim")
-        {
-            state->imu.quaternion[0] = this->l4w4_low_state.imu.quaternion[0]; // w
-            state->imu.quaternion[1] = this->l4w4_low_state.imu.quaternion[1]; // x
-            state->imu.quaternion[2] = this->l4w4_low_state.imu.quaternion[2]; // y
-            state->imu.quaternion[3] = this->l4w4_low_state.imu.quaternion[3]; // z
-        }
+        state->imu.quaternion[0] = this->l4w4_low_state.imu.quaternion[0]; // w
+        state->imu.quaternion[1] = this->l4w4_low_state.imu.quaternion[1]; // x
+        state->imu.quaternion[2] = this->l4w4_low_state.imu.quaternion[2]; // y
+        state->imu.quaternion[3] = this->l4w4_low_state.imu.quaternion[3]; // z
 
         for (int i = 0; i < 3; ++i)
         {
@@ -125,9 +157,9 @@ void RL_Real::GetState(RobotState<double> *state)
 
         for (int i = 0; i < this->params.num_of_dofs; ++i)
         {
-            state->motor_state.q[i] = this->l4w4_low_state.motorState[this->params.state_mapping[i]].q;
-            state->motor_state.dq[i] = this->l4w4_low_state.motorState[this->params.state_mapping[i]].dq;
-            state->motor_state.tau_est[i] = this->l4w4_low_state.motorState[this->params.state_mapping[i]].tauEst;
+            state->motor_state.q[i] = this->l4w4_low_state.motorState[this->params.joint_mapping[i]].q;
+            state->motor_state.dq[i] = this->l4w4_low_state.motorState[this->params.joint_mapping[i]].dq;
+            state->motor_state.tau_est[i] = this->l4w4_low_state.motorState[this->params.joint_mapping[i]].tauEst;
         }
     }
     else
@@ -140,12 +172,12 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
 {
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
-        this->l4w4_low_command.motorCmd[i].mode = 0x0A;
-        this->l4w4_low_command.motorCmd[i].q = command->motor_command.q[this->params.command_mapping[i]];
-        this->l4w4_low_command.motorCmd[i].dq = command->motor_command.dq[this->params.command_mapping[i]];
-        this->l4w4_low_command.motorCmd[i].Kp = command->motor_command.kp[this->params.command_mapping[i]];
-        this->l4w4_low_command.motorCmd[i].Kd = command->motor_command.kd[this->params.command_mapping[i]];
-        this->l4w4_low_command.motorCmd[i].tau = command->motor_command.tau[this->params.command_mapping[i]];
+        this->l4w4_low_command.motorCmd[this->params.joint_mapping[i]].mode = 0x0A;
+        this->l4w4_low_command.motorCmd[this->params.joint_mapping[i]].q = command->motor_command.q[i];
+        this->l4w4_low_command.motorCmd[this->params.joint_mapping[i]].dq = command->motor_command.dq[i];
+        this->l4w4_low_command.motorCmd[this->params.joint_mapping[i]].Kp = command->motor_command.kp[i];
+        this->l4w4_low_command.motorCmd[this->params.joint_mapping[i]].Kd = command->motor_command.kd[i];
+        this->l4w4_low_command.motorCmd[this->params.joint_mapping[i]].tau = command->motor_command.tau[i];
     }
 
     this->l4w4_sdk.SendUDP(this->l4w4_low_command);
@@ -154,6 +186,50 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
 void RL_Real::RobotControl()
 {
     this->motiontime++;
+
+    if (this->control.current_keyboard == Input::Keyboard::W)
+    {
+        this->control.x += 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::S)
+    {
+        this->control.x -= 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::A)
+    {
+        this->control.y += 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::D)
+    {
+        this->control.y -= 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::Q)
+    {
+        this->control.yaw += 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::E)
+    {
+        this->control.yaw -= 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::Space)
+    {
+        this->control.x = 0;
+        this->control.y = 0;
+        this->control.yaw = 0;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::N || this->control.current_gamepad == Input::Gamepad::X)
+    {
+        this->control.navigation_mode = !this->control.navigation_mode;
+        std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
 
     this->GetState(&this->robot_state);
     this->StateController(&this->robot_state, &this->robot_command);
@@ -166,9 +242,9 @@ void RL_Real::RunModel()
     {
         this->episode_length_buf += 1;
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
-        if (this->fsm._currentState->getStateName() == "RLFSMStateRL_Navigation")
+        if (this->control.navigation_mode)
         {
-#ifdef USE_ROS
+#if !defined(USE_CMAKE)
             this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
 #endif
         }
@@ -217,7 +293,7 @@ torch::Tensor RL_Real::Forward()
     {
         this->history_obs_buf.insert(clamped_obs);
         this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
-        if (this->fsm._currentState->getStateName() != "RLFSMStateRL_LocomotionLab")
+        if (this->fsm.current_state_->GetStateName() != "RLFSMStateRL_LocomotionLab")
         {
             torch::Tensor myTensor = history_obs.view({1,10,57});
             actions = this->model.forward({clamped_obs, myTensor}).toTensor();
@@ -255,7 +331,7 @@ void RL_Real::Plot()
         this->plot_target_joint_pos[i].erase(this->plot_target_joint_pos[i].begin());
         this->plot_real_joint_pos[i].push_back(this->l4w4_low_state.motorState[i].q);
         this->plot_target_joint_pos[i].push_back(this->l4w4_low_command.motorCmd[i].q);
-        plt::subplot(4, 3, i + 1);
+        plt::subplot(this->params.num_of_dofs, 1, i + 1);
         plt::named_plot("_real_joint_pos", this->plot_t, this->plot_real_joint_pos[i], "r");
         plt::named_plot("_target_joint_pos", this->plot_t, this->plot_target_joint_pos[i], "b");
         plt::xlim(this->plot_t.front(), this->plot_t.back());
@@ -264,31 +340,40 @@ void RL_Real::Plot()
     plt::pause(0.0001);
 }
 
-#ifdef USE_ROS
-void RL_Real::CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg)
+#if !defined(USE_CMAKE)
+void RL_Real::CmdvelCallback(
+#if defined(USE_ROS1)
+    const geometry_msgs::Twist::ConstPtr &msg
+#elif defined(USE_ROS2)
+    const geometry_msgs::msg::Twist::SharedPtr msg
+#endif
+)
 {
     this->cmd_vel = *msg;
 }
 #endif
 
+#if defined(USE_ROS1)
 void signalHandler(int signum)
 {
-#ifdef USE_ROS
     ros::shutdown();
-#endif
     exit(0);
 }
+#endif
 
 int main(int argc, char **argv)
 {
+#if defined(USE_ROS1)
     signal(SIGINT, signalHandler);
-#ifdef USE_ROS
     ros::init(argc, argv, "rl_sar");
-#endif
     RL_Real rl_sar;
-#ifdef USE_ROS
     ros::spin();
-#else
+#elif defined(USE_ROS2)
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<RL_Real>());
+    rclcpp::shutdown();
+#elif defined(USE_CMAKE)
+    RL_Real rl_sar;
     while (1) { sleep(10); }
 #endif
     return 0;

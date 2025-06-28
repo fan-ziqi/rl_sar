@@ -1,0 +1,39 @@
+# Copyright (c) 2024-2025 Ziqi Fan
+# SPDX-License-Identifier: Apache-2.0
+
+g1:
+  dt: 0.005
+  decimation: 4
+  fixed_kp: [100.0, 100.0, 100.0, 150.0, 40.0, 40.0,
+             100.0, 100.0, 100.0, 150.0, 40.0, 40.0,
+             300.0, 300.0, 300.0,
+             100.0, 100.0, 50.0, 50.0, 20.0, 20.0, 20.0,
+             100.0, 100.0, 50.0, 50.0, 20.0, 20.0, 20.0]
+  fixed_kd: [2.0, 2.0, 2.0, 4.0, 2.0, 2.0,
+             2.0, 2.0, 2.0, 4.0, 2.0, 2.0,
+             3.0, 3.0, 3.0,
+             2.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0,
+             2.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0]
+  num_of_dofs: 29
+  wheel_indices: []
+  torque_limits: [300.0, 300.0, 300.0, 300.0, 20.0, 20.0,
+                  300.0, 300.0, 300.0, 300.0, 20.0, 20.0,
+                  300.0, 300.0, 300.0,
+                  300.0, 300.0, 300.0, 300.0, 300.0, 300.0, 300.0,
+                  300.0, 300.0, 300.0, 300.0, 300.0, 300.0, 300.0]
+  default_dof_pos: [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0,
+                    -0.1, 0.0, 0.0, 0.3, -0.2, 0.0,
+                    0.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  joint_names: [left_hip_pitch_joint, left_hip_roll_joint, left_hip_yaw_joint, left_knee_joint, left_ankle_pitch_joint, left_ankle_roll_joint,
+                right_hip_pitch_joint, right_hip_roll_joint, right_hip_yaw_joint, right_knee_joint, right_ankle_pitch_joint, right_ankle_roll_joint,
+                waist_yaw_joint, waist_roll_joint, waist_pitch_joint,
+                left_shoulder_pitch_joint, left_shoulder_roll_joint, left_shoulder_yaw_joint, left_elbow_joint, left_wrist_roll_joint, left_wrist_pitch_joint, left_wrist_yaw_joint,
+                right_shoulder_pitch_joint, right_shoulder_roll_joint, right_shoulder_yaw_joint, right_elbow_joint, right_wrist_roll_joint, right_wrist_pitch_joint, right_wrist_yaw_joint]
+  joint_controller_names: [left_hip_pitch_controller, left_hip_roll_controller, left_hip_yaw_controller, left_knee_controller, left_ankle_pitch_controller, left_ankle_roll_controller,
+                           right_hip_pitch_controller, right_hip_roll_controller, right_hip_yaw_controller, right_knee_controller, right_ankle_pitch_controller, right_ankle_roll_controller,
+                           waist_yaw_controller, waist_roll_controller, waist_pitch_controller,
+                           left_shoulder_pitch_controller, left_shoulder_roll_controller, left_shoulder_yaw_controller, left_elbow_controller, left_wrist_roll_controller, left_wrist_pitch_controller, left_wrist_yaw_controller,
+                           right_shoulder_pitch_controller, right_shoulder_roll_controller, right_shoulder_yaw_controller, right_elbow_controller, right_wrist_roll_controller, right_wrist_pitch_controller, right_wrist_yaw_controller]
+  joint_mapping: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]

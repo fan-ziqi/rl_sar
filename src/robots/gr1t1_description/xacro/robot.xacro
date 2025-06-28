@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<robot name="gr1t1_description" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:include filename="$(find gr1t1_description)/urdf/GR1T1_lower_limb.urdf"/>
+    <xacro:include filename="$(find gr1t1_description)/xacro/gazebo.xacro"/>
+
+</robot>

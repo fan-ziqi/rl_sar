@@ -1,6 +1,8 @@
 build
 devel
 logs
+install
+log
 .catkin_tools
 .vscode
 *.csv
@@ -8,3 +10,5 @@ logs
 *.json
 __pycache__
 cmake_build
+
+package.xml

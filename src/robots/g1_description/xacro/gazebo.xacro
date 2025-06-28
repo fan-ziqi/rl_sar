@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:property name="ros_version" value="$(env ROS_VERSION)" />
+
+    <xacro:if value="${int(ros_version) == 1}">
+
+    <!-- ros_control plugin -->
+    <gazebo>
+        <plugin filename="libgazebo_ros_control.so" name="gazebo_ros_control">
+        <robotNamespace>/g1_gazebo</robotNamespace>
+        <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+        </plugin>
+    </gazebo>
+
+    <gazebo reference="imu_in_torso">
+        <gravity>true</gravity>
+        <sensor name="imu_sensor" type="imu">
+        <always_on>true</always_on>
+        <update_rate>1000</update_rate>
+        <visualize>true</visualize>
+        <topic>__default_topic__</topic>
+        <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+            <topicName>imu_in_torso</topicName>
+            <bodyName>imu_in_torso</bodyName>
+            <updateRateHZ>1000.0</updateRateHZ>
+            <gaussianNoise>0.0</gaussianNoise>
+            <xyzOffset>0 0 0</xyzOffset>
+            <rpyOffset>0 0 0</rpyOffset>
+            <frameName>imu_in_torso</frameName>
+        </plugin>
+        <pose>0 0 0 0 0 0</pose>
+        </sensor>
+    </gazebo>
+
+    </xacro:if>
+
+    <xacro:if value="${int(ros_version) == 2}">
+
+    <gazebo reference="imu_in_torso">
+      <sensor name="imu_sensor" type="imu">
+      <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+          <ros>
+            <namespace>/</namespace>
+            <remapping>~/out:=imu</remapping>
+          </ros>
+          <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        </plugin>
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <visualize>true</visualize>
+        <imu>
+          <angular_velocity>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </gazebo>
+
+    <ros2_control name="GazeboSystem" type="system">
+        <hardware>
+            <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+        </hardware>
+
+        <xacro:macro name="joint_interface" params="joint_name effort_limit">
+            <joint name="${joint_name}">
+            <command_interface name="effort">
+                <param name="min">-${effort_limit}</param>
+                <param name="max">${effort_limit}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+            <state_interface name="effort"/>
+            </joint>
+        </xacro:macro>
+
+        <xacro:macro name="leg_joints" params="prefix">
+            <xacro:joint_interface joint_name="${prefix}_hip_pitch_joint" effort_limit="88"/>
+            <xacro:joint_interface joint_name="${prefix}_hip_roll_joint" effort_limit="139"/>
+            <xacro:joint_interface joint_name="${prefix}_hip_yaw_joint" effort_limit="88"/>
+            <xacro:joint_interface joint_name="${prefix}_knee_joint" effort_limit="139"/>
+            <xacro:joint_interface joint_name="${prefix}_ankle_pitch_joint" effort_limit="35"/>
+            <xacro:joint_interface joint_name="${prefix}_ankle_roll_joint" effort_limit="35"/>
+        </xacro:macro>
+
+        <xacro:macro name="arm_joints" params="prefix">
+            <xacro:joint_interface joint_name="${prefix}_shoulder_pitch_joint" effort_limit="25"/>
+            <xacro:joint_interface joint_name="${prefix}_shoulder_roll_joint" effort_limit="25"/>
+            <xacro:joint_interface joint_name="${prefix}_shoulder_yaw_joint" effort_limit="25"/>
+            <xacro:joint_interface joint_name="${prefix}_elbow_joint" effort_limit="25"/>
+            <xacro:joint_interface joint_name="${prefix}_wrist_roll_joint" effort_limit="25"/>
+            <xacro:joint_interface joint_name="${prefix}_wrist_pitch_joint" effort_limit="5"/>
+            <xacro:joint_interface joint_name="${prefix}_wrist_yaw_joint" effort_limit="5"/>
+        </xacro:macro>
+
+        <xacro:macro name="torso_joints">
+            <xacro:joint_interface joint_name="waist_yaw_joint" effort_limit="88"/>
+            <xacro:joint_interface joint_name="waist_roll_joint" effort_limit="35"/>
+            <xacro:joint_interface joint_name="waist_pitch_joint" effort_limit="35"/>
+        </xacro:macro>
+
+        <xacro:leg_joints prefix="left"/>
+        <xacro:leg_joints prefix="right"/>
+        <xacro:arm_joints prefix="left"/>
+        <xacro:arm_joints prefix="right"/>
+        <xacro:torso_joints/>
+
+    </ros2_control>
+
+    <gazebo>
+        <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+            <parameters>$(find g1_description)/config/robot_control_ros2.yaml</parameters>
+        </plugin>
+    </gazebo>
+
+    </xacro:if>
+
+    <gazebo reference="">
+        <mu1>0.5</mu1>
+        <mu2>0.5</mu2>
+        <self_collide>1</self_collide>
+    </gazebo>
+
+</robot>

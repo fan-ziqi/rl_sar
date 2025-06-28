@@ -1,0 +1,39 @@
+# Copyright (c) 2024-2025 Ziqi Fan
+# SPDX-License-Identifier: Apache-2.0
+
+b2w:
+  dt: 0.005
+  decimation: 4
+  fixed_kp: [200.0, 200.0, 300.0,
+             200.0, 200.0, 300.0,
+             200.0, 200.0, 300.0,
+             200.0, 200.0, 300.0,
+             0.0, 0.0, 0.0, 0.0]
+  fixed_kd: [3.0, 3.0, 3.0,
+             3.0, 3.0, 3.0,
+             3.0, 3.0, 3.0,
+             3.0, 3.0, 3.0,
+             1.0, 1.0, 1.0, 1.0]
+  num_of_dofs: 16
+  wheel_indices: [12, 13, 14, 15]
+  torque_limits: [200.0, 200.0, 320.0,
+                  200.0, 200.0, 320.0,
+                  200.0, 200.0, 320.0,
+                  200.0, 200.0, 320.0,
+                  20.0, 20.0, 20.0, 20.0]
+  default_dof_pos: [ 0.00, 0.80, -1.50,
+                     0.00, 0.80, -1.50,
+                     0.00, 0.80, -1.50,
+                     0.00, 0.80, -1.50,
+                     0.00, 0.00, 0.00, 0.00]
+  joint_names: ["FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
+                "FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
+                "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint",
+                "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint",
+                "FR_foot_joint", "FL_foot_joint", "RR_foot_joint", "RL_foot_joint"]
+  joint_controller_names: ["FR_hip_controller", "FR_thigh_controller", "FR_calf_controller",
+                           "FL_hip_controller", "FL_thigh_controller", "FL_calf_controller",
+                           "RR_hip_controller", "RR_thigh_controller", "RR_calf_controller",
+                           "RL_hip_controller", "RL_thigh_controller", "RL_calf_controller",
+                           "FR_foot_controller", "FL_foot_controller", "RR_foot_controller", "RL_foot_controller"]
+  joint_mapping: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]

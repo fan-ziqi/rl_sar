@@ -1,0 +1,8 @@
+<library path="lib/librobot_joint_controller">
+    <class name="robot_joint_controller/RobotJointController"
+           type="robot_joint_controller::RobotJointController"
+           base_class_type="controller_interface::ControllerBase"/>
+        <description>
+            The robot joint controller.
+        </description>
+</library>

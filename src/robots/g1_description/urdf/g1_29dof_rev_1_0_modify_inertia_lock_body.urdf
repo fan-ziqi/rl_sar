@@ -1395,37 +1395,4 @@
     </actuator>
   </transmission> -->
 
-  <gazebo>
-    <plugin filename="libgazebo_ros_control.so" name="gazebo_ros_control">
-      <robotNamespace>/g1_gazebo</robotNamespace>
-      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
-    </plugin>
-  </gazebo>
-
-  <gazebo reference="imu_in_torso">
-    <gravity>true</gravity>
-    <sensor name="imu_sensor" type="imu">
-      <always_on>true</always_on>
-      <update_rate>1000</update_rate>
-      <visualize>true</visualize>
-      <topic>__default_topic__</topic>
-      <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
-        <topicName>imu_in_torso</topicName>
-        <bodyName>imu_in_torso</bodyName>
-        <updateRateHZ>1000.0</updateRateHZ>
-        <gaussianNoise>0.0</gaussianNoise>
-        <xyzOffset>0 0 0</xyzOffset>
-        <rpyOffset>0 0 0</rpyOffset>
-        <frameName>imu_in_torso</frameName>
-      </plugin>
-      <pose>0 0 0 0 0 0</pose>
-    </sensor>
-  </gazebo>
-
-  <gazebo reference="">
-    <mu1>0.5</mu1>
-    <mu2>0.5</mu2>
-    <self_collide>1</self_collide>
-  </gazebo>
-
 </robot>

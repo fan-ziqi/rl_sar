@@ -8,23 +8,30 @@
 
 // #define PLOT
 // #define CSV_LOGGER
-// #define USE_ROS
 
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
 #include "loop.hpp"
+#include "fsm.hpp"
+
 #include "l4w4_sdk.hpp"
 #include <csignal>
 
-#ifdef USE_ROS
+#if defined(USE_ROS1)
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
+#elif defined(USE_ROS2)
+#include <rclcpp/rclcpp.hpp>
+#include <geometry_msgs/msg/twist.hpp>
 #endif
 
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
 
 class RL_Real : public RL
+#if defined(USE_ROS2)
+    , public rclcpp::Node
+#endif
 {
 public:
     RL_Real();
@@ -61,11 +68,14 @@ private:
     std::vector<double> mapped_joint_positions;
     std::vector<double> mapped_joint_velocities;
 
-#ifdef USE_ROS
-    // ros
+#if defined(USE_ROS1)
     geometry_msgs::Twist cmd_vel;
     ros::Subscriber cmd_vel_subscriber;
     void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
+#elif defined(USE_ROS2)
+    geometry_msgs::msg::Twist cmd_vel;
+    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscriber;
+    void CmdvelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
 #endif
 };
 

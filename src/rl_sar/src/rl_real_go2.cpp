@@ -6,25 +6,38 @@
 #include "rl_real_go2.hpp"
 
 RL_Real::RL_Real(bool wheel_mode)
+#if defined(USE_ROS2)
+    : rclcpp::Node("rl_real_node")
+#endif
 {
-#ifdef USE_ROS
-    // init ros
+#if defined(USE_ROS1)
     ros::NodeHandle nh;
     this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Real::CmdvelCallback, this);
+#elif defined(USE_ROS2)
+    this->cmd_vel_subscriber = this->create_subscription<geometry_msgs::msg::Twist>(
+        "/cmd_vel", rclcpp::SystemDefaultsQoS(),
+        [this] (const geometry_msgs::msg::Twist::SharedPtr msg) {this->CmdvelCallback(msg);}
+    );
 #endif
 
     // read params from yaml
-    if (wheel_mode)
+    this->ang_vel_type = "ang_vel_body";
+    this->robot_name = wheel_mode ? "go2w" : "go2";
+    this->ReadYamlBase(this->robot_name);
+
+    // auto load FSM by robot_name
+    if (FSMManager::GetInstance().IsTypeSupported(this->robot_name))
     {
-        this->robot_name = "go2w";
-        this->default_rl_config = "robot_lab";
+        auto fsm_ptr = FSMManager::GetInstance().CreateFSM(this->robot_name, this);
+        if (fsm_ptr)
+        {
+            this->fsm = *fsm_ptr;
+        }
     }
     else
     {
-        this->robot_name = "go2";
-        this->default_rl_config = "himloco";
+        std::cout << LOGGER::ERROR << "No FSM registered for robot: " << this->robot_name << std::endl;
     }
-    this->ReadYamlBase(this->robot_name);
 
     // init torch
     torch::autograd::GradMode::set_enabled(false);
@@ -97,37 +110,48 @@ RL_Real::~RL_Real()
 
 void RL_Real::GetState(RobotState<double> *state)
 {
+    if (this->unitree_joy.components.A) this->control.SetGamepad(Input::Gamepad::A);
+    if (this->unitree_joy.components.B) this->control.SetGamepad(Input::Gamepad::B);
+    if (this->unitree_joy.components.X) this->control.SetGamepad(Input::Gamepad::X);
+    if (this->unitree_joy.components.Y) this->control.SetGamepad(Input::Gamepad::Y);
+    if (this->unitree_joy.components.L1) this->control.SetGamepad(Input::Gamepad::LB);
+    if (this->unitree_joy.components.R1) this->control.SetGamepad(Input::Gamepad::RB);
+    if (this->unitree_joy.components.F1) this->control.SetGamepad(Input::Gamepad::LStick);
+    if (this->unitree_joy.components.F2) this->control.SetGamepad(Input::Gamepad::RStick);
+    if (this->unitree_joy.components.up) this->control.SetGamepad(Input::Gamepad::DPadUp);
+    if (this->unitree_joy.components.down) this->control.SetGamepad(Input::Gamepad::DPadDown);
+    if (this->unitree_joy.components.left) this->control.SetGamepad(Input::Gamepad::DPadLeft);
+    if (this->unitree_joy.components.right) this->control.SetGamepad(Input::Gamepad::DPadRight);
+    if (this->unitree_joy.components.L1 && this->unitree_joy.components.A) this->control.SetGamepad(Input::Gamepad::LB_A);
+    if (this->unitree_joy.components.L1 && this->unitree_joy.components.B) this->control.SetGamepad(Input::Gamepad::LB_B);
+    if (this->unitree_joy.components.L1 && this->unitree_joy.components.X) this->control.SetGamepad(Input::Gamepad::LB_X);
+    if (this->unitree_joy.components.L1 && this->unitree_joy.components.Y) this->control.SetGamepad(Input::Gamepad::LB_Y);
+    if (this->unitree_joy.components.L1 && this->unitree_joy.components.F1) this->control.SetGamepad(Input::Gamepad::LB_LStick);
+    if (this->unitree_joy.components.L1 && this->unitree_joy.components.F2) this->control.SetGamepad(Input::Gamepad::LB_RStick);
+    if (this->unitree_joy.components.L1 && this->unitree_joy.components.up) this->control.SetGamepad(Input::Gamepad::LB_DPadUp);
+    if (this->unitree_joy.components.L1 && this->unitree_joy.components.down) this->control.SetGamepad(Input::Gamepad::LB_DPadDown);
+    if (this->unitree_joy.components.L1 && this->unitree_joy.components.left) this->control.SetGamepad(Input::Gamepad::LB_DPadLeft);
+    if (this->unitree_joy.components.L1 && this->unitree_joy.components.right) this->control.SetGamepad(Input::Gamepad::LB_DPadRight);
+    if (this->unitree_joy.components.R1 && this->unitree_joy.components.A) this->control.SetGamepad(Input::Gamepad::RB_A);
+    if (this->unitree_joy.components.R1 && this->unitree_joy.components.B) this->control.SetGamepad(Input::Gamepad::RB_B);
+    if (this->unitree_joy.components.R1 && this->unitree_joy.components.X) this->control.SetGamepad(Input::Gamepad::RB_X);
+    if (this->unitree_joy.components.R1 && this->unitree_joy.components.Y) this->control.SetGamepad(Input::Gamepad::RB_Y);
+    if (this->unitree_joy.components.R1 && this->unitree_joy.components.F1) this->control.SetGamepad(Input::Gamepad::RB_LStick);
+    if (this->unitree_joy.components.R1 && this->unitree_joy.components.F2) this->control.SetGamepad(Input::Gamepad::RB_RStick);
+    if (this->unitree_joy.components.R1 && this->unitree_joy.components.up) this->control.SetGamepad(Input::Gamepad::RB_DPadUp);
+    if (this->unitree_joy.components.R1 && this->unitree_joy.components.down) this->control.SetGamepad(Input::Gamepad::RB_DPadDown);
+    if (this->unitree_joy.components.R1 && this->unitree_joy.components.left) this->control.SetGamepad(Input::Gamepad::RB_DPadLeft);
+    if (this->unitree_joy.components.R1 && this->unitree_joy.components.right) this->control.SetGamepad(Input::Gamepad::RB_DPadRight);
+    if (this->unitree_joy.components.L1 && this->unitree_joy.components.R1) this->control.SetGamepad(Input::Gamepad::LB_RB);
+
     this->control.x = this->joystick.ly();
     this->control.y = -this->joystick.lx();
     this->control.yaw = -this->joystick.rx();
 
-    if ((int)this->unitree_joy.components.R2 == 1)
-    {
-        this->control.SetControlState(STATE_POS_GETUP);
-    }
-    else if ((int)this->unitree_joy.components.R1 == 1)
-    {
-        this->control.SetControlState(STATE_RL_LOCOMOTION);
-    }
-    else if ((int)this->unitree_joy.components.L2 == 1)
-    {
-        this->control.SetControlState(STATE_POS_GETDOWN);
-    }
-
-    if (this->params.framework == "isaacgym")
-    {
-        state->imu.quaternion[3] = this->unitree_low_state.imu_state().quaternion()[0]; // w
-        state->imu.quaternion[0] = this->unitree_low_state.imu_state().quaternion()[1]; // x
-        state->imu.quaternion[1] = this->unitree_low_state.imu_state().quaternion()[2]; // y
-        state->imu.quaternion[2] = this->unitree_low_state.imu_state().quaternion()[3]; // z
-    }
-    else if (this->params.framework == "isaacsim")
-    {
-        state->imu.quaternion[0] = this->unitree_low_state.imu_state().quaternion()[0]; // w
-        state->imu.quaternion[1] = this->unitree_low_state.imu_state().quaternion()[1]; // x
-        state->imu.quaternion[2] = this->unitree_low_state.imu_state().quaternion()[2]; // y
-        state->imu.quaternion[3] = this->unitree_low_state.imu_state().quaternion()[3]; // z
-    }
+    state->imu.quaternion[0] = this->unitree_low_state.imu_state().quaternion()[0]; // w
+    state->imu.quaternion[1] = this->unitree_low_state.imu_state().quaternion()[1]; // x
+    state->imu.quaternion[2] = this->unitree_low_state.imu_state().quaternion()[2]; // y
+    state->imu.quaternion[3] = this->unitree_low_state.imu_state().quaternion()[3]; // z
 
     for (int i = 0; i < 3; ++i)
     {
@@ -135,9 +159,9 @@ void RL_Real::GetState(RobotState<double> *state)
     }
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
-        state->motor_state.q[i] = this->unitree_low_state.motor_state()[this->params.state_mapping[i]].q();
-        state->motor_state.dq[i] = this->unitree_low_state.motor_state()[this->params.state_mapping[i]].dq();
-        state->motor_state.tau_est[i] = this->unitree_low_state.motor_state()[this->params.state_mapping[i]].tau_est();
+        state->motor_state.q[i] = this->unitree_low_state.motor_state()[this->params.joint_mapping[i]].q();
+        state->motor_state.dq[i] = this->unitree_low_state.motor_state()[this->params.joint_mapping[i]].dq();
+        state->motor_state.tau_est[i] = this->unitree_low_state.motor_state()[this->params.joint_mapping[i]].tau_est();
     }
 }
 
@@ -145,12 +169,12 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
 {
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
-        this->unitree_low_command.motor_cmd()[i].mode() = 0x01;
-        this->unitree_low_command.motor_cmd()[i].q() = command->motor_command.q[this->params.command_mapping[i]];
-        this->unitree_low_command.motor_cmd()[i].dq() = command->motor_command.dq[this->params.command_mapping[i]];
-        this->unitree_low_command.motor_cmd()[i].kp() = command->motor_command.kp[this->params.command_mapping[i]];
-        this->unitree_low_command.motor_cmd()[i].kd() = command->motor_command.kd[this->params.command_mapping[i]];
-        this->unitree_low_command.motor_cmd()[i].tau() = command->motor_command.tau[this->params.command_mapping[i]];
+        this->unitree_low_command.motor_cmd()[this->params.joint_mapping[i]].mode() = 0x01;
+        this->unitree_low_command.motor_cmd()[this->params.joint_mapping[i]].q() = command->motor_command.q[i];
+        this->unitree_low_command.motor_cmd()[this->params.joint_mapping[i]].dq() = command->motor_command.dq[i];
+        this->unitree_low_command.motor_cmd()[this->params.joint_mapping[i]].kp() = command->motor_command.kp[i];
+        this->unitree_low_command.motor_cmd()[this->params.joint_mapping[i]].kd() = command->motor_command.kd[i];
+        this->unitree_low_command.motor_cmd()[this->params.joint_mapping[i]].tau() = command->motor_command.tau[i];
     }
 
     this->unitree_low_command.crc() = Crc32Core((uint32_t *)&unitree_low_command, (sizeof(unitree_go::msg::dds_::LowCmd_) >> 2) - 1);
@@ -160,6 +184,50 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
 void RL_Real::RobotControl()
 {
     this->motiontime++;
+
+    if (this->control.current_keyboard == Input::Keyboard::W)
+    {
+        this->control.x += 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::S)
+    {
+        this->control.x -= 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::A)
+    {
+        this->control.y += 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::D)
+    {
+        this->control.y -= 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::Q)
+    {
+        this->control.yaw += 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::E)
+    {
+        this->control.yaw -= 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::Space)
+    {
+        this->control.x = 0;
+        this->control.y = 0;
+        this->control.yaw = 0;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::N || this->control.current_gamepad == Input::Gamepad::X)
+    {
+        this->control.navigation_mode = !this->control.navigation_mode;
+        std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
 
     this->GetState(&this->robot_state);
     this->StateController(&this->robot_state, &this->robot_command);
@@ -172,9 +240,9 @@ void RL_Real::RunModel()
     {
         this->episode_length_buf += 1;
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
-        if (this->fsm._currentState->getStateName() == "RLFSMStateRL_Navigation")
+        if (this->control.navigation_mode)
         {
-#ifdef USE_ROS
+#if !defined(USE_CMAKE)
             this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
 #endif
         }
@@ -252,7 +320,7 @@ void RL_Real::Plot()
         this->plot_target_joint_pos[i].erase(this->plot_target_joint_pos[i].begin());
         this->plot_real_joint_pos[i].push_back(this->unitree_low_state.motor_state()[i].q());
         this->plot_target_joint_pos[i].push_back(this->unitree_low_command.motor_cmd()[i].q());
-        plt::subplot(4, 3, i + 1);
+        plt::subplot(this->params.num_of_dofs, 1, i + 1);
         plt::named_plot("_real_joint_pos", this->plot_t, this->plot_real_joint_pos[i], "r");
         plt::named_plot("_target_joint_pos", this->plot_t, this->plot_target_joint_pos[i], "b");
         plt::xlim(this->plot_t.front(), this->plot_t.back());
@@ -367,37 +435,46 @@ void RL_Real::JoystickHandler(const void *message)
     this->unitree_joy.value = joystick.keys();
 }
 
-#ifdef USE_ROS
-void RL_Real::CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg)
+#if !defined(USE_CMAKE)
+void RL_Real::CmdvelCallback(
+#if defined(USE_ROS1)
+    const geometry_msgs::Twist::ConstPtr &msg
+#elif defined(USE_ROS2)
+    const geometry_msgs::msg::Twist::SharedPtr msg
+#endif
+)
 {
     this->cmd_vel = *msg;
 }
 #endif
 
+#if defined(USE_ROS1)
 void signalHandler(int signum)
 {
-#ifdef USE_ROS
     ros::shutdown();
-#endif
     exit(0);
 }
+#endif
 
 int main(int argc, char **argv)
 {
-    signal(SIGINT, signalHandler);
-#ifdef USE_ROS
-    ros::init(argc, argv, "rl_sar");
-#endif
     if (argc < 2)
     {
         std::cout << "Usage: " << argv[0] << " networkInterface [wheel]" << std::endl;
         exit(-1);
     }
     ChannelFactory::Instance()->Init(0, argv[1]);
+#if defined(USE_ROS1)
+    signal(SIGINT, signalHandler);
+    ros::init(argc, argv, "rl_sar");
     RL_Real rl_sar(argc > 2 && std::string(argv[2]) == "wheel");
-#ifdef USE_ROS
     ros::spin();
-#else
+#elif defined(USE_ROS2)
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<RL_Real>(argc > 2 && std::string(argv[2]) == "wheel"));
+    rclcpp::shutdown();
+#elif defined(USE_CMAKE)
+    RL_Real rl_sar(argc > 2 && std::string(argv[2]) == "wheel");
     while (1) { sleep(10); }
 #endif
     return 0;

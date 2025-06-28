@@ -1,0 +1,21 @@
+# Copyright (c) 2024-2025 Ziqi Fan
+# SPDX-License-Identifier: Apache-2.0
+
+gr1t2:
+  dt: 0.001
+  decimation: 20
+  fixed_kp: [57.0, 43.0, 114.0, 114.0, 15.3,
+             57.0, 43.0, 114.0, 114.0, 15.3]
+  fixed_kd: [5.7, 4.3, 11.4, 11.4, 1.5,
+             5.7, 4.3, 11.4, 11.4, 1.5]
+  num_of_dofs: 10
+  wheel_indices: []
+  torque_limits: [60.0, 45.0, 130.0, 130.0, 16.0,
+                  60.0, 45.0, 130.0, 130.0, 16.0]
+  default_dof_pos: [0.0, 0.0, -0.2618, 0.5236, -0.2618,
+                    0.0, 0.0, -0.2618, 0.5236, -0.2618]
+  joint_names: ["l_hip_roll", "l_hip_yaw", "l_hip_pitch", "l_knee_pitch", "l_ankle_pitch",
+                "r_hip_roll", "r_hip_yaw", "r_hip_pitch", "r_knee_pitch", "r_ankle_pitch"]
+  joint_controller_names: ["l_hip_roll_controller", "l_hip_yaw_controller", "l_hip_pitch_controller", "l_knee_pitch_controller", "l_ankle_pitch_controller",
+                           "r_hip_roll_controller", "r_hip_yaw_controller", "r_hip_pitch_controller", "r_knee_pitch_controller", "r_ankle_pitch_controller"]
+  joint_mapping: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
