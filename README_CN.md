@@ -383,3 +383,4 @@ rl_sar/src/rl_real_<ROBOT>.cpp  # 可以按需自定义forward()函数以适配�
 - [unitreerobotics/unitree_guide](https://github.com/unitreerobotics/unitree_guide)
 - [mertgungor/unitree_model_control](https://github.com/mertgungor/unitree_model_control)
 - [src/rl_sar/scripts/actuator_net.py](src/rl_sar/scripts/actuator_net.py) 中的代码修改自 [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways) 仓库中的 [scripts/actuator_net](https://github.com/Improbable-AI/walk-these-ways/tree/master/scripts/actuator_net)
+- - Unitree-G1 RoboMimic pre-trained policies from [ccrpRepo/RoboMimic_Deploy](https://github.com/ccrpRepo/RoboMimic_Deploy)

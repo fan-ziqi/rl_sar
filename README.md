@@ -383,3 +383,4 @@ The project uses some code from the following open-source code repositories:
 - [unitreerobotics/unitree_guide](https://github.com/unitreerobotics/unitree_guide)
 - [mertgungor/unitree_model_control](https://github.com/mertgungor/unitree_model_control)
 - The code in [src/rl_sar/scripts/actuator_net.py](src/rl_sar/scripts/actuator_net.py) is modified from [scripts/actuator_net](https://github.com/Improbable-AI/walk-these-ways/tree/master/scripts/actuator_net) in the [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways) repository.
+- Unitree-G1 RoboMimic pre-trained policies from [ccrpRepo/RoboMimic_Deploy](https://github.com/ccrpRepo/RoboMimic_Deploy)
