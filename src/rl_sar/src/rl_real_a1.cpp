@@ -92,27 +92,43 @@ void RL_Real::GetState(RobotState<double> *state)
     this->unitree_udp.GetRecv(this->unitree_low_state);
     memcpy(&this->unitree_joy, this->unitree_low_state.wirelessRemote, 40);
 
+    if (this->unitree_joy.btn.components.A) this->control.SetGamepad(Input::Gamepad::A);
+    if (this->unitree_joy.btn.components.B) this->control.SetGamepad(Input::Gamepad::B);
+    if (this->unitree_joy.btn.components.X) this->control.SetGamepad(Input::Gamepad::X);
+    if (this->unitree_joy.btn.components.Y) this->control.SetGamepad(Input::Gamepad::Y);
+    if (this->unitree_joy.btn.components.L1) this->control.SetGamepad(Input::Gamepad::LB);
+    if (this->unitree_joy.btn.components.R1) this->control.SetGamepad(Input::Gamepad::RB);
+    if (this->unitree_joy.btn.components.F1) this->control.SetGamepad(Input::Gamepad::LStick);
+    if (this->unitree_joy.btn.components.F2) this->control.SetGamepad(Input::Gamepad::RStick);
+    if (this->unitree_joy.btn.components.up) this->control.SetGamepad(Input::Gamepad::DPadUp);
+    if (this->unitree_joy.btn.components.down) this->control.SetGamepad(Input::Gamepad::DPadDown);
+    if (this->unitree_joy.btn.components.left) this->control.SetGamepad(Input::Gamepad::DPadLeft);
+    if (this->unitree_joy.btn.components.right) this->control.SetGamepad(Input::Gamepad::DPadRight);
+    if (this->unitree_joy.btn.components.L1 && this->unitree_joy.btn.components.A) this->control.SetGamepad(Input::Gamepad::LB_A);
+    if (this->unitree_joy.btn.components.L1 && this->unitree_joy.btn.components.B) this->control.SetGamepad(Input::Gamepad::LB_B);
+    if (this->unitree_joy.btn.components.L1 && this->unitree_joy.btn.components.X) this->control.SetGamepad(Input::Gamepad::LB_X);
+    if (this->unitree_joy.btn.components.L1 && this->unitree_joy.btn.components.Y) this->control.SetGamepad(Input::Gamepad::LB_Y);
+    if (this->unitree_joy.btn.components.L1 && this->unitree_joy.btn.components.F1) this->control.SetGamepad(Input::Gamepad::LB_LStick);
+    if (this->unitree_joy.btn.components.L1 && this->unitree_joy.btn.components.F2) this->control.SetGamepad(Input::Gamepad::LB_RStick);
+    if (this->unitree_joy.btn.components.L1 && this->unitree_joy.btn.components.up) this->control.SetGamepad(Input::Gamepad::LB_DPadUp);
+    if (this->unitree_joy.btn.components.L1 && this->unitree_joy.btn.components.down) this->control.SetGamepad(Input::Gamepad::LB_DPadDown);
+    if (this->unitree_joy.btn.components.L1 && this->unitree_joy.btn.components.left) this->control.SetGamepad(Input::Gamepad::LB_DPadLeft);
+    if (this->unitree_joy.btn.components.L1 && this->unitree_joy.btn.components.right) this->control.SetGamepad(Input::Gamepad::LB_DPadRight);
+    if (this->unitree_joy.btn.components.R1 && this->unitree_joy.btn.components.A) this->control.SetGamepad(Input::Gamepad::RB_A);
+    if (this->unitree_joy.btn.components.R1 && this->unitree_joy.btn.components.B) this->control.SetGamepad(Input::Gamepad::RB_B);
+    if (this->unitree_joy.btn.components.R1 && this->unitree_joy.btn.components.X) this->control.SetGamepad(Input::Gamepad::RB_X);
+    if (this->unitree_joy.btn.components.R1 && this->unitree_joy.btn.components.Y) this->control.SetGamepad(Input::Gamepad::RB_Y);
+    if (this->unitree_joy.btn.components.R1 && this->unitree_joy.btn.components.F1) this->control.SetGamepad(Input::Gamepad::RB_LStick);
+    if (this->unitree_joy.btn.components.R1 && this->unitree_joy.btn.components.F2) this->control.SetGamepad(Input::Gamepad::RB_RStick);
+    if (this->unitree_joy.btn.components.R1 && this->unitree_joy.btn.components.up) this->control.SetGamepad(Input::Gamepad::RB_DPadUp);
+    if (this->unitree_joy.btn.components.R1 && this->unitree_joy.btn.components.down) this->control.SetGamepad(Input::Gamepad::RB_DPadDown);
+    if (this->unitree_joy.btn.components.R1 && this->unitree_joy.btn.components.left) this->control.SetGamepad(Input::Gamepad::RB_DPadLeft);
+    if (this->unitree_joy.btn.components.R1 && this->unitree_joy.btn.components.right) this->control.SetGamepad(Input::Gamepad::RB_DPadRight);
+    if (this->unitree_joy.btn.components.L1 && this->unitree_joy.btn.components.R1) this->control.SetGamepad(Input::Gamepad::LB_RB);
+
     this->control.x = this->unitree_joy.ly;
     this->control.y = -this->unitree_joy.lx;
     this->control.yaw = -this->unitree_joy.rx;
-
-    if ((int)this->unitree_joy.btn.components.R2 == 1)
-    {
-        this->control.SetControlState(STATE_POS_GETUP);
-    }
-    else if ((int)this->unitree_joy.btn.components.R1 == 1)
-    {
-        this->control.SetControlState(STATE_RL_LOCOMOTION);
-    }
-    else if ((int)this->unitree_joy.btn.components.L2 == 1)
-    {
-        this->control.SetControlState(STATE_POS_GETDOWN);
-    }
-    else if ((int)this->unitree_joy.btn.components.down == 1)
-    {
-        this->control.navigation_mode = !this->control.navigation_mode;
-        std::cout << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
-    }
 
     state->imu.quaternion[0] = this->unitree_low_state.imu.quaternion[0]; // w
     state->imu.quaternion[1] = this->unitree_low_state.imu.quaternion[1]; // x
@@ -151,6 +167,50 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
 void RL_Real::RobotControl()
 {
     this->motiontime++;
+
+    if (this->control.current_keyboard == Input::Keyboard::W)
+    {
+        this->control.x += 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::S)
+    {
+        this->control.x -= 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::A)
+    {
+        this->control.y += 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::D)
+    {
+        this->control.y -= 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::Q)
+    {
+        this->control.yaw += 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::E)
+    {
+        this->control.yaw -= 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::Space)
+    {
+        this->control.x = 0;
+        this->control.y = 0;
+        this->control.yaw = 0;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::N || this->control.current_gamepad == Input::Gamepad::X)
+    {
+        this->control.navigation_mode = !this->control.navigation_mode;
+        std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
 
     this->GetState(&this->robot_state);
     this->StateController(&this->robot_state, &this->robot_command);

@@ -319,8 +319,7 @@ void RL_Sim::SetCommand(const RobotCommand<double> *command)
 
 void RL_Sim::RobotControl()
 {
-
-    if (this->control.control_state == STATE_RESET_SIMULATION)
+    if (this->control.current_keyboard == Input::Keyboard::R || this->control.current_gamepad == Input::Gamepad::RB_Y)
     {
 #if defined(USE_ROS1)
         std_srvs::Empty empty;
@@ -329,9 +328,9 @@ void RL_Sim::RobotControl()
         auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
         auto result = this->gazebo_reset_world_client->async_send_request(empty_request);
 #endif
-        this->control.control_state = this->control.last_control_state;
+        this->control.current_keyboard = this->control.last_keyboard;
     }
-    if (this->control.control_state == STATE_TOGGLE_SIMULATION)
+    if (this->control.current_keyboard == Input::Keyboard::Enter || this->control.current_gamepad == Input::Gamepad::RB_X)
     {
         if (simulation_running)
         {
@@ -356,12 +355,57 @@ void RL_Sim::RobotControl()
             std::cout << std::endl << LOGGER::INFO << "Simulation Start" << std::endl;
         }
         simulation_running = !simulation_running;
-        this->control.control_state = this->control.last_control_state;
+        this->control.current_keyboard = this->control.last_keyboard;
     }
 
     if (simulation_running)
     {
         this->motiontime++;
+
+        if (this->control.current_keyboard == Input::Keyboard::W)
+        {
+            this->control.x += 0.1;
+            this->control.current_keyboard = this->control.last_keyboard;
+        }
+        if (this->control.current_keyboard == Input::Keyboard::S)
+        {
+            this->control.x -= 0.1;
+            this->control.current_keyboard = this->control.last_keyboard;
+        }
+        if (this->control.current_keyboard == Input::Keyboard::A)
+        {
+            this->control.y += 0.1;
+            this->control.current_keyboard = this->control.last_keyboard;
+        }
+        if (this->control.current_keyboard == Input::Keyboard::D)
+        {
+            this->control.y -= 0.1;
+            this->control.current_keyboard = this->control.last_keyboard;
+        }
+        if (this->control.current_keyboard == Input::Keyboard::Q)
+        {
+            this->control.yaw += 0.1;
+            this->control.current_keyboard = this->control.last_keyboard;
+        }
+        if (this->control.current_keyboard == Input::Keyboard::E)
+        {
+            this->control.yaw -= 0.1;
+            this->control.current_keyboard = this->control.last_keyboard;
+        }
+        if (this->control.current_keyboard == Input::Keyboard::Space)
+        {
+            this->control.x = 0;
+            this->control.y = 0;
+            this->control.yaw = 0;
+            this->control.current_keyboard = this->control.last_keyboard;
+        }
+        if (this->control.current_keyboard == Input::Keyboard::N || this->control.current_gamepad == Input::Gamepad::X)
+        {
+            this->control.navigation_mode = !this->control.navigation_mode;
+            std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
+            this->control.current_keyboard = this->control.last_keyboard;
+        }
+
         this->GetState(&this->robot_state);
         this->StateController(&this->robot_state, &this->robot_command);
         this->SetCommand(&this->robot_command);
@@ -405,39 +449,45 @@ void RL_Sim::JoyCallback(
     // joystick control
     // Description of buttons and axes(F710):
     // |__ buttons[]: A=0, B=1, X=2, Y=3, LB=4, RB=5, back=6, start=7, power=8, stickL=9, stickR=10
-    // |__ axes[]: Lx=0, Ly=1, Rx=3, Ry=4, LT=2, RT=5
-    if (this->joy_msg.buttons[5])
-    {
-        if (this->joy_msg.buttons[3]) // RB+Y
-        {
-            this->control.SetControlState(STATE_POS_GETUP);
-        }
-        else if (this->joy_msg.buttons[0]) // RB+A
-        {
-            this->control.SetControlState(STATE_POS_GETDOWN);
-        }
-        else if (this->joy_msg.buttons[1]) // RB+B
-        {
-            this->control.SetControlState(STATE_RL_LOCOMOTION);
-        }
-        else if (this->joy_msg.buttons[2]) // RB+X
-        {
-            this->control.SetControlState(STATE_RESET_SIMULATION);
-        }
-        else if (this->joy_msg.axes[7] < 0) // DOWN
-        {
-            this->control.navigation_mode = !this->control.navigation_mode;
-            std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
-        }
-    }
-    if (this->joy_msg.buttons[4]) // LB
-    {
-        this->control.SetControlState(STATE_TOGGLE_SIMULATION);
-    }
+    // |__ axes[]: Lx=0, Ly=1, Rx=3, Ry=4, LT=2, RT=5, DPadX=6, DPadY=7
 
-    this->control.x = this->joy_msg.axes[1] * 1.5; // Ly
-    this->control.y = this->joy_msg.axes[0] * 1.5; // Lx
-    this->control.yaw = this->joy_msg.axes[3] * 1.5; // Rx
+    if (this->joy_msg.buttons[0]) this->control.SetGamepad(Input::Gamepad::A);
+    if (this->joy_msg.buttons[1]) this->control.SetGamepad(Input::Gamepad::B);
+    if (this->joy_msg.buttons[2]) this->control.SetGamepad(Input::Gamepad::X);
+    if (this->joy_msg.buttons[3]) this->control.SetGamepad(Input::Gamepad::Y);
+    if (this->joy_msg.buttons[4]) this->control.SetGamepad(Input::Gamepad::LB);
+    if (this->joy_msg.buttons[5]) this->control.SetGamepad(Input::Gamepad::RB);
+    if (this->joy_msg.buttons[9]) this->control.SetGamepad(Input::Gamepad::LStick);
+    if (this->joy_msg.buttons[10]) this->control.SetGamepad(Input::Gamepad::RStick);
+    if (this->joy_msg.axes[7] > 0) this->control.SetGamepad(Input::Gamepad::DPadUp);
+    if (this->joy_msg.axes[7] < 0) this->control.SetGamepad(Input::Gamepad::DPadDown);
+    if (this->joy_msg.axes[6] < 0) this->control.SetGamepad(Input::Gamepad::DPadLeft);
+    if (this->joy_msg.axes[6] > 0) this->control.SetGamepad(Input::Gamepad::DPadRight);
+    if (this->joy_msg.buttons[4] && this->joy_msg.buttons[0]) this->control.SetGamepad(Input::Gamepad::LB_A);
+    if (this->joy_msg.buttons[4] && this->joy_msg.buttons[1]) this->control.SetGamepad(Input::Gamepad::LB_B);
+    if (this->joy_msg.buttons[4] && this->joy_msg.buttons[2]) this->control.SetGamepad(Input::Gamepad::LB_X);
+    if (this->joy_msg.buttons[4] && this->joy_msg.buttons[3]) this->control.SetGamepad(Input::Gamepad::LB_Y);
+    if (this->joy_msg.buttons[4] && this->joy_msg.buttons[9]) this->control.SetGamepad(Input::Gamepad::LB_LStick);
+    if (this->joy_msg.buttons[4] && this->joy_msg.buttons[10]) this->control.SetGamepad(Input::Gamepad::LB_RStick);
+    if (this->joy_msg.buttons[4] && this->joy_msg.axes[7] > 0) this->control.SetGamepad(Input::Gamepad::LB_DPadUp);
+    if (this->joy_msg.buttons[4] && this->joy_msg.axes[7] < 0) this->control.SetGamepad(Input::Gamepad::LB_DPadDown);
+    if (this->joy_msg.buttons[4] && this->joy_msg.axes[6] > 0) this->control.SetGamepad(Input::Gamepad::LB_DPadRight);
+    if (this->joy_msg.buttons[4] && this->joy_msg.axes[6] < 0) this->control.SetGamepad(Input::Gamepad::LB_DPadLeft);
+    if (this->joy_msg.buttons[5] && this->joy_msg.buttons[0]) this->control.SetGamepad(Input::Gamepad::RB_A);
+    if (this->joy_msg.buttons[5] && this->joy_msg.buttons[1]) this->control.SetGamepad(Input::Gamepad::RB_B);
+    if (this->joy_msg.buttons[5] && this->joy_msg.buttons[2]) this->control.SetGamepad(Input::Gamepad::RB_X);
+    if (this->joy_msg.buttons[5] && this->joy_msg.buttons[3]) this->control.SetGamepad(Input::Gamepad::RB_Y);
+    if (this->joy_msg.buttons[5] && this->joy_msg.buttons[9]) this->control.SetGamepad(Input::Gamepad::RB_LStick);
+    if (this->joy_msg.buttons[5] && this->joy_msg.buttons[10]) this->control.SetGamepad(Input::Gamepad::RB_RStick);
+    if (this->joy_msg.buttons[5] && this->joy_msg.axes[7] > 0) this->control.SetGamepad(Input::Gamepad::RB_DPadUp);
+    if (this->joy_msg.buttons[5] && this->joy_msg.axes[7] < 0) this->control.SetGamepad(Input::Gamepad::RB_DPadDown);
+    if (this->joy_msg.buttons[5] && this->joy_msg.axes[6] > 0) this->control.SetGamepad(Input::Gamepad::RB_DPadRight);
+    if (this->joy_msg.buttons[5] && this->joy_msg.axes[6] < 0) this->control.SetGamepad(Input::Gamepad::RB_DPadLeft);
+    if (this->joy_msg.buttons[4] && this->joy_msg.buttons[5]) this->control.SetGamepad(Input::Gamepad::LB_RB);
+
+    this->control.x = this->joy_msg.axes[1] * 1.5; // LY
+    this->control.y = this->joy_msg.axes[0] * 1.5; // LX
+    this->control.yaw = this->joy_msg.axes[3] * 1.5; // RX
 }
 
 #if defined(USE_ROS1)

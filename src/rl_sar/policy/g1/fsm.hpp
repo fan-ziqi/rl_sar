@@ -12,10 +12,10 @@
 namespace g1_fsm
 {
 
-class RLFSMStateWaiting : public RLFSMState
+class RLFSMStatePassive : public RLFSMState
 {
 public:
-    RLFSMStateWaiting(RL *rl) : RLFSMState(*rl, "RLFSMStateWaiting") {}
+    RLFSMStatePassive(RL *rl) : RLFSMState(*rl, "RLFSMStatePassive") {}
 
     void Enter() override
     {
@@ -26,7 +26,11 @@ public:
     {
         for (int i = 0; i < rl.params.num_of_dofs; ++i)
         {
-            fsm_command->motor_command.q[i] = fsm_state->motor_state.q[i];
+            // fsm_command->motor_command.q[i] = fsm_state->motor_state.q[i];
+            fsm_command->motor_command.dq[i] = 0;
+            fsm_command->motor_command.kp[i] = 0;
+            fsm_command->motor_command.kd[i] = 8;
+            fsm_command->motor_command.tau[i] = 0;
         }
     }
 
@@ -34,7 +38,7 @@ public:
 
     std::string CheckChange() override
     {
-        if (rl.control.control_state == STATE::STATE_POS_GETUP)
+        if (rl.control.current_keyboard == Input::Keyboard::Num0 || rl.control.current_gamepad == Input::Gamepad::Y)
         {
             return "RLFSMStateGetUp";
         }
@@ -79,29 +83,29 @@ public:
     {
         if (rl.running_percent >= 1.0f)
         {
-            if (rl.control.control_state == STATE::STATE_RL_LOCOMOTION)
+            if (rl.control.current_keyboard == Input::Keyboard::P || rl.control.current_gamepad == Input::Gamepad::LB_X)
+            {
+                return "RLFSMStatePassive";
+            }
+            else if (rl.control.current_keyboard == Input::Keyboard::Num1 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
             {
                 return "RLFSMStateRL_Locomotion";
             }
-            else if (rl.control.control_state == STATE::STATE_RL_SKILL_1)
+            else if (rl.control.current_keyboard == Input::Keyboard::Num2 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
             {
                 return "RLFSMStateRL_Dance";
             }
-            else if (rl.control.control_state == STATE::STATE_RL_SKILL_2)
+            else if (rl.control.current_keyboard == Input::Keyboard::Num3 || rl.control.current_gamepad == Input::Gamepad::RB_DPadDown)
             {
                 return "RLFSMStateRL_KungFu";
             }
-            else if (rl.control.control_state == STATE::STATE_RL_SKILL_3)
+            else if (rl.control.current_keyboard == Input::Keyboard::Num4 || rl.control.current_gamepad == Input::Gamepad::RB_DPadLeft)
             {
                 return "RLFSMStateRL_Kick";
             }
-            else if (rl.control.control_state == STATE::STATE_POS_GETDOWN)
+            else if (rl.control.current_keyboard == Input::Keyboard::Num9 || rl.control.current_gamepad == Input::Gamepad::B)
             {
                 return "RLFSMStateGetDown";
-            }
-            else if (rl.control.control_state == STATE::STATE_WAITING)
-            {
-                return "RLFSMStateWaiting";
             }
         }
         return state_name_;
@@ -144,9 +148,9 @@ public:
     {
         if (rl.running_percent >= 1.0f)
         {
-            return "RLFSMStateWaiting";
+            return "RLFSMStatePassive";
         }
-        else if (rl.control.control_state == STATE::STATE_POS_GETUP)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num0 || rl.control.current_gamepad == Input::Gamepad::Y)
         {
             return "RLFSMStateGetUp";
         }
@@ -161,6 +165,8 @@ public:
 
     void Enter() override
     {
+        rl.episode_length_buf = 0;
+
         // read params from yaml
         rl.config_name = "unitree_rl_gym";
         std::string robot_path = rl.robot_name + "/" + rl.config_name;
@@ -173,7 +179,7 @@ public:
         {
             std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
             rl.rl_init_done = false;
-            rl.control.control_state = STATE::STATE_POS_GETUP;
+            rl.control.current_keyboard = Input::Keyboard::Num0;
         }
 
         // pos init
@@ -210,33 +216,33 @@ public:
 
     std::string CheckChange() override
     {
-        if (rl.control.control_state == STATE::STATE_POS_GETDOWN)
+        if (rl.control.current_keyboard == Input::Keyboard::P || rl.control.current_gamepad == Input::Gamepad::LB_X)
+        {
+            return "RLFSMStatePassive";
+        }
+        else if (rl.control.current_keyboard == Input::Keyboard::Num9 || rl.control.current_gamepad == Input::Gamepad::B)
         {
             return "RLFSMStateGetDown";
         }
-        else if (rl.control.control_state == STATE::STATE_POS_GETUP)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num0 || rl.control.current_gamepad == Input::Gamepad::Y)
         {
             return "RLFSMStateGetUp";
         }
-        else if (rl.control.control_state == STATE::STATE_RL_LOCOMOTION)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num1 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
         {
             return "RLFSMStateRL_Locomotion";
         }
-        else if (rl.control.control_state == STATE::STATE_RL_SKILL_1)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num2 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
         {
             return "RLFSMStateRL_Dance";
         }
-        else if (rl.control.control_state == STATE::STATE_RL_SKILL_2)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num3 || rl.control.current_gamepad == Input::Gamepad::RB_DPadDown)
         {
             return "RLFSMStateRL_KungFu";
         }
-        else if (rl.control.control_state == STATE::STATE_RL_SKILL_3)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num4 || rl.control.current_gamepad == Input::Gamepad::RB_DPadLeft)
         {
             return "RLFSMStateRL_Kick";
-        }
-        else if (rl.control.control_state == STATE::STATE_WAITING)
-        {
-            return "RLFSMStateWaiting";
         }
         return state_name_;
     }
@@ -249,6 +255,8 @@ public:
 
     void Enter() override
     {
+        rl.episode_length_buf = 0;
+
         // read params from yaml
         rl.config_name = "robomimic/dance";
         std::string robot_path = rl.robot_name + "/" + rl.config_name;
@@ -261,10 +269,9 @@ public:
         {
             std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
             rl.rl_init_done = false;
-            rl.control.control_state = STATE::STATE_POS_GETUP;
+            rl.control.current_keyboard = Input::Keyboard::Num0;
         }
 
-        rl.episode_length_buf = 0;
         rl.motion_length = 18.0;
 
         // pos init
@@ -298,7 +305,7 @@ public:
 
         if (motion_time / rl.motion_length == 1)
         {
-            rl.control.SetControlState(STATE::STATE_POS_GETUP);
+            rl.control.SetKeyboard(Input::Keyboard::Num0);
         }
     }
 
@@ -309,21 +316,21 @@ public:
 
     std::string CheckChange() override
     {
-        if (rl.control.control_state == STATE::STATE_POS_GETDOWN)
+        if (rl.control.current_keyboard == Input::Keyboard::P || rl.control.current_gamepad == Input::Gamepad::LB_X)
+        {
+            return "RLFSMStatePassive";
+        }
+        else if (rl.control.current_keyboard == Input::Keyboard::Num9 || rl.control.current_gamepad == Input::Gamepad::B)
         {
             return "RLFSMStateGetDown";
         }
-        else if (rl.control.control_state == STATE::STATE_POS_GETUP)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num0 || rl.control.current_gamepad == Input::Gamepad::Y)
         {
             return "RLFSMStateGetUp";
         }
-        else if (rl.control.control_state == STATE::STATE_RL_LOCOMOTION)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num1 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
         {
             return "RLFSMStateRL_Locomotion";
-        }
-        else if (rl.control.control_state == STATE::STATE_WAITING)
-        {
-            return "RLFSMStateWaiting";
         }
         return state_name_;
     }
@@ -336,6 +343,8 @@ public:
 
     void Enter() override
     {
+        rl.episode_length_buf = 0;
+
         // read params from yaml
         rl.config_name = "robomimic/kungfu";
         std::string robot_path = rl.robot_name + "/" + rl.config_name;
@@ -348,10 +357,9 @@ public:
         {
             std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
             rl.rl_init_done = false;
-            rl.control.control_state = STATE::STATE_POS_GETUP;
+            rl.control.current_keyboard = Input::Keyboard::Num0;
         }
 
-        rl.episode_length_buf = 0;
         rl.motion_length = 17.433;
 
         // pos init
@@ -385,7 +393,7 @@ public:
 
         if (motion_time / rl.motion_length == 1)
         {
-            rl.control.SetControlState(STATE::STATE_POS_GETUP);
+            rl.control.SetKeyboard(Input::Keyboard::Num0);
         }
     }
 
@@ -396,21 +404,21 @@ public:
 
     std::string CheckChange() override
     {
-        if (rl.control.control_state == STATE::STATE_POS_GETDOWN)
+        if (rl.control.current_keyboard == Input::Keyboard::P || rl.control.current_gamepad == Input::Gamepad::LB_X)
+        {
+            return "RLFSMStatePassive";
+        }
+        else if (rl.control.current_keyboard == Input::Keyboard::Num9 || rl.control.current_gamepad == Input::Gamepad::B)
         {
             return "RLFSMStateGetDown";
         }
-        else if (rl.control.control_state == STATE::STATE_POS_GETUP)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num0 || rl.control.current_gamepad == Input::Gamepad::Y)
         {
             return "RLFSMStateGetUp";
         }
-        else if (rl.control.control_state == STATE::STATE_RL_LOCOMOTION)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num1 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
         {
             return "RLFSMStateRL_Locomotion";
-        }
-        else if (rl.control.control_state == STATE::STATE_WAITING)
-        {
-            return "RLFSMStateWaiting";
         }
         return state_name_;
     }
@@ -423,6 +431,8 @@ public:
 
     void Enter() override
     {
+        rl.episode_length_buf = 0;
+
         // read params from yaml
         rl.config_name = "robomimic/kick";
         std::string robot_path = rl.robot_name + "/" + rl.config_name;
@@ -435,10 +445,9 @@ public:
         {
             std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
             rl.rl_init_done = false;
-            rl.control.control_state = STATE::STATE_POS_GETUP;
+            rl.control.current_keyboard = Input::Keyboard::Num0;
         }
 
-        rl.episode_length_buf = 0;
         rl.motion_length = 3.633;
 
         // pos init
@@ -472,7 +481,7 @@ public:
 
         if (motion_time / rl.motion_length == 1)
         {
-            rl.control.SetControlState(STATE::STATE_POS_GETUP);
+            rl.control.SetKeyboard(Input::Keyboard::Num0);
         }
     }
 
@@ -483,21 +492,21 @@ public:
 
     std::string CheckChange() override
     {
-        if (rl.control.control_state == STATE::STATE_POS_GETDOWN)
+        if (rl.control.current_keyboard == Input::Keyboard::P || rl.control.current_gamepad == Input::Gamepad::LB_X)
+        {
+            return "RLFSMStatePassive";
+        }
+        else if (rl.control.current_keyboard == Input::Keyboard::Num9 || rl.control.current_gamepad == Input::Gamepad::B)
         {
             return "RLFSMStateGetDown";
         }
-        else if (rl.control.control_state == STATE::STATE_POS_GETUP)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num0 || rl.control.current_gamepad == Input::Gamepad::Y)
         {
             return "RLFSMStateGetUp";
         }
-        else if (rl.control.control_state == STATE::STATE_RL_LOCOMOTION)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num1 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
         {
             return "RLFSMStateRL_Locomotion";
-        }
-        else if (rl.control.control_state == STATE::STATE_WAITING)
-        {
-            return "RLFSMStateWaiting";
         }
         return state_name_;
     }
@@ -512,8 +521,8 @@ public:
     std::shared_ptr<FSMState> CreateState(void *context, const std::string &state_name) override
     {
         RL *rl = static_cast<RL *>(context);
-        if (state_name == "RLFSMStateWaiting")
-            return std::make_shared<g1_fsm::RLFSMStateWaiting>(rl);
+        if (state_name == "RLFSMStatePassive")
+            return std::make_shared<g1_fsm::RLFSMStatePassive>(rl);
         else if (state_name == "RLFSMStateGetUp")
             return std::make_shared<g1_fsm::RLFSMStateGetUp>(rl);
         else if (state_name == "RLFSMStateGetDown")
@@ -532,7 +541,7 @@ public:
     std::vector<std::string> GetSupportedStates() const override
     {
         return {
-            "RLFSMStateWaiting",
+            "RLFSMStatePassive",
             "RLFSMStateGetUp",
             "RLFSMStateGetDown",
             "RLFSMStateRL_Locomotion",
@@ -546,6 +555,6 @@ private:
     std::string initial_state_;
 };
 
-REGISTER_FSM_FACTORY(G1FSMFactory, "RLFSMStateWaiting")
+REGISTER_FSM_FACTORY(G1FSMFactory, "RLFSMStatePassive")
 
 #endif // G1_FSM_HPP

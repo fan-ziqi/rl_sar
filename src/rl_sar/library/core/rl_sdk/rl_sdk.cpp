@@ -220,7 +220,7 @@ void RL::TorqueProtect(torch::Tensor origin_output_dof_tau)
             std::cout << LOGGER::WARNING << "Torque(" << index + 1 << ")=" << value << " out of range(" << limit_lower << ", " << limit_upper << ")" << std::endl;
         }
         // Just a reminder, no protection
-        // this->control.SetControlState(STATE_POS_GETDOWN);
+        // this->control.SetKeyboard(Input::Keyboard::P);
         // std::cout << LOGGER::INFO << "Switching to STATE_POS_GETDOWN"<< std::endl;
     }
 }
@@ -254,12 +254,12 @@ void RL::AttitudeProtect(const std::vector<double> &quaternion, float pitch_thre
 
     if (std::fabs(roll) > roll_threshold)
     {
-        // this->control.SetControlState(STATE_POS_GETDOWN);
+        // this->control.SetKeyboard(Input::Keyboard::P);
         std::cout << LOGGER::WARNING << "Roll exceeds " << roll_threshold << " degrees. Current: " << roll << " degrees." << std::endl;
     }
     if (std::fabs(pitch) > pitch_threshold)
     {
-        // this->control.SetControlState(STATE_POS_GETDOWN);
+        // this->control.SetKeyboard(Input::Keyboard::P);
         std::cout << LOGGER::WARNING << "Pitch exceeds " << pitch_threshold << " degrees. Current: " << pitch << " degrees." << std::endl;
     }
 }
@@ -290,65 +290,58 @@ void RL::KeyboardInterface()
         int c = fgetc(stdin);
         switch (c)
         {
-        case '0':
-            this->control.SetControlState(STATE_POS_GETUP);
-            break;
-        case 'p':
-            this->control.SetControlState(STATE_RL_LOCOMOTION);
-            break;
-        case 'n':
-            this->control.navigation_mode = !this->control.navigation_mode;
-            std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
-            break;
-        // case '1':
-        //     this->control.SetControlState(STATE_POS_GETDOWN);
-        //     break;
-        case '1':
-            this->control.SetControlState(STATE_RL_SKILL_1);
-            break;
-        case '2':
-            this->control.SetControlState(STATE_RL_SKILL_2);
-            break;
-        case '3':
-            this->control.SetControlState(STATE_RL_SKILL_3);
-            break;
-        case 'q':
-            break;
-        case 'w':
-            this->control.x += 0.1;
-            break;
-        case 's':
-            this->control.x -= 0.1;
-            break;
-        case 'a':
-            this->control.yaw += 0.1;
-            break;
-        case 'd':
-            this->control.yaw -= 0.1;
-            break;
-        case 'i':
-            break;
-        case 'k':
-            break;
-        case 'j':
-            this->control.y += 0.1;
-            break;
-        case 'l':
-            this->control.y -= 0.1;
-            break;
-        case ' ':
-            this->control.x = 0;
-            this->control.y = 0;
-            this->control.yaw = 0;
-            break;
-        case 'r':
-            this->control.SetControlState(STATE_RESET_SIMULATION);
-            break;
-        case '\n':
-            this->control.SetControlState(STATE_TOGGLE_SIMULATION);
-            break;
-        default:
-            break;
+        case '0': this->control.SetKeyboard(Input::Keyboard::Num0); break;
+        case '1': this->control.SetKeyboard(Input::Keyboard::Num1); break;
+        case '2': this->control.SetKeyboard(Input::Keyboard::Num2); break;
+        case '3': this->control.SetKeyboard(Input::Keyboard::Num3); break;
+        case '4': this->control.SetKeyboard(Input::Keyboard::Num4); break;
+        case '5': this->control.SetKeyboard(Input::Keyboard::Num5); break;
+        case '6': this->control.SetKeyboard(Input::Keyboard::Num6); break;
+        case '7': this->control.SetKeyboard(Input::Keyboard::Num7); break;
+        case '8': this->control.SetKeyboard(Input::Keyboard::Num8); break;
+        case '9': this->control.SetKeyboard(Input::Keyboard::Num9); break;
+        case 'a': case 'A': this->control.SetKeyboard(Input::Keyboard::A); break;
+        case 'b': case 'B': this->control.SetKeyboard(Input::Keyboard::B); break;
+        case 'c': case 'C': this->control.SetKeyboard(Input::Keyboard::C); break;
+        case 'd': case 'D': this->control.SetKeyboard(Input::Keyboard::D); break;
+        case 'e': case 'E': this->control.SetKeyboard(Input::Keyboard::E); break;
+        case 'f': case 'F': this->control.SetKeyboard(Input::Keyboard::F); break;
+        case 'g': case 'G': this->control.SetKeyboard(Input::Keyboard::G); break;
+        case 'h': case 'H': this->control.SetKeyboard(Input::Keyboard::H); break;
+        case 'i': case 'I': this->control.SetKeyboard(Input::Keyboard::I); break;
+        case 'j': case 'J': this->control.SetKeyboard(Input::Keyboard::J); break;
+        case 'k': case 'K': this->control.SetKeyboard(Input::Keyboard::K); break;
+        case 'l': case 'L': this->control.SetKeyboard(Input::Keyboard::L); break;
+        case 'm': case 'M': this->control.SetKeyboard(Input::Keyboard::M); break;
+        case 'n': case 'N': this->control.SetKeyboard(Input::Keyboard::N); break;
+        case 'o': case 'O': this->control.SetKeyboard(Input::Keyboard::O); break;
+        case 'p': case 'P': this->control.SetKeyboard(Input::Keyboard::P); break;
+        case 'q': case 'Q': this->control.SetKeyboard(Input::Keyboard::Q); break;
+        case 'r': case 'R': this->control.SetKeyboard(Input::Keyboard::R); break;
+        case 's': case 'S': this->control.SetKeyboard(Input::Keyboard::S); break;
+        case 't': case 'T': this->control.SetKeyboard(Input::Keyboard::T); break;
+        case 'u': case 'U': this->control.SetKeyboard(Input::Keyboard::U); break;
+        case 'v': case 'V': this->control.SetKeyboard(Input::Keyboard::V); break;
+        case 'w': case 'W': this->control.SetKeyboard(Input::Keyboard::W); break;
+        case 'x': case 'X': this->control.SetKeyboard(Input::Keyboard::X); break;
+        case 'y': case 'Y': this->control.SetKeyboard(Input::Keyboard::Y); break;
+        case 'z': case 'Z': this->control.SetKeyboard(Input::Keyboard::Z); break;
+        case ' ': this->control.SetKeyboard(Input::Keyboard::Space); break;
+        case '\n': case '\r': this->control.SetKeyboard(Input::Keyboard::Enter); break;
+        case 27: this->control.SetKeyboard(Input::Keyboard::Escape); break;
+        case 0xE0:
+        {
+            int ext = fgetc(stdin);
+            switch (ext)
+            {
+            case 72: this->control.SetKeyboard(Input::Keyboard::Up); break;
+            case 80: this->control.SetKeyboard(Input::Keyboard::Down); break;
+            case 75: this->control.SetKeyboard(Input::Keyboard::Left); break;
+            case 77: this->control.SetKeyboard(Input::Keyboard::Right); break;
+            default:  break;
+            }
+        } break;
+        default:  break;
         }
     }
 }

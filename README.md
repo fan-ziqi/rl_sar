@@ -37,6 +37,9 @@ Support List:
 >
 > Discuss in [Github Discussion](https://github.com/fan-ziqi/rl_sar/discussions) or [Discord](https://discord.gg/vmVjkhVugU).
 
+> [!CAUTION]
+> **Disclaimer: User acknowledges that all risks and consequences arising from using this code shall be solely borne by the user, the author assumes no liability for any direct or indirect damages, and proper safety measures must be implemented prior to operation.**
+
 ## Preparation
 
 Clone the code
@@ -146,7 +149,7 @@ Examples:
   ./build.sh -m                 # Build with CMake for hardware deployment
 ```
 
-> [!NOTE]
+> [!TIP]
 > If catkin build report errors: `Unable to find either executable 'empy' or Python module 'em'`, run `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3` before `catkin build`
 
 ## Running
@@ -187,25 +190,37 @@ If Gazebo cannot be opened when you start it for the first time, you need to dow
 git clone https://github.com/osrf/gazebo_models.git ~/.gazebo/models
 ```
 
-Keyboard Control:
+### Gamepad and Keyboard Controls
 
-- Press **<Enter>** to toggle the simulator between running and stopped. (Default is running state)
-- Press **0** to move the robot from the initial simulation pose to the `default_dof_pos` defined in the YAML file using position control interpolation.
-- Press **p** to switch to Reinforcement Learning mode.
-- Use **W/S** to move forward/backward, **J/L** to move left/right, and **A/D** to turn. Press **<Space>** to reset all control commands to zero.
-- Press **n** to switch to Navigation mode, disabling gamepad commands and receiving commands from the `cmd_vel` topic.
-- If the robot falls down, press **R** to reset the Gazebo environment.
-- Press **1** to move the robot from its current position back to the initial simulation pose using position control interpolation.
-
-Gamepad Control:
-
-- Press **LB** to toggle the simulator between running and stopped. (Default is running state)
-- Press **RB + Y** to move the robot from the initial simulation pose to the `default_dof_pos` defined in the YAML file using position control interpolation.
-- Press **RB + B** to switch to Reinforcement Learning mode.
-- Use **LY** to move forward/backward, **LX** to move left/right, and **RX** to turn.
-- Press the **down button on the left** to switch to Navigation mode, disabling gamepad commands and receiving commands from the `cmd_vel` topic.
-- If the robot falls down, press **RB + X** to reset the Gazebo environment.
-- Press **RB + A** to move the robot from its current position back to the initial simulation pose using position control interpolation.
+|Gamepad Control|Keyboard Control|Description|
+|---|---|---|
+|**Basic**|||
+|A|Num0|Move the robot from its initial program pose to the `default_dof_pos` defined in `base.yaml` using position control interpolation|
+|B|Num9|Move the robot from its current position to the initial program pose using position control interpolation|
+|X|N|Toggle navigation mode (disables velocity commands, receives `cmd_vel` topic)|
+|Y|N/A|N/A|
+|**Simulation**|||
+|RB+Y|R|Reset Gazebo environment (stand up fallen robot)|
+|RB+X|Enter|Toggle Gazebo run/stop (default: running state)|
+|**Motor**|||
+|LB+A|M|N/A (Recommended for motor enable)|
+|LB+B|K|N/A (Recommended for motor disable)|
+|LB+X|P|N/A Motor passive mode (`kp=0, kd=8`)|
+|LB+RB|N/A|N/A (Recommended for emergency stop)|
+|**Skill**|||
+|RB+DPadUp|Num1|Basic Locomotion|
+|RB+DPadDown|Num2|Skill 2|
+|RB+DPadLeft|Num3|Skill 3|
+|RB+DPadRight|Num4|Skill 4|
+|LB+DPadUp|Num5|Skill 5|
+|LB+DPadDown|Num6|Skill 6|
+|LB+DPadLeft|Num7|Skill 7|
+|LB+DPadRight|Num8|Skill 8|
+|**Movement**|||
+|LY Axis|W/S|Forward/Backward movement (X-axis)|
+|LX Axis|A/D|Left/Right movement (Y-axis)|
+|RX Axis|Q/E|Yaw rotation|
+|N/A (Release joystick)|Space|Reset all control commands to zero|
 
 ### Real Robots
 
@@ -233,10 +248,6 @@ ros2 run rl_sar rl_real_a1
 ./cmake_build/bin/rl_real_a1
 ```
 
-Press **R2** on the gamepad to switch the robot to the default standing pose, **R1** to switch to Reinforcement Learning (RL) control mode, and **L2** in any state to return to the initial lying-down pose. The **left joystick up/down** controls movement along the **x-axis**, **left joystick left/right** controls **yaw**, and **right joystick left/right** controls movement along the **y-axis**.
-
-Alternatively, press **0** on the keyboard to switch the robot to the default standing pose, **P** to switch to RL control mode, and **1** in any state to return to the initial lying-down pose. Use **W/S** to control the **x-axis**, **A/D** to control **yaw**, and **J/L** to control the **y-axis**.
-
 </details>
 
 <details>
@@ -263,8 +274,6 @@ ros2 run rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
 # CMake
 ./cmake_build/bin/rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
 ```
-
-Go2/Go2W supports both joy and keyboard control, following the same method as described for A1.
 
 #### Deploying on the Onboard Jetson
 

@@ -11,6 +11,7 @@
 #include <string>
 #include <exception>
 #include <unistd.h>
+#include <algorithm>
 #include <tbb/concurrent_queue.h>
 
 #include <yaml-cpp/yaml.h>
@@ -59,33 +60,63 @@ struct RobotState
     } motor_state;
 };
 
-enum STATE
+namespace Input
 {
-    STATE_WAITING = 0,
-    STATE_POS_GETUP,
-    STATE_RL_LOCOMOTION,
-    STATE_RL_SKILL_1,
-    STATE_RL_SKILL_2,
-    STATE_RL_SKILL_3,
-    STATE_POS_GETDOWN,
-    STATE_RESET_SIMULATION,
-    STATE_TOGGLE_SIMULATION,
-};
+    // Recommend: Num0-GetUp Num9-GetDown N-ToggleNavMode
+    //            R-SimReset Enter-SimToggle
+    //            M-MotorEnable K-MotorDisable P-MotorPassive
+    //            Num1-BaseLocomotion Num2-Num8-Skills(7)
+    //            WS-AxisX AD-AxisY QE-AxisYaw Space-AxisClear
+    enum class Keyboard
+    {
+        None = 0,
+        A, B, C, D, E, F, G, H, I, J, K, L, M,
+        N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
+        Num0, Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9,
+        Space, Enter, Escape,
+        Up, Down, Left, Right
+    };
+
+    // Recommend: A-GetUp B-GetDown X-ToggleNavMode Y-None
+    //            RB_Y-SimReset RB_X-SimToggle
+    //            LB_A-MotorEnable LB_B-MotorDisable LB_X-MotorPassive
+    //            RB_DPadUp-BaseLocomotion RB_DPadOthers/LB_DPadOthers-Skills(7)
+    //            LY-AxisX LX-AxisY RX-AxisYaw
+    enum class Gamepad
+    {
+        None = 0,
+        A, B, X, Y, LB, RB, LStick, RStick, DPadUp, DPadDown, DPadLeft, DPadRight,
+        LB_A, LB_B, LB_X, LB_Y, LB_LStick, LB_RStick, LB_DPadUp, LB_DPadDown, LB_DPadLeft, LB_DPadRight,
+        RB_A, RB_B, RB_X, RB_Y, RB_LStick, RB_RStick, RB_DPadUp, RB_DPadDown, RB_DPadLeft, RB_DPadRight,
+        LB_RB
+    };
+}
 
 struct Control
 {
-    STATE control_state, last_control_state;
+    Input::Keyboard current_keyboard, last_keyboard;
+    Input::Gamepad current_gamepad, last_gamepad;
+
     double x = 0.0;
     double y = 0.0;
     double yaw = 0.0;
-    double wheel = 0.0;
     bool navigation_mode = false;
-    void SetControlState(STATE new_state)
+
+    void SetKeyboard(Input::Keyboard keyboad)
     {
-        if (control_state != new_state)
+        if (current_keyboard != keyboad)
         {
-            last_control_state = control_state;
-            control_state = new_state;
+            last_keyboard = current_keyboard;
+            current_keyboard = keyboad;
+        }
+    }
+
+    void SetGamepad(Input::Gamepad gamepad)
+    {
+        if (current_gamepad != gamepad)
+        {
+            last_gamepad = current_gamepad;
+            current_gamepad = gamepad;
         }
     }
 };

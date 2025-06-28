@@ -113,13 +113,6 @@ void RL_Real::GetState(RobotState<double> *state)
         return;
     }
 
-    memcpy(this->remote_data_rx.buff, &unitree_low_state.wireless_remote()[0], 40);
-    this->gamepad.update(this->remote_data_rx.RF_RX);
-
-    this->control.x = this->gamepad.ly;
-    this->control.y = -this->gamepad.lx;
-    this->control.yaw = -this->gamepad.rx;
-
     if (this->mode_machine != this->unitree_low_state.mode_machine())
     {
         if (this->mode_machine == 0)
@@ -129,23 +122,46 @@ void RL_Real::GetState(RobotState<double> *state)
         this->mode_machine = this->unitree_low_state.mode_machine();
     }
 
-    if (this->gamepad.R2.pressed)
-    {
-        this->control.SetControlState(STATE_POS_GETUP);
-    }
-    else if (this->gamepad.R1.pressed)
-    {
-        this->control.SetControlState(STATE_RL_LOCOMOTION);
-    }
-    else if (this->gamepad.L2.pressed)
-    {
-        this->control.SetControlState(STATE_POS_GETDOWN);
-    }
-    else if (this->gamepad.down.pressed)
-    {
-        this->control.navigation_mode = !this->control.navigation_mode;
-        std::cout << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
-    }
+    memcpy(this->remote_data_rx.buff, &unitree_low_state.wireless_remote()[0], 40);
+    this->gamepad.update(this->remote_data_rx.RF_RX);
+
+    if (this->gamepad.A.pressed) this->control.SetGamepad(Input::Gamepad::A);
+    if (this->gamepad.B.pressed) this->control.SetGamepad(Input::Gamepad::B);
+    if (this->gamepad.X.pressed) this->control.SetGamepad(Input::Gamepad::X);
+    if (this->gamepad.Y.pressed) this->control.SetGamepad(Input::Gamepad::Y);
+    if (this->gamepad.R1.pressed) this->control.SetGamepad(Input::Gamepad::RB);
+    if (this->gamepad.L1.pressed) this->control.SetGamepad(Input::Gamepad::LB);
+    if (this->gamepad.F1.pressed) this->control.SetGamepad(Input::Gamepad::LStick);
+    if (this->gamepad.F2.pressed) this->control.SetGamepad(Input::Gamepad::RStick);
+    if (this->gamepad.up.pressed) this->control.SetGamepad(Input::Gamepad::DPadUp);
+    if (this->gamepad.down.pressed) this->control.SetGamepad(Input::Gamepad::DPadDown);
+    if (this->gamepad.left.pressed) this->control.SetGamepad(Input::Gamepad::DPadLeft);
+    if (this->gamepad.right.pressed) this->control.SetGamepad(Input::Gamepad::DPadRight);
+    if (this->gamepad.L1.pressed && this->gamepad.A.pressed) this->control.SetGamepad(Input::Gamepad::LB_A);
+    if (this->gamepad.L1.pressed && this->gamepad.B.pressed) this->control.SetGamepad(Input::Gamepad::LB_B);
+    if (this->gamepad.L1.pressed && this->gamepad.X.pressed) this->control.SetGamepad(Input::Gamepad::LB_X);
+    if (this->gamepad.L1.pressed && this->gamepad.Y.pressed) this->control.SetGamepad(Input::Gamepad::LB_Y);
+    if (this->gamepad.L1.pressed && this->gamepad.F1.pressed) this->control.SetGamepad(Input::Gamepad::LB_LStick);
+    if (this->gamepad.L1.pressed && this->gamepad.F2.pressed) this->control.SetGamepad(Input::Gamepad::LB_RStick);
+    if (this->gamepad.L1.pressed && this->gamepad.up.pressed) this->control.SetGamepad(Input::Gamepad::LB_DPadUp);
+    if (this->gamepad.L1.pressed && this->gamepad.down.pressed) this->control.SetGamepad(Input::Gamepad::LB_DPadDown);
+    if (this->gamepad.L1.pressed && this->gamepad.left.pressed) this->control.SetGamepad(Input::Gamepad::LB_DPadLeft);
+    if (this->gamepad.L1.pressed && this->gamepad.right.pressed) this->control.SetGamepad(Input::Gamepad::LB_DPadRight);
+    if (this->gamepad.R1.pressed && this->gamepad.A.pressed) this->control.SetGamepad(Input::Gamepad::RB_A);
+    if (this->gamepad.R1.pressed && this->gamepad.B.pressed) this->control.SetGamepad(Input::Gamepad::RB_B);
+    if (this->gamepad.R1.pressed && this->gamepad.X.pressed) this->control.SetGamepad(Input::Gamepad::RB_X);
+    if (this->gamepad.R1.pressed && this->gamepad.Y.pressed) this->control.SetGamepad(Input::Gamepad::RB_Y);
+    if (this->gamepad.R1.pressed && this->gamepad.F1.pressed) this->control.SetGamepad(Input::Gamepad::RB_LStick);
+    if (this->gamepad.R1.pressed && this->gamepad.F2.pressed) this->control.SetGamepad(Input::Gamepad::RB_RStick);
+    if (this->gamepad.R1.pressed && this->gamepad.up.pressed) this->control.SetGamepad(Input::Gamepad::RB_DPadUp);
+    if (this->gamepad.R1.pressed && this->gamepad.down.pressed) this->control.SetGamepad(Input::Gamepad::RB_DPadDown);
+    if (this->gamepad.R1.pressed && this->gamepad.left.pressed) this->control.SetGamepad(Input::Gamepad::RB_DPadLeft);
+    if (this->gamepad.R1.pressed && this->gamepad.right.pressed) this->control.SetGamepad(Input::Gamepad::RB_DPadRight);
+    if (this->gamepad.L1.pressed && this->gamepad.R1.pressed) this->control.SetGamepad(Input::Gamepad::LB_RB);
+
+    this->control.x = this->gamepad.ly;
+    this->control.y = -this->gamepad.lx;
+    this->control.yaw = -this->gamepad.rx;
 
     state->imu.quaternion[0] = this->unitree_low_state.imu_state().quaternion()[0]; // w
     state->imu.quaternion[1] = this->unitree_low_state.imu_state().quaternion()[1]; // x
@@ -186,6 +202,50 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
 void RL_Real::RobotControl()
 {
     this->motiontime++;
+
+    if (this->control.current_keyboard == Input::Keyboard::W)
+    {
+        this->control.x += 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::S)
+    {
+        this->control.x -= 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::A)
+    {
+        this->control.y += 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::D)
+    {
+        this->control.y -= 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::Q)
+    {
+        this->control.yaw += 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::E)
+    {
+        this->control.yaw -= 0.1;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::Space)
+    {
+        this->control.x = 0;
+        this->control.y = 0;
+        this->control.yaw = 0;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::N || this->control.current_gamepad == Input::Gamepad::X)
+    {
+        this->control.navigation_mode = !this->control.navigation_mode;
+        std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
+        this->control.current_keyboard = this->control.last_keyboard;
+    }
 
     this->GetState(&this->robot_state);
     this->StateController(&this->robot_state, &this->robot_command);

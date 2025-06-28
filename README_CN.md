@@ -37,6 +37,9 @@
 >
 > 在 [Github Discussion](https://github.com/fan-ziqi/rl_sar/discussions) 或 [Discord](https://discord.gg/MC9KguQHtt) 中讨论
 
+> [!CAUTION]
+> **免责声明：使用者确认使用本代码产生的所有风险及后果均由使用者自行承担，作者不承担任何直接或间接责任，操作前必须确保已采取充分安全防护措施。**
+
 ## 准备
 
 拉取代码
@@ -146,7 +149,7 @@ Examples:
   ./build.sh -m                 # Build with CMake for hardware deployment
 ```
 
-> [!NOTE]
+> [!TIP]
 > 如果 catkin build 报错: `Unable to find either executable 'empy' or Python module 'em'`, 在`catkin build` 之前执行 `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3`
 
 ## 运行
@@ -187,25 +190,37 @@ ros2 run rl_sar rl_sim
 git clone https://github.com/osrf/gazebo_models.git ~/.gazebo/models
 ```
 
-键盘控制：
+### 手柄与键盘控制
 
-- 按 **\<Enter\>** 切换仿真器运行/停止。（默认为运行状态）
-- 按 **0** 让机器人从仿真开始的姿态以位控插值运动到yaml中定义的`default_dof_pos`。
-- 按 **p** 切换到强化学习模式。
-- **W/S** 控制前后移动，**J/L** 控制左右移动，**A/D** 控制转向，按 **\<Space\>** 将所有控制指令设置为零。
-- 按 **n** 切换到导航模式，屏蔽手柄命令，接收`cmd_vel`话题。
-- 如果机器人摔倒，按 **R** 重置Gazebo环境。
-- 按 **1** 让机器人从当前位置以位控插值运动到仿真开始的姿态。
-
-手柄控制：
-
-- 按 **LB** 切换仿真器运行/停止。（默认为运行状态）
-- 按 **RB+Y** 让机器人从仿真开始的姿态以位控插值运动到yaml中定义的`default_dof_pos`。
-- 按 **RB+B** 切换到强化学习模式。
-- **LY** 控制前后移动，**LX** 控制左右移动，**RX** 控制转向。
-- 按 **左面的下键** 切换到导航模式，屏蔽手柄命令，接收`cmd_vel`话题。
-- 如果机器人摔倒，按 **RB+X** 重置Gazebo环境。
-- 按 **RB+A** 让机器人从当前位置以位控插值运动到仿真开始的姿态。
+|手柄控制|键盘控制|功能描述|
+|---|---|---|
+|**基础**|||
+|A|Num0|让机器人从程序开始运行时的姿态以位控插值运动到`base.yaml`中定义的`default_dof_pos`|
+|B|Num9|让机器人从当前位置以位控插值运动到程序开始运行时的姿态|
+|X|N|切换导航模式 (导航模式屏蔽速度命令，接收`cmd_vel`话题)|
+|Y|N/A|N/A|
+|**仿真**|||
+|RB+Y|R|重置Gazebo环境 (让摔倒的机器人站起来)|
+|RB+X|Enter|切换Gazebo运行/停止 (默认为运行状态)|
+|**电机**|||
+|LB+A|M|N/A (推荐设置为电机使能)|
+|LB+B|K|N/A (推荐设置为电机失能)|
+|LB+X|P|电机Passive模式 (`kp=0, kd=8`)|
+|LB+RB|N/A|N/A (推荐设置为急停保护)|
+|**技能**|||
+|RB+DPadUp|Num1|基础Locomotion|
+|RB+DPadDown|Num2|技能2|
+|RB+DPadLeft|Num3|技能3|
+|RB+DPadRight|Num4|技能4|
+|LB+DPadUp|Num5|技能5|
+|LB+DPadDown|Num6|技能6|
+|LB+DPadLeft|Num7|技能7|
+|LB+DPadRight|Num8|技能8|
+|**移动**|||
+|LY轴|W/S|前后移动 (X轴)|
+|LX轴|A/D|左右移动 (Y轴)|
+|RX轴|Q/E|偏航旋转 (Yaw)|
+|N/A(松开摇杆)|Space|将所有控制指令设置为零|
 
 ### 真实机器人
 
@@ -233,10 +248,6 @@ ros2 run rl_sar rl_real_a1
 ./cmake_build/bin/rl_real_a1
 ```
 
-按下遥控器的**R2**键让机器人切换到默认站起姿态，按下**R1**键切换到RL控制模式，任意状态按下**L2**切换到最初的趴下姿态。左摇杆上下控制x，左摇杆左右控制yaw，右摇杆左右控制y。
-
-或者按下键盘上的**0**键让机器人切换到默认站起姿态，按下**P**键切换到RL控制模式，任意状态按下**1**键切换到最初的趴下姿态。WS控制x，AD控制yaw，JL控制y。
-
 </details>
 
 <details>
@@ -263,8 +274,6 @@ ros2 run rl_sar rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
 # CMake
 ./cmake_build/bin/rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
 ```
-
-Go2/Go2W支持手柄与键盘控制，方法与上面a1相同
 
 #### 在机载Jetson中部署
 
