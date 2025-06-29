@@ -23,8 +23,8 @@
 |Unitree-B2 (b2)|robot_lab (IsaacSim)|⚪|
 |Unitree-B2W (b2w)|robot_lab (IsaacSim)|⚪|
 |Unitree-G1 (g1)|unitree_rl_gym (IsaacGym)</br>robomimic pre-loco (IsaacGym)</br>robomimic_dance (IsaacGym)</br>robomimic_kick (IsaacGym)</br>robomimic_kungfu (IsaacGym)|✅</br>✅</br>✅</br>🚫</br>🚫|
-|FFTAI-GR1T1 (gr1t1)|legged_gym (IsaacGym)|⚪|
-|FFTAI-GR1T2 (gr1t2)|legged_gym (IsaacGym)|⚪|
+|FFTAI-GR1T1 (gr1t1)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
+|FFTAI-GR1T2 (gr1t2)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
 |GoldenRetriever-L4W4 (l4w4)|legged_gym (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
 
 > [!IMPORTANT]
@@ -183,6 +183,9 @@ rosrun rl_sar rl_sim
 source install/setup.bash
 ros2 run rl_sar rl_sim
 ```
+
+> [!TIP]
+> Ubuntu22.04中若启动Gazebo后看不到机器人，则是机器人初始化到了视野范围外，启动rl_sim后会自动重置机器人位置。若机器人在站立过程中翻倒，请使用键盘`R`或手柄`RB+Y`重置机器人环境。
 
 如果第一次启动Gazebo无法打开则需要下载模型包
 

@@ -23,8 +23,8 @@ Support List:
 |Unitree-B2 (b2)|robot_lab (IsaacSim)|⚪|
 |Unitree-B2W (b2w)|robot_lab (IsaacSim)|⚪|
 |Unitree-G1 (g1)|unitree_rl_gym (IsaacGym)</br>robomimic pre-loco (IsaacGym)</br>robomimic_dance (IsaacGym)</br>robomimic_kick (IsaacGym)</br>robomimic_kungfu (IsaacGym)|✅</br>✅</br>✅</br>🚫</br>🚫|
-|FFTAI-GR1T1 (gr1t1)|legged_gym (IsaacGym)|⚪|
-|FFTAI-GR1T2 (gr1t2)|legged_gym (IsaacGym)|⚪|
+|FFTAI-GR1T1 (gr1t1)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
+|FFTAI-GR1T2 (gr1t2)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
 |GoldenRetriever-L4W4 (l4w4)|legged_gym (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
 
 > [!IMPORTANT]
@@ -183,6 +183,9 @@ rosrun rl_sar rl_sim
 source install/setup.bash
 ros2 run rl_sar rl_sim
 ```
+
+> [!TIP]
+> If you cannot see the robot after launching Gazebo in Ubuntu 22.04, it means the robot was initialized outside the field of view. The robot's position will be automatically reset after launching rl_sim. If the robot falls over during the standing process, use the keyboard `R` or the gamepad `RB+Y` to reset the robot.
 
 If Gazebo cannot be opened when you start it for the first time, you need to download the model package
 

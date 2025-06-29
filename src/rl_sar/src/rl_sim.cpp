@@ -151,6 +151,9 @@ RL_Sim::RL_Sim()
     this->gazebo_pause_physics_client = this->create_client<std_srvs::srv::Empty>("/pause_physics");
     this->gazebo_unpause_physics_client = this->create_client<std_srvs::srv::Empty>("/unpause_physics");
     this->gazebo_reset_world_client = this->create_client<std_srvs::srv::Empty>("/reset_world");
+
+    auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
+    auto result = this->gazebo_reset_world_client->async_send_request(empty_request);
 #endif
 
     // loop
