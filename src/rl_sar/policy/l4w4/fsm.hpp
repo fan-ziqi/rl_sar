@@ -138,7 +138,7 @@ public:
         {
             return "RLFSMStatePassive";
         }
-        else if (rl.control.current_keyboard == Input::Keyboard::Num0 || rl.control.current_gamepad == Input::Gamepad::Y)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num0 || rl.control.current_gamepad == Input::Gamepad::A)
         {
             return "RLFSMStateGetUp";
         }
@@ -212,7 +212,7 @@ public:
         {
             return "RLFSMStateGetDown";
         }
-        else if (rl.control.current_keyboard == Input::Keyboard::Num0 || rl.control.current_gamepad == Input::Gamepad::Y)
+        else if (rl.control.current_keyboard == Input::Keyboard::Num0 || rl.control.current_gamepad == Input::Gamepad::A)
         {
             return "RLFSMStateGetUp";
         }
