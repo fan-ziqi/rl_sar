@@ -1,5 +1,9 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:property name="hip_torque_max" value="23.7"/>
+    <xacro:property name="thigh_torque_max" value="23.7"/>
+    <xacro:property name="calf_torque_max" value="35.55"/>
+    
     <xacro:property name="ros_version" value="$(env ROS_VERSION)" />
 
     <xacro:if value="${int(ros_version) == 1}">
