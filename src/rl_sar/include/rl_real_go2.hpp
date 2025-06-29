@@ -8,6 +8,7 @@
 
 // #define PLOT
 // #define CSV_LOGGER
+// #define USE_ROS
 
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
@@ -24,10 +25,10 @@
 #include <unitree/robot/b2/motion_switcher/motion_switcher_client.hpp>
 #include <csignal>
 
-#if defined(USE_ROS1)
+#if defined(USE_ROS1) && defined(USE_ROS)
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
-#elif defined(USE_ROS2)
+#elif defined(USE_ROS2) && defined(USE_ROS)
 #include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #endif
@@ -70,7 +71,7 @@ typedef union
 } xKeySwitchUnion;
 
 class RL_Real : public RL
-#if defined(USE_ROS2)
+#if defined(USE_ROS2) && defined(USE_ROS)
     , public rclcpp::Node
 #endif
 {
@@ -119,11 +120,11 @@ private:
     std::vector<double> mapped_joint_positions;
     std::vector<double> mapped_joint_velocities;
 
-#if defined(USE_ROS1)
+#if defined(USE_ROS1) && defined(USE_ROS)
     geometry_msgs::Twist cmd_vel;
     ros::Subscriber cmd_vel_subscriber;
     void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
-#elif defined(USE_ROS2)
+#elif defined(USE_ROS2) && defined(USE_ROS)
     geometry_msgs::msg::Twist cmd_vel;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscriber;
     void CmdvelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);

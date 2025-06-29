@@ -6,14 +6,14 @@
 #include "rl_real_a1.hpp"
 
 RL_Real::RL_Real() : unitree_safe(UNITREE_LEGGED_SDK::LeggedType::A1), unitree_udp(UNITREE_LEGGED_SDK::LOWLEVEL)
-#if defined(USE_ROS2)
+#if defined(USE_ROS2) && defined(USE_ROS)
     , rclcpp::Node("rl_real_node")
 #endif
 {
-#if defined(USE_ROS1)
+#if defined(USE_ROS1) && defined(USE_ROS)
     ros::NodeHandle nh;
     this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Real::CmdvelCallback, this);
-#elif defined(USE_ROS2)
+#elif defined(USE_ROS2) && defined(USE_ROS)
     this->cmd_vel_subscriber = this->create_subscription<geometry_msgs::msg::Twist>(
         "/cmd_vel", rclcpp::SystemDefaultsQoS(),
         [this] (const geometry_msgs::msg::Twist::SharedPtr msg) {this->CmdvelCallback(msg);}
@@ -225,7 +225,7 @@ void RL_Real::RunModel()
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
         if (this->control.navigation_mode)
         {
-#if !defined(USE_CMAKE)
+#if !defined(USE_CMAKE) && defined(USE_ROS)
             this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
 #endif
         }
@@ -312,11 +312,11 @@ void RL_Real::Plot()
     plt::pause(0.0001);
 }
 
-#if !defined(USE_CMAKE)
+#if !defined(USE_CMAKE) && defined(USE_ROS)
 void RL_Real::CmdvelCallback(
-#if defined(USE_ROS1)
+#if defined(USE_ROS1) && defined(USE_ROS)
     const geometry_msgs::Twist::ConstPtr &msg
-#elif defined(USE_ROS2)
+#elif defined(USE_ROS2) && defined(USE_ROS)
     const geometry_msgs::msg::Twist::SharedPtr msg
 #endif
 )
@@ -325,7 +325,7 @@ void RL_Real::CmdvelCallback(
 }
 #endif
 
-#if defined(USE_ROS1)
+#if defined(USE_ROS1) && defined(USE_ROS)
 void signalHandler(int signum)
 {
     ros::shutdown();
@@ -335,16 +335,16 @@ void signalHandler(int signum)
 
 int main(int argc, char **argv)
 {
-#if defined(USE_ROS1)
+#if defined(USE_ROS1) && defined(USE_ROS)
     signal(SIGINT, signalHandler);
     ros::init(argc, argv, "rl_sar");
     RL_Real rl_sar;
     ros::spin();
-#elif defined(USE_ROS2)
+#elif defined(USE_ROS2) && defined(USE_ROS)
     rclcpp::init(argc, argv);
     rclcpp::spin(std::make_shared<RL_Real>());
     rclcpp::shutdown();
-#elif defined(USE_CMAKE)
+#elif defined(USE_CMAKE) || !defined(USE_ROS)
     RL_Real rl_sar;
     while (1) { sleep(10); }
 #endif
