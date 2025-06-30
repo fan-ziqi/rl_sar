@@ -1,37 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by
-Stephen Brawner (brawner@gmail.com)
-     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
-     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<?xml version='1.0' encoding='utf-8'?>
 <robot name="go2w_description">
-<material name="black">
-    <color rgba="0.0 0.0 0.0 1.0"/>
-  </material>
-  <material name="blue">
-    <color rgba="0.0 0.0 0.8 1.0"/>
-  </material>
-  <material name="green">
-    <color rgba="0.0 0.8 0.0 1.0"/>
-  </material>
-  <material name="grey">
-    <color rgba="0.2 0.2 0.2 1.0"/>
-  </material>
-  <material name="silver">
-    <color rgba="0.913725490196 0.913725490196 0.847058823529 1.0"/>
-  </material>
-  <material name="orange">
-    <color rgba="1.0 0.423529411765 0.0392156862745 1.0"/>
-  </material>
-  <material name="brown">
-    <color rgba="0.870588235294 0.811764705882 0.764705882353 1.0"/>
-  </material>
-  <material name="red">
-    <color rgba="0.8 0.0 0.0 1.0"/>
-  </material>
-  <material name="white">
-    <color rgba="1.0 1.0 1.0 1.0"/>
-  </material>
-
   <link name="base">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -45,6 +13,7 @@ Stephen Brawner (brawner@gmail.com)
     <parent link="base"/>
     <child link="trunk"/>
   </joint>
+
   <link name="trunk">
     <inertial>
       <origin xyz="0.021112 0 -0.005366" rpy="0 0 0" />
@@ -56,10 +25,7 @@ Stephen Brawner (brawner@gmail.com)
       <geometry>
         <mesh filename="package://go2w_description/meshes/base.dae" />
       </geometry>
-      <material name="">
-        <color rgba="1 1 1 1" />
-      </material>
-    </visual>
+      <material name="深色橡胶_001-effect"><color rgba="0.6717055 0.6924257 0.7742702 1" /></material><material name="白色logo_001-effect"><color rgba="1 1 1 1" /></material><material name="黑色贴纸_007-effect"><color rgba="0.009018 0.009018 0.009018 1" /></material><material name="黑色金属_007-effect"><color rgba="0.01341 0.01341 0.01341 1" /></material><material name="黑色塑料_003-effect"><color rgba="0.023455 0.023455 0.023455 1" /></material></visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
@@ -80,7 +46,7 @@ Stephen Brawner (brawner@gmail.com)
       </geometry>
     </collision>
   </link>
-  <joint name="Head_upper_joint" type="fixed">
+  <joint name="Head_upper_joint" type="fixed" dont_collapse="true">
     <origin xyz="0.285 0 0.01" rpy="0 0 0" />
     <parent link="trunk" />
     <child link="Head_upper" />
@@ -99,7 +65,7 @@ Stephen Brawner (brawner@gmail.com)
       </geometry>
     </collision>
   </link>
-  <joint name="Head_lower_joint" type="fixed">
+  <joint name="Head_lower_joint" type="fixed" dont_collapse="true">
     <origin xyz="0.008 0 -0.07" rpy="0 0 0" />
     <parent link="Head_upper" />
     <child link="Head_lower" />
@@ -116,10 +82,7 @@ Stephen Brawner (brawner@gmail.com)
       <geometry>
         <mesh filename="package://go2w_description/meshes/hip.dae" />
       </geometry>
-      <material name="">
-        <color rgba="1 1 1 1" />
-      </material>
-    </visual>
+      <material name="深色橡胶_001-effect"><color rgba="0.6717055 0.6924257 0.7742702 1" /></material><material name="Material-effect"><color rgba="0.9 0.95 0.95 1" /></material></visual>
     <collision>
       <origin rpy="1.5707963267948966 0 0" xyz="0 0.08 0" />
       <geometry>
@@ -145,10 +108,7 @@ Stephen Brawner (brawner@gmail.com)
       <geometry>
         <mesh filename="package://go2w_description/meshes/thigh.dae" />
       </geometry>
-      <material name="">
-        <color rgba="1 1 1 1" />
-      </material>
-    </visual>
+      <material name="深色橡胶_003-effect"><color rgba="0.6717055 0.6924257 0.7742702 1" /></material><material name="Material_009-effect"><color rgba="0.9 0.95 0.95 1" /></material></visual>
     <collision>
       <origin rpy="0 1.5707963267948966 0" xyz="0 0 -0.1065" />
       <geometry>
@@ -172,7 +132,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://go2w_description/meshes/calf.dae" />
+        <mesh filename="package://go2w_description/meshes/calf.stl" />
       </geometry>
       <material name="">
         <color rgba="1 1 1 1" />
@@ -258,62 +218,20 @@ Stephen Brawner (brawner@gmail.com)
       </material>
     </visual>
     <collision>
-      <origin rpy="1.5707963267948966 0 0" xyz="0 0.048 0" />
+      <origin rpy="0 0 0" xyz="0 0.0 0" />
       <geometry>
-        <!-- <mesh filename="package://go2w_description/meshes/left_wheel.dae" /> -->
-        <cylinder length="0.045" radius="0.086" />
+        <mesh filename="package://go2w_description/meshes/left_wheel.dae" />
       </geometry>
     </collision>
   </link>
-  <joint name="FL_foot_joint" type="revolute">
+  <joint name="FL_foot_joint" type="continuous">
     <origin xyz="0 0 -0.2264" rpy="0 0 0" />
     <parent link="FL_calf" />
     <child link="FL_foot" />
     <axis xyz="0 1 0" />
-    <!-- <dynamics damping="0.01" friction="0.01"/> -->
-    <limit effort="23.7" velocity="30.1" lower="-999999" upper="999999" />
-  </joint>
 
-  <transmission name="FL_hip_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="FL_hip_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="FL_hip_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="FL_thigh_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="FL_thigh_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="FL_thigh_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="FL_calf_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="FL_calf_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="FL_calf_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="FL_foot_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="FL_foot_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="FL_foot_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
+      <limit effort="23.7" velocity="30.1" />
+  </joint>
 
   <link name="FR_hip">
     <inertial>
@@ -326,10 +244,7 @@ Stephen Brawner (brawner@gmail.com)
       <geometry>
         <mesh filename="package://go2w_description/meshes/hip.dae" />
       </geometry>
-      <material name="">
-        <color rgba="1 1 1 1" />
-      </material>
-    </visual>
+      <material name="深色橡胶_001-effect"><color rgba="0.6717055 0.6924257 0.7742702 1" /></material><material name="Material-effect"><color rgba="0.9 0.95 0.95 1" /></material></visual>
     <collision>
       <origin rpy="1.5707963267948966 0 0" xyz="0 -0.08 0" />
       <geometry>
@@ -355,10 +270,7 @@ Stephen Brawner (brawner@gmail.com)
       <geometry>
         <mesh filename="package://go2w_description/meshes/thigh_mirror.dae" />
       </geometry>
-      <material name="">
-        <color rgba="1 1 1 1" />
-      </material>
-    </visual>
+      <material name="深色橡胶_012-effect"><color rgba="0.6717055 0.6924257 0.7742702 1" /></material><material name="Material_011-effect"><color rgba="0.9 0.95 0.95 1" /></material></visual>
     <collision>
       <origin rpy="0 1.5707963267948966 0" xyz="0 0 -0.1065" />
       <geometry>
@@ -382,7 +294,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://go2w_description/meshes/calf_mirror.dae" />
+        <mesh filename="package://go2w_description/meshes/calf_mirror.stl" />
       </geometry>
       <material name="">
         <color rgba="1 1 1 1" />
@@ -468,61 +380,20 @@ Stephen Brawner (brawner@gmail.com)
       </material>
     </visual>
     <collision>
-      <origin rpy="1.5707963267948966 0 0" xyz="0 -0.048 0" />
+      <origin rpy="0 0 0" xyz="0 -0.0 0" />
       <geometry>
-        <!-- <mesh filename="package://go2w_description/meshes/right_wheel.dae" /> -->
-        <cylinder length="0.045" radius="0.086" />
+        <mesh filename="package://go2w_description/meshes/right_wheel.dae" />
+
       </geometry>
     </collision>
   </link>
-  <joint name="FR_foot_joint" type="revolute">
+  <joint name="FR_foot_joint" type="continuous">
     <origin xyz="0 0 -0.2264" rpy="0 0 0" />
     <parent link="FR_calf" />
     <child link="FR_foot" />
     <axis xyz="0 1 0" />
-    <limit effort="23.7" velocity="30.1" lower="-999999" upper="999999"/>
+      <limit effort="23.7" velocity="30.1" />
   </joint>
-
-  <transmission name="FR_hip_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="FR_hip_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="FR_hip_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="FR_thigh_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="FR_thigh_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="FR_thigh_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="FR_calf_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="FR_calf_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="FR_calf_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="FR_foot_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="FR_foot_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="FR_foot_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
 
   <link name="RL_hip">
     <inertial>
@@ -535,10 +406,7 @@ Stephen Brawner (brawner@gmail.com)
       <geometry>
         <mesh filename="package://go2w_description/meshes/hip.dae" />
       </geometry>
-      <material name="">
-        <color rgba="1 1 1 1" />
-      </material>
-    </visual>
+      <material name="深色橡胶_001-effect"><color rgba="0.6717055 0.6924257 0.7742702 1" /></material><material name="Material-effect"><color rgba="0.9 0.95 0.95 1" /></material></visual>
     <collision>
       <origin rpy="1.5707963267948966 0 0" xyz="0 0.08 0" />
       <geometry>
@@ -564,10 +432,7 @@ Stephen Brawner (brawner@gmail.com)
       <geometry>
         <mesh filename="package://go2w_description/meshes/thigh.dae" />
       </geometry>
-      <material name="">
-        <color rgba="1 1 1 1" />
-      </material>
-    </visual>
+      <material name="深色橡胶_003-effect"><color rgba="0.6717055 0.6924257 0.7742702 1" /></material><material name="Material_009-effect"><color rgba="0.9 0.95 0.95 1" /></material></visual>
     <collision>
       <origin rpy="0 1.5707963267948966 0" xyz="0 0 -0.1065" />
       <geometry>
@@ -591,7 +456,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://go2w_description/meshes/calf.dae" />
+        <mesh filename="package://go2w_description/meshes/calf.stl" />
       </geometry>
       <material name="">
         <color rgba="1 1 1 1" />
@@ -641,25 +506,25 @@ Stephen Brawner (brawner@gmail.com)
   </joint>
 
   <link name="RL_foot_motor">
-    <inertial>
-      <origin xyz="0 0.0 0" rpy="0 0 0" />
-      <mass value="0.646" />
-      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.0016" iyz="0" izz="0.001" />
-    </inertial>
-    <collision>
-      <origin rpy="1.5707963267948966 0 0" xyz="0 0 0" />
-      <geometry>
-        <cylinder length="0.05" radius="0.05" />
-      </geometry>
-    </collision>
-  </link>
+  <inertial>
+    <origin xyz="0 0.0 0" rpy="0 0 0" />
+    <mass value="0.646" />
+    <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.0016" iyz="0" izz="0.001" />
+  </inertial>
+  <collision>
+    <origin rpy="1.5707963267948966 0 0" xyz="0 0 0" />
+    <geometry>
+      <cylinder length="0.05" radius="0.05" />
+    </geometry>
+  </collision>
+</link>
 
-  <joint name="RL_foot_motor_joint" type="fixed">
-    <origin xyz="0.00 0.01 -0.2264" rpy="0 0.0 0" />
-    <parent link="RL_calf" />
-    <child link="RL_foot_motor" />
-    <axis xyz="0 0 0" />
-  </joint>
+<joint name="RL_foot_motor_joint" type="fixed">
+  <origin xyz="0.00 0.01 -0.2264" rpy="0 0.0 0" />
+  <parent link="RL_calf" />
+  <child link="RL_foot_motor" />
+  <axis xyz="0 0 0" />
+</joint>
 
 
   <link name="RL_foot">
@@ -678,61 +543,20 @@ Stephen Brawner (brawner@gmail.com)
       </material>
     </visual>
     <collision>
-      <origin rpy="1.5707963267948966 0 0" xyz="0 0.048 0" />
+      <origin rpy="0 0 0" xyz="0 0.0 0" />
       <geometry>
-        <!-- <mesh filename="package://go2w_description/meshes/left_wheel.dae" /> -->
-        <cylinder length="0.045" radius="0.086" />
+        <mesh filename="package://go2w_description/meshes/left_wheel.dae" />
+
       </geometry>
     </collision>
   </link>
-  <joint name="RL_foot_joint" type="revolute">
+  <joint name="RL_foot_joint" type="continuous">
     <origin xyz="0.0 0 -0.2264" rpy="0 0 0" />
     <parent link="RL_calf" />
     <child link="RL_foot" />
     <axis xyz="0 1 0" />
-    <limit effort="23.7" velocity="30.1" lower="-999999" upper="999999"/>
+      <limit effort="23.7" velocity="30.1" />
   </joint>
-
-  <transmission name="RL_hip_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="RL_hip_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="RL_hip_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="RL_thigh_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="RL_thigh_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="RL_thigh_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="RL_calf_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="RL_calf_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="RL_calf_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="RL_foot_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="RL_foot_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="RL_foot_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
 
   <link name="RR_hip">
     <inertial>
@@ -745,10 +569,7 @@ Stephen Brawner (brawner@gmail.com)
       <geometry>
         <mesh filename="package://go2w_description/meshes/hip.dae" />
       </geometry>
-      <material name="">
-        <color rgba="1 1 1 1" />
-      </material>
-    </visual>
+      <material name="深色橡胶_001-effect"><color rgba="0.6717055 0.6924257 0.7742702 1" /></material><material name="Material-effect"><color rgba="0.9 0.95 0.95 1" /></material></visual>
     <collision>
       <origin rpy="1.5707963267948966 0 0" xyz="0 -0.08 0" />
       <geometry>
@@ -774,10 +595,7 @@ Stephen Brawner (brawner@gmail.com)
       <geometry>
         <mesh filename="package://go2w_description/meshes/thigh_mirror.dae" />
       </geometry>
-      <material name="">
-        <color rgba="1 1 1 1" />
-      </material>
-    </visual>
+      <material name="深色橡胶_012-effect"><color rgba="0.6717055 0.6924257 0.7742702 1" /></material><material name="Material_011-effect"><color rgba="0.9 0.95 0.95 1" /></material></visual>
     <collision>
       <origin rpy="0 1.5707963267948966 0" xyz="0 0 -0.1065" />
       <geometry>
@@ -801,7 +619,7 @@ Stephen Brawner (brawner@gmail.com)
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://go2w_description/meshes/calf_mirror.dae" />
+        <mesh filename="package://go2w_description/meshes/calf_mirror.stl" />
       </geometry>
       <material name="">
         <color rgba="1 1 1 1" />
@@ -851,25 +669,25 @@ Stephen Brawner (brawner@gmail.com)
   </joint>
 
   <link name="RR_foot_motor">
-    <inertial>
-      <origin xyz="0 0.0 0" rpy="0 0 0" />
-      <mass value="0.646" />
-      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.0016" iyz="0" izz="0.001" />
-    </inertial>
-    <collision>
-      <origin rpy="1.5707963267948966 0 0" xyz="0 0 0" />
-      <geometry>
-        <cylinder length="0.05" radius="0.05" />
-      </geometry>
-    </collision>
-  </link>
+  <inertial>
+    <origin xyz="0 0.0 0" rpy="0 0 0" />
+    <mass value="0.646" />
+    <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.0016" iyz="0" izz="0.001" />
+  </inertial>
+  <collision>
+    <origin rpy="1.5707963267948966 0 0" xyz="0 0 0" />
+    <geometry>
+      <cylinder length="0.05" radius="0.05" />
+    </geometry>
+  </collision>
+</link>
 
-  <joint name="RR_foot_motor_joint" type="fixed">
-    <origin xyz="0.00 -0.01 -0.2264" rpy="0 0.0 0" />
-    <parent link="RR_calf" />
-    <child link="RR_foot_motor" />
-    <axis xyz="0 0 0" />
-  </joint>
+<joint name="RR_foot_motor_joint" type="fixed">
+  <origin xyz="0.00 -0.01 -0.2264" rpy="0 0.0 0" />
+  <parent link="RR_calf" />
+  <child link="RR_foot_motor" />
+  <axis xyz="0 0 0" />
+</joint>
 
   <link name="RR_foot">
     <inertial>
@@ -887,20 +705,169 @@ Stephen Brawner (brawner@gmail.com)
       </material>
     </visual>
     <collision>
-      <origin rpy="1.5707963267948966 0 0" xyz="0 -0.048 0" />
+      <origin rpy="0 0 0" xyz="0 -0.0 0" />
       <geometry>
-        <!-- <mesh filename="package://go2w_description/meshes/right_wheel.dae" /> -->
-        <cylinder length="0.045" radius="0.086" />
+        <mesh filename="package://go2w_description/meshes/right_wheel.dae" />
+
       </geometry>
     </collision>
   </link>
-  <joint name="RR_foot_joint" type="revolute">
+  <joint name="RR_foot_joint" type="continuous">
     <origin xyz="-0.0 0 -0.2264" rpy="0 0 0" />
     <parent link="RR_calf" />
     <child link="RR_foot" />
     <axis xyz="0 1 0" />
-    <limit effort="23.7" velocity="30.1" lower="-999999" upper="999999"/>
+      <limit effort="23.7" velocity="30.1" />
   </joint>
+  <link name="imu_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0" />
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+    </inertial>
+  </link>
+  <joint name="imu_joint" type="fixed">
+    <origin xyz="-0.02557 0 0.04232" rpy="0 0 0" />
+    <parent link="trunk" />
+    <child link="imu_link" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="radar_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0" />
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+    </inertial>
+  </link>
+  <joint name="radar_joint" type="fixed">
+    <origin xyz="0.28945 0 -0.046825" rpy="0 2.8782 0" />
+    <parent link="trunk" />
+    <child link="radar_link" />
+    <axis xyz="0 0 0" />
+  </joint>
+
+  <transmission name="FL_hip_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="FL_hip_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="FL_hip_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="FL_thigh_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="FL_thigh_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="FL_thigh_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="FL_calf_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="FL_calf_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="FL_calf_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="FL_foot_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="FL_foot_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="FL_foot_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="FR_hip_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="FR_hip_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="FR_hip_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="FR_thigh_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="FR_thigh_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="FR_thigh_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="FR_calf_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="FR_calf_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="FR_calf_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="FR_foot_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="FR_foot_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="FR_foot_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="RL_hip_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="RL_hip_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="RL_hip_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="RL_thigh_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="RL_thigh_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="RL_thigh_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="RL_calf_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="RL_calf_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="RL_calf_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="RL_foot_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="RL_foot_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="RL_foot_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
 
   <transmission name="RR_hip_tran">
     <type>transmission_interface/SimpleTransmission</type>
@@ -943,30 +910,4 @@ Stephen Brawner (brawner@gmail.com)
     </actuator>
   </transmission>
 
-  <link name="imu_link">
-    <inertial>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <mass value="0" />
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-    </inertial>
-  </link>
-  <joint name="imu_joint" type="fixed">
-    <origin xyz="-0.02557 0 0.04232" rpy="0 0 0" />
-    <parent link="trunk" />
-    <child link="imu_link" />
-    <axis xyz="0 0 0" />
-  </joint>
-  <link name="radar">
-    <inertial>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <mass value="0" />
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-    </inertial>
-  </link>
-  <joint name="radar_joint" type="fixed">
-    <origin xyz="0.28945 0 -0.046825" rpy="0 2.8782 0" />
-    <parent link="trunk" />
-    <child link="radar" />
-    <axis xyz="0 0 0" />
-  </joint>
 </robot>
