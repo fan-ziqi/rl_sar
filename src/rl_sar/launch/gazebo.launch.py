@@ -41,7 +41,7 @@ def generate_launch_description():
             os.path.join(get_package_share_directory("gazebo_ros"), "launch", "gazebo.launch.py")
         ),
         launch_arguments={
-            "verbose": "false",
+            # "verbose": "true",
             # "pause": "true",  # Not Available
             "world": os.path.join(get_package_share_directory("rl_sar"), "worlds", wname + ".world"),
         }.items(),
