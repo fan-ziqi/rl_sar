@@ -38,7 +38,7 @@ public:
 
     std::string CheckChange() override
     {
-        if (rl.control.current_keyboard == Input::Keyboard::Num0 || rl.control.current_gamepad == Input::Gamepad::Y || rl.control.current_gamepad == Input::Gamepad::Y)
+        if (rl.control.current_keyboard == Input::Keyboard::Num0 || rl.control.current_gamepad == Input::Gamepad::A)
         {
             return "RLFSMStateGetUp";
         }
@@ -51,8 +51,17 @@ class RLFSMStateGetUp : public RLFSMState
 public:
     RLFSMStateGetUp(RL *rl) : RLFSMState(*rl, "RLFSMStateGetUp") {}
 
+    float pre_running_percent = 0.0f;
+    std::vector<float> pre_running_pos = {
+        0.00, 1.36, -2.65, 0.0,
+        0.00, 1.36, -2.65, 0.0,
+        0.00, 1.36, -2.65, 0.0,
+        0.00, 1.36, -2.65, 0.0
+    };
+
     void Enter() override
     {
+        pre_running_percent = 0.0f;
         rl.running_percent = 0.0f;
         rl.now_state = *fsm_state;
         rl.start_state = rl.now_state;
@@ -60,14 +69,30 @@ public:
 
     void Run() override
     {
-        if (rl.running_percent < 1.0f)
+        if (pre_running_percent < 1.0f)
         {
-            rl.running_percent += 1.0f / 500.0f;
+            pre_running_percent += 1.0f / 200.0f;
+            pre_running_percent = std::min(pre_running_percent, 1.0f);
+
+            for (int i = 0; i < rl.params.num_of_dofs; ++i)
+            {
+                fsm_command->motor_command.q[i] = (1 - pre_running_percent) * rl.now_state.motor_state.q[i] + pre_running_percent * pre_running_pos[i];
+                fsm_command->motor_command.dq[i] = 0;
+                fsm_command->motor_command.kp[i] = rl.params.fixed_kp[0][i].item<double>();
+                fsm_command->motor_command.kd[i] = rl.params.fixed_kd[0][i].item<double>();
+                fsm_command->motor_command.tau[i] = 0;
+            }
+            std::cout << "\r" << std::flush << LOGGER::INFO << "Pre Getting up " << std::fixed << std::setprecision(2) << rl.running_percent * 100.0f << "%" << std::flush;
+        }
+
+        if (pre_running_percent == 1 && rl.running_percent < 1.0f)
+        {
+            rl.running_percent += 1.0f / 400.0f;
             rl.running_percent = std::min(rl.running_percent, 1.0f);
 
             for (int i = 0; i < rl.params.num_of_dofs; ++i)
             {
-                fsm_command->motor_command.q[i] = (1 - rl.running_percent) * rl.now_state.motor_state.q[i] + rl.running_percent * rl.params.default_dof_pos[0][i].item<double>();
+                fsm_command->motor_command.q[i] = (1 - rl.running_percent) * pre_running_pos[i] + rl.running_percent * rl.params.default_dof_pos[0][i].item<double>();
                 fsm_command->motor_command.dq[i] = 0;
                 fsm_command->motor_command.kp[i] = rl.params.fixed_kp[0][i].item<double>();
                 fsm_command->motor_command.kd[i] = rl.params.fixed_kd[0][i].item<double>();
@@ -81,7 +106,7 @@ public:
 
     std::string CheckChange() override
     {
-        if (rl.running_percent >= 1.0f)
+        if (rl.running_percent == 1.0f)
         {
             if (rl.control.current_keyboard == Input::Keyboard::P || rl.control.current_gamepad == Input::Gamepad::LB_X)
             {
@@ -134,7 +159,7 @@ public:
 
     std::string CheckChange() override
     {
-        if (rl.running_percent >= 1.0f)
+        if (rl.running_percent == 1.0f)
         {
             return "RLFSMStatePassive";
         }

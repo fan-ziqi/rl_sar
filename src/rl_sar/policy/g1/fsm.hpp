@@ -81,7 +81,7 @@ public:
 
     std::string CheckChange() override
     {
-        if (rl.running_percent >= 1.0f)
+        if (rl.running_percent == 1.0f)
         {
             if (rl.control.current_keyboard == Input::Keyboard::P || rl.control.current_gamepad == Input::Gamepad::LB_X)
             {
@@ -150,7 +150,7 @@ public:
 
     std::string CheckChange() override
     {
-        if (rl.running_percent >= 1.0f)
+        if (rl.running_percent == 1.0f)
         {
             return "RLFSMStatePassive";
         }
