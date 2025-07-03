@@ -3,6 +3,7 @@ devel
 logs
 install
 log
+third_party
 .catkin_tools
 .vscode
 *.csv
