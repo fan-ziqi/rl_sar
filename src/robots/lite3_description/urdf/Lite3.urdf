@@ -497,7 +497,7 @@
     <child link="imu_link" />
     <axis xyz="0 0 0" />
   </joint>
-  <link name="radar">
+  <!-- <link name="radar">
     <inertial>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <mass value="0" />
@@ -509,6 +509,6 @@
     <parent link="TORSO" />
     <child link="radar" />
     <axis xyz="0 0 0" />
-  </joint>
+  </joint> -->
 
 </robot>
