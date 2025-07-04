@@ -3,7 +3,12 @@ devel
 logs
 install
 log
-third_party
+# .gitignore
+src/third_party/libtorch/
+*.zip
+*.so
+*.a
+
 .catkin_tools
 .vscode
 *.csv
