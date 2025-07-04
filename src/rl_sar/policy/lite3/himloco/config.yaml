@@ -59,3 +59,4 @@ lite3/himloco:
                            "FR_hip_controller", "FR_thigh_controller", "FR_calf_controller",
                            "RR_hip_controller", "RR_thigh_controller", "RR_calf_controller"]
   joint_mapping: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+#   joint_mapping: [3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8]

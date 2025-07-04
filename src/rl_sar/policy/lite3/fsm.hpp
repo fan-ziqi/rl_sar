@@ -57,7 +57,6 @@ public:
         0.00, -1.36, 2.65,
         0.00, -1.36, 2.65,
         0.00, -1.36, 2.65,
-        0.00, 0.00, 0.00, 0.00
     };
 
     void Enter() override
@@ -260,13 +259,13 @@ public:
     {
         RL *rl = static_cast<RL *>(context);
         if (state_name == "RLFSMStatePassive")
-            return std::make_shared<go2_fsm::RLFSMStatePassive>(rl);
+            return std::make_shared<lite3_fsm::RLFSMStatePassive>(rl);
         else if (state_name == "RLFSMStateGetUp")
-            return std::make_shared<go2_fsm::RLFSMStateGetUp>(rl);
+            return std::make_shared<lite3_fsm::RLFSMStateGetUp>(rl);
         else if (state_name == "RLFSMStateGetDown")
-            return std::make_shared<go2_fsm::RLFSMStateGetDown>(rl);
+            return std::make_shared<lite3_fsm::RLFSMStateGetDown>(rl);
         else if (state_name == "RLFSMStateRL_Locomotion")
-            return std::make_shared<go2_fsm::RLFSMStateRL_Locomotion>(rl);
+            return std::make_shared<lite3_fsm::RLFSMStateRL_Locomotion>(rl);
         return nullptr;
     }
     std::string GetType() const override { return "lite3"; }
