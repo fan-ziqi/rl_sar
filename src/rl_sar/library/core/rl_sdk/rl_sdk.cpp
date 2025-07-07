@@ -39,15 +39,33 @@ torch::Tensor RL::ComputeObservation()
         }
         else if (observation == "ang_vel_world")
         {
-            obs_list.push_back(this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale);
+            torch::Tensor ang_vel_world = this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale;
+            std::cout << "[DEBUG] ang_vel_world: ";
+            for (int i = 0; i < ang_vel_world.size(1); ++i)
+                std::cout << ang_vel_world[0][i].item<float>() << " ";
+            std::cout << std::endl;
+
+            obs_list.push_back(ang_vel_world);        
         }
         else if (observation == "gravity_vec")
         {
-            obs_list.push_back(this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec));
+            torch::Tensor gravity_vec = this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec);
+            std::cout << "[DEBUG] gravity_vec: ";
+            for (int i = 0; i < gravity_vec.size(1); ++i)
+                std::cout << gravity_vec[0][i].item<float>() << " ";
+            std::cout << std::endl;
+
+            obs_list.push_back(gravity_vec);
         }
         else if (observation == "commands")
         {
-            obs_list.push_back(this->obs.commands * this->params.commands_scale);
+            torch::Tensor scaled_cmd = this->obs.commands * this->params.commands_scale;
+            std::cout << "\n[DEBUG] commands (scaled): ";
+            for (int i = 0; i < scaled_cmd.size(1); ++i)
+                std::cout << scaled_cmd[0][i].item<float>() << " ";
+            std::cout << std::endl;
+
+            obs_list.push_back(scaled_cmd);
         }
         else if (observation == "dof_pos")
         {
@@ -56,15 +74,37 @@ torch::Tensor RL::ComputeObservation()
             {
                 dof_pos_rel[0][i] = 0.0;
             }
+
+            std::cout << "\n[DEBUG] dof_pos_rel: ";
+            for (int i = 0; i < this->params.num_of_dofs; ++i)
+            {
+                std::cout << this->obs.dof_pos[0][i].item<double>() << " ";
+            }
+            std::cout << std::endl;
+
             obs_list.push_back(dof_pos_rel * this->params.dof_pos_scale);
         }
         else if (observation == "dof_vel")
         {
             obs_list.push_back(this->obs.dof_vel * this->params.dof_vel_scale);
+            torch::Tensor scaled_dof_vel = this->obs.dof_vel * this->params.dof_vel_scale;
+
+            std::cout << "[DEBUG] dof_vel: ";
+            for (int i = 0; i < this->params.num_of_dofs; ++i)
+            {
+                std::cout << scaled_dof_vel[0][i].item<double>() << " ";
+            }
+            std::cout << std::endl;
         }
         else if (observation == "actions")
         {
             obs_list.push_back(this->obs.actions);
+            std::cout << "[DEBUG] action: ";
+            for (int i = 0; i < this->params.num_of_dofs; ++i)
+            {
+                std::cout << this->obs.actions[0][i].item<double>() << " ";
+            }
+            std::cout << std::endl;
         }
         else if (observation == "phase")
         {
@@ -172,6 +212,20 @@ void RL::ComputeOutput(const torch::Tensor &actions, torch::Tensor &output_dof_p
     output_dof_pos = pos_actions_scaled + this->params.default_dof_pos;
     output_dof_vel = vel_actions_scaled;
     output_dof_tau = this->params.rl_kp * (all_actions_scaled + this->params.default_dof_pos - this->obs.dof_pos) - this->params.rl_kd * this->obs.dof_vel;
+    
+    // std::cout << "[DEBUG] Torque: ";
+    // for (int i = 0; i < this->params.num_of_dofs; ++i)
+    // {
+    //     std::cout << output_dof_tau[0][i].item<double>() << " ";
+    // }
+    // std::cout << std::endl;
+    std::cout << "[DEBUG] Kp: ";
+    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    {
+        std::cout << this->params.rl_kp[0][i].item<double>() << " ";
+    }
+    std::cout << std::endl;
+    
     output_dof_tau = torch::clamp(output_dof_tau, -(this->params.torque_limits), this->params.torque_limits);
 }
 
