@@ -680,8 +680,6 @@ Stephen Brawner (brawner@gmail.com)
     <child link="radar" />
     <axis xyz="0 0 0" />
   </joint>
-<<<<<<< HEAD
-=======
 
   <transmission name="FL_hip_tran">
     <type>transmission_interface/SimpleTransmission</type>
@@ -807,5 +805,4 @@ Stephen Brawner (brawner@gmail.com)
     </actuator>
   </transmission>
 
->>>>>>> upstream/main
 </robot>
