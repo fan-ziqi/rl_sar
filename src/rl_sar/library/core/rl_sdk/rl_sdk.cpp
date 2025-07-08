@@ -58,45 +58,13 @@ torch::Tensor RL::ComputeObservation()
             }
             obs_list.push_back(dof_pos_rel * this->params.dof_pos_scale);
         }
-<<<<<<< HEAD
-        else if (observation == "dof_pos_wheel")
-        {
-            torch::Tensor dof_pos_rel = this->obs.dof_pos - this->params.default_dof_pos;
-            for (int i : this->params.wheel_indices)
-            {
-                dof_pos_rel[0][i] = 0.0;
-            }
-            obs_list.push_back(dof_pos_rel * this->params.dof_pos_scale);
-        }
         else if (observation == "dof_vel")
         {
             obs_list.push_back(this->obs.dof_vel * this->params.dof_vel_scale);
-            torch::Tensor scaled_dof_vel = this->obs.dof_vel * this->params.dof_vel_scale;
-
-            std::cout << "[DEBUG] dof_vel: ";
-            for (int i = 0; i < this->params.num_of_dofs; ++i)
-            {
-                std::cout << scaled_dof_vel[0][i].item<double>() << " ";
-            }
-            std::cout << std::endl;
-=======
-        else if (observation == "dof_vel")
-        {
-            obs_list.push_back(this->obs.dof_vel * this->params.dof_vel_scale);
->>>>>>> upstream/main
         }
         else if (observation == "actions")
         {
             obs_list.push_back(this->obs.actions);
-<<<<<<< HEAD
-            std::cout << "[DEBUG] action: ";
-            for (int i = 0; i < this->params.num_of_dofs; ++i)
-            {
-                std::cout << this->obs.actions[0][i].item<double>() << " ";
-            }
-            std::cout << std::endl;
-=======
->>>>>>> upstream/main
         }
         else if (observation == "phase")
         {
@@ -204,23 +172,6 @@ void RL::ComputeOutput(const torch::Tensor &actions, torch::Tensor &output_dof_p
     output_dof_pos = pos_actions_scaled + this->params.default_dof_pos;
     output_dof_vel = vel_actions_scaled;
     output_dof_tau = this->params.rl_kp * (all_actions_scaled + this->params.default_dof_pos - this->obs.dof_pos) - this->params.rl_kd * this->obs.dof_vel;
-<<<<<<< HEAD
-    
-    // std::cout << "[DEBUG] Torque: ";
-    // for (int i = 0; i < this->params.num_of_dofs; ++i)
-    // {
-    //     std::cout << output_dof_tau[0][i].item<double>() << " ";
-    // }
-    // std::cout << std::endl;
-    std::cout << "[DEBUG] Kp: ";
-    for (int i = 0; i < this->params.num_of_dofs; ++i)
-    {
-        std::cout << this->params.rl_kp[0][i].item<double>() << " ";
-    }
-    std::cout << std::endl;
-    
-=======
->>>>>>> upstream/main
     output_dof_tau = torch::clamp(output_dof_tau, -(this->params.torque_limits), this->params.torque_limits);
 }
 
