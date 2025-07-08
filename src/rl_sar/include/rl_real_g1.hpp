@@ -244,8 +244,8 @@ private:
     void LowStateHandler(const void *message);
     void ImuTorsoHandler(const void *message);
     unitree::robot::b2::MotionSwitcherClient msc;
-    LowCmd_ unitree_low_command{};
-    LowState_ unitree_low_state{};
+    LowCmd_ unitree_low_command;
+    LowState_ unitree_low_state;
     IMUState_ unitree_imu_torso;
     Mode mode_pr;
     uint8_t mode_machine;

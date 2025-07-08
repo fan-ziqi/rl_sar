@@ -265,16 +265,7 @@ void RL_Sim::GetState(RobotState<double> *state)
     const auto &angular_velocity = this->vel.angular;
 #elif defined(USE_ROS2)
     const auto &orientation = this->gazebo_imu.orientation;
-    // std::cout << "Base orientation [x,y,z,w]: ["
-    //           << orientation.x << ", "
-    //           << orientation.y << ", "
-    //           << orientation.z << ", "
-    //           << orientation.w << "]" << std::endl;
     const auto &angular_velocity = this->gazebo_imu.angular_velocity;
-    // std::cout << "Base Angular Velocity [x,y,z]: ["
-    //           << angular_velocity.x << ", "
-    //           << angular_velocity.y << ", "
-    //           << angular_velocity.z << "]" << std::endl;
 #endif
 
     state->imu.quaternion[0] = orientation.w;
@@ -296,8 +287,6 @@ void RL_Sim::GetState(RobotState<double> *state)
         state->motor_state.q[i] = this->robot_state_subscriber_msg.motor_state[this->params.joint_mapping[i]].q;
         state->motor_state.dq[i] = this->robot_state_subscriber_msg.motor_state[this->params.joint_mapping[i]].dq;
         state->motor_state.tau_est[i] = this->robot_state_subscriber_msg.motor_state[this->params.joint_mapping[i]].tau_est;
-
-
 #endif
     }
 }
@@ -543,15 +532,6 @@ void RL_Sim::RunModel()
         if (this->output_dof_pos.defined() && this->output_dof_pos.numel() > 0)
         {
             output_dof_pos_queue.push(this->output_dof_pos);
-
-
-            // test model output
-            std::cout << "[RL_Sim] Actions: ";
-            for (int i = 0; i < this->params.num_of_dofs; ++i)
-            {
-                std::cout << this->obs.actions[0][i].item<double>() << " ";
-            }
-            std::cout << std::endl;
         }
         if (this->output_dof_vel.defined() && this->output_dof_vel.numel() > 0)
         {

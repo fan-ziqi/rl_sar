@@ -49,15 +49,6 @@ RL_Real::RL_Real()
     this->InitLowCmd();
     this->InitOutputs();
     this->InitControl();
-    // create lowcmd publisher
-    this->lowcmd_publisher.reset(new ChannelPublisher<LowCmd_>(HG_CMD_TOPIC));
-    this->lowcmd_publisher->InitChannel();
-    // create lowstate subscriber
-    this->lowstate_subscriber.reset(new ChannelSubscriber<LowState_>(HG_STATE_TOPIC));
-    this->lowstate_subscriber->InitChannel(std::bind(&RL_Real::LowStateHandler, this, std::placeholders::_1), 1);
-    // create imutorso subscriber
-    this->imutorso_subscriber.reset(new ChannelSubscriber<IMUState_>(HG_IMU_TORSO));
-    this->imutorso_subscriber->InitChannel(std::bind(&RL_Real::ImuTorsoHandler, this, std::placeholders::_1), 1);
     // init MotionSwitcherClient
     this->msc.SetTimeout(5.0f);
     this->msc.Init();
@@ -71,6 +62,15 @@ RL_Real::RL_Real()
         }
         sleep(5);
     }
+    // create lowcmd publisher
+    this->lowcmd_publisher.reset(new ChannelPublisher<LowCmd_>(HG_CMD_TOPIC));
+    this->lowcmd_publisher->InitChannel();
+    // create lowstate subscriber
+    this->lowstate_subscriber.reset(new ChannelSubscriber<LowState_>(HG_STATE_TOPIC));
+    this->lowstate_subscriber->InitChannel(std::bind(&RL_Real::LowStateHandler, this, std::placeholders::_1), 1);
+    // create imutorso subscriber
+    this->imutorso_subscriber.reset(new ChannelSubscriber<IMUState_>(HG_IMU_TORSO));
+    this->imutorso_subscriber->InitChannel(std::bind(&RL_Real::ImuTorsoHandler, this, std::placeholders::_1), 1);
 
     // loop
     this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05, std::bind(&RL_Real::KeyboardInterface, this));
@@ -107,12 +107,6 @@ RL_Real::~RL_Real()
 
 void RL_Real::GetState(RobotState<double> *state)
 {
-    if (this->unitree_low_state.crc() != Crc32Core((uint32_t *)&unitree_low_state, (sizeof(LowState_) >> 2) - 1))
-    {
-        std::cout << "[ERROR] CRC Error" << std::endl;
-        return;
-    }
-
     if (this->mode_machine != this->unitree_low_state.mode_machine())
     {
         if (this->mode_machine == 0)
@@ -396,7 +390,7 @@ void RL_Real::InitLowCmd()
 
 void RL_Real::LowStateHandler(const void *message)
 {
-    this->unitree_low_state = *(LowState_ *)message;
+    this->unitree_low_state = *(const LowState_ *)message;
 }
 
 void RL_Real::ImuTorsoHandler(const void *message)

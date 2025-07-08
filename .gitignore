@@ -3,12 +3,6 @@ devel
 logs
 install
 log
-# .gitignore
-src/third_party/libtorch/
-*.zip
-*.so
-*.a
-
 .catkin_tools
 .vscode
 *.csv
@@ -16,5 +10,6 @@ src/third_party/libtorch/
 *.json
 __pycache__
 cmake_build
+src/third_party/libtorch/
 
 package.xml
