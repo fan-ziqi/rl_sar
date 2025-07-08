@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 Ziqi Fan
+# Copyright (c) 2024-2025 Yuxuan Ma
 # SPDX-License-Identifier: Apache-2.0
 
 lite3/himloco:
@@ -6,7 +6,6 @@ lite3/himloco:
   num_observations: 45
   observations: ["commands", "ang_vel_world", "gravity_vec", "dof_pos", "dof_vel", "actions"]
   observations_history: [0, 1, 2, 3, 4, 5]  # 0 is the latest observation
-#   observations_history: [5, 4, 3, 2, 1, 0]  # 0 is the latest observation
   clip_obs: 100.0
   clip_actions_lower: [-100, -100, -100,
                        -100, -100, -100,
@@ -37,10 +36,6 @@ lite3/himloco:
                  0.25, 0.25, 0.25,
                  0.25, 0.25, 0.25,
                  0.25, 0.25, 0.25]
-#   action_scale: [0.125, 0.25, 0.25,
-#                  0.125, 0.25, 0.25,
-#                  0.125, 0.25, 0.25,
-#                  0.125, 0.25, 0.25]
   wheel_indices: []
   lin_vel_scale: 2.0
   ang_vel_scale: 0.25
