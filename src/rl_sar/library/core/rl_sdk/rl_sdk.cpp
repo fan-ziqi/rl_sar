@@ -74,14 +74,15 @@ torch::Tensor RL::ComputeObservation()
             {
                 dof_pos_rel[0][i] = 0.0;
             }
-
-            std::cout << "\n[DEBUG] dof_pos_rel: ";
-            for (int i = 0; i < this->params.num_of_dofs; ++i)
+            obs_list.push_back(dof_pos_rel * this->params.dof_pos_scale);
+        }
+        else if (observation == "dof_pos_wheel")
+        {
+            torch::Tensor dof_pos_rel = this->obs.dof_pos - this->params.default_dof_pos;
+            for (int i : this->params.wheel_indices)
             {
-                std::cout << this->obs.dof_pos[0][i].item<double>() << " ";
+                dof_pos_rel[0][i] = 0.0;
             }
-            std::cout << std::endl;
-
             obs_list.push_back(dof_pos_rel * this->params.dof_pos_scale);
         }
         else if (observation == "dof_vel")

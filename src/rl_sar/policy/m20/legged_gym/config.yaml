@@ -1,0 +1,69 @@
+m20/legged_gym:
+  model_name: "policy.pt"
+  num_observations: 53
+  observations: ["commands", "ang_vel", "gravity_vec",  "dof_pos", "dof_vel", "actions"]
+  observations_history: [0, 1, 2, 3, 4, 5]  # 0 is the latest observation
+  clip_obs: 100.0
+  clip_actions_lower: [-100.0, -100.0, -100.0,
+                       -100.0, -100.0, -100.0,
+                       -100.0, -100.0, -100.0,
+                       -100.0, -100.0, -100.0,
+                       -100.0, -100.0, -100.0, -100.0]
+  clip_actions_upper: [100.0, 100.0, 100.0,
+                       100.0, 100.0, 100.0,
+                       100.0, 100.0, 100.0,
+                       100.0, 100.0, 100.0,
+                       100.0, 100.0, 100.0, 100.0]
+  rl_kp: [80.0, 80.0, 100.0,
+          80.0, 80.0, 100.0,
+          80.0, 80.0, 100.0,
+          80.0, 80.0, 100.0,
+          0.0, 0.0, 0.0, 0.0]
+  rl_kd: [2.5, 2.5, 2.5,
+          2.5, 2.5, 2.5,
+          2.5, 2.5, 2.5,
+          2.5, 2.5, 2.5,
+          2, 2, 2, 2]  
+  fixed_kp: [70.0, 70.0, 70.0,
+             70.0, 70.0, 70.0,
+             70.0, 70.0, 70.0,
+             70.0, 70.0, 70.0,
+             0.0, 0.0, 0.0, 0.0]
+  fixed_kd: [5.0, 5.0, 5.0,
+             5.0, 5.0, 5.0,
+             5.0, 5.0, 5.0,
+             5.0, 5.0, 5.0,
+             0.5, 0.5, 0.5, 0.5]
+  num_of_dofs: 16
+  action_scale: [0.25, 0.25, 0.25,
+                 0.25, 0.25, 0.25,
+                 0.25, 0.25, 0.25,
+                 0.25, 0.25, 0.25,
+                 10.0, 10.0, 10.0, 10.0]
+  wheel_indices: [12, 13, 14, 15]
+  lin_vel_scale: 2.0
+  ang_vel_scale: 0.25
+  dof_pos_scale: 1.0
+  dof_vel_scale: 0.05
+  commands_scale: [2.0, 2.0, 0.25]
+  torque_limits: [70, 70, 70,
+                  70, 70, 70,
+                  70, 70, 70,
+                  70, 70, 70,
+                  70, 70, 70, 70]
+  default_dof_pos: [ 0.00, -0.70, 1.70,
+                     0.00, -0.70, 1.70,
+                     0.00, -0.90, 1.50,
+                     0.00, -0.90, 1.50,
+                     0.00, 0.00, 0.00, 0.00]
+  joint_names: ["FR_HipX_joint", "FR_HipY_joint", "FR_Knee_joint",
+                "FL_HipX_joint", "FL_HipY_joint", "FL_Knee_joint",
+                "HR_HipX_joint", "HR_HipY_joint", "HR_Knee_joint",
+                "HL_HipX_joint", "HL_HipY_joint", "HL_Knee_joint",
+                "FR_Wheel_joint", "FL_Wheel_joint", "HR_Wheel_joint", "HL_Wheel_joint"]
+  joint_controller_names: ["FR_hip_controller", "FR_thigh_controller", "FR_calf_controller",
+                           "FL_hip_controller", "FL_thigh_controller", "FL_calf_controller",
+                           "RR_hip_controller", "RR_thigh_controller", "RR_calf_controller",
+                           "RL_hip_controller", "RL_thigh_controller", "RL_calf_controller",
+                           "FR_foot_controller", "FL_foot_controller", "RR_foot_controller", "RL_foot_controller"]
+  joint_mapping: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]

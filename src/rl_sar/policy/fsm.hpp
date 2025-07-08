@@ -16,5 +16,6 @@
 #include "gr1t2/fsm.hpp"
 #include "l4w4/fsm.hpp"
 #include "lite3/fsm.hpp"
+#include "m20/fsm.hpp"
 
 #endif // FSM_HPP

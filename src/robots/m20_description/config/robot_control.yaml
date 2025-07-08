@@ -1,0 +1,76 @@
+# Copyright (c) 2024-2025 Ziqi Fan
+# SPDX-License-Identifier: Apache-2.0
+
+go2w_gazebo:
+    # Publish all joint states -----------------------------------
+    joint_state_controller:
+        type: joint_state_controller/JointStateController
+        publish_rate: 1000
+
+    # FL Controllers ---------------------------------------
+    FL_hip_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: FL_HipX_joint
+
+    FL_thigh_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: FL_HipY_joint
+
+    FL_calf_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: FL_knee_joint
+
+    FL_foot_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: FL_Wheel_joint
+
+    # FR Controllers ---------------------------------------
+    FR_hip_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: FR_HipX_joint
+
+    FR_thigh_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: FR_HipY_joint
+
+    FR_calf_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: FR_knee_joint
+
+    FR_foot_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: FR_Wheel_joint
+
+    # RL Controllers ---------------------------------------
+    RL_hip_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: HL_HipX_joint
+
+    RL_thigh_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: HL_HipY_joint
+
+    RL_calf_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: HL_knee_joint
+
+    RL_foot_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: HL_Wheel_joint
+
+    # RR Controllers ---------------------------------------
+    RR_hip_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: HR_HipX_joint
+
+    RR_thigh_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: HR_HipY_joint
+
+    RR_calf_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: HR_knee_joint
+
+    RR_foot_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: HR_Wheel_joint

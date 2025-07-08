@@ -1,0 +1,532 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="CA9W">
+    <link name="TORSO">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="1e-5"/>
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/base_link.stl"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.75 0.09 0.14"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 0.045 0" rpy="0 1.57079632 0"/>
+            <geometry>
+                <cylinder length="0.75" radius="0.07"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 -0.045 0" rpy="0 1.57079632 0"/>
+            <geometry>
+                <cylinder length="0.75" radius="0.07"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="INERTIA">
+        <inertial>
+            <origin xyz="-0.0004417 -0.007428 -0.001641" rpy="0 0 0"/>
+            <mass value="14.5"/>
+            <inertia ixx="0.02347" ixy="-0.0001019" ixz="2.493E-5" iyy="0.07120" iyz="0.0001274" izz="0.07795"/>
+        </inertial>
+    </link>
+
+    <!--*************** Front Left Leg ***************-->
+    <link name="FL_HIP">
+        <inertial>
+            <origin xyz="-0.0008982 0.06392 -0.0006497" rpy="0 0 0"/>
+            <mass value="1.183"/>
+            <inertia ixx="8.781E-4" ixy="1.562E-4" ixz="-3.009E-6" iyy="2.001E-3" iyz="-6.154E-6" izz="1.955E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/fl_hip.stl"/>
+            </geometry>
+        </visual>
+    </link>
+    <joint name="FL_HipX_joint" type="revolute">
+        <origin xyz="0.31225 0.065 0" rpy="0 0 0"/>
+        <parent link="TORSO"/>
+        <child link="FL_HIP"/>
+        <axis xyz="-1 0 0"/>
+        <dynamics damping="0" friction="0"/>
+        <limit lower="-0.4363" upper="0.6109" effort="76.4" velocity="22.4"/>
+    </joint>
+    <link name="FL_THIGH">
+        <inertial>
+            <origin xyz="-0.002529 0.01398 -0.2063" rpy="0 0 0"/>
+            <mass value="1.506"/>
+            <inertia ixx="1.568E-2" ixy="-7.963E-5" ixz="1.644E-4" iyy="1.544E-2" iyz="-1.807E-3" izz="2.276E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/fl_thigh.stl"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 -0.03 0" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.048"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="-0.01 0.005 -0.125" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.07 0.02 0.25"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 0.005 -0.25" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.09" radius="0.05"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="FL_HipY_joint" type="revolute">
+        <origin xyz="0 0.104 0" rpy="0 0 0"/>
+        <parent link="FL_HIP"/>
+        <child link="FL_THIGH"/>
+        <axis xyz="0 -1 0"/>
+        <dynamics damping="0" friction="0"/>
+        <limit lower="-2.2864" upper="2.583" effort="76.4" velocity="22.4"/>
+    </joint>
+    <link name="FL_SHANK">
+        <inertial>
+            <origin xyz="0.002171 0.01967 -0.1979" rpy="0 0 0"/>
+            <mass value="1.244"/>
+            <inertia ixx="8.156E-3" ixy="-6.974E-5" ixz="-3.069E-4" iyy="8.025E-3" iyz="9.843E-4" izz="1.676E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/fl_shank.stl"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0.015 0.0025 -0.125" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.06 0.025 0.25"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 0.04 -0.25" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.04"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="FL_Knee_joint" type="revolute">
+        <origin xyz="0 -0.0286 -0.25" rpy="0 0 0"/>
+        <parent link="FL_THIGH"/>
+        <child link="FL_SHANK"/>
+        <axis xyz="0 -1 0"/>
+        <dynamics damping="0" friction="0"/>
+        <limit lower="-2.81" upper="2.793" effort="76.4" velocity="22.4"/>
+    </joint>
+    <link name="FL_WHEEL">
+        <inertial>
+            <origin xyz="0 0.0801 0" rpy="0 0 0"/>
+            <mass value="1.429"/>
+            <inertia ixx="3.173E-3" ixy="2.433E-6" ixz="-8.15E-7" iyy="4.606E-3" iyz="1.772E-6" izz="3.177E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/l_wheel.stl"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0.08 0" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.054" radius="0.09"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="FL_Wheel_joint" type="revolute">
+        <origin xyz="0 0 -0.25" rpy="0 0 0"/>
+        <parent link="FL_SHANK"/>
+        <child link="FL_WHEEL"/>
+        <axis xyz="0 -1 0"/>
+        <limit effort="21.6" velocity="79.3" lower="-999999" upper="999999"/>
+    </joint>
+
+    <!--*************** Front Right Leg ***************-->
+    <link name="FR_HIP">
+        <inertial>
+            <origin xyz="-0.0008982 -0.06392 -0.0006497" rpy="0 0 0"/>
+            <mass value="1.183"/>
+            <inertia ixx="8.781E-4" ixy="-1.562E-4" ixz="-3.009E-6" iyy="2.001E-3" iyz="6.154E-6" izz="1.955E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/fr_hip.stl"/>
+            </geometry>
+        </visual>
+    </link>
+    <joint name="FR_HipX_joint" type="revolute">
+        <origin xyz="0.31225 -0.065 0" rpy="0 0 0"/>
+        <parent link="TORSO"/>
+        <child link="FR_HIP"/>
+        <axis xyz="-1 0 0"/>
+        <dynamics damping="0" friction="0"/>
+        <limit lower="-0.6109" upper="0.4363" effort="76.4" velocity="22.4"/>
+    </joint>
+    <link name="FR_THIGH">
+        <inertial>
+            <origin xyz="-0.002529 -0.01398 -0.2063" rpy="0 0 0"/>
+            <mass value="1.506"/>
+            <inertia ixx="1.568E-2" ixy="7.963E-5" ixz="1.644E-4" iyy="1.544E-2" iyz="1.807E-3" izz="2.276E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/fr_thigh.stl"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0.03 0" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.048"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="-0.01 -0.005 -0.125" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.07 0.02 0.25"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 -0.005 -0.25" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.09" radius="0.05"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="FR_HipY_joint" type="revolute">
+        <origin xyz="0 -0.104 0" rpy="0 0 0"/>
+        <parent link="FR_HIP"/>
+        <child link="FR_THIGH"/>
+        <axis xyz="0 -1 0"/>
+        <dynamics damping="0" friction="0"/>
+        <limit lower="-2.2864" upper="2.583" effort="76.4" velocity="22.4"/>
+    </joint>
+    <link name="FR_SHANK">
+        <inertial>
+            <origin xyz="0.002171 -0.01967 -0.1979" rpy="0 0 0"/>
+            <mass value="1.244"/>
+            <inertia ixx="8.156E-3" ixy="6.974E-5" ixz="-3.069E-4" iyy="8.025E-3" iyz="-9.843E-4" izz="1.676E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/fr_shank.stl"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0.015 -0.0025 -0.125" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.06 0.025 0.25"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 -0.04 -0.25" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.04"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="FR_Knee_joint" type="revolute">
+        <origin xyz="0 0.0286 -0.25" rpy="0 0 0"/>
+        <parent link="FR_THIGH"/>
+        <child link="FR_SHANK"/>
+        <axis xyz="0 -1 0"/>
+        <dynamics damping="0" friction="0"/>
+        <limit lower="-2.81" upper="2.793" effort="76.4" velocity="22.4"/>
+    </joint>
+    <link name="FR_WHEEL">
+        <inertial>
+            <origin xyz="0 -0.0801 0" rpy="0 0 0"/>
+            <mass value="1.429"/>
+            <inertia ixx="3.173E-3" ixy="-2.433E-6" ixz="-8.15E-7" iyy="4.606E-3" iyz="-1.772E-6" izz="3.177E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/r_wheel.stl"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 -0.08 0" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.054" radius="0.09"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="FR_Wheel_joint" type="revolute">
+        <origin xyz="0 0 -0.25" rpy="0 0 0"/>
+        <parent link="FR_SHANK"/>
+        <child link="FR_WHEEL"/>
+        <axis xyz="0 -1 0"/>
+        <limit effort="21.6" velocity="79.3" lower="-999999" upper="999999"/>
+    </joint>
+
+    <!--*************** Hind Left Leg ***************-->
+    <link name="HL_HIP">
+        <inertial>
+            <origin xyz="0.0008982 0.06392 -0.0006497" rpy="0 0 0"/>
+            <mass value="1.183"/>
+            <inertia ixx="8.781E-4" ixy="-1.562E-4" ixz="3.009E-6" iyy="2.001E-3" iyz="-6.154E-6" izz="1.955E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/hl_hip.stl"/>
+            </geometry>
+        </visual>
+    </link>
+    <joint name="HL_HipX_joint" type="revolute">
+        <origin xyz="-0.31225 0.065 0" rpy="0 0 0"/>
+        <parent link="TORSO"/>
+        <child link="HL_HIP"/>
+        <axis xyz="-1 0 0"/>
+        <dynamics damping="0" friction="0"/>
+        <limit lower="-0.4363" upper="0.6109" effort="76.4" velocity="22.4"/>
+    </joint>
+    <link name="HL_THIGH">
+        <inertial>
+            <origin xyz="0.002529 0.01398 -0.2063" rpy="0 0 0"/>
+            <mass value="1.506"/>
+            <inertia ixx="1.568E-2" ixy="7.963E-5" ixz="-1.644E-4" iyy="1.544E-2" iyz="-1.807E-3" izz="2.276E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/hl_thigh.stl"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 -0.03 0" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.048"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0.01 0.005 -0.125" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.07 0.02 0.25"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 0.005 -0.25" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.09" radius="0.05"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="HL_HipY_joint" type="revolute">
+        <origin xyz="0 0.104 0" rpy="0 0 0"/>
+        <parent link="HL_HIP"/>
+        <child link="HL_THIGH"/>
+        <axis xyz="0 -1 0"/>
+        <dynamics damping="0" friction="0"/>
+        <limit lower="-2.583" upper="2.2864" effort="76.4" velocity="22.4"/>
+    </joint>
+    <link name="HL_SHANK">
+        <inertial>
+            <origin xyz="-0.002171 0.01967 -0.1979" rpy="0 0 0"/>
+            <mass value="1.244"/>
+            <inertia ixx="8.156E-3" ixy="6.974E-5" ixz="3.069E-4" iyy="8.025E-3" iyz="9.843E-4" izz="1.676E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/hl_shank.stl"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="-0.015 0.0025 -0.125" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.06 0.025 0.25"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 0.04 -0.25" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.04"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="HL_Knee_joint" type="revolute">
+        <origin xyz="0 -0.0286 -0.25" rpy="0 0 0"/>
+        <parent link="HL_THIGH"/>
+        <child link="HL_SHANK"/>
+        <axis xyz="0 -1 0"/>
+        <dynamics damping="0" friction="0"/>
+        <limit lower="-2.793" upper="2.81" effort="76.4" velocity="22.4"/>
+    </joint>
+    <link name="HL_WHEEL">
+        <inertial>
+            <origin xyz="0 0.0801 0" rpy="0 0 0"/>
+            <mass value="1.429"/>
+            <inertia ixx="3.173E-3" ixy="-2.433E-6" ixz="8.15E-7" iyy="4.606E-3" iyz="1.772E-6" izz="3.177E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/l_wheel.stl"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0.08 0" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.054" radius="0.09"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="HL_Wheel_joint" type="revolute">
+        <origin xyz="0 0 -0.25" rpy="0 0 0"/>
+        <parent link="HL_SHANK"/>
+        <child link="HL_WHEEL"/>
+        <axis xyz="0 -1 0"/>
+        <limit effort="21.6" velocity="79.3" lower="-999999" upper="999999"/>
+    </joint>
+
+    <!--*************** Hind Right Leg ***************-->
+    <link name="HR_HIP">
+        <inertial>
+            <origin xyz="0.0008982 -0.06392 -0.0006497" rpy="0 0 0"/>
+            <mass value="1.183"/>
+            <inertia ixx="8.781E-4" ixy="1.562E-4" ixz="3.009E-6" iyy="2.001E-3" iyz="6.154E-6" izz="1.955E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/hr_hip.stl"/>
+            </geometry>
+        </visual>
+    </link>
+    <joint name="HR_HipX_joint" type="revolute">
+        <origin xyz="-0.31225 -0.065 0" rpy="0 0 0"/>
+        <parent link="TORSO"/>
+        <child link="HR_HIP"/>
+        <axis xyz="-1 0 0"/>
+        <dynamics damping="0" friction="0"/>
+        <limit lower="-0.6109" upper="0.4363" effort="76.4" velocity="22.4"/>
+        <!-- <safety_controller soft_upper_limit="1" soft_lower_limit="1" k_position="100" k_velocity="1"/> -->
+    </joint>
+    <link name="HR_THIGH">
+        <inertial>
+            <origin xyz="0.002529 -0.01398 -0.2063" rpy="0 0 0"/>
+            <mass value="1.506"/>
+            <inertia ixx="1.568E-2" ixy="-7.963E-5" ixz="-1.644E-4" iyy="1.544E-2" iyz="1.807E-3" izz="2.276E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/hr_thigh.stl"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0.03 0" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.048"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0.01 0.005 -0.125" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.07 0.02 0.25"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 -0.005 -0.25" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.09" radius="0.05"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="HR_HipY_joint" type="revolute">
+        <origin xyz="0 -0.104 0" rpy="0 0 0"/>
+        <parent link="HR_HIP"/>
+        <child link="HR_THIGH"/>
+        <axis xyz="0 -1 0"/>
+        <dynamics damping="0" friction="0"/>
+        <limit lower="-2.583" upper="2.2864" effort="76.4" velocity="22.4"/>
+    </joint>
+    <link name="HR_SHANK">
+        <inertial>
+            <origin xyz="-0.002171 -0.01967 -0.1979" rpy="0 0 0"/>
+            <mass value="1.244"/>
+            <inertia ixx="8.156E-3" ixy="-6.974E-5" ixz="3.069E-4" iyy="8.025E-3" iyz="-9.843E-4" izz="1.676E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/hr_shank.stl"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="-0.015 -0.0025 -0.125" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.06 0.025 0.25"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 -0.04 -0.25" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.04"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="HR_Knee_joint" type="revolute">
+        <origin xyz="0 0.0286 -0.25" rpy="0 0 0"/>
+        <parent link="HR_THIGH"/>
+        <child link="HR_SHANK"/>
+        <axis xyz="0 -1 0"/>
+        <dynamics damping="0" friction="0"/>
+        <limit lower="-2.793" upper="2.81" effort="76.4" velocity="22.4"/>
+    </joint>
+    <link name="HR_WHEEL">
+        <inertial>
+            <origin xyz="0 -0.0801 0" rpy="0 0 0"/>
+            <mass value="1.429"/>
+            <inertia ixx="3.173E-3" ixy="2.433E-6" ixz="8.15E-7" iyy="4.606E-3" iyz="-1.772E-6" izz="3.177E-3"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+            <geometry>
+                <mesh filename="../meshes/r_wheel.stl"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 -0.08 0" rpy="1.57079632 0 0"/>
+            <geometry>
+                <cylinder length="0.054" radius="0.09"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="HR_Wheel_joint" type="revolute">
+        <origin xyz="0 0 -0.25" rpy="0 0 0"/>
+        <parent link="HR_SHANK"/>
+        <child link="HR_WHEEL"/>
+        <axis xyz="0 -1 0"/>
+        <limit effort="21.6" velocity="79.3" lower="-999999" upper="999999"/>
+    </joint>
+
+    <joint name="Torso2Inertia" type="fixed">
+        <parent link="TORSO"/>
+        <child link="INERTIA"/>
+    </joint>
+</robot>
