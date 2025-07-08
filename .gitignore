@@ -10,5 +10,6 @@ log
 *.json
 __pycache__
 cmake_build
+src/third_party/libtorch/
 
 package.xml

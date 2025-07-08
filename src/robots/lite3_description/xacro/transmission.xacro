@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- FL transmissions -->
+  <transmission name="FL_HipX_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="FL_HipX">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="FL_HipX_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="FL_HipY_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="FL_HipY">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="FL_HipY_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="FL_Knee_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="FL_Knee">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="FL_Knee_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <!-- FR transmissions -->
+  <transmission name="FR_HipX_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="FR_HipX">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="FR_HipX_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="FR_HipY_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="FR_HipY">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="FR_HipY_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="FR_Knee_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="FR_Knee">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="FR_Knee_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <!-- HL transmissions -->
+  <transmission name="HL_HipX_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="HL_HipX">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="HL_HipX_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="HL_HipY_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="HL_HipY">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="HL_HipY_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="HL_Knee_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="HL_Knee">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="HL_Knee_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <!-- HR transmissions -->
+  <transmission name="HR_HipX_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="HR_HipX">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="HR_HipX_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="HR_HipY_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="HR_HipY">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="HR_HipY_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="HR_Knee_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="HR_Knee">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="HR_Knee_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+</robot>

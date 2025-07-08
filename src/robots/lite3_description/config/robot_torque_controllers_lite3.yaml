@@ -1,0 +1,73 @@
+lite3_gazebo:
+  
+  joint_states_controller:
+      type: joint_state_controller/JointStateController
+      publish_rate: 1000
+
+#effort_controllers/JointEffortController   
+
+# FL Controllers ------------------------------------------------------------ 
+  FL_HipX:
+      type: effort_controllers/JointEffortController
+      joint: FL_HipX
+      pid:    {p: 300, i: 0.0, d: 10}
+        
+  FL_HipY:
+      type: effort_controllers/JointEffortController
+      joint: FL_HipY
+      pid:    {p: 300, i: 0.0, d: 10}
+        
+  FL_Knee:
+      type: effort_controllers/JointEffortController
+      joint: FL_Knee
+      pid:    {p: 300, i: 0.0, d: 10}
+
+  # FR Controllers ------------------------------------------------------------ 
+  FR_HipX:
+      type: effort_controllers/JointEffortController
+      joint: FR_HipX
+      pid:    {p: 300, i: 0.0, d: 10}
+        
+  FR_HipY:
+      type: effort_controllers/JointEffortController
+      joint: FR_HipY
+      pid:    {p: 300, i: 0.0, d: 10}
+        
+  FR_Knee:
+      type: effort_controllers/JointEffortController
+      joint: FR_Knee
+      pid:    {p: 300, i: 0.0, d: 10}
+
+  # HL Controllers ------------------------------------------------------------ 
+  HL_HipX:
+      type: effort_controllers/JointEffortController
+      joint: HL_HipX
+      pid:    {p: 300, i: 0.0, d: 10}
+        
+  HL_HipY:
+      type: effort_controllers/JointEffortController
+      joint: HL_HipY
+      pid:    {p: 300, i: 0.0, d: 10}
+        
+  HL_Knee:
+      type: effort_controllers/JointEffortController
+      joint: HL_Knee
+      pid:    {p: 300, i: 0.0, d: 10}
+
+  # HR Controllers ------------------------------------------------------------     
+  HR_HipX:
+      type: effort_controllers/JointEffortController
+      joint: HR_HipX
+      pid:   {p: 300, i: 0.0, d: 10}
+        
+  HR_HipY:
+      type: effort_controllers/JointEffortController
+      joint: HR_HipY
+      pid:    {p: 300, i: 0.0, d: 10}
+        
+  HR_Knee:
+      type: effort_controllers/JointEffortController
+      joint: HR_Knee
+      pid:  {p: 300, i: 0.0, d: 10}
+
+
