@@ -256,33 +256,6 @@ ros2 run rl_sar rl_real_a1
 
 <details>
 
-<summary>Deeprobotics Lite3 (Click to expand)</summary>
-
-Deeprobotics Lite3 can be connected using wireless method.
-(Wired not tested. For some versions of Lite3, the wired Ethernet port may requires additional installation.)
-
-- Connect to the Lite3 starting with WIFI broadcasted by the robot. We strongly recommand testing the communication the Lite3 using [Lite3_Motion_SDK](https://github.com/DeepRoboticsLab/Lite3_MotionSDK) before use.
- **(Note: Wireless connection may lead to packet loss, disconnection, or even loss of control, please ensure safety)**
-
-- Determine the IP address and port number of Lite3, and modify **line 46-48 in rl_sar/src/rl_real_lite3.cpp**.
-- Then Update **jy_exe/conf/network.toml** on the Lite3 motion host to set the IP and port to that of the local machine running ROS2, enabling communication.
-
-> [!CAUTION]
-> **Recheck joint mapping parameters!<br>Recheck rl_sar/policy/himloco/config.yaml. The default joint mapping in Sim2Sim configuration differs from that used in real. If not updated accordingly, this mismatch may lead to incorrect robot behavior and potential safety hazards**
-
-Open a new terminal and start the control program
-
-```bash
-# ROS2
-source install/setup.bash
-ros2 run rl_sar rl_real_lite3
-```
-
-</details>
-
-
-<details>
-
 <summary>Unitree Go2/Go2W/G1(29dofs) (Click to expand)</summary>
 
 #### Ethernet Connection
@@ -364,6 +337,39 @@ source ~/.bashrc
 ```
 
 Pull the code and compile it. The process is the same as above.
+
+</details>
+
+<details>
+
+<summary>Deeprobotics Lite3 (Click to expand)</summary>
+
+Deeprobotics Lite3 can be connected using wireless method.
+(Wired not tested. For some versions of Lite3, the wired Ethernet port may requires additional installation.)
+
+- Connect to the Lite3 starting with WIFI broadcasted by the robot. We strongly recommand testing the communication the Lite3 using [Lite3_Motion_SDK](https://github.com/DeepRoboticsLab/Lite3_MotionSDK) before use.
+ **(Note: Wireless connection may lead to packet loss, disconnection, or even loss of control, please ensure safety)**
+
+- Determine the IP address and port number of Lite3, and modify **line 46-48 in rl_sar/src/rl_real_lite3.cpp**.
+- Then Update **jy_exe/conf/network.toml** on the Lite3 motion host to set the IP and port to that of the local machine running ROS2, enabling communication.
+
+> [!CAUTION]
+> **Recheck joint mapping parameters!<br>Recheck rl_sar/policy/himloco/config.yaml. The default joint mapping in Sim2Sim configuration differs from that used in real. If not updated accordingly, this mismatch may lead to incorrect robot behavior and potential safety hazards**
+
+Open a new terminal and start the control program
+
+```bash
+# ROS1
+source devel/setup.bash
+rosrun rl_sar rl_real_lite3
+
+# ROS2
+source install/setup.bash
+ros2 run rl_sar rl_real_lite3
+
+# CMake
+./cmake_build/bin/rl_real_lite3
+```
 
 </details>
 
