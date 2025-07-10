@@ -372,7 +372,7 @@ robots/<ROBOT>_description/config/robot_control_ros2.yaml
 rl_sar/policy/fsm.hpp
 rl_sar/policy/<ROBOT>/fsm.hpp
 rl_sar/policy/<ROBOT>/base.yaml  # 此文件中必须遵守实物机器人的关节顺序
-rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml  # 此文件中可以是训练时指定的关节顺序
+rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml
 rl_sar/policy/<ROBOT>/<CONFIG>/<POLICY>.pt  # 必须导出jit才可使用
 
 # 你实物机器人的代码

@@ -372,7 +372,7 @@ robots/<ROBOT>_description/config/robot_control_ros2.yaml
 rl_sar/policy/fsm.hpp
 rl_sar/policy/<ROBOT>/fsm.hpp
 rl_sar/policy/<ROBOT>/base.yaml  # This file must follow the physical robot's joint order
-rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml  # This file can use the joint order specified during training
+rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml
 rl_sar/policy/<ROBOT>/<CONFIG>/<POLICY>.pt  # Must be exported as JIT to be usable
 
 # your real robot code
