@@ -107,6 +107,17 @@ if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
   )
 endif()
 
+# unitree_sdk2-2.0.0
+set(BUILD_EXAMPLES OFF CACHE BOOL "Disable examples build for unitree_sdk2" FORCE)
+add_subdirectory(library/thirdparty/unitree_sdk2-2.0.0)
+
+# l4w4_sdk
+add_library(l4w4_sdk INTERFACE)
+target_include_directories(l4w4_sdk INTERFACE
+    library/thirdparty/l4w4_sdk
+)
+target_link_libraries(l4w4_sdk INTERFACE Threads::Threads)
+
 # Lite3_MotionSDK
 add_library(lite3_motionsdk SHARED IMPORTED)
 set_target_properties(lite3_motionsdk PROPERTIES
@@ -121,17 +132,6 @@ if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
     DESTINATION lib/
   )
 endif()
-
-# unitree_sdk2-2.0.0
-set(BUILD_EXAMPLES OFF CACHE BOOL "Disable examples build for unitree_sdk2" FORCE)
-add_subdirectory(library/thirdparty/unitree_sdk2-2.0.0)
-
-# l4w4_sdk
-add_library(l4w4_sdk INTERFACE)
-target_include_directories(l4w4_sdk INTERFACE
-    library/thirdparty/l4w4_sdk
-)
-target_link_libraries(l4w4_sdk INTERFACE Threads::Threads)
 
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")
@@ -239,7 +239,9 @@ target_link_libraries(rl_real_lite3
     yaml-cpp
 )
 if(NOT USE_CMAKE)
-    if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+    if($ENV{ROS_DISTRO} MATCHES "noetic")
+        target_link_libraries(rl_real_lite3 ${catkin_LIBRARIES})
+    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         ament_target_dependencies(rl_real_lite3
             rclcpp
             geometry_msgs
@@ -247,8 +249,6 @@ if(NOT USE_CMAKE)
         install(TARGETS rl_real_lite3 DESTINATION lib/${PROJECT_NAME})
     endif()
 endif()
-
-
 
 add_executable(rl_real_go2 src/rl_real_go2.cpp)
 target_link_libraries(rl_real_go2
@@ -310,13 +310,11 @@ endif()
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         catkin_install_python(PROGRAMS
-            # scripts/rl_sim.py
             scripts/actuator_net.py
             DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         )
     elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         install(PROGRAMS
-            # scripts/rl_sim.py
             scripts/actuator_net.py
             DESTINATION lib/${PROJECT_NAME}
         )
