@@ -17,3 +17,7 @@ Guidelines for modifications:
 
 * Jijie Huang
 * Yufeng Chi (-T.K.-)
+* Yuxuan Ma
+* Peizhuo Li
+* Hongyi Li
+* [Deeprobotics](http://www.deeprobotics.cn/en)

@@ -107,6 +107,21 @@ if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
   )
 endif()
 
+# Lite3_MotionSDK
+add_library(lite3_motionsdk SHARED IMPORTED)
+set_target_properties(lite3_motionsdk PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/Lite3_MotionSDK/include"
+    IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/Lite3_MotionSDK/lib/libdeeprobotics_legged_sdk_x86_64.so"
+)
+set(LITE3_REAL_LIBS Threads::Threads lite3_motionsdk)
+if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+  file(GLOB GLOB_LITE3_SDK_SO "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/Lite3_MotionSDK/lib/libdeeprobotics_legged_sdk_x86_64.so")
+  install(FILES
+    ${GLOB_LITE3_SDK_SO}
+    DESTINATION lib/
+  )
+endif()
+
 # unitree_sdk2-2.0.0
 set(BUILD_EXAMPLES OFF CACHE BOOL "Disable examples build for unitree_sdk2" FORCE)
 add_subdirectory(library/thirdparty/unitree_sdk2-2.0.0)
@@ -215,6 +230,25 @@ if(NOT USE_CMAKE)
         install(TARGETS rl_real_a1 DESTINATION lib/${PROJECT_NAME})
     endif()
 endif()
+
+add_executable(rl_real_lite3 src/rl_real_lite3.cpp)
+target_link_libraries(rl_real_lite3
+    ${LITE3_REAL_LIBS}
+    rl_sdk
+    observation_buffer
+    yaml-cpp
+)
+if(NOT USE_CMAKE)
+    if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+        ament_target_dependencies(rl_real_lite3
+            rclcpp
+            geometry_msgs
+        )
+        install(TARGETS rl_real_lite3 DESTINATION lib/${PROJECT_NAME})
+    endif()
+endif()
+
+
 
 add_executable(rl_real_go2 src/rl_real_go2.cpp)
 target_link_libraries(rl_real_go2
