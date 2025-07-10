@@ -82,7 +82,7 @@ public:
                 fsm_command->motor_command.kd[i] = rl.params.fixed_kd[0][i].item<double>();
                 fsm_command->motor_command.tau[i] = 0;
             }
-            std::cout << "\r" << std::flush << LOGGER::INFO << "Pre Getting up " << std::fixed << std::setprecision(2) << rl.running_percent * 100.0f << "%" << std::flush;
+            std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "Pre Getting up " << std::fixed << std::setprecision(2) << pre_running_percent * 100.0f << "%" << std::flush;
         }
 
         if (pre_running_percent == 1 && rl.running_percent < 1.0f)
@@ -98,7 +98,7 @@ public:
                 fsm_command->motor_command.kd[i] = rl.params.fixed_kd[0][i].item<double>();
                 fsm_command->motor_command.tau[i] = 0;
             }
-            std::cout << "\r" << std::flush << LOGGER::INFO << "Getting up " << std::fixed << std::setprecision(2) << rl.running_percent * 100.0f << "%" << std::flush;
+            std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "Getting up " << std::fixed << std::setprecision(2) << rl.running_percent * 100.0f << "%" << std::flush;
         }
     }
 
@@ -151,7 +151,7 @@ public:
                 fsm_command->motor_command.kd[i] = rl.params.fixed_kd[0][i].item<double>();
                 fsm_command->motor_command.tau[i] = 0;
             }
-            std::cout << "\r" << std::flush << LOGGER::INFO << "Getting down "<< std::fixed << std::setprecision(2) << rl.running_percent * 100.0f << "%" << std::flush;
+            std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "Getting down "<< std::fixed << std::setprecision(2) << rl.running_percent * 100.0f << "%" << std::flush;
         }
     }
 
@@ -200,7 +200,7 @@ public:
 
     void Run() override
     {
-        std::cout << "\r" << std::flush << LOGGER::INFO << "RL Controller x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
+        std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "RL Controller x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
 
         torch::Tensor _output_dof_pos, _output_dof_vel;
         if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))

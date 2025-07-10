@@ -280,9 +280,9 @@ void RL_Sim::GetState(RobotState<double> *state)
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
 #if defined(USE_ROS1)
-        state->motor_state.q[i] = this->joint_positions[this->params.joint_controller_names[i]];
-        state->motor_state.dq[i] = this->joint_velocities[this->params.joint_controller_names[i]];
-        state->motor_state.tau_est[i] = this->joint_efforts[this->params.joint_controller_names[i]];
+        state->motor_state.q[i] = this->joint_positions[this->params.joint_controller_names[this->params.joint_mapping[i]]];
+        state->motor_state.dq[i] = this->joint_velocities[this->params.joint_controller_names[this->params.joint_mapping[i]]];
+        state->motor_state.tau_est[i] = this->joint_efforts[this->params.joint_controller_names[this->params.joint_mapping[i]]];
 #elif defined(USE_ROS2)
         state->motor_state.q[i] = this->robot_state_subscriber_msg.motor_state[this->params.joint_mapping[i]].q;
         state->motor_state.dq[i] = this->robot_state_subscriber_msg.motor_state[this->params.joint_mapping[i]].dq;
@@ -296,11 +296,11 @@ void RL_Sim::SetCommand(const RobotCommand<double> *command)
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
 #if defined(USE_ROS1)
-        this->joint_publishers_commands[i].q = command->motor_command.q[i];
-        this->joint_publishers_commands[i].dq = command->motor_command.dq[i];
-        this->joint_publishers_commands[i].kp = command->motor_command.kp[i];
-        this->joint_publishers_commands[i].kd = command->motor_command.kd[i];
-        this->joint_publishers_commands[i].tau = command->motor_command.tau[i];
+        this->joint_publishers_commands[this->params.joint_mapping[i]].q = command->motor_command.q[i];
+        this->joint_publishers_commands[this->params.joint_mapping[i]].dq = command->motor_command.dq[i];
+        this->joint_publishers_commands[this->params.joint_mapping[i]].kp = command->motor_command.kp[i];
+        this->joint_publishers_commands[this->params.joint_mapping[i]].kd = command->motor_command.kd[i];
+        this->joint_publishers_commands[this->params.joint_mapping[i]].tau = command->motor_command.tau[i];
 #elif defined(USE_ROS2)
         this->robot_command_publisher_msg.motor_command[this->params.joint_mapping[i]].q = command->motor_command.q[i];
         this->robot_command_publisher_msg.motor_command[this->params.joint_mapping[i]].dq = command->motor_command.dq[i];
