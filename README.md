@@ -26,7 +26,7 @@ Support List:
 |FFTAI-GR1T1 (gr1t1)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
 |FFTAI-GR1T2 (gr1t2)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
 |GoldenRetriever-L4W4 (l4w4)|legged_gym (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
-|Deeprobotics-Lite3 (lite3)</br>(Only tested on ROS2 humble)|himloco (IsaacGym)|✅|
+|Deeprobotics-Lite3 (lite3)|himloco (IsaacGym)|✅|
 
 > [!IMPORTANT]
 > Python version temporarily suspended maintenance, please use [v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3) if necessary, may be re-released in the future.
@@ -430,8 +430,10 @@ Please cite the following if you use this code or parts of it:
 
 The project uses some code from the following open-source code repositories:
 
+- [unitreerobotics/unitree_sdk2-2.0.0](https://github.com/unitreerobotics/unitree_sdk2/tree/2.0.0)
+- [unitreerobotics/unitree_legged_sdk-v3.2](https://github.com/unitreerobotics/unitree_legged_sdk/tree/v3.2)
 - [unitreerobotics/unitree_guide](https://github.com/unitreerobotics/unitree_guide)
 - [mertgungor/unitree_model_control](https://github.com/mertgungor/unitree_model_control)
-- The code in [src/rl_sar/scripts/actuator_net.py](src/rl_sar/scripts/actuator_net.py) is modified from [scripts/actuator_net](https://github.com/Improbable-AI/walk-these-ways/tree/master/scripts/actuator_net) in the [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways) repository.
-- Unitree-G1 RoboMimic pre-trained policies from [ccrpRepo/RoboMimic_Deploy](https://github.com/ccrpRepo/RoboMimic_Deploy)
-- [Deeprobotics/Lite3_Motion_SDK](https://github.com/DeepRoboticsLab/Lite3_MotionSDK) 
+- [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways)
+- [ccrpRepo/RoboMimic_Deploy](https://github.com/ccrpRepo/RoboMimic_Deploy)
+- [Deeprobotics/Lite3_Motion_SDK](https://github.com/DeepRoboticsLab/Lite3_MotionSDK)

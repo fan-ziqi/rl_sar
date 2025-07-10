@@ -1,17 +1,19 @@
 /*
-* Copyright (c) 2024-2025 Yuxuan Ma
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright (c) 2024-2025 Ziqi Fan
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #include "rl_real_lite3.hpp"
 
-
 RL_Real::RL_Real()
 #if defined(USE_ROS2) && defined(USE_ROS)
-    , rclcpp::Node("rl_real_node")
+    : rclcpp::Node("rl_real_node")
 #endif
 {
-#if defined(USE_ROS2) && defined(USE_ROS)
+#if defined(USE_ROS1) && defined(USE_ROS)
+    ros::NodeHandle nh;
+    this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Real::CmdvelCallback, this);
+#elif defined(USE_ROS2) && defined(USE_ROS)
     this->cmd_vel_subscriber = this->create_subscription<geometry_msgs::msg::Twist>(
         "/cmd_vel", rclcpp::SystemDefaultsQoS(),
         [this] (const geometry_msgs::msg::Twist::SharedPtr msg) {this->CmdvelCallback(msg);}
@@ -47,7 +49,6 @@ RL_Real::RL_Real()
     int robot_port = 43893;
     std::string robot_ip = "192.168.2.1";
     // init robot
-    std::cout << this->robot_name << " Real Deployment" << std::endl;
     this->receiver_ = new Receiver();
     this->sender_ = new Sender(robot_ip, robot_port);
     this->sender_->RobotStateInit();
@@ -66,63 +67,52 @@ RL_Real::RL_Real()
     this->loop_control->start();
     this->loop_rl->start();
 
+#ifdef PLOT
+    this->plot_t = std::vector<int>(this->plot_size, 0);
+    this->plot_real_joint_pos.resize(this->params.num_of_dofs);
+    this->plot_target_joint_pos.resize(this->params.num_of_dofs);
+    for (auto &vector : this->plot_real_joint_pos) { vector = std::vector<double>(this->plot_size, 0); }
+    for (auto &vector : this->plot_target_joint_pos) { vector = std::vector<double>(this->plot_size, 0); }
+    this->loop_plot = std::make_shared<LoopFunc>("loop_plot", 0.002, std::bind(&RL_Real::Plot, this));
+    this->loop_plot->start();
+#endif
+#ifdef CSV_LOGGER
+    this->CSVInit(this->robot_name);
+#endif
 }
 
 RL_Real::~RL_Real()
 {
-    // this->loop_udpSend->shutdown();
     this->loop_udpRecv->shutdown();
     this->loop_keyboard->shutdown();
     this->loop_control->shutdown();
     this->loop_rl->shutdown();
+#ifdef PLOT
+    this->loop_plot->shutdown();
+#endif
     std::cout << LOGGER::INFO << "RL_Real exit" << std::endl;
 }
 
 void RL_Real::GetState(RobotState<double> *state)
-{   
+{
     float q[4];
-    EulerToQuaternion(this->robot_data_->imu.angle_roll,
-                  this->robot_data_->imu.angle_pitch,
-                  this->robot_data_->imu.angle_yaw,
-                  q);
+    EulerToQuaternion(this->robot_data_->imu.angle_roll, this->robot_data_->imu.angle_pitch, this->robot_data_->imu.angle_yaw, q);
 
     state->imu.quaternion[0] = q[0]; // w
     state->imu.quaternion[1] = q[1]; // x
     state->imu.quaternion[2] = q[2]; // y
     state->imu.quaternion[3] = q[3]; // z
 
-    // std::cout << "[DEBUG] IMU quaternion: ["
-    //       << state->imu.quaternion[0] << ", "
-    //       << state->imu.quaternion[1] << ", "
-    //       << state->imu.quaternion[2] << ", "
-    //       << state->imu.quaternion[3] << "]" << std::endl;
-
-
     state->imu.gyroscope[0] = this->robot_data_->imu.angular_velocity_roll;
     state->imu.gyroscope[1] = this->robot_data_->imu.angular_velocity_pitch;
     state->imu.gyroscope[2] = this->robot_data_->imu.angular_velocity_yaw;
-
-    // std::cout << "[DEBUG] IMU angular velocity: ["
-    //       << state->imu.gyroscope[0] << ", "
-    //       << state->imu.gyroscope[1] << ", "
-    //       << state->imu.gyroscope[2] << "]" << std::endl;
-
 
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
         state->motor_state.q[i] = this->robot_data_->joint_data.joint_data[this->params.joint_mapping[i]].position;
         state->motor_state.dq[i] = this->robot_data_->joint_data.joint_data[this->params.joint_mapping[i]].velocity;
         state->motor_state.tau_est[i] = this->robot_data_->joint_data.joint_data[this->params.joint_mapping[i]].torque;
-    
-        // std::cout << "[DEBUG] Joint[" << i << "] maps to raw joint[" <<this->params.joint_mapping[i]<< "] : "
-        //       << "q = " << state->motor_state.q[i] << ", "
-        //       << "dq = " << state->motor_state.dq[i] << ", "
-        //       << "tau_est = " << state->motor_state.tau_est[i] << std::endl;
     }
-
-
-
-
 }
 
 void RL_Real::SetCommand(const RobotCommand<double> *command)
@@ -134,13 +124,6 @@ void RL_Real::SetCommand(const RobotCommand<double> *command)
         this->robot_joint_cmd_.joint_cmd[this->params.joint_mapping[i]].kp = command->motor_command.kp[i];
         this->robot_joint_cmd_.joint_cmd[this->params.joint_mapping[i]].kd = command->motor_command.kd[i];
         this->robot_joint_cmd_.joint_cmd[this->params.joint_mapping[i]].torque = command->motor_command.tau[i];
-
-        // std::cout << "[DEBUG] Joint_cmd[" << i << "] maps to raw joint[" <<this->params.joint_mapping[i]<< "] : "
-        //       << "q = " << this->robot_joint_cmd_.joint_cmd[this->params.joint_mapping[i]].position << ", "
-        //       << "dq = " << this->robot_joint_cmd_.joint_cmd[this->params.joint_mapping[i]].velocity << ", "
-        //       << "kp = " << this->robot_joint_cmd_.joint_cmd[this->params.joint_mapping[i]].kp << ", "
-        //       << "kd = " << this->robot_joint_cmd_.joint_cmd[this->params.joint_mapping[i]].kd << ", "
-        //       << "tau_est = " << this->robot_joint_cmd_.joint_cmd[this->params.joint_mapping[i]].torque << std::endl;
     }
 
     this->sender_->SendCmd(robot_joint_cmd_);
@@ -220,11 +203,7 @@ void RL_Real::RunModel()
         this->obs.dof_vel = torch::tensor(this->robot_state.motor_state.dq).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
 
         this->obs.actions = this->Forward();
-
         this->ComputeOutput(this->obs.actions, this->output_dof_pos, this->output_dof_vel, this->output_dof_tau);
-
-
-
 
         if (this->output_dof_pos.defined() && this->output_dof_pos.numel() > 0)
         {
@@ -238,9 +217,14 @@ void RL_Real::RunModel()
         {
             output_dof_tau_queue.push(this->output_dof_tau);
         }
+
         // this->TorqueProtect(this->output_dof_tau);
         // this->AttitudeProtect(this->robot_state.imu.quaternion, 75.0f, 75.0f);
 
+#ifdef CSV_LOGGER
+        torch::Tensor tau_est = torch::tensor(this->robot_state.motor_state.tau_est).unsqueeze(0);
+        this->CSVLogger(this->output_dof_tau, tau_est, this->obs.dof_pos, this->output_dof_pos, this->obs.dof_vel);
+#endif
     }
 }
 
@@ -272,10 +256,33 @@ torch::Tensor RL_Real::Forward()
     }
 }
 
-void RL_Real::UDPRecv() 
+void RL_Real::Plot()
+{
+    this->plot_t.erase(this->plot_t.begin());
+    this->plot_t.push_back(this->motiontime);
+    plt::cla();
+    plt::clf();
+    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    {
+        this->plot_real_joint_pos[i].erase(this->plot_real_joint_pos[i].begin());
+        this->plot_target_joint_pos[i].erase(this->plot_target_joint_pos[i].begin());
+        this->plot_real_joint_pos[i].push_back(this->robot_data_->joint_data.joint_data[this->params.joint_mapping[i]].position);
+        this->plot_target_joint_pos[i].push_back(this->robot_joint_cmd_.joint_cmd[this->params.joint_mapping[i]].position);
+        plt::subplot(this->params.num_of_dofs, 1, i + 1);
+        plt::named_plot("_real_joint_pos", this->plot_t, this->plot_real_joint_pos[i], "r");
+        plt::named_plot("_target_joint_pos", this->plot_t, this->plot_target_joint_pos[i], "b");
+        plt::xlim(this->plot_t.front(), this->plot_t.back());
+    }
+    // plt::legend();
+    plt::pause(0.0001);
+}
+
+void RL_Real::UDPRecv()
 {
     if (receiver_)
+    {
         robot_data_ = &(receiver_->GetState());
+    }
 }
 
 void RL_Real::EulerToQuaternion(float roll, float pitch, float yaw, float q[4])
@@ -297,26 +304,6 @@ void RL_Real::EulerToQuaternion(float roll, float pitch, float yaw, float q[4])
     q[3] = cr * cp * sy - sr * sp * cy;  // z
 }
 
-// void RL_Real::Plot()
-// {
-//     this->plot_t.erase(this->plot_t.begin());
-//     this->plot_t.push_back(this->motiontime);
-//     plt::cla();
-//     plt::clf();
-//     for (int i = 0; i < this->params.num_of_dofs; ++i)
-//     {
-//         this->plot_real_joint_pos[i].erase(this->plot_real_joint_pos[i].begin());
-//         this->plot_target_joint_pos[i].erase(this->plot_target_joint_pos[i].begin());
-//         this->plot_real_joint_pos[i].push_back(this->unitree_low_state.motorState[i].q);
-//         this->plot_target_joint_pos[i].push_back(this->unitree_low_command.motorCmd[i].q);
-//         plt::subplot(this->params.num_of_dofs, 1, i + 1);
-//         plt::named_plot("_real_joint_pos", this->plot_t, this->plot_real_joint_pos[i], "r");
-//         plt::named_plot("_target_joint_pos", this->plot_t, this->plot_target_joint_pos[i], "b");
-//         plt::xlim(this->plot_t.front(), this->plot_t.back());
-//     }
-//     // plt::legend();
-//     plt::pause(0.0001);
-// }
 
 #if !defined(USE_CMAKE) && defined(USE_ROS)
 void RL_Real::CmdvelCallback(
@@ -356,6 +343,3 @@ int main(int argc, char **argv)
 #endif
     return 0;
 }
-
-
-

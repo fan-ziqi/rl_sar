@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 Yuxuan Ma
+# Copyright (c) 2024-2025 Ziqi Fan
 # SPDX-License-Identifier: Apache-2.0
 
 lite3:
@@ -23,11 +23,11 @@ lite3:
                      0.0, -0.80, 1.50,
                      0.0, -0.80, 1.50]
   joint_names: ["FL_HipX", "FL_HipY", "FL_Knee",
-                "HL_HipX", "HL_HipY", "HL_Knee",
                 "FR_HipX", "FR_HipY", "FR_Knee",
+                "HL_HipX", "HL_HipY", "HL_Knee",
                 "HR_HipX", "HR_HipY", "HR_Knee"]
-  joint_controller_names: ["FL_hip_controller", "FL_thigh_controller", "FL_calf_controller",
-                           "RL_hip_controller", "RL_thigh_controller", "RL_calf_controller",
-                           "FR_hip_controller", "FR_thigh_controller", "FR_calf_controller",
-                           "RR_hip_controller", "RR_thigh_controller", "RR_calf_controller"]
+  joint_controller_names: ["FL_HipX_controller", "FL_HipY_controller", "FL_Knee_controller",
+                           "FR_HipX_controller", "FR_HipY_controller", "FR_Knee_controller",
+                           "HL_HipX_controller", "HL_HipY_controller", "HL_Knee_controller",
+                           "HR_HipX_controller", "HR_HipY_controller", "HR_Knee_controller"]
   joint_mapping: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]

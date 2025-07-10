@@ -2,11 +2,7 @@
 
 <robot name="lite3" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <!-- <xacro:include filename="$(find lite3_description)/xacro/gazebo.xacro"/>
-    <xacro:include filename="$(find lite3_description)/xacro/body.xacro"/>
-    <xacro:include filename="$(find lite3_description)/xacro/transmission.xacro"/> -->
-    <xacro:include filename="$(find lite3_description)/urdf/Lite3.urdf"/>
+    <xacro:include filename="$(find lite3_description)/urdf/lite3.urdf"/>
     <xacro:include filename="$(find lite3_description)/xacro/gazebo.xacro"/>
-
 
 </robot>

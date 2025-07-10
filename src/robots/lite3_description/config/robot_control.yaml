@@ -5,54 +5,54 @@ lite3_gazebo:
         publish_rate: 1000
 
     # FL Controllers ---------------------------------------
-    FL_hip_controller:
+    FL_HipX_controller:
         type: robot_joint_controller/RobotJointController
         joint: FL_HipX
 
-    FL_thigh_controller:
+    FL_HipY_controller:
         type: robot_joint_controller/RobotJointController
         joint: FL_HipY
 
-    FL_calf_controller:
+    FL_Knee_controller:
         type: robot_joint_controller/RobotJointController
         joint: FL_Knee
 
     # FR Controllers ---------------------------------------
-    FR_hip_controller:
+    FR_HipX_controller:
         type: robot_joint_controller/RobotJointController
         joint: FR_HipX
 
-    FR_thigh_controller:
+    FR_HipY_controller:
         type: robot_joint_controller/RobotJointController
         joint: FR_HipY
 
-    FR_calf_controller:
+    FR_Knee_controller:
         type: robot_joint_controller/RobotJointController
         joint: FR_Knee
 
-    # RL Controllers ---------------------------------------
-    RL_hip_controller:
+    # HL Controllers ---------------------------------------
+    HL_HipX_controller:
         type: robot_joint_controller/RobotJointController
         joint: HL_HipX
 
-    RL_thigh_controller:
+    HL_HipY_controller:
         type: robot_joint_controller/RobotJointController
         joint: HL_HipY
 
-    RL_calf_controller:
+    HL_Knee_controller:
         type: robot_joint_controller/RobotJointController
         joint: HL_Knee
 
-    # RR Controllers ---------------------------------------
-    RR_hip_controller:
+    # HR Controllers ---------------------------------------
+    HR_HipX_controller:
         type: robot_joint_controller/RobotJointController
         joint: HR_HipX
 
-    RR_thigh_controller:
+    HR_HipY_controller:
         type: robot_joint_controller/RobotJointController
         joint: HR_HipY
 
-    RR_calf_controller:
+    HR_Knee_controller:
         type: robot_joint_controller/RobotJointController
         joint: HR_Knee
 
