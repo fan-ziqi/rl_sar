@@ -1,0 +1,53 @@
+# Copyright (c) 2024-2025 Yuxuan Ma
+# SPDX-License-Identifier: Apache-2.0
+
+lite3/himloco:
+  model_name: "policy_6_11.pt"
+  num_observations: 45
+  observations: ["commands", "ang_vel", "gravity_vec", "dof_pos", "dof_vel", "actions"]
+  observations_history: [0, 1, 2, 3, 4, 5]  # 0 is the latest observation
+  clip_obs: 100.0
+  clip_actions_lower: [-100, -100, -100,
+                       -100, -100, -100,
+                       -100, -100, -100,
+                       -100, -100, -100]
+  clip_actions_upper: [100, 100, 100,
+                       100, 100, 100,
+                       100, 100, 100,
+                       100, 100, 100]
+  rl_kp: [40, 40, 40,
+          40, 40, 40,
+          40, 40, 40,
+          40, 40, 40]
+  rl_kd: [1, 1, 1,
+          1, 1, 1,
+          1, 1, 1,
+          1, 1, 1]
+  fixed_kp: [40, 40, 40,
+             40, 40, 40,
+             40, 40, 40,
+             40, 40, 40]
+  fixed_kd: [1, 1, 1,
+             1, 1, 1,
+             1, 1, 1,
+             1, 1, 1]
+  num_of_dofs: 12
+  action_scale: [0.25, 0.25, 0.25,
+                 0.25, 0.25, 0.25,
+                 0.25, 0.25, 0.25,
+                 0.25, 0.25, 0.25]
+  wheel_indices: []
+  lin_vel_scale: 2.0
+  ang_vel_scale: 0.25
+  dof_pos_scale: 1.0
+  dof_vel_scale: 0.05
+  commands_scale: [2.0, 2.0, 0.25]
+  torque_limits: [30.0, 30.0, 30.0,
+                  30.0, 30.0, 30.0,
+                  30.0, 30.0, 30.0,
+                  30.0, 30.0, 30.0]
+  default_dof_pos: [-0.1, -0.80, 1.50,
+                     0.1, -0.80, 1.50,
+                    -0.1, -0.80, 1.50,
+                     0.1, -0.80, 1.50]
+  joint_mapping: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]

@@ -118,6 +118,21 @@ target_include_directories(l4w4_sdk INTERFACE
 )
 target_link_libraries(l4w4_sdk INTERFACE Threads::Threads)
 
+# Lite3_MotionSDK
+add_library(lite3_motionsdk SHARED IMPORTED)
+set_target_properties(lite3_motionsdk PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/Lite3_MotionSDK/include"
+    IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/Lite3_MotionSDK/lib/libdeeprobotics_legged_sdk_x86_64.so"
+)
+set(LITE3_REAL_LIBS Threads::Threads lite3_motionsdk)
+if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+  file(GLOB GLOB_LITE3_SDK_SO "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/Lite3_MotionSDK/lib/libdeeprobotics_legged_sdk_x86_64.so")
+  install(FILES
+    ${GLOB_LITE3_SDK_SO}
+    DESTINATION lib/
+  )
+endif()
+
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         include_directories(${catkin_INCLUDE_DIRS})
@@ -216,6 +231,25 @@ if(NOT USE_CMAKE)
     endif()
 endif()
 
+add_executable(rl_real_lite3 src/rl_real_lite3.cpp)
+target_link_libraries(rl_real_lite3
+    ${LITE3_REAL_LIBS}
+    rl_sdk
+    observation_buffer
+    yaml-cpp
+)
+if(NOT USE_CMAKE)
+    if($ENV{ROS_DISTRO} MATCHES "noetic")
+        target_link_libraries(rl_real_lite3 ${catkin_LIBRARIES})
+    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+        ament_target_dependencies(rl_real_lite3
+            rclcpp
+            geometry_msgs
+        )
+        install(TARGETS rl_real_lite3 DESTINATION lib/${PROJECT_NAME})
+    endif()
+endif()
+
 add_executable(rl_real_go2 src/rl_real_go2.cpp)
 target_link_libraries(rl_real_go2
     unitree_sdk2
@@ -276,13 +310,11 @@ endif()
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         catkin_install_python(PROGRAMS
-            # scripts/rl_sim.py
             scripts/actuator_net.py
             DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         )
     elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         install(PROGRAMS
-            # scripts/rl_sim.py
             scripts/actuator_net.py
             DESTINATION lib/${PROJECT_NAME}
         )

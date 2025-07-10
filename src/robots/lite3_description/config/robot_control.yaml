@@ -1,0 +1,58 @@
+lite3_gazebo:
+    # Publish all joint states -----------------------------------
+    joint_state_controller:
+        type: joint_state_controller/JointStateController
+        publish_rate: 1000
+
+    # FL Controllers ---------------------------------------
+    FL_HipX_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: FL_HipX
+
+    FL_HipY_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: FL_HipY
+
+    FL_Knee_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: FL_Knee
+
+    # FR Controllers ---------------------------------------
+    FR_HipX_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: FR_HipX
+
+    FR_HipY_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: FR_HipY
+
+    FR_Knee_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: FR_Knee
+
+    # HL Controllers ---------------------------------------
+    HL_HipX_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: HL_HipX
+
+    HL_HipY_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: HL_HipY
+
+    HL_Knee_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: HL_Knee
+
+    # HR Controllers ---------------------------------------
+    HR_HipX_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: HR_HipX
+
+    HR_HipY_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: HR_HipY
+
+    HR_Knee_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: HR_Knee
+

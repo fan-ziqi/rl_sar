@@ -26,6 +26,7 @@ Support List:
 |FFTAI-GR1T1 (gr1t1)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
 |FFTAI-GR1T2 (gr1t2)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
 |GoldenRetriever-L4W4 (l4w4)|legged_gym (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
+|Deeprobotics-Lite3 (lite3)|himloco (IsaacGym)|✅|
 
 > [!IMPORTANT]
 > Python version temporarily suspended maintenance, please use [v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3) if necessary, may be re-released in the future.
@@ -339,6 +340,39 @@ Pull the code and compile it. The process is the same as above.
 
 </details>
 
+<details>
+
+<summary>Deeprobotics Lite3 (Click to expand)</summary>
+
+Deeprobotics Lite3 can be connected using wireless method.
+(Wired not tested. For some versions of Lite3, the wired Ethernet port may requires additional installation.)
+
+- Connect to the Lite3 starting with WIFI broadcasted by the robot. We strongly recommand testing the communication the Lite3 using [Lite3_Motion_SDK](https://github.com/DeepRoboticsLab/Lite3_MotionSDK) before use.
+ **(Note: Wireless connection may lead to packet loss, disconnection, or even loss of control, please ensure safety)**
+
+- Determine the IP address and port number of Lite3, and modify **line 46-48 in rl_sar/src/rl_real_lite3.cpp**.
+- Then Update **jy_exe/conf/network.toml** on the Lite3 motion host to set the IP and port to that of the local machine running ROS2, enabling communication.
+
+> [!CAUTION]
+> **Recheck joint mapping parameters!<br>Recheck rl_sar/policy/himloco/config.yaml. The default joint mapping in Sim2Sim configuration differs from that used in real. If not updated accordingly, this mismatch may lead to incorrect robot behavior and potential safety hazards**
+
+Open a new terminal and start the control program
+
+```bash
+# ROS1
+source devel/setup.bash
+rosrun rl_sar rl_real_lite3
+
+# ROS2
+source install/setup.bash
+ros2 run rl_sar rl_real_lite3
+
+# CMake
+./cmake_build/bin/rl_real_lite3
+```
+
+</details>
+
 ### Train the actuator network
 
 Take A1 as an example below
@@ -402,7 +436,10 @@ Please cite the following if you use this code or parts of it:
 
 The project uses some code from the following open-source code repositories:
 
+- [unitreerobotics/unitree_sdk2-2.0.0](https://github.com/unitreerobotics/unitree_sdk2/tree/2.0.0)
+- [unitreerobotics/unitree_legged_sdk-v3.2](https://github.com/unitreerobotics/unitree_legged_sdk/tree/v3.2)
 - [unitreerobotics/unitree_guide](https://github.com/unitreerobotics/unitree_guide)
 - [mertgungor/unitree_model_control](https://github.com/mertgungor/unitree_model_control)
-- The code in [src/rl_sar/scripts/actuator_net.py](src/rl_sar/scripts/actuator_net.py) is modified from [scripts/actuator_net](https://github.com/Improbable-AI/walk-these-ways/tree/master/scripts/actuator_net) in the [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways) repository.
-- Unitree-G1 RoboMimic pre-trained policies from [ccrpRepo/RoboMimic_Deploy](https://github.com/ccrpRepo/RoboMimic_Deploy)
+- [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways)
+- [ccrpRepo/RoboMimic_Deploy](https://github.com/ccrpRepo/RoboMimic_Deploy)
+- [Deeprobotics/Lite3_Motion_SDK](https://github.com/DeepRoboticsLab/Lite3_MotionSDK)
