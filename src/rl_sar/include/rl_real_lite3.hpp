@@ -21,6 +21,11 @@
 #include "robot_types.h"
 #include <cmath>
 
+//Retroid Gamepad
+#include "gamepad.h"
+#include "retroid_gamepad.h"
+#include "gamepad_keys.h"
+
 #if defined(USE_ROS1) && defined(USE_ROS)
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
@@ -52,7 +57,6 @@ private:
     // loop
     std::shared_ptr<LoopFunc> loop_keyboard;
     std::shared_ptr<LoopFunc> loop_control;
-    std::shared_ptr<LoopFunc> loop_udpSend;
     std::shared_ptr<LoopFunc> loop_udpRecv;
     std::shared_ptr<LoopFunc> loop_rl;
     std::shared_ptr<LoopFunc> loop_plot;
@@ -68,9 +72,13 @@ private:
     Receiver* receiver_ = nullptr;
     RobotCmd robot_joint_cmd_{};
     RobotData* robot_data_=nullptr;
-    // void UDPSend();
     void UDPRecv();
     void EulerToQuaternion(float roll, float pitch, float yaw, float q[4]);
+
+    //Retroid Gamepad
+    std::shared_ptr<RetroidGamepad> gamepad_ptr_;
+    RetroidKeys rt_keys_record_, rt_keys_;
+    bool first_flag_;
 
     // others
     int motiontime = 0;
