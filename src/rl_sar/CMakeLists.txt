@@ -133,6 +133,13 @@ if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
   )
 endif()
 
+# Retroid Gamepad
+set(GAMEPAD_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/gamepad/src/gamepad.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/gamepad/src/retroid_gamepad.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/gamepad/src/udp_receiver.cpp
+)
+
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         include_directories(${catkin_INCLUDE_DIRS})
@@ -231,12 +238,18 @@ if(NOT USE_CMAKE)
     endif()
 endif()
 
-add_executable(rl_real_lite3 src/rl_real_lite3.cpp)
+add_executable(rl_real_lite3 
+    src/rl_real_lite3.cpp
+    ${GAMEPAD_SRC}
+)
 target_link_libraries(rl_real_lite3
     ${LITE3_REAL_LIBS}
     rl_sdk
     observation_buffer
     yaml-cpp
+)
+target_include_directories(rl_real_lite3 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/gamepad/include
 )
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")

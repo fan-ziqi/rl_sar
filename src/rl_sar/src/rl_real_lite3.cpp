@@ -57,6 +57,11 @@ RL_Real::RL_Real()
     this->receiver_->StartWork();
     this->robot_data_ = &(receiver_->GetState());
 
+    // init gamepad
+    this->gamepad_ptr_ = std::make_shared<RetroidGamepad>(12121);
+    this->first_flag_ = true;
+    this->gamepad_ptr_->StartDataThread();
+
     // loop
     this->loop_udpRecv = std::make_shared<LoopFunc>("loop_udpRecv", 0.002, std::bind(&RL_Real::UDPRecv, this), 3);
     this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05, std::bind(&RL_Real::KeyboardInterface, this));
@@ -87,6 +92,7 @@ RL_Real::~RL_Real()
     this->loop_keyboard->shutdown();
     this->loop_control->shutdown();
     this->loop_rl->shutdown();
+    this->gamepad_ptr_->StopDataThread();
 #ifdef PLOT
     this->loop_plot->shutdown();
 #endif
@@ -95,6 +101,21 @@ RL_Real::~RL_Real()
 
 void RL_Real::GetState(RobotState<double> *state)
 {
+    this->rt_keys_ = this->gamepad_ptr_->GetKeys();
+    if(this->first_flag_){
+        this->rt_keys_record_ = this->rt_keys_;
+        this->first_flag_ = false;
+    }
+    if (this->rt_keys_.A != this->rt_keys_record_.A) this->control.SetGamepad(Input::Gamepad::A);
+    if (this->rt_keys_.B != this->rt_keys_record_.B) this->control.SetGamepad(Input::Gamepad::B);
+    if (this->rt_keys_.X != this->rt_keys_record_.X) this->control.SetGamepad(Input::Gamepad::X);
+    if (this->rt_keys_.Y != this->rt_keys_record_.Y) this->control.SetGamepad(Input::Gamepad::Y);
+    if (bool(this->rt_keys_.left_axis_button) && bool(this->rt_keys_.right_axis_button)) this->control.SetGamepad(Input::Gamepad::LB_RB);
+    
+    this->control.x = this->rt_keys_.left_axis_y;
+    this->control.y = -this->rt_keys_.left_axis_x;
+    this->control.yaw = -this->rt_keys_.right_axis_x;
+       
     float q[4];
     EulerToQuaternion(this->robot_data_->imu.angle_roll, this->robot_data_->imu.angle_pitch, this->robot_data_->imu.angle_yaw, q);
 
