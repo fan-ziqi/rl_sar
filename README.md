@@ -356,6 +356,8 @@ Deeprobotics Lite3 can be connected using wireless method.
 > [!CAUTION]
 > **Recheck joint mapping parameters!<br>Recheck rl_sar/policy/himloco/config.yaml. The default joint mapping in Sim2Sim configuration differs from that used in real. If not updated accordingly, this mismatch may lead to incorrect robot behavior and potential safety hazards**
 
+Lite3 also support control using Deeprobotics Retroid gamepad, refer to [Deeprobotics Gamepad](https://github.com/DeepRoboticsLab/gamepad)
+
 Open a new terminal and start the control program
 
 ```bash
