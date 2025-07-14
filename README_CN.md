@@ -36,7 +36,7 @@
 >
 > robot_lab配置文件中的关节顺序 `joint_names` 与本项目代码中 `xxx/robot_lab/config.yaml` 中定义的相同。
 >
-> 在 [Github Discussion](https://github.com/fan-ziqi/rl_sar/discussions) 或 [Discord](https://discord.gg/MC9KguQHtt) 中讨论
+> 在 [Github Discussion](https://github.com/fan-ziqi/rl_sar/discussions) 中讨论
 
 > [!CAUTION]
 > **免责声明：使用者确认使用本代码产生的所有风险及后果均由使用者自行承担，作者不承担任何直接或间接责任，操作前必须确保已采取充分安全防护措施。**
