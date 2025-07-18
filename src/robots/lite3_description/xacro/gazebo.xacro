@@ -226,9 +226,9 @@
         </xacro:macro>
 
         <xacro:macro name="leg_joints" params="prefix">
-            <xacro:joint_interface joint_name="${prefix}_HipX" torque_limit="${HipX_torque_max}"/>
-            <xacro:joint_interface joint_name="${prefix}_HipY" torque_limit="${HipY_torque_max}"/>
-            <xacro:joint_interface joint_name="${prefix}_Knee" torque_limit="${Knee_torque_max}"/>
+            <xacro:joint_interface joint_name="${prefix}_HipX_joint" torque_limit="${HipX_torque_max}"/>
+            <xacro:joint_interface joint_name="${prefix}_HipY_joint" torque_limit="${HipY_torque_max}"/>
+            <xacro:joint_interface joint_name="${prefix}_Knee_joint" torque_limit="${Knee_torque_max}"/>
         </xacro:macro>
 
         <xacro:leg_joints prefix="FR"/>
