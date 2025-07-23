@@ -5,9 +5,6 @@
 
 #include "rl_sim.hpp"
 
-// #define PLOT
-// #define CSV_LOGGER
-
 RL_Sim::RL_Sim()
 #if defined(USE_ROS2)
     : rclcpp::Node("rl_sim_node")
