@@ -380,7 +380,7 @@ ros2 run rl_sar rl_real_lite3
 下面拿A1举例
 
 1. 取消注释`rl_real_a1.hpp`中最上面的`#define CSV_LOGGER`，你也可以在仿真程序中修改对应部分采集仿真数据用来测试训练过程。
-2. 运行控制程序，程序会在执行后记录所有数据。
+2. 运行控制程序，程序会记录所有数据到`src/rl_sar/policy/<ROBOT>/motor.csv`。
 3. 停止控制程序，开始训练执行器网络。注意，下面的路径前均省略了`rl_sar/src/rl_sar/policy/`。
     ```bash
     rosrun rl_sar actuator_net.py --mode train --data a1/motor.csv --output a1/motor.pt

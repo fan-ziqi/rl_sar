@@ -380,7 +380,7 @@ ros2 run rl_sar rl_real_lite3
 Take A1 as an example below
 
 1. Uncomment `#define CSV_LOGGER` in the top of `rl_real_a1.hpp`. You can also modify the corresponding part in the simulation program to collect simulation data for testing the training process.
-2. Run the control program, and the program will log all data after execution.
+2. Run the control program, and the program will log all data in `src/rl_sar/policy/<ROBOT>/motor.csv`.
 3. Stop the control program and start training the actuator network. Note that `rl_sar/src/rl_sar/policy/` is omitted before the following paths.
     ```bash
     rosrun rl_sar actuator_net.py --mode train --data a1/motor.csv --output a1/motor.pt
