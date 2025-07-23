@@ -1,0 +1,55 @@
+name: Bug report
+description: File a bug report for the repository
+
+body:
+- type: markdown
+  attributes:
+    value: |
+      **Your help in making rl_sar better is greatly appreciated!**
+
+      * Please ensure that:
+        * The issue hasn't already been reported by using the [issue search](https://github.com/fan-ziqi/rl_sar/search?q=is%3Aissue&type=issues).
+      * For questions, please consider [open a discussion](https://github.com/fan-ziqi/rl_sar/discussions).
+
+- type: textarea
+  attributes:
+    label: Description
+    description: A clear and concise description of the bug/issue. Try to provide a minimal example to reproduce it.
+    placeholder: |
+      Markdown formatting might be applied to the text.
+
+      ```python
+      # use triple backticks for code blocks or terminal output/error messages
+      ```
+  validations:
+    required: true
+
+- type: input
+  attributes:
+    label: Commit
+    placeholder: e.g. 8f3b9ca, main
+  validations:
+    required: true
+- type: input
+  attributes:
+    label: Operating System (OS)
+    placeholder: e.g. Ubuntu 20.04, Ubuntu 22.04
+  validations:
+    required: true
+- type: input
+  attributes:
+    label: ROS Version
+    placeholder: e.g. noetic, melodic
+  validations:
+    required: true
+- type: input
+  attributes:
+    label: Python Version
+    placeholder: e.g. Python 3.8, Conda-Python 3.11
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Additional information
+    placeholder: Any other information that might be helpful.

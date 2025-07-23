@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question / Feature request
+    url: https://github.com/fan-ziqi/rl_sar/discussions
+    about: Please ask questions or request features on the Discussions tab
+  - name: robot_lab repository
+    url: https://github.com/fan-ziqi/robot_lab
+    about: For issues or questions related to robot_lab, please refer to its repository
