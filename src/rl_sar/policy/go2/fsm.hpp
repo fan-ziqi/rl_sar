@@ -20,6 +20,7 @@ public:
     void Enter() override
     {
         rl.running_percent = 0.0f;
+        std::cout << LOGGER::NOTE << "Entered passive mode. Press '0' (Keyboard) or 'A' (Gamepad) to switch to RLFSMStateGetUp." << std::endl;
     }
 
     void Run() override
@@ -107,13 +108,13 @@ public:
 
     std::string CheckChange() override
     {
+        if (rl.control.current_keyboard == Input::Keyboard::P || rl.control.current_gamepad == Input::Gamepad::LB_X)
+        {
+            return "RLFSMStatePassive";
+        }
         if (rl.running_percent == 1.0f)
         {
-            if (rl.control.current_keyboard == Input::Keyboard::P || rl.control.current_gamepad == Input::Gamepad::LB_X)
-            {
-                return "RLFSMStatePassive";
-            }
-            else if (rl.control.current_keyboard == Input::Keyboard::Num1 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
+            if (rl.control.current_keyboard == Input::Keyboard::Num1 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
             {
                 return "RLFSMStateRL_Locomotion";
             }
@@ -160,7 +161,7 @@ public:
 
     std::string CheckChange() override
     {
-        if (rl.running_percent == 1.0f)
+        if (rl.control.current_keyboard == Input::Keyboard::P || rl.control.current_gamepad == Input::Gamepad::LB_X || rl.running_percent == 1.0f)
         {
             return "RLFSMStatePassive";
         }
