@@ -100,11 +100,11 @@ set_target_properties(unitree_legged_sdk PROPERTIES
 )
 set(UNITREE_A1_LIBS Threads::Threads unitree_legged_sdk lcm)
 if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
-  file(GLOB GLOB_UNITREE_LEGGED_SDK "${CMAKE_CURRENT_SOURCE_DIR}/library/unitree_legged_sdk-3.2/lib/${UNITREE_LIB}.so")
-  install(FILES
-    ${GLOB_UNITREE_LEGGED_SDK}
-    DESTINATION lib/
-  )
+    file(GLOB GLOB_UNITREE_LEGGED_SDK "${CMAKE_CURRENT_SOURCE_DIR}/library/unitree_legged_sdk-3.2/lib/${UNITREE_LIB}.so")
+    install(FILES
+        ${GLOB_UNITREE_LEGGED_SDK}
+        DESTINATION lib/
+    )
 endif()
 
 # unitree_sdk2-2.0.0
@@ -122,15 +122,15 @@ target_link_libraries(l4w4_sdk INTERFACE Threads::Threads)
 add_library(lite3_motionsdk SHARED IMPORTED)
 set_target_properties(lite3_motionsdk PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/Lite3_MotionSDK/include"
-    IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/Lite3_MotionSDK/lib/libdeeprobotics_legged_sdk_x86_64.so"
+    IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/Lite3_MotionSDK/lib/libdeeprobotics_legged_sdk_${ARCH_DIR}.so"
 )
 set(LITE3_REAL_LIBS Threads::Threads lite3_motionsdk)
 if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
-  file(GLOB GLOB_LITE3_SDK_SO "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/Lite3_MotionSDK/lib/libdeeprobotics_legged_sdk_x86_64.so")
-  install(FILES
-    ${GLOB_LITE3_SDK_SO}
-    DESTINATION lib/
-  )
+    file(GLOB GLOB_LITE3_SDK_SO "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/Lite3_MotionSDK/lib/libdeeprobotics_legged_sdk_${ARCH_DIR}.so")
+    install(FILES
+        ${GLOB_LITE3_SDK_SO}
+        DESTINATION lib/
+    )
 endif()
 
 # Retroid Gamepad
@@ -238,7 +238,7 @@ if(NOT USE_CMAKE)
     endif()
 endif()
 
-add_executable(rl_real_lite3 
+add_executable(rl_real_lite3
     src/rl_real_lite3.cpp
     ${GAMEPAD_SRC}
 )
