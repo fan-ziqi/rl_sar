@@ -6,6 +6,7 @@ g1/unitree_rl_gym:
   num_observations: 47
   observations: ["ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions", "g1_phase"]
   observations_history: []  # 0 is the latest observation
+  observations_history_priority: "time"  # "time" or "term" priority
   clip_obs: 100.0
   clip_actions_lower: [-100.0, -100.0, -100.0, -100.0, -100.0, -100.0,
                        -100.0, -100.0, -100.0, -100.0, -100.0, -100.0]

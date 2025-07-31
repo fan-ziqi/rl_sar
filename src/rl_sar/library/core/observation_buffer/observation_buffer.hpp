@@ -12,7 +12,7 @@
 class ObservationBuffer
 {
 public:
-    ObservationBuffer(int num_envs, int num_obs, int include_history_steps);
+    ObservationBuffer(int num_envs, const std::vector<int>& obs_dims, int history_length, const std::string& priority);
     ObservationBuffer();
 
     void reset(std::vector<int> reset_idxs, torch::Tensor new_obs);
@@ -21,9 +21,11 @@ public:
 
 private:
     int num_envs;
-    int num_obs;
-    int include_history_steps;
-    int num_obs_total;
+    std::vector<int> obs_dims;
+    std::string priority;
+    int num_obs = 0;
+    int history_length = 0;
+    int num_obs_total = 0;
     torch::Tensor obs_buf;
 };
 

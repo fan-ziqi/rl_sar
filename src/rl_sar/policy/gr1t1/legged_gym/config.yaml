@@ -6,6 +6,7 @@ gr1t1/legged_gym:
   num_observations: 39
   observations: ["ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
   observations_history: []  # 0 is the latest observation
+  observations_history_priority: "time"  # "time" or "term" priority
   clip_obs: 100.0
   clip_actions_lower: [-0.4391, -1.0491, -2.0991, -0.4391, -1.3991,
                        -1.1391, -1.0491, -2.0991, -0.4391, -1.3991]

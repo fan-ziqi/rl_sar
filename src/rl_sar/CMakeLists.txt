@@ -342,3 +342,10 @@ if(NOT USE_CMAKE)
         )
     endif()
 endif()
+
+# only for test
+# add_executable(test_observation_buffer test/test_observation_buffer.cpp)
+# target_link_libraries(test_observation_buffer
+#     observation_buffer
+# )
+# install(TARGETS test_observation_buffer DESTINATION lib/${PROJECT_NAME})

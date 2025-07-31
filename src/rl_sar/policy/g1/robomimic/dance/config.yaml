@@ -6,6 +6,7 @@ g1/robomimic/dance:
   num_observations: 94
   observations: ["ang_vel", "gravity_vec", "dof_pos", "dof_vel", "actions", "g1_mimic_phase"]
   observations_history: [0, 1, 2, 3]  # 0 is the latest observation
+  observations_history_priority: "time"  # "time" or "term" priority
   clip_obs: 100.0
   clip_actions_lower: [-100.0, -100.0, -100.0, -100.0, -100.0, -100.0,
                        -100.0, -100.0, -100.0, -100.0, -100.0, -100.0,

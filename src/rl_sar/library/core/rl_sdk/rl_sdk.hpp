@@ -130,6 +130,7 @@ struct ModelParams
     int num_observations;
     std::vector<std::string> observations;
     std::vector<int> observations_history;
+    std::string observations_history_priority;
     double damping;
     double stiffness;
     torch::Tensor action_scale;
@@ -174,6 +175,7 @@ public:
 
     ModelParams params;
     Observations obs;
+    std::vector<int> obs_dims;
 
     RobotState<double> robot_state;
     RobotCommand<double> robot_command;
