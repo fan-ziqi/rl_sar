@@ -16,6 +16,18 @@ test mujoco simulate
 simulate
 ```
 
+compile rl_sar
+
+```bash
+./build.sh -m
+```
+
+test go2w
+
+```bash
+./cmake_build/bin/mujoco src/robots/go2w_description/mjcf/scene.xml
+```
+
 ### TODO
 
 can't find `lodepng`
