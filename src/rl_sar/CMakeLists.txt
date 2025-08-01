@@ -349,3 +349,19 @@ endif()
 #     observation_buffer
 # )
 # install(TARGETS test_observation_buffer DESTINATION lib/${PROJECT_NAME})
+
+# add_executable(test_observation_buffer test/test_observation_buffer.cpp)
+# target_link_libraries(test_observation_buffer
+#     observation_buffer
+# )
+# install(TARGETS test_observation_buffer DESTINATION lib/${PROJECT_NAME})
+
+find_package(mujoco REQUIRED)
+file(GLOB MUJOCO_SRC ${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/mujoco/simulate/**.cc)
+set(MUJOCO_DEPENDENCIES
+    pthread
+    mujoco::mujoco
+    glfw
+    yaml-cpp)
+add_executable(mujoco ${MUJOCO_SRC})
+target_link_libraries(mujoco ${MUJOCO_DEPENDENCIES})
