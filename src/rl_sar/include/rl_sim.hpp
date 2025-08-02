@@ -8,6 +8,7 @@
 
 // #define PLOT
 // #define CSV_LOGGER
+#define USE_MUJOCO
 
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
@@ -42,6 +43,8 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include <std_srvs/srv/empty.hpp>
 #include <rcl_interfaces/srv/get_parameters.hpp>
+#elif defined(USE_MUJOCO)
+#include <mujoco/mujoco.h>
 #endif
 
 #include "matplotlibcpp.h"
@@ -53,7 +56,11 @@ class RL_Sim : public RL
 #endif
 {
 public:
+#if defined(USE_ROS1) || defined(USE_ROS2)
     RL_Sim();
+#elif defined(USE_MUJOCO)
+    RL_Sim(mjModel *model, mjData *data);
+#endif
     ~RL_Sim();
 
 private:
@@ -116,6 +123,11 @@ private:
     void CmdvelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
     void RobotStateCallback(const robot_msgs::msg::RobotState::SharedPtr msg);
     void JoyCallback(const sensor_msgs::msg::Joy::SharedPtr msg);
+
+#elif defined(USE_MUJOCO)
+    mjData *mj_data_;
+    mjModel *mj_model_;
+    int dim_motor_sensor_ = 0;
 #endif
 
     // others

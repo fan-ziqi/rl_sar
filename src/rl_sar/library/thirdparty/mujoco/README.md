@@ -25,9 +25,9 @@ compile rl_sar
 test go2w
 
 ```bash
-./cmake_build/bin/mujoco src/robots/go2w_description/mjcf/scene.xml
+./cmake_build/bin/rl_sim src/robots/go2w_description/mjcf/scene.xml
 ```
 
 ### TODO
 
-can't find `lodepng`
+can't find `lodepng`, just comment it

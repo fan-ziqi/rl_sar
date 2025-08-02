@@ -5,9 +5,15 @@
 
 #include "rl_sim.hpp"
 
+#if defined(USE_ROS1)
 RL_Sim::RL_Sim()
-#if defined(USE_ROS2)
+#elif defined(USE_ROS2)
+RL_Sim::RL_Sim()
     : rclcpp::Node("rl_sim_node")
+#elif defined(USE_MUJOCO)
+#include "mujoco_utils.cpp"
+RL_Sim::RL_Sim(mjModel *model, mjData *data)
+    : mj_model_(model), mj_data_(data)
 #endif
 {
 #if defined(USE_ROS1)
@@ -257,6 +263,7 @@ void RL_Sim::StartJointController(const std::string& ros_namespace, const std::v
 
 void RL_Sim::GetState(RobotState<double> *state)
 {
+#if defined(USE_ROS1) || defined(USE_ROS2)
 #if defined(USE_ROS1)
     const auto &orientation = this->pose.orientation;
     const auto &angular_velocity = this->vel.angular;
@@ -286,10 +293,32 @@ void RL_Sim::GetState(RobotState<double> *state)
         state->motor_state.tau_est[i] = this->robot_state_subscriber_msg.motor_state[this->params.joint_mapping[i]].tau_est;
 #endif
     }
+#elif defined(USE_MUJOCO)
+    //  TODO: joint_mapping, wxyz/xyzw
+    if (mj_data_)
+    {
+        state->imu.quaternion[0] = mj_data_->sensordata[dim_motor_sensor_ + 0];
+        state->imu.quaternion[1] = mj_data_->sensordata[dim_motor_sensor_ + 1];
+        state->imu.quaternion[2] = mj_data_->sensordata[dim_motor_sensor_ + 2];
+        state->imu.quaternion[3] = mj_data_->sensordata[dim_motor_sensor_ + 3];
+
+        state->imu.gyroscope[0] = mj_data_->sensordata[dim_motor_sensor_ + 4];
+        state->imu.gyroscope[1] = mj_data_->sensordata[dim_motor_sensor_ + 5];
+        state->imu.gyroscope[2] = mj_data_->sensordata[dim_motor_sensor_ + 6];
+
+        for (int i = 0; i < this->params.num_of_dofs; ++i)
+        {
+            state->motor_state.q[i] = mj_data_->sensordata[i];
+            state->motor_state.dq[i] = mj_data_->sensordata[i + this->params.num_of_dofs];
+            state->motor_state.tau_est[i] = mj_data_->sensordata[i + 2 * this->params.num_of_dofs];
+        }
+    }
+#endif
 }
 
 void RL_Sim::SetCommand(const RobotCommand<double> *command)
 {
+#if defined(USE_ROS1) || defined(USE_ROS2)
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
 #if defined(USE_ROS1)
@@ -315,10 +344,22 @@ void RL_Sim::SetCommand(const RobotCommand<double> *command)
 #elif defined(USE_ROS2)
     this->robot_command_publisher->publish(this->robot_command_publisher_msg);
 #endif
+#elif defined(USE_MUJOCO)
+    if (mj_data_)
+    {
+        for (int i = 0; i < this->params.num_of_dofs; ++i)
+        {
+            mj_data_->ctrl[i] = command->motor_command.tau[i] +
+                                command->motor_command.kp[i] * (command->motor_command.q[i] - mj_data_->sensordata[i]) +
+                                command->motor_command.kd[i] * (command->motor_command.dq[i] - mj_data_->sensordata[i + this->params.num_of_dofs]);
+        }
+    }
+#endif
 }
 
 void RL_Sim::RobotControl()
 {
+#if defined(USE_ROS1) || defined(USE_ROS2)
     if (this->control.current_keyboard == Input::Keyboard::R || this->control.current_gamepad == Input::Gamepad::RB_Y)
     {
 #if defined(USE_ROS1)
@@ -357,6 +398,7 @@ void RL_Sim::RobotControl()
         simulation_running = !simulation_running;
         this->control.current_keyboard = this->control.last_keyboard;
     }
+#endif
 
     if (simulation_running)
     {
@@ -425,6 +467,7 @@ void RL_Sim::GazeboImuCallback(const sensor_msgs::msg::Imu::SharedPtr msg)
 }
 #endif
 
+#if defined(USE_ROS1) || defined(USE_ROS2)
 void RL_Sim::CmdvelCallback(
 #if defined(USE_ROS1)
     const geometry_msgs::Twist::ConstPtr &msg
@@ -435,7 +478,9 @@ void RL_Sim::CmdvelCallback(
 {
     this->cmd_vel = *msg;
 }
+#endif
 
+#if defined(USE_ROS1) || defined(USE_ROS2)
 void RL_Sim::JoyCallback(
 #if defined(USE_ROS1)
     const sensor_msgs::Joy::ConstPtr &msg
@@ -489,6 +534,7 @@ void RL_Sim::JoyCallback(
     this->control.y = this->joy_msg.axes[0] * 1.5; // LX
     this->control.yaw = this->joy_msg.axes[3] * 1.5; // RX
 }
+#endif
 
 #if defined(USE_ROS1)
 void RL_Sim::JointStatesCallback(const robot_msgs::MotorState::ConstPtr &msg, const std::string &joint_controller_name)
@@ -513,7 +559,9 @@ void RL_Sim::RunModel()
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
         if (this->control.navigation_mode)
         {
+#if defined(USE_ROS1) || defined(USE_ROS2)
             this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
+#endif
         }
         else
         {
@@ -625,6 +673,60 @@ int main(int argc, char **argv)
     rclcpp::init(argc, argv);
     rclcpp::spin(std::make_shared<RL_Sim>());
     rclcpp::shutdown();
+#elif defined(USE_MUJOCO)
+    // display an error if running on macOS under Rosetta 2
+#if defined(__APPLE__) && defined(__AVX__)
+    if (rosetta_error_msg)
+    {
+        DisplayErrorDialogBox("Rosetta 2 is not supported", rosetta_error_msg);
+        std::exit(1);
+    }
+#endif
+
+    // print version, check compatibility
+    std::printf("MuJoCo version %s\n", mj_versionString());
+    if (mjVERSION_HEADER != mj_version())
+    {
+        mju_error("Headers and library have different versions");
+    }
+
+    // scan for libraries in the plugin directory to load additional plugins
+    scanPluginLibraries();
+
+#if defined(mjUSEUSD)
+    // If USD is used, print the version.
+    std::printf("OpenUSD version v%d.%02d\n", PXR_MINOR_VERSION, PXR_PATCH_VERSION);
+#endif
+
+    mjvCamera cam;
+    mjv_defaultCamera(&cam);
+
+    mjvOption opt;
+    mjv_defaultOption(&opt);
+
+    mjvPerturb pert;
+    mjv_defaultPerturb(&pert);
+
+    // simulate object encapsulates the UI
+    auto sim = std::make_unique<mj::Simulate>(
+        std::make_unique<mj::GlfwAdapter>(),
+        &cam, &opt, &pert, /* is_passive = */ false);
+
+    const char *filename = nullptr;
+    if (argc > 1)
+    {
+        filename = argv[1];
+    }
+
+    // start physics thread
+    std::thread physicsthreadhandle(&PhysicsThread, sim.get(), filename);
+
+    // RL_Sim rl_sar(m, d);
+
+    // start simulation UI loop (blocking call)
+    sim->RenderLoop();
+    physicsthreadhandle.join();
+
 #endif
     return 0;
 }

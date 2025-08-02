@@ -153,6 +153,7 @@ include_directories(
     library/core/rl_sdk
     library/core/loop
     library/core/fsm
+    library/thirdparty/mujoco/simulate
     policy
 )
 
@@ -217,6 +218,23 @@ if(NOT USE_CMAKE)
         )
         install(TARGETS rl_sim DESTINATION lib/${PROJECT_NAME})
     endif()
+else()
+    if (POLICY CMP0072)
+        set(OpenGL_GL_PREFERENCE "GLVND")
+    endif()
+    find_package(mujoco REQUIRED)
+    file(GLOB MUJOCO_SIMULATE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/mujoco/simulate/**.cc)
+    set(MUJOCO_SIMULATE_DEPENDENCIES
+        pthread
+        mujoco::mujoco
+        glfw
+        rl_sdk
+        observation_buffer
+        yaml-cpp
+        Threads::Threads
+    )
+    add_executable(rl_sim ${MUJOCO_SIMULATE_SRC} src/rl_sim.cpp)
+    target_link_libraries(rl_sim ${MUJOCO_SIMULATE_DEPENDENCIES})
 endif()
 
 add_executable(rl_real_a1 src/rl_real_a1.cpp)
@@ -349,19 +367,3 @@ endif()
 #     observation_buffer
 # )
 # install(TARGETS test_observation_buffer DESTINATION lib/${PROJECT_NAME})
-
-# add_executable(test_observation_buffer test/test_observation_buffer.cpp)
-# target_link_libraries(test_observation_buffer
-#     observation_buffer
-# )
-# install(TARGETS test_observation_buffer DESTINATION lib/${PROJECT_NAME})
-
-find_package(mujoco REQUIRED)
-file(GLOB MUJOCO_SRC ${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/mujoco/simulate/**.cc)
-set(MUJOCO_DEPENDENCIES
-    pthread
-    mujoco::mujoco
-    glfw
-    yaml-cpp)
-add_executable(mujoco ${MUJOCO_SRC})
-target_link_libraries(mujoco ${MUJOCO_DEPENDENCIES})
