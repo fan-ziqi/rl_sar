@@ -6,6 +6,7 @@ lite3/himloco:
   num_observations: 45
   observations: ["commands", "ang_vel", "gravity_vec", "dof_pos", "dof_vel", "actions"]
   observations_history: [0, 1, 2, 3, 4, 5]  # 0 is the latest observation
+  observations_history_priority: "time"  # "time" or "term" priority
   clip_obs: 100.0
   clip_actions_lower: [-100, -100, -100,
                        -100, -100, -100,

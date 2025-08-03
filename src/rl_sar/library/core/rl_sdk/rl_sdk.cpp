@@ -101,6 +101,12 @@ torch::Tensor RL::ComputeObservation()
         }
     }
 
+    this->obs_dims.clear();
+    for (const auto& obs : obs_list)
+    {
+       this->obs_dims.push_back(obs.size(1));
+    }
+
     torch::Tensor obs = torch::cat(obs_list, 1);
     torch::Tensor clamped_obs = torch::clamp(obs, -this->params.clip_obs, this->params.clip_obs);
     return clamped_obs;
@@ -116,6 +122,7 @@ void RL::InitObservations()
     this->obs.dof_pos = this->params.default_dof_pos;
     this->obs.dof_vel = torch::zeros({1, this->params.num_of_dofs});
     this->obs.actions = torch::zeros({1, this->params.num_of_dofs});
+    this->ComputeObservation();
 }
 
 void RL::InitOutputs()
@@ -144,18 +151,22 @@ void RL::InitRL(std::string robot_path)
             observation = this->ang_vel_type;
         }
     }
-    // init rl
-    if (!this->params.observations_history.empty())
-    {
-        this->history_obs_buf = ObservationBuffer(1, this->params.num_observations, this->params.observations_history.size());
-    }
-    // model
-    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/" + this->params.model_name;
-    this->model = torch::jit::load(model_path);
 
+    // init rl
     this->InitObservations();
     this->InitOutputs();
     this->InitControl();
+
+    // init obs history
+    if (!this->params.observations_history.empty())
+    {
+        int history_length = *std::max_element(this->params.observations_history.begin(), this->params.observations_history.end()) + 1;
+        this->history_obs_buf = ObservationBuffer(1, this->obs_dims, history_length, this->params.observations_history_priority);
+    }
+
+    // init model
+    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/" + this->params.model_name;
+    this->model = torch::jit::load(model_path);
 }
 
 void RL::ComputeOutput(const torch::Tensor &actions, torch::Tensor &output_dof_pos, torch::Tensor &output_dof_vel, torch::Tensor &output_dof_tau)
@@ -411,6 +422,7 @@ void RL::ReadYamlRL(std::string robot_path)
     {
         this->params.observations_history = ReadVectorFromYaml<int>(config["observations_history"]);
     }
+    this->params.observations_history_priority = config["observations_history_priority"].as<std::string>();
     this->params.clip_obs = config["clip_obs"].as<double>();
     if (config["clip_actions_lower"].IsNull() && config["clip_actions_upper"].IsNull())
     {
