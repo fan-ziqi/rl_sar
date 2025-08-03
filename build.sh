@@ -69,7 +69,7 @@ run_cmake_build() {
     print_separator
 
     cmake src/rl_sar/ -B cmake_build -DUSE_CMAKE=ON
-    cmake --build cmake_build -j4
+    cmake --build cmake_build -j1
 
     print_success "CMake build completed!"
 }
