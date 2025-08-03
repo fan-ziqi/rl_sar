@@ -36,7 +36,7 @@ public:
         {
             _thread = std::thread(&LoopFunc::loop, this);
         }
-        _thread.detach();
+        // _thread.detach();
     }
 
     void shutdown()

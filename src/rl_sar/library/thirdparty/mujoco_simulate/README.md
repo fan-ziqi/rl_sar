@@ -1,33 +1,29 @@
-### mujoco
+### devel-mujoco
 
 install mujoco
 
 ```bash
 git clone https://github.com/google-deepmind/mujoco.git
+git checkout 3.2.7
 mkdir build && cd build
 cmake ..
 make -j4
 sudo make install
 ```
 
-test mujoco simulate
-
-```bash
-simulate
-```
-
 compile rl_sar
 
 ```bash
-./build.sh -m
+./build.sh -s mujoco
+./build.sh -m -s mujoco
 ```
 
-test go2w
+test with go2w
 
 ```bash
-./cmake_build/bin/rl_sim src/robots/go2w_description/mjcf/scene.xml
+./cmake_build/bin/rl_sim go2w
 ```
 
 ### TODO
 
-can't find `lodepng`, just comment it
+ROS2 `Segmentation fault (core dumped)`

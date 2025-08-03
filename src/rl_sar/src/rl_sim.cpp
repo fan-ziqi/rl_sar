@@ -6,19 +6,21 @@
 #include "rl_sim.hpp"
 
 #if defined(USE_ROS1)
-RL_Sim::RL_Sim()
+RL_Sim::RL_Sim(std::string robot_name)
 #elif defined(USE_ROS2)
-RL_Sim::RL_Sim()
+RL_Sim::RL_Sim(std::string robot_name)
     : rclcpp::Node("rl_sim_node")
-#elif defined(USE_MUJOCO)
-#include "mujoco_utils.cpp"
-RL_Sim::RL_Sim(mjModel *model, mjData *data)
-    : mj_model_(model), mj_data_(data)
+#else
+RL_Sim::RL_Sim(std::string robot_name)
 #endif
 {
 #if defined(USE_ROS1)
-    this->ang_vel_type = "ang_vel_world";
     ros::NodeHandle nh;
+#endif
+
+#if defined(SIMULATOR_GAZEBO)
+#if defined(USE_ROS1)
+    this->ang_vel_type = "ang_vel_world";
     nh.param<std::string>("ros_namespace", this->ros_namespace, "");
     nh.param<std::string>("robot_name", this->robot_name, "");
 #elif defined(USE_ROS2)
@@ -59,6 +61,64 @@ RL_Sim::RL_Sim(mjModel *model, mjData *data)
         std::cout << LOGGER::ERROR << "Failed to call param_node service" << std::endl;
     }
 #endif
+#elif defined(SIMULATOR_MUJOCO)
+    this->robot_name = robot_name;
+    this->ang_vel_type = "ang_vel_body";
+
+    std::cout << LOGGER::INFO << "Launching mujoco..." << std::endl;
+
+    // display an error if running on macOS under Rosetta 2
+#if defined(__APPLE__) && defined(__AVX__)
+    if (rosetta_error_msg)
+    {
+        DisplayErrorDialogBox("Rosetta 2 is not supported", rosetta_error_msg);
+        std::exit(1);
+    }
+#endif
+
+    // print version, check compatibility
+    std::printf("MuJoCo version %s\n", mj_versionString());
+    if (mjVERSION_HEADER != mj_version())
+    {
+        mju_error("Headers and library have different versions");
+    }
+
+    // scan for libraries in the plugin directory to load additional plugins
+    scanPluginLibraries();
+
+    mjvCamera cam;
+    mjv_defaultCamera(&cam);
+
+    mjvOption opt;
+    mjv_defaultOption(&opt);
+
+    mjvPerturb pert;
+    mjv_defaultPerturb(&pert);
+
+    // simulate object encapsulates the UI
+    sim = std::make_unique<mj::Simulate>(
+        std::make_unique<mj::GlfwAdapter>(),
+        &cam, &opt, &pert, /* is_passive = */ false);
+
+    std::string filename = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/../robots/" + this->robot_name + "_description/mjcf/scene.xml";
+
+    // start physics thread
+    std::thread physicsthreadhandle(&PhysicsThread, sim.get(), filename.c_str());
+
+    while (1)
+    {
+        if (d)
+        {
+            std::cout << "Mujoco data is prepared" << std::endl;
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
+    this->mj_model = m;
+    this->mj_data = d;
+    this->SetupSysJoystick("/dev/input/js0", 16);
+#endif
 
     // read params from yaml
     this->ReadYamlBase(this->robot_name);
@@ -82,15 +142,19 @@ RL_Sim::RL_Sim(mjModel *model, mjData *data)
     torch::set_num_threads(4);
 
     // init robot
+#if defined(SIMULATOR_GAZEBO)
 #if defined(USE_ROS1)
     this->joint_publishers_commands.resize(this->params.num_of_dofs);
 #elif defined(USE_ROS2)
     this->robot_command_publisher_msg.motor_command.resize(this->params.num_of_dofs);
     this->robot_state_subscriber_msg.motor_state.resize(this->params.num_of_dofs);
 #endif
+#endif
     this->InitOutputs();
     this->InitControl();
 
+    // gazebo with ros
+#if defined(SIMULATOR_GAZEBO)
 #if defined(USE_ROS1)
     this->StartJointController(this->ros_namespace, this->params.joint_controller_names);
     // publisher
@@ -103,8 +167,6 @@ RL_Sim::RL_Sim(mjModel *model, mjData *data)
     }
 
     // subscriber
-    this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Sim::CmdvelCallback, this);
-    this->joy_subscriber = nh.subscribe<sensor_msgs::Joy>("/joy", 10, &RL_Sim::JoyCallback, this);
     this->model_state_subscriber = nh.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 10, &RL_Sim::ModelStatesCallback, this);
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
@@ -127,21 +189,13 @@ RL_Sim::RL_Sim(mjModel *model, mjData *data)
     this->gazebo_pause_physics_client = nh.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
     this->gazebo_unpause_physics_client = nh.serviceClient<std_srvs::Empty>("/gazebo/unpause_physics");
     this->gazebo_reset_world_client = nh.serviceClient<std_srvs::Empty>("/gazebo/reset_world");
-#elif defined(USE_ROS2)
+#elif defined(USE_ROS2) && defined(SIMULATOR_GAZEBO)
     this->StartJointController(this->ros_namespace, this->params.joint_names);
     // publisher
     this->robot_command_publisher = this->create_publisher<robot_msgs::msg::RobotCommand>(
         this->ros_namespace + "robot_joint_controller/command", rclcpp::SystemDefaultsQoS());
 
     // subscriber
-    this->cmd_vel_subscriber = this->create_subscription<geometry_msgs::msg::Twist>(
-        "/cmd_vel", rclcpp::SystemDefaultsQoS(),
-        [this] (const geometry_msgs::msg::Twist::SharedPtr msg) {this->CmdvelCallback(msg);}
-    );
-    this->joy_subscriber = this->create_subscription<sensor_msgs::msg::Joy>(
-        "/joy", rclcpp::SystemDefaultsQoS(),
-        [this] (const sensor_msgs::msg::Joy::SharedPtr msg) {this->JoyCallback(msg);}
-    );
     this->gazebo_imu_subscriber = this->create_subscription<sensor_msgs::msg::Imu>(
         "/imu", rclcpp::SystemDefaultsQoS(), [this] (const sensor_msgs::msg::Imu::SharedPtr msg) {this->GazeboImuCallback(msg);}
     );
@@ -157,6 +211,22 @@ RL_Sim::RL_Sim(mjModel *model, mjData *data)
 
     auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
     auto result = this->gazebo_reset_world_client->async_send_request(empty_request);
+#endif
+#endif
+
+    // cmd_vel and joy
+#if defined(USE_ROS1)
+    this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Sim::CmdvelCallback, this);
+    this->joy_subscriber = nh.subscribe<sensor_msgs::Joy>("/joy", 10, &RL_Sim::JoyCallback, this);
+#elif defined(USE_ROS2)
+    this->cmd_vel_subscriber = this->create_subscription<geometry_msgs::msg::Twist>(
+        "/cmd_vel", rclcpp::SystemDefaultsQoS(),
+        [this] (const geometry_msgs::msg::Twist::SharedPtr msg) {this->CmdvelCallback(msg);}
+    );
+    this->joy_subscriber = this->create_subscription<sensor_msgs::msg::Joy>(
+        "/joy", rclcpp::SystemDefaultsQoS(),
+        [this] (const sensor_msgs::msg::Joy::SharedPtr msg) {this->JoyCallback(msg);}
+    );
 #endif
 
     // loop
@@ -183,6 +253,12 @@ RL_Sim::RL_Sim(mjModel *model, mjData *data)
 #endif
 
     std::cout << LOGGER::INFO << "RL_Sim start" << std::endl;
+
+#if defined(SIMULATOR_MUJOCO)
+    // start simulation UI loop (blocking call)
+    sim->RenderLoop();
+    physicsthreadhandle.join();
+#endif
 }
 
 RL_Sim::~RL_Sim()
@@ -196,6 +272,7 @@ RL_Sim::~RL_Sim()
     std::cout << LOGGER::INFO << "RL_Sim exit" << std::endl;
 }
 
+#if defined(SIMULATOR_GAZEBO)
 void RL_Sim::StartJointController(const std::string& ros_namespace, const std::vector<std::string>& names)
 {
 #if defined(USE_ROS1)
@@ -260,10 +337,11 @@ void RL_Sim::StartJointController(const std::string& ros_namespace, const std::v
     }
 #endif
 }
+#endif
 
 void RL_Sim::GetState(RobotState<double> *state)
 {
-#if defined(USE_ROS1) || defined(USE_ROS2)
+#if defined(SIMULATOR_GAZEBO)
 #if defined(USE_ROS1)
     const auto &orientation = this->pose.orientation;
     const auto &angular_velocity = this->vel.angular;
@@ -293,24 +371,25 @@ void RL_Sim::GetState(RobotState<double> *state)
         state->motor_state.tau_est[i] = this->robot_state_subscriber_msg.motor_state[this->params.joint_mapping[i]].tau_est;
 #endif
     }
-#elif defined(USE_MUJOCO)
-    //  TODO: joint_mapping, wxyz/xyzw
-    if (mj_data_)
+#elif defined(SIMULATOR_MUJOCO)
+    if (mj_data)
     {
-        state->imu.quaternion[0] = mj_data_->sensordata[dim_motor_sensor_ + 0];
-        state->imu.quaternion[1] = mj_data_->sensordata[dim_motor_sensor_ + 1];
-        state->imu.quaternion[2] = mj_data_->sensordata[dim_motor_sensor_ + 2];
-        state->imu.quaternion[3] = mj_data_->sensordata[dim_motor_sensor_ + 3];
+        this->GetSysJoystick();
 
-        state->imu.gyroscope[0] = mj_data_->sensordata[dim_motor_sensor_ + 4];
-        state->imu.gyroscope[1] = mj_data_->sensordata[dim_motor_sensor_ + 5];
-        state->imu.gyroscope[2] = mj_data_->sensordata[dim_motor_sensor_ + 6];
+        state->imu.quaternion[0] = mj_data->sensordata[3 * this->params.num_of_dofs + 0];
+        state->imu.quaternion[1] = mj_data->sensordata[3 * this->params.num_of_dofs + 1];
+        state->imu.quaternion[2] = mj_data->sensordata[3 * this->params.num_of_dofs + 2];
+        state->imu.quaternion[3] = mj_data->sensordata[3 * this->params.num_of_dofs + 3];
+
+        state->imu.gyroscope[0] = mj_data->sensordata[3 * this->params.num_of_dofs + 4];
+        state->imu.gyroscope[1] = mj_data->sensordata[3 * this->params.num_of_dofs + 5];
+        state->imu.gyroscope[2] = mj_data->sensordata[3 * this->params.num_of_dofs + 6];
 
         for (int i = 0; i < this->params.num_of_dofs; ++i)
         {
-            state->motor_state.q[i] = mj_data_->sensordata[i];
-            state->motor_state.dq[i] = mj_data_->sensordata[i + this->params.num_of_dofs];
-            state->motor_state.tau_est[i] = mj_data_->sensordata[i + 2 * this->params.num_of_dofs];
+            state->motor_state.q[i] = mj_data->sensordata[this->params.joint_mapping[i]];
+            state->motor_state.dq[i] = mj_data->sensordata[this->params.joint_mapping[i] + this->params.num_of_dofs];
+            state->motor_state.tau_est[i] = mj_data->sensordata[this->params.joint_mapping[i] + 2 * this->params.num_of_dofs];
         }
     }
 #endif
@@ -318,7 +397,7 @@ void RL_Sim::GetState(RobotState<double> *state)
 
 void RL_Sim::SetCommand(const RobotCommand<double> *command)
 {
-#if defined(USE_ROS1) || defined(USE_ROS2)
+#if defined(SIMULATOR_GAZEBO)
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
 #if defined(USE_ROS1)
@@ -344,14 +423,15 @@ void RL_Sim::SetCommand(const RobotCommand<double> *command)
 #elif defined(USE_ROS2)
     this->robot_command_publisher->publish(this->robot_command_publisher_msg);
 #endif
-#elif defined(USE_MUJOCO)
-    if (mj_data_)
+#elif defined(SIMULATOR_MUJOCO)
+    if (mj_data)
     {
         for (int i = 0; i < this->params.num_of_dofs; ++i)
         {
-            mj_data_->ctrl[i] = command->motor_command.tau[i] +
-                                command->motor_command.kp[i] * (command->motor_command.q[i] - mj_data_->sensordata[i]) +
-                                command->motor_command.kd[i] * (command->motor_command.dq[i] - mj_data_->sensordata[i + this->params.num_of_dofs]);
+            mj_data->ctrl[this->params.joint_mapping[i]] =
+                command->motor_command.tau[i] +
+                command->motor_command.kp[i] * (command->motor_command.q[i] - mj_data->sensordata[this->params.joint_mapping[i]]) +
+                command->motor_command.kd[i] * (command->motor_command.dq[i] - mj_data->sensordata[this->params.joint_mapping[i] + this->params.num_of_dofs]);
         }
     }
 #endif
@@ -359,15 +439,20 @@ void RL_Sim::SetCommand(const RobotCommand<double> *command)
 
 void RL_Sim::RobotControl()
 {
-#if defined(USE_ROS1) || defined(USE_ROS2)
     if (this->control.current_keyboard == Input::Keyboard::R || this->control.current_gamepad == Input::Gamepad::RB_Y)
     {
-#if defined(USE_ROS1)
+#if defined(USE_ROS1) && defined(SIMULATOR_GAZEBO)
         std_srvs::Empty empty;
         this->gazebo_reset_world_client.call(empty);
-#elif defined(USE_ROS2)
+#elif defined(USE_ROS2) && defined(SIMULATOR_GAZEBO)
         auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
         auto result = this->gazebo_reset_world_client->async_send_request(empty_request);
+#elif defined(SIMULATOR_MUJOCO)
+        if (this->mj_model && this->mj_data)
+        {
+            mj_resetData(this->mj_model, this->mj_data);
+            mj_forward(this->mj_model, this->mj_data);
+        }
 #endif
         this->control.current_keyboard = this->control.last_keyboard;
     }
@@ -375,30 +460,33 @@ void RL_Sim::RobotControl()
     {
         if (simulation_running)
         {
-#if defined(USE_ROS1)
+#if defined(USE_ROS1) && defined(SIMULATOR_GAZEBO)
             std_srvs::Empty empty;
             this->gazebo_pause_physics_client.call(empty);
-#elif defined(USE_ROS2)
+#elif defined(USE_ROS2) && defined(SIMULATOR_GAZEBO)
             auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
             auto result = this->gazebo_pause_physics_client->async_send_request(empty_request);
+#elif defined(SIMULATOR_MUJOCO)
+            sim->run = 0;
 #endif
             std::cout << std::endl << LOGGER::INFO << "Simulation Stop" << std::endl;
         }
         else
         {
-#if defined(USE_ROS1)
+#if defined(USE_ROS1) && defined(SIMULATOR_GAZEBO)
             std_srvs::Empty empty;
             this->gazebo_unpause_physics_client.call(empty);
-#elif defined(USE_ROS2)
+#elif defined(USE_ROS2) && defined(SIMULATOR_GAZEBO)
             auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
             auto result = this->gazebo_unpause_physics_client->async_send_request(empty_request);
+#elif defined(SIMULATOR_MUJOCO)
+            sim->run = 1;
 #endif
             std::cout << std::endl << LOGGER::INFO << "Simulation Start" << std::endl;
         }
         simulation_running = !simulation_running;
         this->control.current_keyboard = this->control.last_keyboard;
     }
-#endif
 
     if (simulation_running)
     {
@@ -454,6 +542,7 @@ void RL_Sim::RobotControl()
     }
 }
 
+#if defined(SIMULATOR_GAZEBO)
 #if defined(USE_ROS1)
 void RL_Sim::ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg)
 {
@@ -465,6 +554,7 @@ void RL_Sim::GazeboImuCallback(const sensor_msgs::msg::Imu::SharedPtr msg)
 {
     this->gazebo_imu = *msg;
 }
+#endif
 #endif
 
 #if defined(USE_ROS1) || defined(USE_ROS2)
@@ -536,6 +626,64 @@ void RL_Sim::JoyCallback(
 }
 #endif
 
+#if defined(SIMULATOR_MUJOCO)
+void RL_Sim::SetupSysJoystick(std::string device, int bits)
+{
+    this->sys_js = new Joystick(device);
+    if (!this->sys_js->isFound())
+    {
+        std::cout << LOGGER::ERROR << "System Joystick open failed." << std::endl;
+        // exit(1);
+    }
+
+    this->sys_js_max_value = (1 << (bits - 1));
+}
+
+void RL_Sim::GetSysJoystick()
+{
+    this->sys_js->getState();
+
+    if (this->sys_js->button_[0]) this->control.SetGamepad(Input::Gamepad::A);
+    if (this->sys_js->button_[1]) this->control.SetGamepad(Input::Gamepad::B);
+    if (this->sys_js->button_[2]) this->control.SetGamepad(Input::Gamepad::X);
+    if (this->sys_js->button_[3]) this->control.SetGamepad(Input::Gamepad::Y);
+    if (this->sys_js->button_[4]) this->control.SetGamepad(Input::Gamepad::LB);
+    if (this->sys_js->button_[5]) this->control.SetGamepad(Input::Gamepad::RB);
+    if (this->sys_js->button_[9]) this->control.SetGamepad(Input::Gamepad::LStick);
+    if (this->sys_js->button_[10]) this->control.SetGamepad(Input::Gamepad::RStick);
+    if (this->sys_js->axis_[7] > 0) this->control.SetGamepad(Input::Gamepad::DPadUp);
+    if (this->sys_js->axis_[7] < 0) this->control.SetGamepad(Input::Gamepad::DPadDown);
+    if (this->sys_js->axis_[6] < 0) this->control.SetGamepad(Input::Gamepad::DPadLeft);
+    if (this->sys_js->axis_[6] > 0) this->control.SetGamepad(Input::Gamepad::DPadRight);
+    if (this->sys_js->button_[4] && this->sys_js->button_[0]) this->control.SetGamepad(Input::Gamepad::LB_A);
+    if (this->sys_js->button_[4] && this->sys_js->button_[1]) this->control.SetGamepad(Input::Gamepad::LB_B);
+    if (this->sys_js->button_[4] && this->sys_js->button_[2]) this->control.SetGamepad(Input::Gamepad::LB_X);
+    if (this->sys_js->button_[4] && this->sys_js->button_[3]) this->control.SetGamepad(Input::Gamepad::LB_Y);
+    if (this->sys_js->button_[4] && this->sys_js->button_[9]) this->control.SetGamepad(Input::Gamepad::LB_LStick);
+    if (this->sys_js->button_[4] && this->sys_js->button_[10]) this->control.SetGamepad(Input::Gamepad::LB_RStick);
+    if (this->sys_js->button_[4] && this->sys_js->axis_[7] > 0) this->control.SetGamepad(Input::Gamepad::LB_DPadUp);
+    if (this->sys_js->button_[4] && this->sys_js->axis_[7] < 0) this->control.SetGamepad(Input::Gamepad::LB_DPadDown);
+    if (this->sys_js->button_[4] && this->sys_js->axis_[6] > 0) this->control.SetGamepad(Input::Gamepad::LB_DPadRight);
+    if (this->sys_js->button_[4] && this->sys_js->axis_[6] < 0) this->control.SetGamepad(Input::Gamepad::LB_DPadLeft);
+    if (this->sys_js->button_[5] && this->sys_js->button_[0]) this->control.SetGamepad(Input::Gamepad::RB_A);
+    if (this->sys_js->button_[5] && this->sys_js->button_[1]) this->control.SetGamepad(Input::Gamepad::RB_B);
+    if (this->sys_js->button_[5] && this->sys_js->button_[2]) this->control.SetGamepad(Input::Gamepad::RB_X);
+    if (this->sys_js->button_[5] && this->sys_js->button_[3]) this->control.SetGamepad(Input::Gamepad::RB_Y);
+    if (this->sys_js->button_[5] && this->sys_js->button_[9]) this->control.SetGamepad(Input::Gamepad::RB_LStick);
+    if (this->sys_js->button_[5] && this->sys_js->button_[10]) this->control.SetGamepad(Input::Gamepad::RB_RStick);
+    if (this->sys_js->button_[5] && this->sys_js->axis_[7] > 0) this->control.SetGamepad(Input::Gamepad::RB_DPadUp);
+    if (this->sys_js->button_[5] && this->sys_js->axis_[7] < 0) this->control.SetGamepad(Input::Gamepad::RB_DPadDown);
+    if (this->sys_js->button_[5] && this->sys_js->axis_[6] > 0) this->control.SetGamepad(Input::Gamepad::RB_DPadRight);
+    if (this->sys_js->button_[5] && this->sys_js->axis_[6] < 0) this->control.SetGamepad(Input::Gamepad::RB_DPadLeft);
+    if (this->sys_js->button_[4] && this->sys_js->button_[5]) this->control.SetGamepad(Input::Gamepad::LB_RB);
+
+    this->control.x = -double(this->sys_js->axis_[1]) / this->sys_js_max_value * 1.5; // LY
+    this->control.y = double(this->sys_js->axis_[0]) / this->sys_js_max_value * 1.5; // LX
+    this->control.yaw = double(this->sys_js->axis_[3]) / this->sys_js_max_value * 1.5; // RX
+}
+#endif
+
+#if defined(SIMULATOR_GAZEBO)
 #if defined(USE_ROS1)
 void RL_Sim::JointStatesCallback(const robot_msgs::MotorState::ConstPtr &msg, const std::string &joint_controller_name)
 {
@@ -548,6 +696,7 @@ void RL_Sim::RobotStateCallback(const robot_msgs::msg::RobotState::SharedPtr msg
 {
     this->robot_state_subscriber_msg = *msg;
 }
+#endif
 #endif
 
 void RL_Sim::RunModel()
@@ -638,12 +787,17 @@ void RL_Sim::Plot()
     {
         this->plot_real_joint_pos[i].erase(this->plot_real_joint_pos[i].begin());
         this->plot_target_joint_pos[i].erase(this->plot_target_joint_pos[i].begin());
+#if defined(SIMULATOR_GAZEBO)
 #if defined(USE_ROS1)
         this->plot_real_joint_pos[i].push_back(this->joint_positions[this->params.joint_controller_names[i]]);
         this->plot_target_joint_pos[i].push_back(this->joint_publishers_commands[i].q);
 #elif defined(USE_ROS2)
         this->plot_real_joint_pos[i].push_back(this->robot_state_subscriber_msg.motor_state[i].q);
         this->plot_target_joint_pos[i].push_back(this->robot_command_publisher_msg.motor_command[i].q);
+#endif
+#elif defined(SIMULATOR_MUJOCO)
+        this->plot_real_joint_pos[i].push_back(mj_data->sensordata[i]);
+        // this->plot_target_joint_pos[i].push_back();  // TODO
 #endif
         plt::subplot(this->params.num_of_dofs, 1, i + 1);
         plt::named_plot("_real_joint_pos", this->plot_t, this->plot_real_joint_pos[i], "r");
@@ -654,79 +808,44 @@ void RL_Sim::Plot()
     plt::pause(0.01);
 }
 
-#if defined(USE_ROS1)
 void signalHandler(int signum)
 {
+#if defined(SIMULATOR_MUJOCO)
+    pthread_exit(NULL);
+#endif
+#if defined(USE_ROS1)
     ros::shutdown();
     exit(0);
-}
+#elif defined(USE_ROS2)
+    rclcpp::shutdown();
+    exit(0);
 #endif
+}
+
 
 int main(int argc, char **argv)
 {
-#if defined(USE_ROS1)
+    std::string robot_name(argc > 1 ? argv[1] : "");
     signal(SIGINT, signalHandler);
-    ros::init(argc, argv, "rl_sar");
-    RL_Sim rl_sar;
+
+#if defined(USE_ROS1)
+    ros::init(argc, argv, "rl_sar", ros::init_options::NoSigintHandler);
+    RL_Sim rl_sar(robot_name);
     ros::spin();
 #elif defined(USE_ROS2)
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<RL_Sim>());
+    // rclcpp::spin(std::make_shared<RL_Sim>(robot_name));
+    auto node = std::make_shared<RL_Sim>(robot_name);
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(node);
+    executor.spin();
     rclcpp::shutdown();
-#elif defined(USE_MUJOCO)
-    // display an error if running on macOS under Rosetta 2
-#if defined(__APPLE__) && defined(__AVX__)
-    if (rosetta_error_msg)
+#else
+    RL_Sim rl_sar(robot_name);
+    while (1)
     {
-        DisplayErrorDialogBox("Rosetta 2 is not supported", rosetta_error_msg);
-        std::exit(1);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
-#endif
-
-    // print version, check compatibility
-    std::printf("MuJoCo version %s\n", mj_versionString());
-    if (mjVERSION_HEADER != mj_version())
-    {
-        mju_error("Headers and library have different versions");
-    }
-
-    // scan for libraries in the plugin directory to load additional plugins
-    scanPluginLibraries();
-
-#if defined(mjUSEUSD)
-    // If USD is used, print the version.
-    std::printf("OpenUSD version v%d.%02d\n", PXR_MINOR_VERSION, PXR_PATCH_VERSION);
-#endif
-
-    mjvCamera cam;
-    mjv_defaultCamera(&cam);
-
-    mjvOption opt;
-    mjv_defaultOption(&opt);
-
-    mjvPerturb pert;
-    mjv_defaultPerturb(&pert);
-
-    // simulate object encapsulates the UI
-    auto sim = std::make_unique<mj::Simulate>(
-        std::make_unique<mj::GlfwAdapter>(),
-        &cam, &opt, &pert, /* is_passive = */ false);
-
-    const char *filename = nullptr;
-    if (argc > 1)
-    {
-        filename = argv[1];
-    }
-
-    // start physics thread
-    std::thread physicsthreadhandle(&PhysicsThread, sim.get(), filename);
-
-    // RL_Sim rl_sar(m, d);
-
-    // start simulation UI loop (blocking call)
-    sim->RenderLoop();
-    physicsthreadhandle.join();
-
 #endif
     return 0;
 }

@@ -5,6 +5,8 @@
 [![ROS2 Foxy/Humble](https://img.shields.io/badge/ros2-foxy/humble-brightgreen.svg?logo=ros)](https://wiki.ros.org/foxy)
 [![License](https://img.shields.io/badge/license-Apache2.0-yellow.svg?logo=apache)](https://opensource.org/license/apache-2-0)
 
+# DEVEL: PLEASE READ [DEVEL-MUJOCO](src/rl_sar/library/thirdparty/mujoco_simulate/README.md) !
+
 [中文文档](README_CN.md)
 
 This repository provides a framework for simulation verification and physical deployment of robot reinforcement learning algorithms, suitable for quadruped robots, wheeled robots, and humanoid robots. "sar" stands for "simulation and real"
@@ -441,6 +443,9 @@ The project uses some code from the following open-source code repositories:
 - [unitreerobotics/unitree_sdk2-2.0.0](https://github.com/unitreerobotics/unitree_sdk2/tree/2.0.0)
 - [unitreerobotics/unitree_legged_sdk-v3.2](https://github.com/unitreerobotics/unitree_legged_sdk/tree/v3.2)
 - [unitreerobotics/unitree_guide](https://github.com/unitreerobotics/unitree_guide)
+- [unitreerobotics/unitree_mujoco](https://github.com/unitreerobotics/unitree_mujoco)
+- [google-deepmind/mujoco-3.2.7](https://github.com/google-deepmind/mujoco)
+- [drewnoakes/joystick](https://github.com/drewnoakes/joystick)
 - [mertgungor/unitree_model_control](https://github.com/mertgungor/unitree_model_control)
 - [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways)
 - [ccrpRepo/RoboMimic_Deploy](https://github.com/ccrpRepo/RoboMimic_Deploy)

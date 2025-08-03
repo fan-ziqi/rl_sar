@@ -25,9 +25,6 @@
 #include <string>
 #include <thread>
 
-#if defined(mjUSEUSD)
-#include <mujoco/experimental/usd/usd.h>
-#endif
 #include <mujoco/mujoco.h>
 #include "glfw_adapter.h"
 #include "simulate.h"
@@ -42,7 +39,7 @@ extern "C" {
   #if defined(__APPLE__)
     #include <mach-o/dyld.h>
   #endif
-  #include <errno.h>
+  #include <sys/errno.h>
   #include <unistd.h>
 #endif
 }
@@ -227,25 +224,13 @@ mjModel* LoadModel(const char* file, mj::Simulate& sim) {
   char loadError[kErrorLength] = "";
   mjModel* mnew = 0;
   auto load_start = mj::Simulate::Clock::now();
-
-  std::string filename_str(filename);
-  std::string extension;
-  size_t dot_pos = filename_str.rfind('.');
-
-  if (dot_pos != std::string::npos && dot_pos < filename_str.length() - 1) {
-    extension = filename_str.substr(dot_pos);
-  }
-
-  if (extension == ".mjb") {
+  if (mju::strlen_arr(filename)>4 &&
+      !std::strncmp(filename + mju::strlen_arr(filename) - 4, ".mjb",
+                    mju::sizeof_arr(filename) - mju::strlen_arr(filename)+4)) {
     mnew = mj_loadModel(filename, nullptr);
     if (!mnew) {
       mju::strcpy_arr(loadError, "could not load binary model");
     }
-#if defined(mjUSEUSD)
-  } else if (extension == ".usda" || extension == ".usd" ||
-             extension == ".usdc" || extension == ".usdz" ) {
-    mnew = mj_loadUSD(filename, nullptr, loadError, kErrorLength);
-#endif
   } else {
     mnew = mj_loadXML(filename, nullptr, loadError, kErrorLength);
 
@@ -368,7 +353,7 @@ void PhysicsLoop(mj::Simulate& sim) {
           // requested slow-down factor
           double slowdown = 100 / sim.percentRealTime[sim.real_time_index];
 
-          // misalignment condition: distance from target sim time is bigger than syncMisalign
+          // misalignment condition: distance from target sim time is bigger than syncmisalign
           bool misaligned =
               std::abs(Seconds(elapsedCPU).count()/slowdown - elapsedSim) > syncMisalign;
 

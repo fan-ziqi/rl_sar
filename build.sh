@@ -1,6 +1,3 @@
-# Copyright (c) 2024-2025 Ziqi Fan
-# SPDX-License-Identifier: Apache-2.0
-
 #!/bin/bash
 set -e
 
@@ -64,19 +61,60 @@ ask_confirmation() {
 # ========================
 
 run_cmake_build() {
+    local simulator="$1"
+    local real_robot="$2"
+
     print_header "[Running CMake Build]"
-    print_warning "NOTE: CMake build is for hardware deployment only, not for simulation."
+
+    if [[ "$simulator" != "MUJOCO" ]]; then
+        print_error "CMake build only supports MUJOCO simulator"
+        exit 1
+    fi
+
+    print_warning "NOTE: CMake build is for hardware deployment and mujoco simulation without ros."
     print_separator
 
-    cmake src/rl_sar/ -B cmake_build -DUSE_CMAKE=ON
+    # Set default real robot if not specified
+    if [[ -z "$real_robot" ]]; then
+        real_robot="ALL"
+        print_info "Building ALL real robots by default"
+    fi
+
+    cmake src/rl_sar/ -B cmake_build -DUSE_CMAKE=ON -DSIMULATOR=MUJOCO -DREAL_ROBOT="$real_robot"
     cmake --build cmake_build -j4
 
     print_success "CMake build completed!"
 }
 
 run_ros_build() {
-    local packages=("$@")
+    local packages=()
+    local build_args=()
+    local cmake_args=()
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --*)
+                if [[ "$1" == "--cmake-args" ]]; then
+                    shift
+                    while [[ $# -gt 0 && "$1" != --* ]]; do
+                        cmake_args+=("$1")
+                        shift
+                    done
+                else
+                    build_args+=("$1")
+                    shift
+                fi
+                ;;
+            *)
+                packages+=("$1")
+                shift
+                ;;
+        esac
+    done
+
     local package_list=$(IFS=' '; echo "${packages[*]}")
+    local build_args_list=$(IFS=' '; echo "${build_args[*]}")
+    local cmake_args_list=$(IFS=' '; echo "${cmake_args[*]}")
 
     print_header "[Running ROS Build]"
 
@@ -97,22 +135,22 @@ run_ros_build() {
     if [ ${#packages[@]} -eq 0 ]; then
         if [[ "$ROS_DISTRO" == "noetic" ]]; then
             print_header "[Using catkin build]"
-            print_info "Building all packages..."
-            catkin build
+            print_info "Building all packages with args: ${build_args_list} ${cmake_args_list} --no-warn-unused-cli"
+            catkin build ${build_args_list} --cmake-args ${cmake_args_list} --no-warn-unused-cli
         else
             print_header "[Using colcon build]"
-            print_info "Building all packages..."
-            colcon build --merge-install --symlink-install
+            print_info "Building all packages with args: ${build_args_list} ${cmake_args_list} --no-warn-unused-cli"
+            colcon build --merge-install --symlink-install ${build_args_list} --cmake-args ${cmake_args_list} --no-warn-unused-cli
         fi
     else
         if [[ "$ROS_DISTRO" == "noetic" ]]; then
             print_header "[Using catkin build]"
-            print_info "Building specific packages: $package_list"
-            catkin build $package_list
+            print_info "Building specific packages: $package_list with args: ${build_args_list} ${cmake_args_list} --no-warn-unused-cli"
+            catkin build ${package_list} ${build_args_list} --cmake-args ${cmake_args_list}
         else
             print_header "[Using colcon build]"
-            print_info "Building specific packages: $package_list"
-            colcon build --merge-install --symlink-install --packages-select $package_list
+            print_info "Building specific packages: $package_list with args: ${build_args_list} ${cmake_args_list} --no-warn-unused-cli"
+            colcon build --merge-install --symlink-install --packages-select ${package_list} ${build_args_list} --cmake-args ${cmake_args_list} --no-warn-unused-cli
         fi
     fi
 
@@ -141,6 +179,7 @@ clean_workspace() {
     echo "  - directory log/"
     echo "  - directory logs/"
     echo "  - directory .catkin_tools/"
+    echo "  - directory cmake_build/"
 
     # Ask for confirmation
     if [ ${#packages[@]} -eq 0 ]; then
@@ -179,7 +218,7 @@ clean_workspace() {
 
     # Clean build artifacts
     print_info "Cleaning build artifacts..."
-    rm -rf build/ devel/ install/ log/ logs/ .catkin_tools/
+    rm -rf build/ devel/ install/ log/ logs/ .catkin_tools/ cmake_build/
 
     print_success "Clean completed!"
 }
@@ -311,32 +350,70 @@ create_symlinks_for_specific_packages() {
 
 show_usage() {
     print_header "[Build System Usage]"
-    print_header
     echo -e "Usage: $0 [OPTIONS] [PACKAGE_NAMES...]"
     echo ""
     echo -e "${COLOR_INFO}Options:${COLOR_RESET}"
-    echo -e "  -c, --clean    Clean workspace (remove symlinks and build artifacts)"
-    echo -e "  -m, --cmake    Build using CMake (for hardware deployment only)"
-    echo -e "  -h, --help     Show this help message"
+    echo -e "  -c, --clean      Clean workspace (remove symlinks and build artifacts)"
+    echo -e "  -m, --cmake      Build using CMake (for hardware deployment and mujoco simulation without ros)"
+    echo -e "  -s, --sim SIM    Build with simulator (SIM: gazebo or mujoco)"
+    echo -e "  -r, --real NAME  Build real robot package (NAME: all/a1/go2/g1/lite3/l4w4)"
+    echo -e "  -h, --help       Show this help message"
     echo ""
     echo -e "${COLOR_INFO}Examples:${COLOR_RESET}"
-    echo -e "  $0                    # Build all ROS packages"
+    echo -e "  $0                    # Build all ROS packages (default to gazebo simulator)"
     echo -e "  $0 package1 package2  # Build specific ROS packages"
     echo -e "  $0 -c                 # Clean all symlinks and build artifacts"
     echo -e "  $0 --clean package1   # Clean specific package and build artifacts"
-    echo -e "  $0 -m                 # Build with CMake for hardware deployment"
+    echo -e "  $0 -m                 # Build with CMake for hardware deployment (ALL real robots and gazebo simulator by default)"
+    echo -e "  $0 -m -s mujoco       # Build with CMake and mujoco simulator (ALL real robots)"
+    echo -e "  $0 -m -s mujoco -r a1 # Build with CMake, mujoco simulator and a1 real robot"
+    echo -e "  $0 -s gazebo          # Build with gazebo simulator (ROS)"
+    echo -e "  $0 -s mujoco          # Build with mujoco simulator (ROS)"
+    echo -e "  $0 -r a1              # Build a1 real robot (ROS)"
+    echo -e "  $0 -r go2             # Build go2/go2w real robot (ROS)"
+    echo -e "  $0 -r g1              # Build g1 real robot (ROS)"
+    echo -e "  $0 -r lite3           # Build lite3 real robot (ROS)"
+    echo -e "  $0 -r l4w4            # Build l4w4 real robot (ROS)"
+    echo -e "  $0 -r all             # Build all real robots (ROS)"
+    echo -e "  $0 -s gazebo -r a1    # Build gazebo simulator and a1 real robot (ROS)"
+    echo -e "  $0 -s mujoco -r go2   # Build mujoco simulator and go2 real robot (ROS)"
+    echo -e "  $0 -m -s gazebo       # Error: CMake only supports mujoco"
 }
 
 main() {
     local packages=()
     local clean_mode=false
     local cmake_mode=false
+    local sim_mode=false
+    local sim_name=""
+    local real_mode=false
+    local real_name=""
 
     # Parse command line arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
             -c|--clean) clean_mode=true; shift ;;
             -m|--cmake) cmake_mode=true; shift ;;
+            -s|--sim)
+                sim_mode=true
+                if [[ -n $2 && $2 != -* ]]; then
+                    sim_name=$(echo "$2" | tr '[:lower:]' '[:upper:]')
+                    shift 2
+                else
+                    print_error "Missing SIMULATOR for --sim/-s option"
+                    show_usage; exit 1
+                fi
+                ;;
+            -r|--real)
+                real_mode=true
+                if [[ -n $2 && $2 != -* ]]; then
+                    real_name=$(echo "$2" | tr '[:lower:]' '[:upper:]')
+                    shift 2
+                else
+                    print_error "Missing NAME for --real/-r option"
+                    show_usage; exit 1
+                fi
+                ;;
             -h|--help) show_usage; exit 0 ;;
             --) shift; packages+=("$@"); break ;;
             -*) print_error "Unknown option: $1"; show_usage; exit 1 ;;
@@ -344,9 +421,29 @@ main() {
         esac
     done
 
+    # Set default simulator if not specified
+    if [[ "$cmake_mode" == true && "$sim_mode" == false ]]; then
+        sim_name="GAZEBO"
+        sim_mode=true
+    fi
+
+    # Validate simulator name
+    if [[ "$sim_mode" == true ]]; then
+        if [[ "$sim_name" != "GAZEBO" && "$sim_name" != "MUJOCO" ]]; then
+            print_error "Invalid simulator: $sim_name. Must be 'gazebo' or 'mujoco'"
+            show_usage; exit 1
+        fi
+    fi
+
+    # Check for invalid combinations
+    if [[ "$cmake_mode" == true && "$sim_name" == "GAZEBO" ]]; then
+        print_error "Cannot combine CMake build (-m) with Gazebo (-s gazebo). CMake only supports MUJOCO."
+        show_usage; exit 1
+    fi
+
     # Handle CMake build mode
     if [ "$cmake_mode" = true ]; then
-        run_cmake_build
+        run_cmake_build "$sim_name" "$real_name"
         exit 0
     fi
 
@@ -363,7 +460,32 @@ main() {
         exit 1
     fi
 
-    run_ros_build "${packages[@]}"
+    # Prepare CMake args based on build mode
+    local cmake_args=()
+
+    if [ "$real_mode" = true ]; then
+        case "$real_name" in
+            ALL) cmake_args+=("-DREAL_ROBOT=ALL") ;;
+            A1) cmake_args+=("-DREAL_ROBOT=A1") ;;
+            GO2) cmake_args+=("-DREAL_ROBOT=GO2") ;;
+            G1) cmake_args+=("-DREAL_ROBOT=G1") ;;
+            LITE3) cmake_args+=("-DREAL_ROBOT=LITE3") ;;
+            L4W4) cmake_args+=("-DREAL_ROBOT=L4W4") ;;
+            *)
+                print_error "Unknown real robot name: $real_name"
+                show_usage; exit 1
+                ;;
+        esac
+    fi
+
+    if [ "$sim_mode" = true ]; then
+        cmake_args+=("-DSIMULATOR=$sim_name")
+        if [[ "$sim_name" == "MUJOCO" ]]; then
+            packages=("rl_sar" "robot_msgs" "robot_joint_controller")
+        fi
+    fi
+
+    run_ros_build "${packages[@]}" --cmake-args "${cmake_args[@]}"
 }
 
 main "$@"

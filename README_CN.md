@@ -5,6 +5,8 @@
 [![ROS2 Foxy/Humble](https://img.shields.io/badge/ros2-foxy/humble-brightgreen.svg?logo=ros)](https://wiki.ros.org/foxy)
 [![License](https://img.shields.io/badge/license-Apache2.0-yellow.svg?logo=apache)](https://opensource.org/license/apache-2-0)
 
+# DEVEL: PLEASE READ [DEVEL-MUJOCO](src/rl_sar/library/thirdparty/mujoco_simulate/README.md) !
+
 [English document](README.md)
 
 本仓库提供了机器人强化学习算法的仿真验证与实物部署框架，适配四足机器人、轮足机器人、人形机器人。"sar"代表"simulation and real"
@@ -441,6 +443,9 @@ rl_sar/src/rl_real_<ROBOT>.cpp  # 可以按需自定义forward()函数以适配�
 - [unitreerobotics/unitree_sdk2-2.0.0](https://github.com/unitreerobotics/unitree_sdk2/tree/2.0.0)
 - [unitreerobotics/unitree_legged_sdk-v3.2](https://github.com/unitreerobotics/unitree_legged_sdk/tree/v3.2)
 - [unitreerobotics/unitree_guide](https://github.com/unitreerobotics/unitree_guide)
+- [unitreerobotics/unitree_mujoco](https://github.com/unitreerobotics/unitree_mujoco)
+- [google-deepmind/mujoco-3.2.7](https://github.com/google-deepmind/mujoco)
+- [drewnoakes/joystick](https://github.com/drewnoakes/joystick)
 - [mertgungor/unitree_model_control](https://github.com/mertgungor/unitree_model_control)
 - [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways)
 - [ccrpRepo/RoboMimic_Deploy](https://github.com/ccrpRepo/RoboMimic_Deploy)

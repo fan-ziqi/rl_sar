@@ -1,14 +1,12 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.11)
 project(rl_sar VERSION 3.0.0 LANGUAGES CXX)
 
 set(USE_CMAKE OFF CACHE BOOL "Use Cmake build system")
-message(STATUS "USE_CMAKE: ${USE_CMAKE}")
 if(USE_CMAKE)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 endif()
-
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         add_compile_definitions(USE_ROS1)
@@ -18,6 +16,20 @@ if(NOT USE_CMAKE)
 else()
     message(WARNING "ROS_DISTRO not set, assuming non-ROS mode")
     add_compile_definitions(USE_CMAKE)
+endif()
+
+set(REAL_ROBOT "NONE" CACHE STRING "Select real robot: ALL, A1, GO2, G1, LITE3, L4W4")
+
+set(SIMULATOR "NONE" CACHE STRING "Select simulator: NONE, GAZEBO, MUJOCO")
+set_property(CACHE SIMULATOR PROPERTY STRINGS NONE GAZEBO MUJOCO)
+if(SIMULATOR STREQUAL "GAZEBO")
+    add_compile_definitions(SIMULATOR_GAZEBO)
+    message(STATUS "Building with Gazebo simulator support")
+elseif(SIMULATOR STREQUAL "MUJOCO")
+    add_compile_definitions(SIMULATOR_MUJOCO)
+    message(STATUS "Building with MuJoCo simulator support")
+else()
+    message(STATUS "Building without simulator support")
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -76,6 +88,7 @@ find_package(Torch REQUIRED)
 find_package(TBB REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+find_package(mujoco REQUIRED)
 
 link_directories(/usr/local/lib)
 include_directories(${YAML_CPP_INCLUDE_DIR})
@@ -153,7 +166,8 @@ include_directories(
     library/core/rl_sdk
     library/core/loop
     library/core/fsm
-    library/thirdparty/mujoco/simulate
+    library/thirdparty/mujoco_simulate
+    library/thirdparty/joystick
     policy
 )
 
@@ -192,14 +206,24 @@ if(NOT USE_CMAKE)
     endif()
 endif()
 
+file(GLOB MUJOCO_SIMULATE_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/mujoco_simulate/**.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/joystick/joystick.cc
+)
+set(MUJOCO_SIMULATE_DEPENDENCIES
+    mujoco::mujoco
+    glfw
+)
+add_executable(rl_sim src/rl_sim.cpp ${MUJOCO_SIMULATE_SRC})
+target_link_libraries(rl_sim
+    rl_sdk
+    observation_buffer
+    yaml-cpp
+    Threads::Threads
+    ${MUJOCO_SIMULATE_DEPENDENCIES}
+)
+
 if(NOT USE_CMAKE)
-    add_executable(rl_sim src/rl_sim.cpp)
-    target_link_libraries(rl_sim
-        rl_sdk
-        observation_buffer
-        yaml-cpp
-        Threads::Threads
-    )
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         target_link_libraries(rl_sim ${catkin_LIBRARIES})
     elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
@@ -218,123 +242,116 @@ if(NOT USE_CMAKE)
         )
         install(TARGETS rl_sim DESTINATION lib/${PROJECT_NAME})
     endif()
-else()
-    if (POLICY CMP0072)
-        set(OpenGL_GL_PREFERENCE "GLVND")
-    endif()
-    find_package(mujoco REQUIRED)
-    file(GLOB MUJOCO_SIMULATE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/mujoco/simulate/**.cc)
-    set(MUJOCO_SIMULATE_DEPENDENCIES
-        pthread
-        mujoco::mujoco
-        glfw
+endif()
+
+if(REAL_ROBOT STREQUAL "A1" OR REAL_ROBOT STREQUAL "ALL")
+    add_executable(rl_real_a1 src/rl_real_a1.cpp)
+    target_link_libraries(rl_real_a1
+        ${UNITREE_A1_LIBS}
         rl_sdk
         observation_buffer
         yaml-cpp
-        Threads::Threads
     )
-    add_executable(rl_sim ${MUJOCO_SIMULATE_SRC} src/rl_sim.cpp)
-    target_link_libraries(rl_sim ${MUJOCO_SIMULATE_DEPENDENCIES})
-endif()
-
-add_executable(rl_real_a1 src/rl_real_a1.cpp)
-target_link_libraries(rl_real_a1
-    ${UNITREE_A1_LIBS}
-    rl_sdk
-    observation_buffer
-    yaml-cpp
-)
-if(NOT USE_CMAKE)
-    if($ENV{ROS_DISTRO} MATCHES "noetic")
-        target_link_libraries(rl_real_a1 ${catkin_LIBRARIES})
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
-        ament_target_dependencies(rl_real_a1
-            rclcpp
-            geometry_msgs
-        )
-        install(TARGETS rl_real_a1 DESTINATION lib/${PROJECT_NAME})
+    if(NOT USE_CMAKE)
+        if($ENV{ROS_DISTRO} MATCHES "noetic")
+            target_link_libraries(rl_real_a1 ${catkin_LIBRARIES})
+        elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+            ament_target_dependencies(rl_real_a1
+                rclcpp
+                geometry_msgs
+            )
+            install(TARGETS rl_real_a1 DESTINATION lib/${PROJECT_NAME})
+        endif()
     endif()
 endif()
 
-add_executable(rl_real_lite3
-    src/rl_real_lite3.cpp
-    ${GAMEPAD_SRC}
-)
-target_link_libraries(rl_real_lite3
-    ${LITE3_REAL_LIBS}
-    rl_sdk
-    observation_buffer
-    yaml-cpp
-)
-target_include_directories(rl_real_lite3 PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/gamepad/include
-)
-if(NOT USE_CMAKE)
-    if($ENV{ROS_DISTRO} MATCHES "noetic")
-        target_link_libraries(rl_real_lite3 ${catkin_LIBRARIES})
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
-        ament_target_dependencies(rl_real_lite3
-            rclcpp
-            geometry_msgs
-        )
-        install(TARGETS rl_real_lite3 DESTINATION lib/${PROJECT_NAME})
+if(REAL_ROBOT STREQUAL "LITE3" OR REAL_ROBOT STREQUAL "ALL")
+    add_executable(rl_real_lite3
+        src/rl_real_lite3.cpp
+        ${GAMEPAD_SRC}
+    )
+    target_link_libraries(rl_real_lite3
+        ${LITE3_REAL_LIBS}
+        rl_sdk
+        observation_buffer
+        yaml-cpp
+    )
+    target_include_directories(rl_real_lite3 PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/gamepad/include
+    )
+    if(NOT USE_CMAKE)
+        if($ENV{ROS_DISTRO} MATCHES "noetic")
+            target_link_libraries(rl_real_lite3 ${catkin_LIBRARIES})
+        elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+            ament_target_dependencies(rl_real_lite3
+                rclcpp
+                geometry_msgs
+            )
+            install(TARGETS rl_real_lite3 DESTINATION lib/${PROJECT_NAME})
+        endif()
     endif()
 endif()
 
-add_executable(rl_real_go2 src/rl_real_go2.cpp)
-target_link_libraries(rl_real_go2
-    unitree_sdk2
-    rl_sdk
-    observation_buffer
-    yaml-cpp
-)
-if(NOT USE_CMAKE)
-    if($ENV{ROS_DISTRO} MATCHES "noetic")
-        target_link_libraries(rl_real_go2 ${catkin_LIBRARIES})
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
-        ament_target_dependencies(rl_real_go2
-            rclcpp
-            geometry_msgs
-        )
-        install(TARGETS rl_real_go2 DESTINATION lib/${PROJECT_NAME})
+if(REAL_ROBOT STREQUAL "GO2" OR REAL_ROBOT STREQUAL "ALL")
+    add_executable(rl_real_go2 src/rl_real_go2.cpp)
+    target_link_libraries(rl_real_go2
+        unitree_sdk2
+        rl_sdk
+        observation_buffer
+        yaml-cpp
+    )
+    if(NOT USE_CMAKE)
+        if($ENV{ROS_DISTRO} MATCHES "noetic")
+            target_link_libraries(rl_real_go2 ${catkin_LIBRARIES})
+        elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+            ament_target_dependencies(rl_real_go2
+                rclcpp
+                geometry_msgs
+            )
+            install(TARGETS rl_real_go2 DESTINATION lib/${PROJECT_NAME})
+        endif()
     endif()
 endif()
 
-add_executable(rl_real_g1 src/rl_real_g1.cpp)
-target_link_libraries(rl_real_g1
-    unitree_sdk2
-    rl_sdk
-    observation_buffer
-    yaml-cpp
-)
-if(NOT USE_CMAKE)
-    if($ENV{ROS_DISTRO} MATCHES "noetic")
-        target_link_libraries(rl_real_g1 ${catkin_LIBRARIES})
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
-        ament_target_dependencies(rl_real_g1
-            rclcpp
-            geometry_msgs
-        )
-        install(TARGETS rl_real_g1 DESTINATION lib/${PROJECT_NAME})
+if(REAL_ROBOT STREQUAL "G1" OR REAL_ROBOT STREQUAL "ALL")
+    add_executable(rl_real_g1 src/rl_real_g1.cpp)
+    target_link_libraries(rl_real_g1
+        unitree_sdk2
+        rl_sdk
+        observation_buffer
+        yaml-cpp
+    )
+    if(NOT USE_CMAKE)
+        if($ENV{ROS_DISTRO} MATCHES "noetic")
+            target_link_libraries(rl_real_g1 ${catkin_LIBRARIES})
+        elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+            ament_target_dependencies(rl_real_g1
+                rclcpp
+                geometry_msgs
+            )
+            install(TARGETS rl_real_g1 DESTINATION lib/${PROJECT_NAME})
+        endif()
     endif()
 endif()
 
-add_executable(rl_real_l4w4 src/rl_real_l4w4.cpp)
-target_link_libraries(rl_real_l4w4
-    l4w4_sdk
-    rl_sdk
-    observation_buffer
-    yaml-cpp
-)
-if(NOT USE_CMAKE)
-    if($ENV{ROS_DISTRO} MATCHES "noetic")
-        target_link_libraries(rl_real_l4w4 ${catkin_LIBRARIES})
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
-        ament_target_dependencies(rl_real_l4w4
-            rclcpp
-            geometry_msgs
-        )
-        install(TARGETS rl_real_l4w4 DESTINATION lib/${PROJECT_NAME})
+if(REAL_ROBOT STREQUAL "L4W4" OR REAL_ROBOT STREQUAL "ALL")
+    add_executable(rl_real_l4w4 src/rl_real_l4w4.cpp)
+    target_link_libraries(rl_real_l4w4
+        l4w4_sdk
+        rl_sdk
+        observation_buffer
+        yaml-cpp
+    )
+    if(NOT USE_CMAKE)
+        if($ENV{ROS_DISTRO} MATCHES "noetic")
+            target_link_libraries(rl_real_l4w4 ${catkin_LIBRARIES})
+        elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+            ament_target_dependencies(rl_real_l4w4
+                rclcpp
+                geometry_msgs
+            )
+            install(TARGETS rl_real_l4w4 DESTINATION lib/${PROJECT_NAME})
+        endif()
     endif()
 endif()
 
