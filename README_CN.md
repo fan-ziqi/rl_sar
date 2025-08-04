@@ -3,9 +3,9 @@
 [![Ubuntu 20.04/22.04](https://img.shields.io/badge/Ubuntu-20.04/22.04-blue.svg?logo=ubuntu)](https://ubuntu.com/)
 [![ROS Noetic](https://img.shields.io/badge/ros-noetic-brightgreen.svg?logo=ros)](https://wiki.ros.org/noetic)
 [![ROS2 Foxy/Humble](https://img.shields.io/badge/ros2-foxy/humble-brightgreen.svg?logo=ros)](https://wiki.ros.org/foxy)
+[![Gazebo](https://img.shields.io/badge/Gazebo-Classic-lightgrey.svg?logo=gazebo)](http://gazebosim.org/)
+[![MuJoCo](https://img.shields.io/badge/MuJoCo-3.2.7-orange.svg?logo=mujoco)](https://mujoco.org/)
 [![License](https://img.shields.io/badge/license-Apache2.0-yellow.svg?logo=apache)](https://opensource.org/license/apache-2-0)
-
-# DEVEL: PLEASE READ [DEVEL-MUJOCO](src/rl_sar/library/thirdparty/mujoco_simulate/README.md) !
 
 [English document](README.md)
 
@@ -14,21 +14,23 @@
 > 支持**IsaacGym**和**IsaacSim**
 >
 > 支持**ROS-Noetic**和**ROS2-Foxy/Humble**
+>
+> 支持**Gazebo**和**Mujoco**
 
 支持列表：
 
-|Robot Name (rname:=)|Pre-Trained Policy|Real|
-|-|-|-|
-|Unitree-A1 (a1)|legged_gym (IsaacGym)|✅|
-|Unitree-Go2 (go2)|himloco (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
-|Unitree-Go2W (go2w)|robot_lab (IsaacSim)|✅|
-|Unitree-B2 (b2)|robot_lab (IsaacSim)|⚪|
-|Unitree-B2W (b2w)|robot_lab (IsaacSim)|⚪|
-|Unitree-G1 (g1)|unitree_rl_gym (IsaacGym)</br>robomimic pre-loco (IsaacGym)</br>robomimic_dance (IsaacGym)</br>robomimic_kick (IsaacGym)</br>robomimic_kungfu (IsaacGym)|✅</br>✅</br>✅</br>🚫</br>🚫|
-|FFTAI-GR1T1 (gr1t1)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
-|FFTAI-GR1T2 (gr1t2)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
-|GoldenRetriever-L4W4 (l4w4)|legged_gym (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
-|Deeprobotics-Lite3 (lite3)|himloco (IsaacGym)|✅|
+| Robot Name (rname:=)            | Pre-Trained Policy                                                                 | Gazebo | Mujoco | Real          |
+|---------------------------------|-----------------------------------------------------------------------------------|--------|--------|----------------|
+| Unitree-A1 (a1)                 | legged_gym (IsaacGym)                                                             | ✅     | ❌     | ✅            |
+| Unitree-Go2 (go2)               | himloco (IsaacGym)<br>robot_lab (IsaacSim)                                        | ✅     | ✅     | ✅<br>✅      |
+| Unitree-Go2W (go2w)             | robot_lab (IsaacSim)                                                              | ✅     | ✅     | ✅            |
+| Unitree-B2 (b2)                 | robot_lab (IsaacSim)                                                              | ✅     | ✅     | ⚪            |
+| Unitree-B2W (b2w)               | robot_lab (IsaacSim)                                                              | ✅     | ✅     | ⚪            |
+| Unitree-G1 (g1)                 | unitree_rl_gym (IsaacGym)<br>robomimic pre-loco (IsaacGym)<br>robomimic_dance (IsaacGym)<br>robomimic_kick (IsaacGym)<br>robomimic_kungfu (IsaacGym) | ✅     | ❌     | ✅<br>✅<br>✅<br>❌<br>❌ |
+| FFTAI-GR1T1 (gr1t1)<br>(Only available on Ubuntu20.04) | legged_gym (IsaacGym)                                                             | ✅     | ❌     | ⚪            |
+| FFTAI-GR1T2 (gr1t2)<br>(Only available on Ubuntu20.04) | legged_gym (IsaacGym)                                                             | ✅     | ❌     | ⚪            |
+| GoldenRetriever-L4W4 (l4w4)      | legged_gym (IsaacGym)<br>robot_lab (IsaacSim)                                     | ✅     | ❌     | ✅<br>✅      |
+| Deeprobotics-Lite3 (lite3)      | himloco (IsaacGym)                                                                | ✅     | ❌     | ✅            |
 
 > [!IMPORTANT]
 > Python版本暂时停止维护，如有需要请使用[v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3)版本，后续可能会重新上线。
@@ -63,6 +65,17 @@ sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interfac
 
 ```bash
 sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-control ros-$ROS_DISTRO-ros2-controllers ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-robot-state-publisher ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-gazebo-ros2-control ros-$ROS_DISTRO-gazebo-ros-pkgs ros-$ROS_DISTRO-xacro
+```
+
+如果您使用`mujoco-3.2.7`作为仿真器，则需要按照下述步骤安装：
+
+```bash
+git clone https://github.com/google-deepmind/mujoco.git
+git checkout 3.2.7
+mkdir build && cd build
+cmake ..
+make -j4
+sudo make install
 ```
 
 在任意位置下载并部署`libtorch`（请修改下面的 **\<YOUR_PATH\>** 为实际路径）
@@ -108,49 +121,46 @@ sudo ldconfig
 
 ## 编译
 
-由于本项目支持多版本的ROS，需要针对不同版本创建一些软链接，项目根目录中提供了编译脚本供一键编译。
-
-在项目根目录中执行下面的脚本编译整个项目
+项目根目录中提供了一键编译脚本，使用下述命令默认用catkin/colcon编译所有实物代码和gazebo仿真:
 
 ```bash
 ./build.sh
 ```
 
-若想单独编译某几个包，可以在后面加上包名
-
-```bash
-./build.sh package1 package2
-```
-
-若想删除构建，可以使用下列命令，此命令会删除所有编译产物和创建的软链接
-
-```bash
-./build.sh -c  # or ./build.sh --clean
-```
-
-如果不需要仿真，只在机器人上运行，可以使用CMake进行编译，同时禁用ROS（编译生成的可执行文件在`cmake_build/bin`中，库在`cmake_build/lib`中）
-
-```bash
-./build.sh -m  # or ./build.sh --cmake
-```
-
-详细的使用说明可以通过`./build.sh -h`查看
+如果只需编译部分代码加快编译速度，具体的使用方法见下述描述:
 
 ```bash
 Usage: ./build.sh [OPTIONS] [PACKAGE_NAMES...]
 
 Options:
-  -c, --clean    Clean workspace (remove symlinks and build artifacts)
-  -m, --cmake    Build using CMake (for hardware deployment only)
-  -h, --help     Show this help message
+  -c, --clean      清理工作空间 (移除软链接和编译产物)
+  -m, --cmake      用CMake编译 (仅供实物部署和不用ROS的mujoco仿真)
+  -s, --sim SIM    编译仿真代码 (SIM: gazebo 或 mujoco)
+  -r, --real NAME  编译实物代码 (NAME: all/a1/go2/g1/lite3/l4w4)
+  -h, --help       显示帮助信息
 
 Examples:
-  ./build.sh                    # Build all ROS packages
-  ./build.sh package1 package2  # Build specific ROS packages
-  ./build.sh -c                 # Clean all symlinks and build artifacts
-  ./build.sh --clean package1   # Clean specific package and build artifacts
-  ./build.sh -m                 # Build with CMake for hardware deployment
+  ./build.sh                    # 编译所有ROS包 (默认使用 gazebo 仿真)
+  ./build.sh package1 package2  # 编译指定ROS包
+  ./build.sh -c                 # 清理所有软链接和编译产物
+  ./build.sh --clean package1   # 清理特定软链接和编译产物
+  ./build.sh -m                 # 用CMake编译 (默认编译所有实物机器人和 mujoco 仿真)
+  ./build.sh -m -s mujoco       # 用CMake编译，指定编译 mujoco 仿真 (同时编译所有实物机器人)
+  ./build.sh -m -s mujoco -r a1 # 用CMake编译，指定编译 mujoco 仿真和 a1 实物机器人
+  ./build.sh -s gazebo          # 编译 gazebo 仿真 (with ROS)
+  ./build.sh -s mujoco          # 编译 mujoco 仿真 (with ROS)
+  ./build.sh -r a1              # 编译 a1 实物机器人 (with ROS)
+  ./build.sh -r go2             # 编译 go2/go2w 实物机器人 (with ROS)
+  ./build.sh -r g1              # 编译 g1 实物机器人 (with ROS)
+  ./build.sh -r lite3           # 编译 lite3 实物机器人 (with ROS)
+  ./build.sh -r l4w4            # 编译 l4w4 实物机器人 (with ROS)
+  ./build.sh -r all             # 编译所有实物机器人 (with ROS)
+  ./build.sh -s gazebo -r a1    # 编译 gazebo 仿真和 a1 实物机器人 (with ROS)
+  ./build.sh -s mujoco -r go2   # 编译 mujoco 仿真和 go2 实物机器人 (with ROS)
+  ./build.sh -m -s gazebo       # 错误: CMake 仅支持 mujoco
 ```
+
+使用CMake(`-m`选项)编译生成的可执行文件在`cmake_build/bin`中，库在`cmake_build/lib`中
 
 > [!TIP]
 > 如果 catkin build 报错: `Unable to find either executable 'empy' or Python module 'em'`, 在`catkin build` 之前执行 `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3`
@@ -162,6 +172,8 @@ Examples:
 运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>`中，并配置`<ROBOT>/<CONFIG>/config.yaml`和`<ROBOT>/base.yaml`中的参数。
 
 ### 仿真
+
+#### Gazebo
 
 打开一个终端，启动gazebo仿真环境
 
@@ -194,6 +206,15 @@ ros2 run rl_sar rl_sim
 
 ```bash
 git clone https://github.com/osrf/gazebo_models.git ~/.gazebo/models
+```
+
+#### Mujoco
+
+```bash
+# build with catkin
+rosrun rl_sar rl_sim <ROBOT>
+# build with cmake
+./cmake_build/bin/rl_sim <ROBOT>
 ```
 
 ### 手柄与键盘控制

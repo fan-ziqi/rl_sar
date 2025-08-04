@@ -3,9 +3,9 @@
 [![Ubuntu 20.04/22.04](https://img.shields.io/badge/Ubuntu-20.04/22.04-blue.svg?logo=ubuntu)](https://ubuntu.com/)
 [![ROS Noetic](https://img.shields.io/badge/ros-noetic-brightgreen.svg?logo=ros)](https://wiki.ros.org/noetic)
 [![ROS2 Foxy/Humble](https://img.shields.io/badge/ros2-foxy/humble-brightgreen.svg?logo=ros)](https://wiki.ros.org/foxy)
+[![Gazebo](https://img.shields.io/badge/Gazebo-Classic-lightgrey.svg?logo=gazebo)](http://gazebosim.org/)
+[![MuJoCo](https://img.shields.io/badge/MuJoCo-3.2.7-orange.svg?logo=mujoco)](https://mujoco.org/)
 [![License](https://img.shields.io/badge/license-Apache2.0-yellow.svg?logo=apache)](https://opensource.org/license/apache-2-0)
-
-# DEVEL: PLEASE READ [DEVEL-MUJOCO](src/rl_sar/library/thirdparty/mujoco_simulate/README.md) !
 
 [中文文档](README_CN.md)
 
@@ -14,21 +14,23 @@ This repository provides a framework for simulation verification and physical de
 > Supports both **IsaacGym** and **IsaacSim**
 >
 > Supports both **ROS-Noetic** and **ROS2-Foxy/Humble**
+>
+> Supports both **Gazebo** and **Mujoco**
 
 Support List:
 
-|Robot Name (rname:=)|Pre-Trained Policy|Real|
-|-|-|-|
-|Unitree-A1 (a1)|legged_gym (IsaacGym)|✅|
-|Unitree-Go2 (go2)|himloco (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
-|Unitree-Go2W (go2w)|robot_lab (IsaacSim)|✅|
-|Unitree-B2 (b2)|robot_lab (IsaacSim)|⚪|
-|Unitree-B2W (b2w)|robot_lab (IsaacSim)|⚪|
-|Unitree-G1 (g1)|unitree_rl_gym (IsaacGym)</br>robomimic pre-loco (IsaacGym)</br>robomimic_dance (IsaacGym)</br>robomimic_kick (IsaacGym)</br>robomimic_kungfu (IsaacGym)|✅</br>✅</br>✅</br>🚫</br>🚫|
-|FFTAI-GR1T1 (gr1t1)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
-|FFTAI-GR1T2 (gr1t2)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
-|GoldenRetriever-L4W4 (l4w4)|legged_gym (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
-|Deeprobotics-Lite3 (lite3)|himloco (IsaacGym)|✅|
+| Robot Name (rname:=)            | Pre-Trained Policy                                                                 | Gazebo | Mujoco | Real          |
+|---------------------------------|-----------------------------------------------------------------------------------|--------|--------|----------------|
+| Unitree-A1 (a1)                 | legged_gym (IsaacGym)                                                             | ✅     | ❌     | ✅            |
+| Unitree-Go2 (go2)               | himloco (IsaacGym)<br>robot_lab (IsaacSim)                                        | ✅     | ✅     | ✅<br>✅      |
+| Unitree-Go2W (go2w)             | robot_lab (IsaacSim)                                                              | ✅     | ✅     | ✅            |
+| Unitree-B2 (b2)                 | robot_lab (IsaacSim)                                                              | ✅     | ✅     | ⚪            |
+| Unitree-B2W (b2w)               | robot_lab (IsaacSim)                                                              | ✅     | ✅     | ⚪            |
+| Unitree-G1 (g1)                 | unitree_rl_gym (IsaacGym)<br>robomimic pre-loco (IsaacGym)<br>robomimic_dance (IsaacGym)<br>robomimic_kick (IsaacGym)<br>robomimic_kungfu (IsaacGym) | ✅     | ❌     | ✅<br>✅<br>✅<br>❌<br>❌ |
+| FFTAI-GR1T1 (gr1t1)<br>(Only available on Ubuntu20.04) | legged_gym (IsaacGym)                                                             | ✅     | ❌     | ⚪            |
+| FFTAI-GR1T2 (gr1t2)<br>(Only available on Ubuntu20.04) | legged_gym (IsaacGym)                                                             | ✅     | ❌     | ⚪            |
+| GoldenRetriever-L4W4 (l4w4)      | legged_gym (IsaacGym)<br>robot_lab (IsaacSim)                                     | ✅     | ❌     | ✅<br>✅      |
+| Deeprobotics-Lite3 (lite3)      | himloco (IsaacGym)                                                                | ✅     | ❌     | ✅            |
 
 > [!IMPORTANT]
 > Python version temporarily suspended maintenance, please use [v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3) if necessary, may be re-released in the future.
@@ -63,6 +65,17 @@ If you are using `ros2-foxy` (Ubuntu 20.04) or `ros2-humble` (Ubuntu 22.04), you
 
 ```bash
 sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-control ros-$ROS_DISTRO-ros2-controllers ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-robot-state-publisher ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-gazebo-ros2-control ros-$ROS_DISTRO-gazebo-ros-pkgs ros-$ROS_DISTRO-xacro
+```
+
+If you are using `mujoco-3.2.7` as the simulator, you need to follow these installation steps:
+
+```bash
+git clone https://github.com/google-deepmind/mujoco.git
+git checkout 3.2.7
+mkdir build && cd build
+cmake ..
+make -j4
+sudo make install
 ```
 
 Download and deploy `libtorch` at any location (Please modify **\<YOUR_PATH\>** below to the actual path)
@@ -108,49 +121,46 @@ sudo ldconfig
 
 ## Compilation
 
-Since this project supports multiple versions of ROS, some symbolic links need to be created for different versions. A build script is provided in the project root directory for one-click compilation.
-
-Execute the following script in the project root directory to compile the entire project:
+The project root directory provides a one-click build script. Use the following command to compile all hardware code and Gazebo simulation by default using catkin/colcon:
 
 ```bash
 ./build.sh
 ```
 
-To compile specific packages individually, you can append the package names:
-
-```bash
-./build.sh package1 package2
-```
-
-To clean the build, use the following command. This will remove all compiled outputs and created symbolic links:
-
-```bash
-./build.sh -c  # or ./build.sh --clean
-```
-
-If simulation is not needed and you only want to run on the robot, you can compile using CMake while disabling ROS (the compiled executables will be in `cmake_build/bin` and libraries in `cmake_build/lib`):
-
-```bash
-./build.sh -m  # or ./build.sh --cmake
-```
-
-For detailed usage instructions, you can check them via `./build.sh -h`:
+If you only need to compile part of the code to speed up compilation, refer to the following usage instructions:
 
 ```bash
 Usage: ./build.sh [OPTIONS] [PACKAGE_NAMES...]
 
 Options:
-  -c, --clean    Clean workspace (remove symlinks and build artifacts)
-  -m, --cmake    Build using CMake (for hardware deployment only)
-  -h, --help     Show this help message
+  -c, --clean      Clean workspace (remove symlinks and build artifacts)
+  -m, --cmake      Build using CMake (for hardware deployment and mujoco simulation without ros)
+  -s, --sim SIM    Build with simulator (SIM: gazebo or mujoco)
+  -r, --real NAME  Build real robot package (NAME: all/a1/go2/g1/lite3/l4w4)
+  -h, --help       Show this help message
 
 Examples:
-  ./build.sh                    # Build all ROS packages
+  ./build.sh                    # Build all ROS packages (default to gazebo simulator)
   ./build.sh package1 package2  # Build specific ROS packages
   ./build.sh -c                 # Clean all symlinks and build artifacts
   ./build.sh --clean package1   # Clean specific package and build artifacts
-  ./build.sh -m                 # Build with CMake for hardware deployment
+  ./build.sh -m                 # Build with CMake (ALL real robots and mujoco simulator)
+  ./build.sh -m -s mujoco       # Build with CMake and mujoco simulator (ALL real robots)
+  ./build.sh -m -s mujoco -r a1 # Build with CMake, mujoco simulator and a1 real robot
+  ./build.sh -s gazebo          # Build with gazebo simulator (with ROS)
+  ./build.sh -s mujoco          # Build with mujoco simulator (with ROS)
+  ./build.sh -r a1              # Build a1 real robot (with ROS)
+  ./build.sh -r go2             # Build go2/go2w real robot (with ROS)
+  ./build.sh -r g1              # Build g1 real robot (with ROS)
+  ./build.sh -r lite3           # Build lite3 real robot (with ROS)
+  ./build.sh -r l4w4            # Build l4w4 real robot (with ROS)
+  ./build.sh -r all             # Build all real robots (with ROS)
+  ./build.sh -s gazebo -r a1    # Build gazebo simulator and a1 real robot (with ROS)
+  ./build.sh -s mujoco -r go2   # Build mujoco simulator and go2 real robot (with ROS)
+  ./build.sh -m -s gazebo       # Error: CMake only supports mujoco
 ```
+
+The executable files built with CMake (`-m` option) are located in `cmake_build/bin`, and the libraries are in `cmake_build/lib`.
 
 > [!TIP]
 > If catkin build report errors: `Unable to find either executable 'empy' or Python module 'em'`, run `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3` before `catkin build`
@@ -162,6 +172,8 @@ In the following text, **\<ROBOT\>/\<CONFIG\>** is used to represent different e
 Before running, copy the trained pt model file to `rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>`, and configure the parameters in `<ROBOT>/<CONFIG>/config.yaml` and `<ROBOT>/base.yaml`.
 
 ### Simulation
+
+#### Gazebo
 
 Open a terminal, launch the gazebo simulation environment
 
@@ -194,6 +206,15 @@ If Gazebo cannot be opened when you start it for the first time, you need to dow
 
 ```bash
 git clone https://github.com/osrf/gazebo_models.git ~/.gazebo/models
+```
+
+#### Mujoco
+
+```bash
+# build with catkin
+rosrun rl_sar rl_sim <ROBOT>
+# build with cmake
+./cmake_build/bin/rl_sim <ROBOT>
 ```
 
 ### Gamepad and Keyboard Controls
