@@ -2,7 +2,62 @@
 
 <robot name="g1_description" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+    <xacro:arg name="gpu" default="false"/>
+    <xacro:property name="gpu" value="$(arg gpu)" />
+    
     <xacro:include filename="$(find g1_description)/urdf/g1_29dof_rev_1_0_modify_inertia.urdf"/>
     <xacro:include filename="$(find g1_description)/xacro/gazebo.xacro"/>
+
+    <link name="front_lidar_link">
+        <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+            <box size="0.001 0.001 0.001"/>
+        </geometry>
+        </visual>
+    </link>
+    <joint name="front_lidar_joint" type="fixed"> <!-- 0.073 height of lidar -->
+        <!-- <origin rpy="0 1.5707963 0" xyz="0.10151 0.00008 0.16722"/> -->
+        <origin rpy="0 1.5707963 0" xyz="0.02851 0.00008 0.16722"/>
+        <parent link="torso_link"/>
+        <child link="front_lidar_link"/>
+    </joint>
+    
+    
+    <link name="back_lidar_link">
+        <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+            <box size="0.001 0.001 0.001"/>
+        </geometry>
+        </visual>
+    </link>
+    <joint name="back_lidar_joint" type="fixed">
+        <!-- <origin rpy="0 -1.5707963 0" xyz="-0.096 -0.0004 0.16593"/> -->
+        <origin rpy="0 -1.5707963 0" xyz="-0.023 -0.0004 0.16593"/>
+        <parent link="torso_link"/>
+        <child link="back_lidar_link"/>
+    </joint>
+
+    <!-- <xacro:include filename="$(find robosense_description)/urdf/RS-16.urdf.xacro"/>
+    <xacro:RS-16 parent="front_lidar_link" name="robosense" topic="/rs_points" hz="20" samples="360" gpu="${gpu}">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+    </xacro:RS-16> -->
+
+    <!-- <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+    <xacro:VLP-16 parent="front_lidar_link" name="front_lidar" topic="/front_points" hz="20" samples="360" gpu="${gpu}">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+    </xacro:VLP-16>
+    <xacro:VLP-16 parent="back_lidar_link" name="back_lidar" topic="/back_points" hz="20" samples="360" gpu="${gpu}">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+    </xacro:VLP-16> -->
+
+    <xacro:include filename="$(find velodyne_description)/urdf/HDL-32E.urdf.xacro"/>
+    <xacro:HDL-32E parent="front_lidar_link" name="front_lidar" topic="/front_points" hz="20" samples="360" gpu="${gpu}">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+    </xacro:HDL-32E>
+    <xacro:HDL-32E parent="back_lidar_link" name="back_lidar" topic="/back_points" hz="20" samples="360" gpu="${gpu}">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+    </xacro:HDL-32E>
 
 </robot>
