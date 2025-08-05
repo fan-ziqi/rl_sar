@@ -53,10 +53,10 @@
     </xacro:VLP-16> -->
 
     <xacro:include filename="$(find velodyne_description)/urdf/HDL-32E.urdf.xacro"/>
-    <xacro:HDL-32E parent="front_lidar_link" name="front_lidar" topic="/front_points" hz="20" samples="360" gpu="${gpu}">
+    <xacro:HDL-32E parent="front_lidar_link" name="front_lidar" topic="/front_points" hz="10" samples="360" gpu="${gpu}">
         <origin xyz="0 0 0" rpy="0 0 0" />
     </xacro:HDL-32E>
-    <xacro:HDL-32E parent="back_lidar_link" name="back_lidar" topic="/back_points" hz="20" samples="360" gpu="${gpu}">
+    <xacro:HDL-32E parent="back_lidar_link" name="back_lidar" topic="/back_points" hz="10" samples="360" gpu="${gpu}">
         <origin xyz="0 0 0" rpy="0 0 0" />
     </xacro:HDL-32E>
 
