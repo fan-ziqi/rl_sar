@@ -40,6 +40,7 @@
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/joy.hpp>
 #include <geometry_msgs/msg/twist.hpp>
+#include <gazebo_msgs/msg/model_states.hpp>
 #include <std_srvs/srv/empty.hpp>
 #include <rcl_interfaces/srv/get_parameters.hpp>
 #endif
@@ -99,12 +100,16 @@ private:
 #elif defined(USE_ROS2)
     sensor_msgs::msg::Imu gazebo_imu;
     geometry_msgs::msg::Twist cmd_vel;
+    geometry_msgs::msg::Pose base_pose;
+    geometry_msgs::msg::Twist base_vel;
+    geometry_msgs::msg::Pose object_pose;
     sensor_msgs::msg::Joy joy_msg;
     robot_msgs::msg::RobotCommand robot_command_publisher_msg;
     robot_msgs::msg::RobotState robot_state_subscriber_msg;
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr gazebo_imu_subscriber;
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_subscriber;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscriber;
+    rclcpp::Subscription<gazebo_msgs::msg::ModelStates>::SharedPtr model_state_subscriber;
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_subscriber;
     rclcpp::Client<std_srvs::srv::Empty>::SharedPtr gazebo_pause_physics_client;
     rclcpp::Client<std_srvs::srv::Empty>::SharedPtr gazebo_unpause_physics_client;
@@ -114,6 +119,7 @@ private:
     rclcpp::Client<rcl_interfaces::srv::GetParameters>::SharedPtr param_client;
     void GazeboImuCallback(const sensor_msgs::msg::Imu::SharedPtr msg);
     void CmdvelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
+    void ModelStatesCallback(const gazebo_msgs::msg::ModelStates::SharedPtr msg);
     void RobotStateCallback(const robot_msgs::msg::RobotState::SharedPtr msg);
     void JoyCallback(const sensor_msgs::msg::Joy::SharedPtr msg);
 #endif

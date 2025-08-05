@@ -132,6 +132,10 @@ RL_Sim::RL_Sim()
         "/cmd_vel", rclcpp::SystemDefaultsQoS(),
         [this] (const geometry_msgs::msg::Twist::SharedPtr msg) {this->CmdvelCallback(msg);}
     );
+    this->model_state_subscriber = this->create_subscription<gazebo_msgs::msg::ModelStates>(
+        "/model_states", rclcpp::SystemDefaultsQoS(),
+        [this] (const gazebo_msgs::msg::ModelStates::SharedPtr msg) {this->ModelStatesCallback(msg);}
+    );
     this->joy_subscriber = this->create_subscription<sensor_msgs::msg::Joy>(
         "/joy", rclcpp::SystemDefaultsQoS(),
         [this] (const sensor_msgs::msg::Joy::SharedPtr msg) {this->JoyCallback(msg);}
@@ -435,6 +439,37 @@ void RL_Sim::CmdvelCallback(
 {
     this->cmd_vel = *msg;
 }
+
+#if defined(USE_ROS2)
+void RL_Sim::ModelStatesCallback(
+    const gazebo_msgs::msg::ModelStates::SharedPtr msg
+)
+{
+    //robot model is the third model in the list
+    if (msg->name[2] == "robot_model")
+    {
+        this->base_pose = msg->pose[2];
+        this->base_vel = msg->twist[2];
+        // std::cout << LOGGER::INFO << "Robot model : pos = [" << 
+        //     this->base_pose.position.x << " " << 
+        //     this->base_pose.position.y << " " <<
+        //     this->base_pose.position.z << " " <<
+        //     "] vel = [" << 
+        //     this->base_vel.linear.x << " " <<
+        //     this->base_vel.linear.y << " " <<
+        //     this->base_vel.linear.y << "]" << std::endl;
+    }
+    // object model is the fourth model in the list
+    if (msg->name.size() > 3)
+    {
+        this->object_pose = msg->pose[3]; 
+        // std::cout << LOGGER::INFO << "Object model: pos = [" <<
+        //     this->object_pose.position.x << " " << 
+        //     this->object_pose.position.y << " " <<
+        //     this->object_pose.position.z << "]" << std::endl;
+    }
+}
+#endif
 
 void RL_Sim::JoyCallback(
 #if defined(USE_ROS1)

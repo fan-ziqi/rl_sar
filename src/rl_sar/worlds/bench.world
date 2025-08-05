@@ -1,5 +1,11 @@
 <sdf version='1.7'>
   <world name='default'>
+  <plugin filename="libgazebo_ros_state.so" name="gazebo_ros_state">
+    <ros>
+      <namespace>/</namespace>
+    </ros>
+    <update_rate>1.0</update_rate>
+  </plugin>
     <light name='sun' type='directional'>
       <cast_shadows>1</cast_shadows>
       <pose>0 0 10 0 -0 0</pose>
@@ -108,7 +114,7 @@
           <pose>0 0 0 0 -0 0</pose>
           <geometry>
             <mesh>
-              <uri>/home/elgce/sim2mujoco/resources/meshes/benchmark_bin_centered_resized.stl</uri>
+              <uri>./benchmark_bin_centered_resized.stl</uri>
               <scale>1 1 1</scale>
             </mesh>
           </geometry>

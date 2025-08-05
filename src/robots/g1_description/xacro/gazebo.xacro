@@ -46,7 +46,7 @@
           <initial_orientation_as_reference>false</initial_orientation_as_reference>
         </plugin>
         <always_on>true</always_on>
-        <update_rate>100</update_rate>
+        <update_rate>1000</update_rate>
         <visualize>true</visualize>
         <imu>
           <angular_velocity>
