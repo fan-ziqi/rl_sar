@@ -374,7 +374,7 @@ void RL_Sim::GetState(RobotState<double> *state)
 #elif defined(SIMULATOR_MUJOCO)
     if (mj_data)
     {
-        this->GetSysJoystick();
+        // this->GetSysJoystick();
 
         state->imu.quaternion[0] = mj_data->sensordata[3 * this->params.num_of_dofs + 0];
         state->imu.quaternion[1] = mj_data->sensordata[3 * this->params.num_of_dofs + 1];
