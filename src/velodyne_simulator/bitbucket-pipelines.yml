@@ -1,0 +1,33 @@
+pipelines:
+  default:
+    - parallel:
+      - step:
+          name: foxy
+          image: ros:foxy
+          script:
+            - mkdir -p /tmp/src/repo && mv `pwd`/* /tmp/src/repo && mv /tmp/src `pwd`  # Move everything into the src directory
+            - source `find /opt/ros -name setup.bash | sort | tail -1` && echo $ROS_DISTRO # Source ROS environment
+            - apt update && rosdep install --from-paths src --ignore-src -y # Install dependencies missing from the docker image
+            - colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+            - colcon test
+            - colcon test-result
+      - step:
+          name: galactic
+          image: ros:galactic
+          script:
+            - mkdir -p /tmp/src/repo && mv `pwd`/* /tmp/src/repo && mv /tmp/src `pwd`  # Move everything into the src directory
+            - source `find /opt/ros -name setup.bash | sort | tail -1` && echo $ROS_DISTRO # Source ROS environment
+            - apt update && rosdep install --from-paths src --ignore-src -y # Install dependencies missing from the docker image
+            - colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+            - colcon test
+            - colcon test-result
+      - step:
+          name: humble
+          image: ros:humble
+          script:
+            - mkdir -p /tmp/src/repo && mv `pwd`/* /tmp/src/repo && mv /tmp/src `pwd`  # Move everything into the src directory
+            - source `find /opt/ros -name setup.bash | sort | tail -1` && echo $ROS_DISTRO # Source ROS environment
+            - apt update && rosdep install --from-paths src --ignore-src -y # Install dependencies missing from the docker image
+            - colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+            - colcon test
+            - colcon test-result
