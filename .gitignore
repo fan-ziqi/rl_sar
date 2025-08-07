@@ -12,3 +12,6 @@ __pycache__
 cmake_build
 
 package.xml
+!src/velodyne_simulator/velodyne_description/package.xml
+!src/velodyne_simulator/velodyne_simulator/package.xml
+!src/velodyne_simulator/velodyne_gazebo_plugins/package.xml

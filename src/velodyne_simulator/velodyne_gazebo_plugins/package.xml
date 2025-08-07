@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>velodyne_gazebo_plugins</name>
+  <version>2.0.3</version>
+  <description>
+    Gazebo plugin to provide simulated data from Velodyne laser scanners.
+  </description>
+
+  <license>BSD</license>
+  <author>Kevin Hallenbeck</author>
+  <maintainer email="khallenbeck@dataspeedinc.com">Kevin Hallenbeck</maintainer>
+  <url type="website">http://wiki.ros.org/velodyne_gazebo_plugins</url>
+  <url type="repository">https://bitbucket.org/dataspeedinc/velodyne_simulator</url>
+  <url type="bugtracker">https://bitbucket.org/dataspeedinc/velodyne_simulator/issues</url>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>gazebo_dev</depend>
+  <depend>gazebo_ros</depend>
+  <depend>gazebo_msgs</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+
+</package>
