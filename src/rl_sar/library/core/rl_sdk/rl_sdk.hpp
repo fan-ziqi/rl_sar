@@ -167,6 +167,8 @@ struct Observations
     torch::Tensor dof_pos;
     torch::Tensor dof_vel;
     torch::Tensor actions;
+    torch::Tensor target_pos;
+    torch::Tensor voxel;
 };
 
 class RL

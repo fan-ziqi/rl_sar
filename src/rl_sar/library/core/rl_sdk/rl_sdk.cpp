@@ -101,7 +101,7 @@ torch::Tensor RL::ComputeObservation()
         }
         // hussar
         else if (observation == "command_hussar"){
-            auto cur = this->obs.commands_hussar;
+            auto cur = this->obs.target_pos;
             obs_list.push_back(HistObs("command_hussar", cur));
         }
         else if (observation == "ang_vel_hussar"){
@@ -126,7 +126,10 @@ torch::Tensor RL::ComputeObservation()
             obs_list.push_back(HistObs("prev_actions_multi_hussar"), cur);
         }
         else if (observation == "grid_map_hussar"){
-            
+            torch::Tensor occ = this->voxelizer3d->fetchVoxelObservation();
+            occ = occ.to(torch::kFloat32);
+            occ = occ.flatten(1);
+            obs_list.push_back(occ);
         }
     }
 
@@ -153,6 +156,12 @@ void RL::InitObservations()
     this->obs.actions = torch::zeros({1, this->params.num_of_dofs});
     this->ComputeObservation();
     InitObsHistory();
+    PointcloudVoxelizer::Params p;
+    p.front_topic = "/front_points";
+    p.back_topic = "/back_points";
+    p.voxel = 0.1f;
+    p.sx = 8.f; p.sx = 8.f; p.sy = 8.f; p.sz = 2.5f; p.z_min = -0.2f;
+    this->voxelizer3d = std::make_shared<PointcloudVoxelizer>(p);
 }
 
 void RL::InitOutputs()

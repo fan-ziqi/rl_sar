@@ -40,9 +40,11 @@
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/joy.hpp>
 #include <geometry_msgs/msg/twist.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <gazebo_msgs/msg/model_states.hpp>
 #include <std_srvs/srv/empty.hpp>
 #include <rcl_interfaces/srv/get_parameters.hpp>
+#include "include/pc_voxelizer.hpp" // debug
 #endif
 
 #include "matplotlibcpp.h"
@@ -98,6 +100,7 @@ private:
     void CmdvelCallback(const geometry_msgs::Twist::ConstPtr &msg);
     void JoyCallback(const sensor_msgs::Joy::ConstPtr &msg);
 #elif defined(USE_ROS2)
+    std::shared_ptr<PointcloudVoxelizer> voxelizer3d;
     sensor_msgs::msg::Imu gazebo_imu;
     geometry_msgs::msg::Twist cmd_vel;
     geometry_msgs::msg::Pose base_pose;
@@ -106,6 +109,7 @@ private:
     sensor_msgs::msg::Joy joy_msg;
     robot_msgs::msg::RobotCommand robot_command_publisher_msg;
     robot_msgs::msg::RobotState robot_state_subscriber_msg;
+    geometry_msgs::msg::PoseStamped target_pos_msg;
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr gazebo_imu_subscriber;
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_subscriber;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscriber;
@@ -116,12 +120,14 @@ private:
     rclcpp::Client<std_srvs::srv::Empty>::SharedPtr gazebo_reset_world_client;
     rclcpp::Publisher<robot_msgs::msg::RobotCommand>::SharedPtr robot_command_publisher;
     rclcpp::Subscription<robot_msgs::msg::RobotState>::SharedPtr robot_state_subscriber;
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_position_subscriber;
     rclcpp::Client<rcl_interfaces::srv::GetParameters>::SharedPtr param_client;
     void GazeboImuCallback(const sensor_msgs::msg::Imu::SharedPtr msg);
     void CmdvelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
     void ModelStatesCallback(const gazebo_msgs::msg::ModelStates::SharedPtr msg);
     void RobotStateCallback(const robot_msgs::msg::RobotState::SharedPtr msg);
     void JoyCallback(const sensor_msgs::msg::Joy::SharedPtr msg);
+    void GoalPositionCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
 #endif
 
     // others
@@ -130,6 +136,7 @@ private:
     std::map<std::string, double> joint_positions;
     std::map<std::string, double> joint_velocities;
     std::map<std::string, double> joint_efforts;
+    std::array<double, 3> target_pos {0.0, 0.0, 0.0};
     void StartJointController(const std::string& ros_namespace, const std::vector<std::string>& names);
 };
 
