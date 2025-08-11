@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <algorithm>
 #include <tbb/concurrent_queue.h>
+#include <unordered_map>
+#include <deque>
 
 #include <yaml-cpp/yaml.h>
 #include "fsm_core.hpp"
@@ -221,6 +223,9 @@ public:
     ObservationBuffer history_obs_buf;
     torch::Tensor history_obs;
 
+    // key-based obs buffer
+    std::unordered_map<std::string, std::deque<torch::Tensor>> obs_hist_buf;
+
     // others
     std::string robot_name, config_name;
     bool simulation_running = true;
@@ -231,6 +236,12 @@ public:
     // protect func
     void TorqueProtect(torch::Tensor origin_output_dof_tau);
     void AttitudeProtect(const std::vector<double> &quaternion, float pitch_threshold, float roll_threshold);
+    // for usage of key-based obs
+    void InitObsHistory();
+    int HistoryLen(const std::string& key) const;
+    void PushObs(const std::string& key, const torch::Tensor& val, int keep);
+    torch::Tensor ConcatHistory(const std::string& key, int keep, const std::string& order) const;
+    torch::Tensor HistObs(const std::string& key, const torch::Tensor& current);
 
     // rl module
     torch::jit::script::Module model;

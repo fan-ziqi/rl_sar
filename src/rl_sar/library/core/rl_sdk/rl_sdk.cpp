@@ -99,6 +99,35 @@ torch::Tensor RL::ComputeObservation()
             torch::Tensor phase = count / this->motion_length;
             obs_list.push_back(phase);
         }
+        // hussar
+        else if (observation == "command_hussar"){
+            auto cur = this->obs.commands_hussar;
+            obs_list.push_back(HistObs("command_hussar", cur));
+        }
+        else if (observation == "ang_vel_hussar"){
+            auto cur = this->obs.ang_vel * this->params.ang_vel_scale;
+            obs_list.push_back(HistObs("ang_vel_hussar", cur));
+        }
+        else if (observation == "gravity_vec_multi_hussar"){
+            auto cur = this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec);
+            obs_list.push_back(HistObs("gravity_vec_multi_hussar", cur));
+        }
+        else if (observation == "dof_pos_multi_hussar"){
+            auto cur = this->obs.dof_pos - this->params.default_dof_pos;
+            cur = cur * this->params.dof_pos_scale;
+            obs_list.push_back(HistObs("dof_pos_multi_hussar", cur));
+        }
+        else if (observation == "dof_vel_multi_hussar"){
+            auto cur = this->obs.dof_vel * this->params.dof_vel_scale;
+            obs_list.push_back(HistObs("dof_vel_multi_hussar"), cur);
+        }
+        else if (observation == "prev_actions_multi_hussar"){
+            auto cur = this->obs.actions;
+            obs_list.push_back(HistObs("prev_actions_multi_hussar"), cur);
+        }
+        else if (observation == "grid_map_hussar"){
+            
+        }
     }
 
     this->obs_dims.clear();
@@ -123,6 +152,7 @@ void RL::InitObservations()
     this->obs.dof_vel = torch::zeros({1, this->params.num_of_dofs});
     this->obs.actions = torch::zeros({1, this->params.num_of_dofs});
     this->ComputeObservation();
+    InitObsHistory();
 }
 
 void RL::InitOutputs()
@@ -167,6 +197,72 @@ void RL::InitRL(std::string robot_path)
     // init model
     std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/" + this->params.model_name;
     this->model = torch::jit::load(model_path);
+}
+
+int RL::HistoryLen(const std::string& key) const
+{
+    for (size_t i = 0; i < params.observations.size(); ++i){
+        if (params.observations[i] == key){
+            if (i < params.observations_history.size()){
+                return std::max(1, params.observations_history[i]);
+            }
+            break;
+        }
+    }
+    return 1;
+}
+
+void RL::InitObsHistory()
+{
+    obs_hist_buf.clear();
+    for (const auto& name : params.observations){
+        obs_hist_buf.emplace(name, std::deque<torch::Tensor>{});
+    }
+}
+
+void RL::PushObs(const std::string& key, const torch::Tensor& val, int keep)
+{
+    auto it = obs_hist_buf.find(key);
+    if (it == obs_hist_buf.end()) return;
+    torch::Tensor v = val;
+    if (v.dim() == 1){
+        v = v.unsqueeze(0);
+    }
+    it->second.push_back(v);
+    while((int)it->second.size() > keep){
+        it->second.pop_front();
+    }
+}
+
+torch::Tensor RL::ConcatHistory(const std::string& key, int keep, const std::string& order) const
+{
+    static const std::string kRecentFirst = "recent_first";
+    static const std::string kOldestFirst = "oldest_first";
+    auto it = obs_hist_buf.find(key);
+    TORCH_CHECK(it != obs_hist_buf.end(), "ConcatHistory: key not found in obs_hist_buf: ", key);
+    const auto& q = it->second;
+    TORCH_CHECK(!q.empty(), "ConcatHistory: empty history for key: ", key);
+    const int have = (int)q.size();
+    std::vector<torch::Tensor> parts;
+    parts.reserve(keep);
+    if (order == kOldestFirst) {
+        for (int i = 0; i < keep - have; ++i) parts.push_back(q.front());
+        for (const auto& t : q) parts.push_back(t);
+    } 
+    else {
+        for (int i = have - 1; i >= 0; --i) parts.push_back(q[i]);
+        for (int i = 0; i < keep - have; ++i) parts.push_back(q.back());
+    }
+
+    return torch::cat(parts, 1); 
+}
+
+torch::Tensor RL::HistObs(const std::string& key, const torch::Tensor& current):
+{
+    const int keep = HistoryLen(key);
+    PushObs(key, current, keep);
+    if (keep <= 1) return (current.dim()==1 ? current.unsqueeze(0) : current);
+    return ConcatHistory(key, keep, params.key_observations_history_priority);
 }
 
 void RL::ComputeOutput(const torch::Tensor &actions, torch::Tensor &output_dof_pos, torch::Tensor &output_dof_vel, torch::Tensor &output_dof_tau)
@@ -422,7 +518,14 @@ void RL::ReadYamlRL(std::string robot_path)
     {
         this->params.observations_history = ReadVectorFromYaml<int>(config["observations_history"]);
     }
+    if (config["key_observations_history"].IsNull()){
+        this->params.key_observations_history = {};
+    }
+    else{
+        this->params.key_observations_history = ReadVectorFromYaml<int>(config["key_observations_history"]);
+    }
     this->params.observations_history_priority = config["observations_history_priority"].as<std::string>();
+    this->params.key_observations_history_priority = config["key_observations_history_priority"].as<std::string>();
     this->params.clip_obs = config["clip_obs"].as<double>();
     if (config["clip_actions_lower"].IsNull() && config["clip_actions_upper"].IsNull())
     {
