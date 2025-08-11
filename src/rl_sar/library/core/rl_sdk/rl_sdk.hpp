@@ -19,6 +19,7 @@
 #include <yaml-cpp/yaml.h>
 #include "fsm_core.hpp"
 #include "observation_buffer.hpp"
+#include "pc_voxelizer.hpp"
 
 namespace LOGGER
 {
@@ -133,6 +134,8 @@ struct ModelParams
     std::vector<std::string> observations;
     std::vector<int> observations_history;
     std::string observations_history_priority;
+    std::vector<int> key_observations_history;
+    std::string key_observations_history_priority;
     double damping;
     double stiffness;
     torch::Tensor action_scale;
@@ -251,6 +254,8 @@ public:
     torch::Tensor output_dof_tau;
     torch::Tensor output_dof_pos;
     torch::Tensor output_dof_vel;
+
+    std::shared_ptr<PointcloudVoxelizer> voxelizer3d;
 };
 
 class RLFSMState : public FSMState

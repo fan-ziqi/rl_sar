@@ -66,6 +66,7 @@ if(NOT USE_CMAKE)
         find_package(gazebo_msgs REQUIRED)
         find_package(std_srvs REQUIRED)
         find_package(geometry_msgs REQUIRED)
+        find_package(Eigen3 REQUIRED)
         ament_package()
     endif()
     add_compile_options(${GAZEBO_CXX_FLAGS})
@@ -166,7 +167,18 @@ target_link_libraries(rl_sdk PUBLIC
     Python3::Python
     Python3::Module
     TBB::tbb
+    Eigen3::Eigen
 )
+
+if(NOT USE_CMAKE)
+    if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+        ament_target_dependencies(rl_sdk PUBLIC
+            rclcpp
+            sensor_msgs
+        )
+    endif()
+endif()
+
 find_package(Python3 COMPONENTS NumPy)
 if(Python3_NumPy_FOUND)
     target_link_libraries(rl_sdk PUBLIC Python3::NumPy)
@@ -218,6 +230,7 @@ if(NOT USE_CMAKE)
         install(TARGETS rl_sim DESTINATION lib/${PROJECT_NAME})
     endif()
 endif()
+
 
 add_executable(rl_real_a1 src/rl_real_a1.cpp)
 target_link_libraries(rl_real_a1

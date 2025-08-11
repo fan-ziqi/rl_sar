@@ -150,7 +150,7 @@ RL_Sim::RL_Sim()
     this->goal_position_subscriber = this->create_subscription<geometry_msgs::msg::PoseStamped>(
         "/desired_goal_pos", rclcpp::SystemDefaultsQoS(),
         [this] (const geometry_msgs::msg::PoseStamped::SharedPtr msg) {this->GoalPositionCallback(msg);}
-    )
+    );
 
     // service
     this->gazebo_pause_physics_client = this->create_client<std_srvs::srv::Empty>("/pause_physics");
@@ -413,7 +413,7 @@ void RL_Sim::RobotControl()
             std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
             this->control.current_keyboard = this->control.last_keyboard;
         }
-        this->target_pos = this->target_pos_msg.pos; // TODO 
+        // this->target_pos = this->target_pos_msg.pose; // TODO 
         this->GetState(&this->robot_state);
         this->StateController(&this->robot_state, &this->robot_command);
         this->SetCommand(&this->robot_command);
@@ -545,10 +545,11 @@ void RL_Sim::RobotStateCallback(const robot_msgs::msg::RobotState::SharedPtr msg
 
 // no implementation for ROS1
 #if defined(USE_ROS2)
-void RL_SIM::GoalPositionCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
+void RL_Sim::GoalPositionCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
     this->target_pos_msg = *msg;
 }
+#endif
 
 void RL_Sim::RunModel()
 {
@@ -568,7 +569,7 @@ void RL_Sim::RunModel()
         this->obs.base_quat = torch::tensor(this->robot_state.imu.quaternion).unsqueeze(0);
         this->obs.dof_pos = torch::tensor(this->robot_state.motor_state.q).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
         this->obs.dof_vel = torch::tensor(this->robot_state.motor_state.dq).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
-        this->obs.target_pos = torch::tensor(this->target_pos); // TODO: To debug here
+        this->obs.target_pos = this->target_pos.to(this->obs.base_quat.device()); // TODO: To debug here
         this->obs.actions = this->Forward();
         this->ComputeOutput(this->obs.actions, this->output_dof_pos, this->output_dof_vel, this->output_dof_tau);
 

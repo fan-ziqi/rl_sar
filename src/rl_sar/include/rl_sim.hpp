@@ -44,7 +44,7 @@
 #include <gazebo_msgs/msg/model_states.hpp>
 #include <std_srvs/srv/empty.hpp>
 #include <rcl_interfaces/srv/get_parameters.hpp>
-#include "include/pc_voxelizer.hpp" // debug
+#include "pc_voxelizer.hpp" // debug
 #endif
 
 #include "matplotlibcpp.h"
@@ -136,7 +136,8 @@ private:
     std::map<std::string, double> joint_positions;
     std::map<std::string, double> joint_velocities;
     std::map<std::string, double> joint_efforts;
-    std::array<double, 3> target_pos {0.0, 0.0, 0.0};
+    // std::array<double, 3> target_pos {0.0, 0.0, 0.0};
+    torch::Tensor target_pos = torch::zeros({1, 3}, torch::TensorOptions().dtype(torch::kFloat32));
     void StartJointController(const std::string& ros_namespace, const std::vector<std::string>& names);
 };
 

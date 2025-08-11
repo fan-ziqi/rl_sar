@@ -4,6 +4,7 @@
  */
 
 #include "rl_sdk.hpp"
+#include "pc_voxelizer.hpp"
 
 void RL::StateController(const RobotState<double>* state, RobotCommand<double>* command)
 {
@@ -119,11 +120,11 @@ torch::Tensor RL::ComputeObservation()
         }
         else if (observation == "dof_vel_multi_hussar"){
             auto cur = this->obs.dof_vel * this->params.dof_vel_scale;
-            obs_list.push_back(HistObs("dof_vel_multi_hussar"), cur);
+            obs_list.push_back(HistObs("dof_vel_multi_hussar", cur));
         }
         else if (observation == "prev_actions_multi_hussar"){
             auto cur = this->obs.actions;
-            obs_list.push_back(HistObs("prev_actions_multi_hussar"), cur);
+            obs_list.push_back(HistObs("prev_actions_multi_hussar", cur));
         }
         else if (observation == "grid_map_hussar"){
             torch::Tensor occ = this->voxelizer3d->fetchVoxelObservation();
@@ -154,14 +155,15 @@ void RL::InitObservations()
     this->obs.dof_pos = this->params.default_dof_pos;
     this->obs.dof_vel = torch::zeros({1, this->params.num_of_dofs});
     this->obs.actions = torch::zeros({1, this->params.num_of_dofs});
+    this->obs.target_pos = torch::zeros({1, 3});
     this->ComputeObservation();
     InitObsHistory();
-    PointcloudVoxelizer::Params p;
-    p.front_topic = "/front_points";
-    p.back_topic = "/back_points";
-    p.voxel = 0.1f;
-    p.sx = 8.f; p.sx = 8.f; p.sy = 8.f; p.sz = 2.5f; p.z_min = -0.2f;
-    this->voxelizer3d = std::make_shared<PointcloudVoxelizer>(p);
+    VoxelizerParams vp;
+    vp.front_topic = "/front_points";
+    vp.back_topic = "/back_points";
+    vp.voxel = 0.1f;
+    vp.sx = 8.f; vp.sx = 8.f; vp.sy = 8.f; vp.sz = 2.5f; vp.z_min = -0.2f;
+    this->voxelizer3d = std::make_shared<PointcloudVoxelizer>(vp);
 }
 
 void RL::InitOutputs()
@@ -266,7 +268,7 @@ torch::Tensor RL::ConcatHistory(const std::string& key, int keep, const std::str
     return torch::cat(parts, 1); 
 }
 
-torch::Tensor RL::HistObs(const std::string& key, const torch::Tensor& current):
+torch::Tensor RL::HistObs(const std::string& key, const torch::Tensor& current)
 {
     const int keep = HistoryLen(key);
     PushObs(key, current, keep);
