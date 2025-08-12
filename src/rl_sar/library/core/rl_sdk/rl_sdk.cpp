@@ -260,7 +260,7 @@ torch::Tensor RL::ConcatHistory(const std::string& key, int keep, const std::str
         for (int i = 0; i < keep - have; ++i) parts.push_back(q.front());
         for (const auto& t : q) parts.push_back(t);
     } 
-    else {
+    else if (order == kRecentFirst) {
         for (int i = have - 1; i >= 0; --i) parts.push_back(q[i]);
         for (int i = 0; i < keep - have; ++i) parts.push_back(q.back());
     }
