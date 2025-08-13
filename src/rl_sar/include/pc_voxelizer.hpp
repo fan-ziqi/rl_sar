@@ -66,39 +66,40 @@ public:
 
   // 输出 [1, Nz, Ny, Nx]，uint8
   torch::Tensor fetchVoxelObservation() {
-    auto pts_ptr = std::atomic_load(&latest_pts_);
-    const auto& pts = *pts_ptr;
+    // auto pts_ptr = std::atomic_load(&latest_pts_);
+    // const auto& pts = *pts_ptr;
 
-    if (!occ_.defined()) {
-      const std::vector<int64_t> sz = {
-        static_cast<int64_t>(spec_.Nz),
-        static_cast<int64_t>(spec_.Ny),
-        static_cast<int64_t>(spec_.Nx)
-      };
-      occ_ = torch::empty(sz, torch::TensorOptions().dtype(torch::kUInt8).device(torch::kCPU));
-    }
-    std::memset(occ_.data_ptr<uint8_t>(), 0, static_cast<size_t>(occ_.numel()));
+    // if (!occ_.defined()) {
+    //   const std::vector<int64_t> sz = {
+    //     static_cast<int64_t>(spec_.Nz),
+    //     static_cast<int64_t>(spec_.Ny),
+    //     static_cast<int64_t>(spec_.Nx)
+    //   };
+    //   occ_ = torch::empty(sz, torch::TensorOptions().dtype(torch::kUInt8).device(torch::kCPU));
+    // }
+    // std::memset(occ_.data_ptr<uint8_t>(), 0, static_cast<size_t>(occ_.numel()));
 
-    auto* buf = occ_.data_ptr<uint8_t>();
-    const int Nx = spec_.Nx, Ny = spec_.Ny, Nz = spec_.Nz;
-    auto lin = [&](int ix, int iy, int iz)->size_t { return (size_t)((iz * Ny + iy) * Nx + ix); };
+    // auto* buf = occ_.data_ptr<uint8_t>();
+    // const int Nx = spec_.Nx, Ny = spec_.Ny, Nz = spec_.Nz;
+    // auto lin = [&](int ix, int iy, int iz)->size_t { return (size_t)((iz * Ny + iy) * Nx + ix); };
 
-    const float vx = spec_.voxel;
-    const Eigen::Vector3f org = spec_.origin;
+    // const float vx = spec_.voxel;
+    // const Eigen::Vector3f org = spec_.origin;
 
-    for (const auto& p : pts) {
-      if (p.x() < org.x() || p.y() < org.y() || p.z() < org.z()) continue;
-      if (p.x() >= org.x() + spec_.sx || p.y() >= org.y() + spec_.sy || p.z() >= org.z() + spec_.sz) continue;
-      if (p.z() < params_.z_clip_min || p.z() > params_.z_clip_max) continue;
+    // for (const auto& p : pts) {
+    //   if (p.x() < org.x() || p.y() < org.y() || p.z() < org.z()) continue;
+    //   if (p.x() >= org.x() + spec_.sx || p.y() >= org.y() + spec_.sy || p.z() >= org.z() + spec_.sz) continue;
+    //   if (p.z() < params_.z_clip_min || p.z() > params_.z_clip_max) continue;
 
-      const Eigen::Vector3f rel = p - org;
-      int ix = (int)std::floor(rel.x() / vx);
-      int iy = (int)std::floor(rel.y() / vx);
-      int iz = (int)std::floor(rel.z() / vx);
-      if ((unsigned)ix < (unsigned)Nx && (unsigned)iy < (unsigned)Ny && (unsigned)iz < (unsigned)Nz)
-        buf[lin(ix,iy,iz)] = 1;
-    }
-    return occ_.unsqueeze(0);
+    //   const Eigen::Vector3f rel = p - org;
+    //   int ix = (int)std::floor(rel.x() / vx);
+    //   int iy = (int)std::floor(rel.y() / vx);
+    //   int iz = (int)std::floor(rel.z() / vx);
+    //   if ((unsigned)ix < (unsigned)Nx && (unsigned)iy < (unsigned)Ny && (unsigned)iz < (unsigned)Nz)
+    //     buf[lin(ix,iy,iz)] = 1;
+    // }
+    // return occ_.unsqueeze(0);
+    return torch::zeros({1, 32, 32, 32}, torch::TensorOptions().dtype(torch::kUInt8));
   }
 
   const VoxelGridSpec& spec() const { return spec_; }

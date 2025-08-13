@@ -74,8 +74,16 @@ public:
                                     input_names.data(), inputs, 3,
                                     out_names_c.data(), out_names_c.size());
 
+        // for (size_t i = 0; i < outputs.size(); ++i) {
+        //     auto info = outputs[i].GetTensorTypeAndShapeInfo();
+        //     auto shp  = info.GetShape();
+        //     std::cerr << "[ORT out] " << output_names_[i] << " shape=[";
+        //     for (size_t k = 0; k < shp.size(); ++k) std::cerr << shp[k] << (k+1<shp.size()? ",":"");
+        //     std::cerr << "]\n";
+        // }
+
         // 4) 读取第0个输出（期望 float）
-        auto& out0 = outputs.at(0);
+        auto& out0 = outputs.at(4);
         auto info = out0.GetTensorTypeAndShapeInfo();
         if (info.GetElementType() != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
             throw std::runtime_error("Expect float output tensor for actions.");

@@ -186,7 +186,7 @@ public:
             rl.rl_init_done = false;
             rl.control.current_keyboard = Input::Keyboard::Num0;
         }
-
+        std::cout << "RLFSMStateRL_Locomotion enter done" << std::endl;
         // pos init
     }
 
@@ -197,6 +197,7 @@ public:
         torch::Tensor _output_dof_pos, _output_dof_vel;
         if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
         {
+            std::cout << _output_dof_pos << "sig" << std::endl;
             for (int i = 0; i < rl.params.num_of_dofs; ++i)
             {
                 if (_output_dof_pos.defined() && _output_dof_pos.numel() > 0)

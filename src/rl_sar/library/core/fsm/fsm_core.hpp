@@ -54,9 +54,10 @@ public:
 
     void Run()
     {
-        if (!current_state_)
-            return;
 
+        if (!current_state_){
+            return;
+        }
         if (mode_ == Mode::NORMAL)
         {
             current_state_->Run();

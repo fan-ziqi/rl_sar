@@ -168,8 +168,8 @@ RL_Sim::RL_Sim()
     this->loop_rl->start();
 
     // keyboard
-    // this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05, std::bind(&RL_Sim::KeyboardInterface, this));
-    // this->loop_keyboard->start();
+    this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05, std::bind(&RL_Sim::KeyboardInterface, this));
+    this->loop_keyboard->start();
 
 #ifdef PLOT
     this->plot_t = std::vector<int>(this->plot_size, 0);
@@ -416,9 +416,7 @@ void RL_Sim::RobotControl()
         // this->target_pos = this->target_pos_msg.pose; // TODO 
 
         this->GetState(&this->robot_state);
-
         this->StateController(&this->robot_state, &this->robot_command);
-        
         this->SetCommand(&this->robot_command);
     }
 }
@@ -556,7 +554,7 @@ void RL_Sim::GoalPositionCallback(const geometry_msgs::msg::PoseStamped::SharedP
 
 void RL_Sim::RunModel()
 {
-    std::cout << "here d  is ok" << std::endl;
+    // std::cout << "here d  is ok" << std::endl;
 
     if (this->rl_init_done && simulation_running)
     {
@@ -615,8 +613,8 @@ torch::Tensor RL_Sim::Forward()
     torch::autograd::GradMode::set_enabled(false);
 
     torch::Tensor clamped_obs = this->ComputeObservation();
-    std::cout << clamped_obs.sizes() << std::endl;
-    torch::Tensor mask = torch::zeros({1});
+    // std::cout << clamped_obs.sizes() << std::endl;
+    torch::Tensor mask = torch::ones({1}, torch::TensorOptions().dtype(torch::kBool));
     torch::Tensor actions;
     if (this->params.observations_history.size() != 0)
     {
@@ -628,9 +626,9 @@ torch::Tensor RL_Sim::Forward()
     {
         // actions = this->model.forward({clamped_obs}).toTensor();
         // TODO get policy grid mask here
-        std::cout << this->voxel_grid.sizes() << std::endl;
-        
         actions = this->model.run(clamped_obs, this->voxel_grid, mask);
+        // std::cout << actions.sizes() << std::endl;
+
     }
 
     if (this->params.clip_actions_upper.numel() != 0 && this->params.clip_actions_lower.numel() != 0)

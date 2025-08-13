@@ -22,7 +22,6 @@ void RL::StateController(const RobotState<double>* state, RobotCommand<double>* 
     {
         updateState(pair.second);
     }
-
     fsm.Run();
 }
 
@@ -105,7 +104,8 @@ torch::Tensor RL::ComputeObservation()
         }
         // hussar
         else if (observation == "command_hussar"){
-            auto cur = this->obs.target_pos;
+            // auto cur = this->obs.target_pos;
+            torch::Tensor cur = torch::zeros({1, 4});
             obs_list.push_back(HistObs("command_hussar", cur));
         }
         else if (observation == "ang_vel_hussar"){
@@ -131,8 +131,9 @@ torch::Tensor RL::ComputeObservation()
         }
         else if (observation == "grid_map_hussar"){
             torch::Tensor occ = this->voxelizer3d->fetchVoxelObservation();
-            std::cout << occ << std::endl;
+            // std::cout << occ << std::endl;
             this->voxel_grid = occ.to(torch::kFloat32);
+
         }
     }
 
@@ -154,12 +155,13 @@ void RL::InitObservations()
     this->obs.gravity_vec = torch::tensor({{0.0, 0.0, -1.0}});
     this->obs.commands = torch::tensor({{0.0, 0.0, 0.0}});
     this->obs.base_quat = torch::tensor({{0.0, 0.0, 0.0, 1.0}});
+
     this->obs.dof_pos = this->params.default_dof_pos;
     this->obs.dof_vel = torch::zeros({1, this->params.num_of_dofs});
     this->obs.actions = torch::zeros({1, this->params.num_of_dofs});
     this->obs.target_pos = torch::zeros({1, 3});
-    this->ComputeObservation();
     InitObsHistory();
+    this->ComputeObservation();
     VoxelizerParams vp;
     vp.front_topic = "/front_points";
     vp.back_topic = "/back_points";
@@ -194,7 +196,6 @@ void RL::InitRL(std::string robot_path)
             observation = this->ang_vel_type;
         }
     }
-
     // init rl
     this->InitObservations();
     this->InitOutputs();
@@ -220,8 +221,8 @@ int RL::HistoryLen(const std::string& key) const
 {
     for (size_t i = 0; i < params.observations.size(); ++i){
         if (params.observations[i] == key){
-            if (i < params.observations_history.size()){
-                return std::max(1, params.observations_history[i]);
+            if (i < params.key_observations_history.size()){
+                return std::max(1, params.key_observations_history[i]);
             }
             break;
         }
@@ -233,6 +234,7 @@ void RL::InitObsHistory()
 {
     obs_hist_buf.clear();
     for (const auto& name : params.observations){
+        std::cout << "init" << name << std::endl;
         obs_hist_buf.emplace(name, std::deque<torch::Tensor>{});
     }
 }
@@ -277,6 +279,7 @@ torch::Tensor RL::ConcatHistory(const std::string& key, int keep, const std::str
 torch::Tensor RL::HistObs(const std::string& key, const torch::Tensor& current)
 {
     const int keep = HistoryLen(key);
+    std::cout << key << "  " << keep << std::endl;
     PushObs(key, current, keep);
     if (keep <= 1) return (current.dim()==1 ? current.unsqueeze(0) : current);
     return ConcatHistory(key, keep, params.key_observations_history_priority);
