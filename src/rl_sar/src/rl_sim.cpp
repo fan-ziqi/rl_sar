@@ -168,8 +168,8 @@ RL_Sim::RL_Sim()
     this->loop_rl->start();
 
     // keyboard
-    this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05, std::bind(&RL_Sim::KeyboardInterface, this));
-    this->loop_keyboard->start();
+    // this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05, std::bind(&RL_Sim::KeyboardInterface, this));
+    // this->loop_keyboard->start();
 
 #ifdef PLOT
     this->plot_t = std::vector<int>(this->plot_size, 0);
@@ -215,6 +215,7 @@ void RL_Sim::StartJointController(const std::string& ros_namespace, const std::v
         exit(1);
     }
 #elif defined(USE_ROS2)
+
     const char* ros_distro = std::getenv("ROS_DISTRO");
     std::string spawner = (ros_distro && std::string(ros_distro) == "foxy") ? "spawner.py" : "spawner";
 
@@ -281,7 +282,6 @@ void RL_Sim::GetState(RobotState<double> *state)
     state->imu.gyroscope[0] = angular_velocity.x;
     state->imu.gyroscope[1] = angular_velocity.y;
     state->imu.gyroscope[2] = angular_velocity.z;
-
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
 #if defined(USE_ROS1)
@@ -414,8 +414,11 @@ void RL_Sim::RobotControl()
             this->control.current_keyboard = this->control.last_keyboard;
         }
         // this->target_pos = this->target_pos_msg.pose; // TODO 
+
         this->GetState(&this->robot_state);
+
         this->StateController(&this->robot_state, &this->robot_command);
+        
         this->SetCommand(&this->robot_command);
     }
 }
@@ -553,8 +556,12 @@ void RL_Sim::GoalPositionCallback(const geometry_msgs::msg::PoseStamped::SharedP
 
 void RL_Sim::RunModel()
 {
+    std::cout << "here d  is ok" << std::endl;
+
     if (this->rl_init_done && simulation_running)
     {
+        std::cout << "here c  is ok" << std::endl;
+        
         this->episode_length_buf += 1;
         // this->obs.lin_vel = torch::tensor({{this->vel.linear.x, this->vel.linear.y, this->vel.linear.z}});
         this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
@@ -570,7 +577,11 @@ void RL_Sim::RunModel()
         this->obs.dof_pos = torch::tensor(this->robot_state.motor_state.q).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
         this->obs.dof_vel = torch::tensor(this->robot_state.motor_state.dq).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
         this->obs.target_pos = this->target_pos.to(this->obs.base_quat.device()); // TODO: To debug here
+        std::cout << "here a  is ok" << std::endl;
+
         this->obs.actions = this->Forward();
+        std::cout << "here b  is ok" << std::endl;
+
         this->ComputeOutput(this->obs.actions, this->output_dof_pos, this->output_dof_vel, this->output_dof_tau);
 
         if (this->output_dof_pos.defined() && this->output_dof_pos.numel() > 0)
@@ -604,6 +615,7 @@ torch::Tensor RL_Sim::Forward()
     torch::autograd::GradMode::set_enabled(false);
 
     torch::Tensor clamped_obs = this->ComputeObservation();
+    std::cout << clamped_obs.sizes() << std::endl;
     torch::Tensor mask = torch::zeros({1});
     torch::Tensor actions;
     if (this->params.observations_history.size() != 0)
@@ -616,6 +628,7 @@ torch::Tensor RL_Sim::Forward()
     {
         // actions = this->model.forward({clamped_obs}).toTensor();
         // TODO get policy grid mask here
+        std::cout << this->voxel_grid.sizes() << std::endl;
         
         actions = this->model.run(clamped_obs, this->voxel_grid, mask);
     }
