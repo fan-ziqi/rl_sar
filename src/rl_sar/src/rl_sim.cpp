@@ -604,17 +604,20 @@ torch::Tensor RL_Sim::Forward()
     torch::autograd::GradMode::set_enabled(false);
 
     torch::Tensor clamped_obs = this->ComputeObservation();
-
+    torch::Tensor mask = torch::zeros({1});
     torch::Tensor actions;
     if (this->params.observations_history.size() != 0)
     {
         this->history_obs_buf.insert(clamped_obs);
         this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
-        actions = this->model.forward({this->history_obs}).toTensor();
+        actions = this->model.run(clamped_obs, this->voxel_grid, mask);
     }
     else
     {
-        actions = this->model.forward({clamped_obs}).toTensor();
+        // actions = this->model.forward({clamped_obs}).toTensor();
+        // TODO get policy grid mask here
+        
+        actions = this->model.run(clamped_obs, this->voxel_grid, mask);
     }
 
     if (this->params.clip_actions_upper.numel() != 0 && this->params.clip_actions_lower.numel() != 0)

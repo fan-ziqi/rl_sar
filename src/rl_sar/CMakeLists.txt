@@ -73,6 +73,24 @@ if(NOT USE_CMAKE)
     find_package(gazebo REQUIRED)
 endif()
 
+if(NOT DEFINED ORT_ROOT)
+#   message(FATAL_ERROR "Please pass -DORT_ROOT=/abs/path/to/onnxruntime-linux-x64-gpu-<ver>")
+    set(ORT_ROOT "/opt/onnxruntime-linux-x64-gpu-1.22.0/")
+endif()
+
+set(ORT_INCLUDE_DIR "${ORT_ROOT}/include")
+set(ORT_LIB_DIR "${ORT_ROOT}/lib")
+
+include_directories("${ORT_INCLUDE_DIR}")
+link_directories("${ORT_LIB_DIR}")
+
+set(
+    ORT_LIBS
+    onnxruntime
+    onnxruntime_providers_shared
+    onnxruntime_providers_cuda
+)
+
 find_package(Torch REQUIRED)
 find_package(TBB REQUIRED)
 find_package(Threads REQUIRED)
@@ -168,6 +186,7 @@ target_link_libraries(rl_sdk PUBLIC
     Python3::Module
     TBB::tbb
     Eigen3::Eigen
+    ${ORT_LIBS}
 )
 
 if(NOT USE_CMAKE)
@@ -210,6 +229,11 @@ if(NOT USE_CMAKE)
         observation_buffer
         yaml-cpp
         Threads::Threads
+        ${ORT_LIBS}
+    )
+    set_target_properties(rl_sim PROPERTIES
+        BUILD_RPATH "${ORT_LIB_DIR}"
+        INSTALL_RPATH "${ORT_LIB_DIR}"
     )
     if($ENV{ROS_DISTRO} MATCHES "noetic")
         target_link_libraries(rl_sim ${catkin_LIBRARIES})
@@ -232,106 +256,106 @@ if(NOT USE_CMAKE)
 endif()
 
 
-add_executable(rl_real_a1 src/rl_real_a1.cpp)
-target_link_libraries(rl_real_a1
-    ${UNITREE_A1_LIBS}
-    rl_sdk
-    observation_buffer
-    yaml-cpp
-)
-if(NOT USE_CMAKE)
-    if($ENV{ROS_DISTRO} MATCHES "noetic")
-        target_link_libraries(rl_real_a1 ${catkin_LIBRARIES})
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
-        ament_target_dependencies(rl_real_a1
-            rclcpp
-            geometry_msgs
-        )
-        install(TARGETS rl_real_a1 DESTINATION lib/${PROJECT_NAME})
-    endif()
-endif()
+# add_executable(rl_real_a1 src/rl_real_a1.cpp)
+# target_link_libraries(rl_real_a1
+#     ${UNITREE_A1_LIBS}
+#     rl_sdk
+#     observation_buffer
+#     yaml-cpp
+# )
+# if(NOT USE_CMAKE)
+#     if($ENV{ROS_DISTRO} MATCHES "noetic")
+#         target_link_libraries(rl_real_a1 ${catkin_LIBRARIES})
+#     elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+#         ament_target_dependencies(rl_real_a1
+#             rclcpp
+#             geometry_msgs
+#         )
+#         install(TARGETS rl_real_a1 DESTINATION lib/${PROJECT_NAME})
+#     endif()
+# endif()
 
-add_executable(rl_real_lite3
-    src/rl_real_lite3.cpp
-    ${GAMEPAD_SRC}
-)
-target_link_libraries(rl_real_lite3
-    ${LITE3_REAL_LIBS}
-    rl_sdk
-    observation_buffer
-    yaml-cpp
-)
-target_include_directories(rl_real_lite3 PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/gamepad/include
-)
-if(NOT USE_CMAKE)
-    if($ENV{ROS_DISTRO} MATCHES "noetic")
-        target_link_libraries(rl_real_lite3 ${catkin_LIBRARIES})
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
-        ament_target_dependencies(rl_real_lite3
-            rclcpp
-            geometry_msgs
-        )
-        install(TARGETS rl_real_lite3 DESTINATION lib/${PROJECT_NAME})
-    endif()
-endif()
+# add_executable(rl_real_lite3
+#     src/rl_real_lite3.cpp
+#     ${GAMEPAD_SRC}
+# )
+# target_link_libraries(rl_real_lite3
+#     ${LITE3_REAL_LIBS}
+#     rl_sdk
+#     observation_buffer
+#     yaml-cpp
+# )
+# target_include_directories(rl_real_lite3 PRIVATE
+#     ${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/gamepad/include
+# )
+# if(NOT USE_CMAKE)
+#     if($ENV{ROS_DISTRO} MATCHES "noetic")
+#         target_link_libraries(rl_real_lite3 ${catkin_LIBRARIES})
+#     elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+#         ament_target_dependencies(rl_real_lite3
+#             rclcpp
+#             geometry_msgs
+#         )
+#         install(TARGETS rl_real_lite3 DESTINATION lib/${PROJECT_NAME})
+#     endif()
+# endif()
 
-add_executable(rl_real_go2 src/rl_real_go2.cpp)
-target_link_libraries(rl_real_go2
-    unitree_sdk2
-    rl_sdk
-    observation_buffer
-    yaml-cpp
-)
-if(NOT USE_CMAKE)
-    if($ENV{ROS_DISTRO} MATCHES "noetic")
-        target_link_libraries(rl_real_go2 ${catkin_LIBRARIES})
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
-        ament_target_dependencies(rl_real_go2
-            rclcpp
-            geometry_msgs
-        )
-        install(TARGETS rl_real_go2 DESTINATION lib/${PROJECT_NAME})
-    endif()
-endif()
+# add_executable(rl_real_go2 src/rl_real_go2.cpp)
+# target_link_libraries(rl_real_go2
+#     unitree_sdk2
+#     rl_sdk
+#     observation_buffer
+#     yaml-cpp
+# )
+# if(NOT USE_CMAKE)
+#     if($ENV{ROS_DISTRO} MATCHES "noetic")
+#         target_link_libraries(rl_real_go2 ${catkin_LIBRARIES})
+#     elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+#         ament_target_dependencies(rl_real_go2
+#             rclcpp
+#             geometry_msgs
+#         )
+#         install(TARGETS rl_real_go2 DESTINATION lib/${PROJECT_NAME})
+#     endif()
+# endif()
 
-add_executable(rl_real_g1 src/rl_real_g1.cpp)
-target_link_libraries(rl_real_g1
-    unitree_sdk2
-    rl_sdk
-    observation_buffer
-    yaml-cpp
-)
-if(NOT USE_CMAKE)
-    if($ENV{ROS_DISTRO} MATCHES "noetic")
-        target_link_libraries(rl_real_g1 ${catkin_LIBRARIES})
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
-        ament_target_dependencies(rl_real_g1
-            rclcpp
-            geometry_msgs
-        )
-        install(TARGETS rl_real_g1 DESTINATION lib/${PROJECT_NAME})
-    endif()
-endif()
+# add_executable(rl_real_g1 src/rl_real_g1.cpp)
+# target_link_libraries(rl_real_g1
+#     unitree_sdk2
+#     rl_sdk
+#     observation_buffer
+#     yaml-cpp
+# )
+# if(NOT USE_CMAKE)
+#     if($ENV{ROS_DISTRO} MATCHES "noetic")
+#         target_link_libraries(rl_real_g1 ${catkin_LIBRARIES})
+#     elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+#         ament_target_dependencies(rl_real_g1
+#             rclcpp
+#             geometry_msgs
+#         )
+#         install(TARGETS rl_real_g1 DESTINATION lib/${PROJECT_NAME})
+#     endif()
+# endif()
 
-add_executable(rl_real_l4w4 src/rl_real_l4w4.cpp)
-target_link_libraries(rl_real_l4w4
-    l4w4_sdk
-    rl_sdk
-    observation_buffer
-    yaml-cpp
-)
-if(NOT USE_CMAKE)
-    if($ENV{ROS_DISTRO} MATCHES "noetic")
-        target_link_libraries(rl_real_l4w4 ${catkin_LIBRARIES})
-    elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
-        ament_target_dependencies(rl_real_l4w4
-            rclcpp
-            geometry_msgs
-        )
-        install(TARGETS rl_real_l4w4 DESTINATION lib/${PROJECT_NAME})
-    endif()
-endif()
+# add_executable(rl_real_l4w4 src/rl_real_l4w4.cpp)
+# target_link_libraries(rl_real_l4w4
+#     l4w4_sdk
+#     rl_sdk
+#     observation_buffer
+#     yaml-cpp
+# )
+# if(NOT USE_CMAKE)
+#     if($ENV{ROS_DISTRO} MATCHES "noetic")
+#         target_link_libraries(rl_real_l4w4 ${catkin_LIBRARIES})
+#     elseif($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+#         ament_target_dependencies(rl_real_l4w4
+#             rclcpp
+#             geometry_msgs
+#         )
+#         install(TARGETS rl_real_l4w4 DESTINATION lib/${PROJECT_NAME})
+#     endif()
+# endif()
 
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "noetic")

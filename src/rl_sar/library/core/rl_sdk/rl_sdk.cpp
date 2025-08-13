@@ -5,6 +5,8 @@
 
 #include "rl_sdk.hpp"
 #include "pc_voxelizer.hpp"
+#include <onnxruntime_cxx_api.h>
+#include <torch/torch.h>
 
 void RL::StateController(const RobotState<double>* state, RobotCommand<double>* command)
 {
@@ -23,6 +25,7 @@ void RL::StateController(const RobotState<double>* state, RobotCommand<double>* 
 
     fsm.Run();
 }
+
 
 torch::Tensor RL::ComputeObservation()
 {
@@ -128,9 +131,8 @@ torch::Tensor RL::ComputeObservation()
         }
         else if (observation == "grid_map_hussar"){
             torch::Tensor occ = this->voxelizer3d->fetchVoxelObservation();
-            occ = occ.to(torch::kFloat32);
-            occ = occ.flatten(1);
-            obs_list.push_back(occ);
+            std::cout << occ << std::endl;
+            this->voxel_grid = occ.to(torch::kFloat32);
         }
     }
 
@@ -207,7 +209,8 @@ void RL::InitRL(std::string robot_path)
 
     // init model
     std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/" + this->params.model_name;
-    this->model = torch::jit::load(model_path);
+    // this->model = torch::jit::load(model_path);
+    this->model.load(model_path, /*cuda_device= */0);
 }
 
 int RL::HistoryLen(const std::string& key) const

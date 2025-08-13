@@ -20,6 +20,7 @@
 #include "fsm_core.hpp"
 #include "observation_buffer.hpp"
 #include "pc_voxelizer.hpp"
+#include "onnx_policy.hpp"
 
 namespace LOGGER
 {
@@ -249,13 +250,15 @@ public:
     torch::Tensor HistObs(const std::string& key, const torch::Tensor& current);
 
     // rl module
-    torch::jit::script::Module model;
+    // torch::jit::script::Module model;
+    OnnxPolicy model;
     // output buffer
     torch::Tensor output_dof_tau;
     torch::Tensor output_dof_pos;
     torch::Tensor output_dof_vel;
 
     std::shared_ptr<PointcloudVoxelizer> voxelizer3d;
+    torch::Tensor voxel_grid;
 };
 
 class RLFSMState : public FSMState
