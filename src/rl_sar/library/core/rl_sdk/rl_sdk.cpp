@@ -4,7 +4,7 @@
  */
 
 #include "rl_sdk.hpp"
-#include "pc_voxelizer.hpp"
+// #include "pc_voxelizer.hpp"
 #include <onnxruntime_cxx_api.h>
 #include <torch/torch.h>
 
@@ -165,11 +165,32 @@ void RL::InitObservations()
     this->obs.actions = torch::zeros({1, this->params.num_of_dofs});
     this->obs.target_pos = torch::zeros({1, 3});
     InitObsHistory();
-    VoxelizerParams vp;
+    // VoxelizerParams vp;
+    // vp.front_topic = "/front_points";
+    // vp.back_topic = "/back_points";
+    // vp.voxel = 0.1f;
+    // vp.sx = 8.f; vp.sx = 8.f; vp.sy = 8.f; vp.sz = 2.5f; vp.z_min = -0.2f;
+    // this->voxelizer3d = std::make_shared<PointcloudVoxelizer>(vp);
+    VoxelizerParams vp{};
     vp.front_topic = "/front_points";
-    vp.back_topic = "/back_points";
+    vp.back_topic  = "/back_points";
+
+    // 坐标系：把两路点云都变到这个基坐标系再体素化
+    vp.frame_id    = "base_link";
+    vp.torso_frame = "torso_link";
+
+    // 网格：想完全对齐 python 的 32×32×32、0.1m
     vp.voxel = 0.1f;
-    vp.sx = 8.f; vp.sx = 8.f; vp.sy = 8.f; vp.sz = 2.5f; vp.z_min = -0.2f;
+    vp.sx = 3.2f;  // 32 * 0.1
+    vp.sy = 3.2f;
+    vp.sz = 3.2f;
+    // 可选：按需要裁掉过高/过低的点（在 base_link 下）
+    vp.z_clip_min = -1e9f;
+    vp.z_clip_max =  1e9f;
+
+    // 位姿来源走 TF；不用手写偏置
+    vp.use_explicit_lidar_pose = false;
+
     this->voxelizer3d = std::make_shared<PointcloudVoxelizer>(vp);
     this->ComputeObservation();
 }

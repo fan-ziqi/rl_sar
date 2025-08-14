@@ -67,6 +67,8 @@ if(NOT USE_CMAKE)
         find_package(std_srvs REQUIRED)
         find_package(geometry_msgs REQUIRED)
         find_package(Eigen3 REQUIRED)
+        find_package(tf2_ros REQUIRED)
+        find_package(tf2_geometry_msgs REQUIRED)
         ament_package()
     endif()
     add_compile_options(${GAZEBO_CXX_FLAGS})
@@ -194,6 +196,10 @@ if(NOT USE_CMAKE)
         ament_target_dependencies(rl_sdk PUBLIC
             rclcpp
             sensor_msgs
+            geometry_msgs
+            tf2_geometry_msgs
+            tf2
+            tf2_ros
         )
     endif()
 endif()
@@ -250,6 +256,8 @@ if(NOT USE_CMAKE)
             gazebo_msgs
             std_srvs
             geometry_msgs
+            tf2_ros
+            tf2_geometry_msgs
         )
         install(TARGETS rl_sim DESTINATION lib/${PROJECT_NAME})
     endif()
