@@ -148,7 +148,7 @@ RL_Sim::RL_Sim()
         [this] (const robot_msgs::msg::RobotState::SharedPtr msg) {this->RobotStateCallback(msg);}
     );
     this->goal_position_subscriber = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        "/desired_goal_pos", rclcpp::SystemDefaultsQoS(),
+        "/desired_goal_pose", rclcpp::SystemDefaultsQoS(),
         [this] (const geometry_msgs::msg::PoseStamped::SharedPtr msg) {this->GoalPositionCallback(msg);}
     );
 
@@ -455,23 +455,8 @@ void RL_Sim::ModelStatesCallback(
     {
         this->base_pose = msg->pose[2];
         this->base_vel = msg->twist[2];
-        // std::cout << LOGGER::INFO << "Robot model : pos = [" << 
-        //     this->base_pose.position.x << " " << 
-        //     this->base_pose.position.y << " " <<
-        //     this->base_pose.position.z << " " <<
-        //     "] vel = [" << 
-        //     this->base_vel.linear.x << " " <<
-        //     this->base_vel.linear.y << " " <<
-        //     this->base_vel.linear.y << "]" << std::endl;
-    }
-    // object model is the fourth model in the list
-    if (msg->name.size() > 3)
-    {
-        this->object_pose = msg->pose[3]; 
-        // std::cout << LOGGER::INFO << "Object model: pos = [" <<
-        //     this->object_pose.position.x << " " << 
-        //     this->object_pose.position.y << " " <<
-        //     this->object_pose.position.z << "]" << std::endl;
+        this->base_pos.index({0, 0}).fill_(this->base_pose.position.x);
+        this->base_pos.index({0, 1}).fill_(this->base_pose.position.y);
     }
 }
 #endif
@@ -549,6 +534,10 @@ void RL_Sim::RobotStateCallback(const robot_msgs::msg::RobotState::SharedPtr msg
 void RL_Sim::GoalPositionCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
     this->target_pos_msg = *msg;
+    std::cout << "Get one new target position" << std::endl;
+    this->time_rest.index({0, 0}).fill_(6.0);
+    this->target_pos.index({0, 0}).fill_(msg->pose.position.x); // x
+    this->target_pos.index({0, 0}).fill_(msg->pose.position.y); // y
 }
 #endif
 

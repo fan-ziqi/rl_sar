@@ -57,10 +57,8 @@ public:
         const std::array<const char*,3> input_names = {"policy", "grid_map_", "mask"};
         Ort::Value inputs[] = {std::move(in_p), std::move(in_g), std::move(in_m)};
 
-        // 2) 准备输出名（ORT 1.22 C++ API 需要显式给出至少一个）
         std::vector<const char*> out_names_c;
         if (output_names_.empty()) {
-            // 兜底：极端情况下 load() 没填充时再取一次
             const_cast<OnnxPolicy*>(this)->output_names_ = session_->GetOutputNames();
         }
         out_names_c.reserve(output_names_.size());
@@ -69,7 +67,6 @@ public:
             throw std::runtime_error("No output names available from the model.");
         }
 
-        // 3) 运行推断（必须传输出名与数量）
         auto outputs = session_->Run(Ort::RunOptions{nullptr},
                                     input_names.data(), inputs, 3,
                                     out_names_c.data(), out_names_c.size());
@@ -82,7 +79,6 @@ public:
         //     std::cerr << "]\n";
         // }
 
-        // 4) 读取第0个输出（期望 float）
         auto& out0 = outputs.at(4);
         auto info = out0.GetTensorTypeAndShapeInfo();
         if (info.GetElementType() != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
@@ -92,7 +88,6 @@ public:
         float* ptr = out0.GetTensorMutableData<float>();
 
         std::vector<int64_t> tshape(oshp.begin(), oshp.end());
-        // from_blob + clone 保证内存独立
         return torch::from_blob(ptr, tshape, torch::TensorOptions().dtype(torch::kFloat32)).clone();
     }
 

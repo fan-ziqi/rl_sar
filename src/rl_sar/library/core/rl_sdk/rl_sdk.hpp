@@ -259,6 +259,9 @@ public:
 
     std::shared_ptr<PointcloudVoxelizer> voxelizer3d;
     torch::Tensor voxel_grid;
+    torch::Tensor target_pos = torch::zeros({1, 3}, torch::TensorOptions().dtype(torch::kFloat32));
+    torch::Tensor time_rest = torch::zeros({1, 1}, torch::TensorOptions().dtype(torch::kFloat32));
+    torch::Tensor base_pos = torch::zeros({1, 3}, torch::TensorOptions().dtype(torch::kFloat32));
 };
 
 class RLFSMState : public FSMState

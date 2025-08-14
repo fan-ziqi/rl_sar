@@ -105,7 +105,12 @@ torch::Tensor RL::ComputeObservation()
         // hussar
         else if (observation == "command_hussar"){
             // auto cur = this->obs.target_pos;
-            torch::Tensor cur = torch::zeros({1, 4});
+            torch::Tensor allocated_time = torch::full({1, 1}, 6.0f, torch::kFloat32);
+            auto diff = this->target_pos - this->base_pos;
+            diff = this->QuatRotateInverse(this->obs.base_quat, diff);
+            diff = diff.index({torch::indexing::Slice(0, 1), torch::indexing::Slice(0, 2)});
+            this->time_rest.index({0, 0}).sub_(0.02f).clamp_min_(0.0f);
+            auto cur = torch::cat(std::vector<torch::Tensor>{diff, this->time_rest, allocated_time}, 1);
             obs_list.push_back(HistObs("command_hussar", cur));
         }
         else if (observation == "ang_vel_hussar"){
@@ -133,7 +138,6 @@ torch::Tensor RL::ComputeObservation()
             torch::Tensor occ = this->voxelizer3d->fetchVoxelObservation();
             // std::cout << occ << std::endl;
             this->voxel_grid = occ.to(torch::kFloat32);
-
         }
     }
 
@@ -161,13 +165,13 @@ void RL::InitObservations()
     this->obs.actions = torch::zeros({1, this->params.num_of_dofs});
     this->obs.target_pos = torch::zeros({1, 3});
     InitObsHistory();
-    this->ComputeObservation();
     VoxelizerParams vp;
     vp.front_topic = "/front_points";
     vp.back_topic = "/back_points";
     vp.voxel = 0.1f;
     vp.sx = 8.f; vp.sx = 8.f; vp.sy = 8.f; vp.sz = 2.5f; vp.z_min = -0.2f;
     this->voxelizer3d = std::make_shared<PointcloudVoxelizer>(vp);
+    this->ComputeObservation();
 }
 
 void RL::InitOutputs()
@@ -211,9 +215,7 @@ void RL::InitRL(std::string robot_path)
     // init model
     std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/" + this->params.model_name;
     // this->model = torch::jit::load(model_path);
-    std::cout << "here is ok" << std::endl;
     this->model.load(model_path, /*cuda_device= */0);
-    std::cout << "here is ok" << std::endl;
 
 }
 
@@ -234,7 +236,6 @@ void RL::InitObsHistory()
 {
     obs_hist_buf.clear();
     for (const auto& name : params.observations){
-        std::cout << "init" << name << std::endl;
         obs_hist_buf.emplace(name, std::deque<torch::Tensor>{});
     }
 }
@@ -279,7 +280,6 @@ torch::Tensor RL::ConcatHistory(const std::string& key, int keep, const std::str
 torch::Tensor RL::HistObs(const std::string& key, const torch::Tensor& current)
 {
     const int keep = HistoryLen(key);
-    std::cout << key << "  " << keep << std::endl;
     PushObs(key, current, keep);
     if (keep <= 1) return (current.dim()==1 ? current.unsqueeze(0) : current);
     return ConcatHistory(key, keep, params.key_observations_history_priority);
