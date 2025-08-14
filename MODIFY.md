@@ -33,8 +33,10 @@
     </scan>
     ```
 
-### set 3D goal pose
+### set 3D goal pose & show world
 1. add `interactive_marker.py` in `rl_sar/scripts/` for 3D goal pose
-2. open `rviz` => set `Global Options`'s `fixed frame` = `world`
-3. add `InteractiveMarkers` and set `Interactive Markers Namespace` = `target_pose`
+2. add `object_visualizaer.py` in `rl_sar/scripts/` for world visualization
+3. just launch `rviz.launch.py`.
+<!-- 2. open `rviz` => set `Global Options`'s `fixed frame` = `world` -->
+<!-- 3. add `InteractiveMarkers` and set `Interactive Markers Namespace` = `target_pose` -->
 4. click 3D goal will send `/desired_goal_pose` topic (geometry_msgs::msg::PoseStamped)

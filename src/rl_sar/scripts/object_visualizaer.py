@@ -29,36 +29,36 @@ class ObjectVisualizer(Node):
             self.get_logger().warn(f'Meshes directory does not exist: {self.visualizer_path}')
             return
         
-        self.files = [file for file in os.listdir(self.visualizer_path) if file.endswith(('.stl','.STL'))]  # find all meshes in the 'meshes' folder
+        self.file = "benchmark_bin_centered_resized.stl"
+        # self.files = [file for file in os.listdir(self.visualizer_path) if file.endswith(('.stl','.STL'))]  # find all meshes in the 'meshes' folder
 
-        for marker_id, file in enumerate(self.files):
-            if os.path.exists(os.path.join(BASE_PATH, "worlds", file)):
-            # if os.path.exists(self.visualizer_path + "/"  + file):
-                self.get_logger().info(f'Published object {marker_id}: {file}')
+        # for marker_id, file in enumerate(self.files):
+            # if os.path.exists(os.path.join(BASE_PATH, "worlds", file)):
+        if os.path.exists(self.visualizer_path + "/"  + self.file):
+            self.get_logger().info(f'Published object : {self.file}')
 
     def timer_callback(self):        
 
         self.markerArray.markers.clear()  # Clear previous markers
-        for marker_id, file in enumerate(self.files):
+        # for marker_id, file in enumerate(self.files):
             # self.get_logger().info(f'Loading file: {file}')
-            marker = Marker()
-            marker.id = marker_id
-            marker.mesh_resource = 'file://' + os.path.join(self.visualizer_path, file)
-            # marker.mesh_resource = self.visualizer_path + "/"  + file
-            marker.mesh_use_embedded_materials = True  # Need this to use textures for mesh
-            marker.type = Marker.MESH_RESOURCE
-            marker.header.frame_id = "world"
-            marker.header.stamp = self.get_clock().now().to_msg()
-            marker.scale.x = 1.0
-            marker.scale.y = 1.0
-            marker.scale.z = 1.0
-            marker.pose.orientation.w = 1.0
-            marker.color.a = 0.8  # Fully opaque
-            marker.color.r = 0.2  # Red
-            marker.color.g = 0.2  # Green
-            marker.color.b = 0.2
-            self.markerArray.markers.append(marker)
-
+        marker = Marker()
+        marker.id = 2
+        marker.mesh_resource = 'file://' + os.path.join(self.visualizer_path, self.file)
+        # marker.mesh_resource = self.visualizer_path + "/"  + file
+        marker.mesh_use_embedded_materials = True  # Need this to use textures for mesh
+        marker.type = Marker.MESH_RESOURCE
+        marker.header.frame_id = "world"
+        marker.header.stamp = self.get_clock().now().to_msg()
+        marker.scale.x = 1.0
+        marker.scale.y = 1.0
+        marker.scale.z = 1.0
+        marker.pose.orientation.w = 1.0
+        marker.color.a = 1.0  # Fully opaque
+        marker.color.r = 0.2  # Red
+        marker.color.g = 0.2  # Green
+        marker.color.b = 0.2
+        self.markerArray.markers.append(marker)
         self.publisher.publish(self.markerArray)
 
 def main(args=None):

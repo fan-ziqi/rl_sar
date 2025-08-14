@@ -69,4 +69,5 @@ def generate_launch_description():
         static_tf_world_to_base,
         static_tf_base_to_sensor,
         object_visualizer_node,
+        Interactive_visualizer_node,
     ])
