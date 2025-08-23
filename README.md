@@ -36,7 +36,7 @@ Support List:
 >
 > The order of joints in robot_lab cfg file `joint_names` is the same as that defined in `xxx/robot_lab/config.yaml` in this project.
 >
-> Discuss in [Github Discussion](https://github.com/fan-ziqi/rl_sar/discussions).
+> Discuss in [Github Discussion](https://github.com/fan-ziqi/rl_sar/discussions) or [Discord](http://www.robotsfan.com/dc_rl_sar).
 
 > [!CAUTION]
 > **Disclaimer: User acknowledges that all risks and consequences arising from using this code shall be solely borne by the user, the author assumes no liability for any direct or indirect damages, and proper safety measures must be implemented prior to operation.**
