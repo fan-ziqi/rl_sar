@@ -1,0 +1,18 @@
+controller_manager:
+    ros__parameters:
+        update_rate: 1000  # Hz
+        # use_sim_time: true  # If running in simulation
+
+        joint_state_broadcaster:
+            type: joint_state_broadcaster/JointStateBroadcaster
+
+        imu_sensor_broadcaster:
+            type: imu_sensor_broadcaster/ImuSensorBroadcaster
+
+        robot_joint_controller:
+            type: robot_joint_controller/RobotJointControllerGroup
+
+imu_sensor_broadcaster:
+    ros__parameters:
+        sensor_name: "imu_sensor"
+        frame_id: imu_link

@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<robot name="tita_description" xmlns:xacro="http://wiki.ros.org/xacro">
+  <!-- <xacro:arg name="prefix" default="" />
+  <xacro:arg name="sim_env" default="gazebo"/>
+  <xacro:arg name="ctrl_mode" default="gazebo"/>
+  <xacro:arg name="yaml_path" default="" />
+
+  <xacro:property name="sim_env" value="$(arg sim_env)" />
+  <xacro:property name="ctrl_mode" value="$(arg ctrl_mode)" />
+  <xacro:property name="yaml_path" value="$(arg yaml_path)" /> -->
+
+  <!-- <xacro:include filename="$(find tita_description)/xacro/materials.xacro" />
+  <xacro:include filename="$(find tita_description)/xacro/description.xacro" /> -->
+  <xacro:include filename="$(find tita_description)/xacro/gazebo.xacro" />
+  <xacro:include filename="$(find tita_description)/urdf/tita_description.urdf"/>
+  <!-- <xacro:property name="name" value="GazeboControl" />
+  <xacro:ros2control name="${name}" ctrl_mode="$(arg ctrl_mode)" sim_env="$(arg sim_env)" yaml_path="$(arg yaml_path)" /> -->
+
+</robot>
