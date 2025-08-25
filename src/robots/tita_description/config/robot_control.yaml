@@ -1,0 +1,39 @@
+tita_gazebo:
+    # Publish all joint states -----------------------------------
+    joint_state_controller:
+        type: joint_state_controller/JointStateController
+        publish_rate: 1000
+
+    # Left Controllers ---------------------------------------
+    L_hip_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: joint_left_leg_1
+
+    L_thigh_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: joint_left_leg_2
+
+    L_calf_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: joint_left_leg_3
+
+    L_foot_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: joint_left_leg_4
+
+    # Right Controllers ---------------------------------------
+    R_hip_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: joint_right_leg_1
+
+    R_thigh_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: joint_right_leg_2
+
+    R_calf_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: joint_right_leg_3
+
+    R_foot_controller:
+        type: robot_joint_controller/RobotJointController
+        joint: joint_right_leg_4

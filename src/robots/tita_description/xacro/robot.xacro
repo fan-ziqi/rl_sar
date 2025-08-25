@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<robot name="tita_description" xmlns:xacro="http://wiki.ros.org/xacro">
+
+  <xacro:include filename="$(find tita_description)/xacro/gazebo.xacro" />
+  <xacro:include filename="$(find tita_description)/urdf/tita_description.urdf"/>
+
+</robot>
