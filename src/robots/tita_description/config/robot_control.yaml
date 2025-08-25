@@ -37,5 +37,3 @@ tita_gazebo:
     R_foot_controller:
         type: robot_joint_controller/RobotJointController
         joint: joint_right_leg_4
-
-   

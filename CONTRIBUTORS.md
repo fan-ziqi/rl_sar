@@ -15,11 +15,11 @@ Guidelines for modifications:
 
 ## Contributors
 
-* [Deeprobotics](http://www.deeprobotics.cn/en)
 * [DDTRobot](https://directdrive.com/)
+* [Deeprobotics](http://www.deeprobotics.cn/en)
 * Hongyi Li
 * Jijie Huang
 * Peizhuo Li
+* Yankai Xiang
 * Yufeng Chi (-T.K.-)
 * Yuxuan Ma
-* Yankai Xiang
