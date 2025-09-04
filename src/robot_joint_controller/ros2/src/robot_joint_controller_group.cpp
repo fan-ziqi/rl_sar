@@ -268,7 +268,7 @@ void RobotJointControllerGroup::UpdateFunc(const double &period_seconds)
 
         last_state_.motor_state[index].q = currentPos[index];
         last_state_.motor_state[index].dq = currentVel[index];
-        last_state_.motor_state[index].tau_est = state_interfaces_[index + 1].get_value();
+        last_state_.motor_state[index].tau_est = state_interfaces_[index * 2 + 1].get_value();
     }
 
     // publish state
