@@ -143,7 +143,7 @@ void RL_Real::GetState(RobotState<double> *state)
     this->control.x = this->rt_keys_.left_axis_y;
     this->control.y = -this->rt_keys_.left_axis_x;
     this->control.yaw = -this->rt_keys_.right_axis_x;
-       
+
     float q[4];
     EulerToQuaternion(this->robot_data_->imu.angle_roll, this->robot_data_->imu.angle_pitch, this->robot_data_->imu.angle_yaw, q);
 
@@ -224,6 +224,7 @@ void RL_Real::RobotControl()
         this->control.navigation_mode = !this->control.navigation_mode;
         std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
         this->control.current_keyboard = this->control.last_keyboard;
+        this->control.current_gamepad = this->control.last_gamepad;
     }
 
     this->GetState(&this->robot_state);

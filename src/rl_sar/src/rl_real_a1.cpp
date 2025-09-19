@@ -210,6 +210,7 @@ void RL_Real::RobotControl()
         this->control.navigation_mode = !this->control.navigation_mode;
         std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
         this->control.current_keyboard = this->control.last_keyboard;
+        this->control.current_gamepad = this->control.last_gamepad;
     }
 
     this->GetState(&this->robot_state);
