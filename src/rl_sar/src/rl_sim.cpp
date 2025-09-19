@@ -540,6 +540,7 @@ void RL_Sim::RunModel()
         }
 
         // this->TorqueProtect(this->output_dof_tau);
+        // this->AttitudeProtect(this->robot_state.imu.quaternion, 75.0f, 75.0f);
 
 #ifdef CSV_LOGGER
         torch::Tensor tau_est = torch::zeros({1, this->params.num_of_dofs});

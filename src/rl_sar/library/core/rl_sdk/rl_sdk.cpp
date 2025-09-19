@@ -232,7 +232,7 @@ void RL::TorqueProtect(torch::Tensor origin_output_dof_tau)
         }
         // Just a reminder, no protection
         // this->control.SetKeyboard(Input::Keyboard::P);
-        // std::cout << LOGGER::INFO << "Switching to STATE_POS_GETDOWN"<< std::endl;
+        std::cout << LOGGER::INFO << "Switching to STATE_POS_GETDOWN"<< std::endl;
     }
 }
 
@@ -265,12 +265,12 @@ void RL::AttitudeProtect(const std::vector<double> &quaternion, float pitch_thre
 
     if (std::fabs(roll) > roll_threshold)
     {
-        // this->control.SetKeyboard(Input::Keyboard::P);
+        this->control.SetKeyboard(Input::Keyboard::P);
         std::cout << LOGGER::WARNING << "Roll exceeds " << roll_threshold << " degrees. Current: " << roll << " degrees." << std::endl;
     }
     if (std::fabs(pitch) > pitch_threshold)
     {
-        // this->control.SetKeyboard(Input::Keyboard::P);
+        this->control.SetKeyboard(Input::Keyboard::P);
         std::cout << LOGGER::WARNING << "Pitch exceeds " << pitch_threshold << " degrees. Current: " << pitch << " degrees." << std::endl;
     }
 }
