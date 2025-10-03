@@ -175,7 +175,36 @@ ros2 run rl_sar rl_sim
 git clone https://github.com/osrf/gazebo_models.git ~/.gazebo/models
 ```
 
-### 手柄与键盘控制
+### 使用手机网页控制 (实验性)
+
+安装依赖
+
+```bash
+sudo apt install ros-${ROS_DISTRO}-rosbridge-suite
+sudo apt install ros-${ROS_DISTRO}-web-video-server
+
+# 如果您使用的ROS2版本不是Humble、Jazz或Rolling，需要从源码编译 `web_video_server`
+cd <your_ros2_workspace>/src
+git clone https://github.com/RobotWebTools/web_video_server.git
+cd <your_ros2_workspace>
+colcon build --packages-select web_video_server
+```
+
+在机器人上运行 rosbridge 和 web_video_server
+
+```bash
+# ROS1
+roslaunch rosbridge_server rosbridge_websocket.launch
+rosrun web_video_server web_video_server
+
+# ROS2
+ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+ros2 run web_video_server web_video_server
+```
+
+访问 [http://robot.robotsfan.com/](http://robot.robotsfan.com/)， 填写IP地址和端口，检查右上角的设置界面，然后连接机器人。进入控制页面后，将屏幕水平放置，点击左上角的全屏按钮，即可使用手机浏览器控制机器人！
+
+### 使用手柄或键盘控制
 
 |手柄控制|键盘控制|功能描述|
 |---|---|---|
@@ -426,3 +455,4 @@ rl_sar/src/rl_real_<ROBOT>.cpp  # 可以按需自定义forward()函数以适配�
 - [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways)
 - [ccrpRepo/RoboMimic_Deploy](https://github.com/ccrpRepo/RoboMimic_Deploy)
 - [Deeprobotics/Lite3_Motion_SDK](https://github.com/DeepRoboticsLab/Lite3_MotionSDK)
+- [chengyangkj/ROS_Flutter_Gui_App](https://github.com/chengyangkj/ROS_Flutter_Gui_App)
