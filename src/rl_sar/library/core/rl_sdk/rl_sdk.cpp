@@ -5,7 +5,7 @@
 
 #include "rl_sdk.hpp"
 
-void RL::StateController(const RobotState<double>* state, RobotCommand<double>* command)
+void RL::StateController(const RobotState<float>* state, RobotCommand<float>* command)
 {
     auto updateState = [&](std::shared_ptr<FSMState> statePtr)
     {
@@ -23,9 +23,9 @@ void RL::StateController(const RobotState<double>* state, RobotCommand<double>* 
     fsm.Run();
 }
 
-torch::Tensor RL::ComputeObservation()
+std::vector<float> RL::ComputeObservation()
 {
-    std::vector<torch::Tensor> obs_list;
+    std::vector<std::vector<float>> obs_list;
 
     for (const std::string &observation : this->params.observations)
     {
@@ -51,10 +51,10 @@ torch::Tensor RL::ComputeObservation()
         }
         else if (observation == "dof_pos")
         {
-            torch::Tensor dof_pos_rel = this->obs.dof_pos - this->params.default_dof_pos;
+            std::vector<float> dof_pos_rel = this->obs.dof_pos - this->params.default_dof_pos;
             for (int i : this->params.wheel_indices)
             {
-                dof_pos_rel[0][i] = 0.0;
+                dof_pos_rel[i] = 0.0f;
             }
             obs_list.push_back(dof_pos_rel * this->params.dof_pos_scale);
         }
@@ -69,74 +69,87 @@ torch::Tensor RL::ComputeObservation()
         else if (observation == "phase")
         {
             float motion_time = this->episode_length_buf * this->params.dt * this->params.decimation;
-            torch::Tensor phase = torch::tensor({{3.1415926 * motion_time / 2}});
-            torch::Tensor phase_tensor = torch::cat({
-                torch::sin(phase),
-                torch::cos(phase),
-                torch::sin(phase / 2),
-                torch::cos(phase / 2),
-                torch::sin(phase / 4),
-                torch::cos(phase / 4),
-            }, -1);
+            float phase = 3.1415926f * motion_time / 2.0f;
+            std::vector<float> phase_tensor = {
+                std::sin(phase),
+                std::cos(phase),
+                std::sin(phase / 2.0f),
+                std::cos(phase / 2.0f),
+                std::sin(phase / 4.0f),
+                std::cos(phase / 4.0f)
+            };
             obs_list.push_back(phase_tensor);
         }
         else if (observation == "g1_phase")
         {
             float motion_time = this->episode_length_buf * this->params.dt * this->params.decimation;
-            torch::Tensor period = torch::tensor({{0.8f}});
-            torch::Tensor count = torch::tensor({{motion_time}});
-            torch::Tensor phase = torch::fmod(count, period) / period;
-            torch::Tensor phase_tensor = torch::cat({
-                torch::sin(2 * 3.1415926f * phase),
-                torch::cos(2 * 3.1415926f * phase),
-            }, -1);
+            float period = 0.8f;
+            float count = motion_time;
+            float phase = std::fmod(count, period) / period;
+            std::vector<float> phase_tensor = {
+                std::sin(2.0f * 3.1415926f * phase),
+                std::cos(2.0f * 3.1415926f * phase)
+            };
             obs_list.push_back(phase_tensor);
         }
         else if (observation == "g1_mimic_phase")
         {
             float motion_time = this->episode_length_buf * this->params.dt * this->params.decimation;
-            torch::Tensor count = torch::tensor({{motion_time}});
-            torch::Tensor phase = count / this->motion_length;
-            obs_list.push_back(phase);
+            float count = motion_time;
+            float phase = count / this->motion_length;
+            std::vector<float> phase_vec = {phase};
+            obs_list.push_back(phase_vec);
         }
     }
 
     this->obs_dims.clear();
     for (const auto& obs : obs_list)
     {
-       this->obs_dims.push_back(obs.size(1));
+       this->obs_dims.push_back(obs.size());
     }
 
-    torch::Tensor obs = torch::cat(obs_list, 1);
-    torch::Tensor clamped_obs = torch::clamp(obs, -this->params.clip_obs, this->params.clip_obs);
+    std::vector<float> obs;
+    for (const auto& obs_vec : obs_list)
+    {
+        obs.insert(obs.end(), obs_vec.begin(), obs_vec.end());
+    }
+    std::vector<float> clamped_obs = clamp(obs, -this->params.clip_obs, this->params.clip_obs);
     return clamped_obs;
 }
 
 void RL::InitObservations()
 {
-    this->obs.lin_vel = torch::tensor({{0.0, 0.0, 0.0}});
-    this->obs.ang_vel = torch::tensor({{0.0, 0.0, 0.0}});
-    this->obs.gravity_vec = torch::tensor({{0.0, 0.0, -1.0}});
-    this->obs.commands = torch::tensor({{0.0, 0.0, 0.0}});
-    this->obs.base_quat = torch::tensor({{0.0, 0.0, 0.0, 1.0}});
+    this->obs.lin_vel = {0.0f, 0.0f, 0.0f};
+    this->obs.ang_vel = {0.0f, 0.0f, 0.0f};
+    this->obs.gravity_vec = {0.0f, 0.0f, -1.0f};
+    this->obs.commands = {0.0f, 0.0f, 0.0f};
+    this->obs.base_quat = {0.0f, 0.0f, 0.0f, 1.0f};
     this->obs.dof_pos = this->params.default_dof_pos;
-    this->obs.dof_vel = torch::zeros({1, this->params.num_of_dofs});
-    this->obs.actions = torch::zeros({1, this->params.num_of_dofs});
+    this->obs.dof_vel.resize(this->params.num_of_dofs, 0.0f);
+    this->obs.actions.resize(this->params.num_of_dofs, 0.0f);
     this->ComputeObservation();
 }
 
 void RL::InitOutputs()
 {
-    this->output_dof_tau = torch::zeros({1, this->params.num_of_dofs});
+    this->output_dof_tau.resize(this->params.num_of_dofs, 0.0f);
     this->output_dof_pos = this->params.default_dof_pos;
-    this->output_dof_vel = torch::zeros({1, this->params.num_of_dofs});
+    this->output_dof_vel.resize(this->params.num_of_dofs, 0.0f);
 }
 
 void RL::InitControl()
 {
-    this->control.x = 0.0;
-    this->control.y = 0.0;
-    this->control.yaw = 0.0;
+    this->control.x = 0.0f;
+    this->control.y = 0.0f;
+    this->control.yaw = 0.0f;
+}
+
+void RL::InitJointNum(size_t num_joints)
+{
+    this->robot_state.motor_state.resize(num_joints);
+    this->start_state.motor_state.resize(num_joints);
+    this->now_state.motor_state.resize(num_joints);
+    this->robot_command.motor_command.resize(num_joints);
 }
 
 void RL::InitRL(std::string robot_path)
@@ -152,6 +165,9 @@ void RL::InitRL(std::string robot_path)
         }
     }
 
+    // init joint num first
+    this->InitJointNum(this->params.num_of_dofs);
+
     // init rl
     this->InitObservations();
     this->InitOutputs();
@@ -166,52 +182,68 @@ void RL::InitRL(std::string robot_path)
 
     // init model
     std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/" + this->params.model_name;
-    this->model = torch::jit::load(model_path);
+    this->model = ModelInterface::ModelFactory::load_model(model_path);
 }
 
-void RL::ComputeOutput(const torch::Tensor &actions, torch::Tensor &output_dof_pos, torch::Tensor &output_dof_vel, torch::Tensor &output_dof_tau)
+void RL::ComputeOutput(const std::vector<float> &actions, std::vector<float> &output_dof_pos, std::vector<float> &output_dof_vel, std::vector<float> &output_dof_tau)
 {
-    torch::Tensor actions_scaled = actions * this->params.action_scale;
-    torch::Tensor pos_actions_scaled = actions_scaled.clone();
-    torch::Tensor vel_actions_scaled = torch::zeros_like(actions);
+    std::vector<float> actions_scaled = actions * this->params.action_scale;
+    std::vector<float> pos_actions_scaled = actions_scaled;
+    std::vector<float> vel_actions_scaled(actions.size(), 0.0f);
     for (int i : this->params.wheel_indices)
     {
-        pos_actions_scaled[0][i] = 0.0;
-        vel_actions_scaled[0][i] = actions_scaled[0][i];
+        pos_actions_scaled[i] = 0.0f;
+        vel_actions_scaled[i] = actions_scaled[i];
     }
-    torch::Tensor all_actions_scaled = pos_actions_scaled + vel_actions_scaled;
+    std::vector<float> all_actions_scaled = pos_actions_scaled + vel_actions_scaled;
     output_dof_pos = pos_actions_scaled + this->params.default_dof_pos;
     output_dof_vel = vel_actions_scaled;
     output_dof_tau = this->params.rl_kp * (all_actions_scaled + this->params.default_dof_pos - this->obs.dof_pos) - this->params.rl_kd * this->obs.dof_vel;
-    output_dof_tau = torch::clamp(output_dof_tau, -(this->params.torque_limits), this->params.torque_limits);
+    output_dof_tau = clamp(output_dof_tau, -this->params.torque_limits, this->params.torque_limits);
 }
 
-torch::Tensor RL::QuatRotateInverse(torch::Tensor q, torch::Tensor v)
+std::vector<float> RL::QuatRotateInverse(const std::vector<float>& q, const std::vector<float>& v)
 {
-    torch::Tensor q_w;
-    torch::Tensor q_vec;
-
     // wxyz
-    q_w = q.index({torch::indexing::Slice(), 0});
-    q_vec = q.index({torch::indexing::Slice(), torch::indexing::Slice(1, 4)});
+    float q_w = q[0];
+    float q_x = q[1];
+    float q_y = q[2];
+    float q_z = q[3];
 
-    c10::IntArrayRef shape = q.sizes();
+    float v_x = v[0];
+    float v_y = v[1];
+    float v_z = v[2];
 
-    torch::Tensor a = v * (2.0 * torch::pow(q_w, 2) - 1.0).unsqueeze(-1);
-    torch::Tensor b = torch::cross(q_vec, v, -1) * q_w.unsqueeze(-1) * 2.0;
-    torch::Tensor c = q_vec * torch::bmm(q_vec.view({shape[0], 1, 3}), v.view({shape[0], 3, 1})).squeeze(-1) * 2.0;
-    return a - b + c;
+    float a_x = v_x * (2.0f * q_w * q_w - 1.0f);
+    float a_y = v_y * (2.0f * q_w * q_w - 1.0f);
+    float a_z = v_z * (2.0f * q_w * q_w - 1.0f);
+
+    float cross_x = q_y * v_z - q_z * v_y;
+    float cross_y = q_z * v_x - q_x * v_z;
+    float cross_z = q_x * v_y - q_y * v_x;
+
+    float b_x = cross_x * q_w * 2.0f;
+    float b_y = cross_y * q_w * 2.0f;
+    float b_z = cross_z * q_w * 2.0f;
+
+    float dot = q_x * v_x + q_y * v_y + q_z * v_z;
+
+    float c_x = q_x * dot * 2.0f;
+    float c_y = q_y * dot * 2.0f;
+    float c_z = q_z * dot * 2.0f;
+
+    return {a_x - b_x + c_x, a_y - b_y + c_y, a_z - b_z + c_z};
 }
 
-void RL::TorqueProtect(torch::Tensor origin_output_dof_tau)
+void RL::TorqueProtect(const std::vector<float>& origin_output_dof_tau)
 {
     std::vector<int> out_of_range_indices;
-    std::vector<double> out_of_range_values;
-    for (int i = 0; i < origin_output_dof_tau.size(1); ++i)
+    std::vector<float> out_of_range_values;
+    for (size_t i = 0; i < origin_output_dof_tau.size(); ++i)
     {
-        double torque_value = origin_output_dof_tau[0][i].item<double>();
-        double limit_lower = -this->params.torque_limits[0][i].item<double>();
-        double limit_upper = this->params.torque_limits[0][i].item<double>();
+        float torque_value = origin_output_dof_tau[i];
+        float limit_lower = -this->params.torque_limits[i];
+        float limit_upper = this->params.torque_limits[i];
 
         if (torque_value < limit_lower || torque_value > limit_upper)
         {
@@ -221,12 +253,12 @@ void RL::TorqueProtect(torch::Tensor origin_output_dof_tau)
     }
     if (!out_of_range_indices.empty())
     {
-        for (int i = 0; i < out_of_range_indices.size(); ++i)
+        for (size_t i = 0; i < out_of_range_indices.size(); ++i)
         {
             int index = out_of_range_indices[i];
-            double value = out_of_range_values[i];
-            double limit_lower = -this->params.torque_limits[0][index].item<double>();
-            double limit_upper = this->params.torque_limits[0][index].item<double>();
+            float value = out_of_range_values[i];
+            float limit_lower = -this->params.torque_limits[index];
+            float limit_upper = this->params.torque_limits[index];
 
             std::cout << LOGGER::WARNING << "Torque(" << index + 1 << ")=" << value << " out of range(" << limit_lower << ", " << limit_upper << ")" << std::endl;
         }
@@ -236,9 +268,9 @@ void RL::TorqueProtect(torch::Tensor origin_output_dof_tau)
     }
 }
 
-void RL::AttitudeProtect(const std::vector<double> &quaternion, float pitch_threshold, float roll_threshold)
+void RL::AttitudeProtect(const std::vector<float> &quaternion, float pitch_threshold, float roll_threshold)
 {
-    float rad2deg = 57.2958;
+    float rad2deg = 57.2958f;
     float w, x, y, z;
 
     w = quaternion[0];
@@ -256,7 +288,7 @@ void RL::AttitudeProtect(const std::vector<double> &quaternion, float pitch_thre
     float pitch;
     if (std::fabs(sinp) >= 1)
     {
-        pitch = std::copysign(90.0, sinp); // Clamp to avoid out-of-range values
+        pitch = std::copysign(90.0f, sinp); // Clamp to avoid out-of-range values
     }
     else
     {
@@ -383,14 +415,14 @@ void RL::ReadYamlBase(std::string robot_path)
         return;
     }
 
-    this->params.dt = config["dt"].as<double>();
+    this->params.dt = config["dt"].as<float>();
     this->params.decimation = config["decimation"].as<int>();
     this->params.wheel_indices = ReadVectorFromYaml<int>(config["wheel_indices"]);
     this->params.num_of_dofs = config["num_of_dofs"].as<int>();
-    this->params.fixed_kp = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kp"])).view({1, -1});
-    this->params.fixed_kd = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kd"])).view({1, -1});
-    this->params.torque_limits = torch::tensor(ReadVectorFromYaml<double>(config["torque_limits"])).view({1, -1});
-    this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<double>(config["default_dof_pos"])).view({1, -1});
+    this->params.fixed_kp = ReadVectorFromYaml<float>(config["fixed_kp"]);
+    this->params.fixed_kd = ReadVectorFromYaml<float>(config["fixed_kd"]);
+    this->params.torque_limits = ReadVectorFromYaml<float>(config["torque_limits"]);
+    this->params.default_dof_pos = ReadVectorFromYaml<float>(config["default_dof_pos"]);
     this->params.joint_names = ReadVectorFromYaml<std::string>(config["joint_names"]);
     this->params.joint_controller_names = ReadVectorFromYaml<std::string>(config["joint_controller_names"]);
     this->params.joint_mapping = ReadVectorFromYaml<int>(config["joint_mapping"]);
@@ -423,32 +455,32 @@ void RL::ReadYamlRL(std::string robot_path)
         this->params.observations_history = ReadVectorFromYaml<int>(config["observations_history"]);
     }
     this->params.observations_history_priority = config["observations_history_priority"].as<std::string>();
-    this->params.clip_obs = config["clip_obs"].as<double>();
+    this->params.clip_obs = config["clip_obs"].as<float>();
     if (config["clip_actions_lower"].IsNull() && config["clip_actions_upper"].IsNull())
     {
-        this->params.clip_actions_upper = torch::tensor({}).view({1, -1});
-        this->params.clip_actions_lower = torch::tensor({}).view({1, -1});
+        this->params.clip_actions_upper = {};
+        this->params.clip_actions_lower = {};
     }
     else
     {
-        this->params.clip_actions_upper = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_upper"])).view({1, -1});
-        this->params.clip_actions_lower = torch::tensor(ReadVectorFromYaml<double>(config["clip_actions_lower"])).view({1, -1});
+        this->params.clip_actions_upper = ReadVectorFromYaml<float>(config["clip_actions_upper"]);
+        this->params.clip_actions_lower = ReadVectorFromYaml<float>(config["clip_actions_lower"]);
     }
-    this->params.action_scale = torch::tensor(ReadVectorFromYaml<double>(config["action_scale"])).view({1, -1});
+    this->params.action_scale = ReadVectorFromYaml<float>(config["action_scale"]);
     this->params.wheel_indices = ReadVectorFromYaml<int>(config["wheel_indices"]);
     this->params.num_of_dofs = config["num_of_dofs"].as<int>();
-    this->params.lin_vel_scale = config["lin_vel_scale"].as<double>();
-    this->params.ang_vel_scale = config["ang_vel_scale"].as<double>();
-    this->params.dof_pos_scale = config["dof_pos_scale"].as<double>();
-    this->params.dof_vel_scale = config["dof_vel_scale"].as<double>();
-    this->params.commands_scale = torch::tensor(ReadVectorFromYaml<double>(config["commands_scale"])).view({1, -1});
-    // this->params.commands_scale = torch::tensor({this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale});
-    this->params.rl_kp = torch::tensor(ReadVectorFromYaml<double>(config["rl_kp"])).view({1, -1});
-    this->params.rl_kd = torch::tensor(ReadVectorFromYaml<double>(config["rl_kd"])).view({1, -1});
-    this->params.fixed_kp = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kp"])).view({1, -1});
-    this->params.fixed_kd = torch::tensor(ReadVectorFromYaml<double>(config["fixed_kd"])).view({1, -1});
-    this->params.torque_limits = torch::tensor(ReadVectorFromYaml<double>(config["torque_limits"])).view({1, -1});
-    this->params.default_dof_pos = torch::tensor(ReadVectorFromYaml<double>(config["default_dof_pos"])).view({1, -1});
+    this->params.lin_vel_scale = config["lin_vel_scale"].as<float>();
+    this->params.ang_vel_scale = config["ang_vel_scale"].as<float>();
+    this->params.dof_pos_scale = config["dof_pos_scale"].as<float>();
+    this->params.dof_vel_scale = config["dof_vel_scale"].as<float>();
+    this->params.commands_scale = ReadVectorFromYaml<float>(config["commands_scale"]);
+    // this->params.commands_scale = {this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale};
+    this->params.rl_kp = ReadVectorFromYaml<float>(config["rl_kp"]);
+    this->params.rl_kd = ReadVectorFromYaml<float>(config["rl_kd"]);
+    this->params.fixed_kp = ReadVectorFromYaml<float>(config["fixed_kp"]);
+    this->params.fixed_kd = ReadVectorFromYaml<float>(config["fixed_kd"]);
+    this->params.torque_limits = ReadVectorFromYaml<float>(config["torque_limits"]);
+    this->params.default_dof_pos = ReadVectorFromYaml<float>(config["default_dof_pos"]);
     this->params.joint_mapping = ReadVectorFromYaml<int>(config["joint_mapping"]);
 }
 
@@ -478,15 +510,15 @@ void RL::CSVInit(std::string robot_path)
     file.close();
 }
 
-void RL::CSVLogger(torch::Tensor torque, torch::Tensor tau_est, torch::Tensor joint_pos, torch::Tensor joint_pos_target, torch::Tensor joint_vel)
+void RL::CSVLogger(const std::vector<float>& torque, const std::vector<float>& tau_est, const std::vector<float>& joint_pos, const std::vector<float>& joint_pos_target, const std::vector<float>& joint_vel)
 {
     std::ofstream file(csv_filename.c_str(), std::ios_base::app);
 
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << torque[0][i].item<double>() << ","; }
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << tau_est[0][i].item<double>() << ","; }
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << joint_pos[0][i].item<double>() << ","; }
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << joint_pos_target[0][i].item<double>() << ","; }
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << joint_vel[0][i].item<double>() << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << torque[i] << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << tau_est[i] << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << joint_pos[i] << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << joint_pos_target[i] << ","; }
+    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << joint_vel[i] << ","; }
 
     file << std::endl;
 

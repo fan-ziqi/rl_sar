@@ -12,6 +12,7 @@
 
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
+#include "model_interface.hpp"
 #include "loop.hpp"
 #include "fsm.hpp"
 
@@ -115,11 +116,11 @@ public:
 
     void update(xRockerBtnDataStruct &key_data)
     {
-        lx = lx * (1 - smooth) + (std::fabs(key_data.lx) < dead_zone ? 0.0 : key_data.lx) * smooth;
-        rx = rx * (1 - smooth) + (std::fabs(key_data.rx) < dead_zone ? 0.0 : key_data.rx) * smooth;
-        ry = ry * (1 - smooth) + (std::fabs(key_data.ry) < dead_zone ? 0.0 : key_data.ry) * smooth;
-        l2 = l2 * (1 - smooth) + (std::fabs(key_data.L2) < dead_zone ? 0.0 : key_data.L2) * smooth;
-        ly = ly * (1 - smooth) + (std::fabs(key_data.ly) < dead_zone ? 0.0 : key_data.ly) * smooth;
+        lx = lx * (1 - smooth) + (std::fabs(key_data.lx) < dead_zone ? 0.0f : key_data.lx) * smooth;
+        rx = rx * (1 - smooth) + (std::fabs(key_data.rx) < dead_zone ? 0.0f : key_data.rx) * smooth;
+        ry = ry * (1 - smooth) + (std::fabs(key_data.ry) < dead_zone ? 0.0f : key_data.ry) * smooth;
+        l2 = l2 * (1 - smooth) + (std::fabs(key_data.L2) < dead_zone ? 0.0f : key_data.L2) * smooth;
+        ly = ly * (1 - smooth) + (std::fabs(key_data.ly) < dead_zone ? 0.0f : key_data.ly) * smooth;
 
         R1.update(key_data.btn.components.R1);
         L1.update(key_data.btn.components.L1);
@@ -145,8 +146,8 @@ public:
     float l2 = 0.;
     float ly = 0.;
 
-    float smooth = 0.03;
-    float dead_zone = 0.01;
+    float smooth = 0.03f;
+    float dead_zone = 0.01f;
 
     Button R1;
     Button L1;
@@ -220,9 +221,9 @@ public:
 
 private:
     // rl functions
-    torch::Tensor Forward() override;
-    void GetState(RobotState<double> *state) override;
-    void SetCommand(const RobotCommand<double> *command) override;
+    std::vector<float> Forward() override;
+    void GetState(RobotState<float> *state) override;
+    void SetCommand(const RobotCommand<float> *command) override;
     void RunModel();
     void RobotControl();
 
@@ -235,7 +236,7 @@ private:
     // plot
     const int plot_size = 100;
     std::vector<int> plot_t;
-    std::vector<std::vector<double>> plot_real_joint_pos, plot_target_joint_pos;
+    std::vector<std::vector<float>> plot_real_joint_pos, plot_target_joint_pos;
     void Plot();
 
     // unitree interface
@@ -257,8 +258,8 @@ private:
 
     // others
     int motiontime = 0;
-    std::vector<double> mapped_joint_positions;
-    std::vector<double> mapped_joint_velocities;
+    std::vector<float> mapped_joint_positions;
+    std::vector<float> mapped_joint_velocities;
 
 #if defined(USE_ROS1) && defined(USE_ROS)
     geometry_msgs::Twist cmd_vel;

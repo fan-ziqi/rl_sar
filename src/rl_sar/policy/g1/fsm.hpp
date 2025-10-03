@@ -68,10 +68,10 @@ public:
 
             for (int i = 0; i < rl.params.num_of_dofs; ++i)
             {
-                fsm_command->motor_command.q[i] = (1 - rl.running_percent) * rl.now_state.motor_state.q[i] + rl.running_percent * rl.params.default_dof_pos[0][i].item<double>();
+                fsm_command->motor_command.q[i] = (1 - rl.running_percent) * rl.now_state.motor_state.q[i] + rl.running_percent * rl.params.default_dof_pos[i];
                 fsm_command->motor_command.dq[i] = 0;
-                fsm_command->motor_command.kp[i] = rl.params.fixed_kp[0][i].item<double>();
-                fsm_command->motor_command.kd[i] = rl.params.fixed_kd[0][i].item<double>();
+                fsm_command->motor_command.kp[i] = rl.params.fixed_kp[i];
+                fsm_command->motor_command.kd[i] = rl.params.fixed_kd[i];
                 fsm_command->motor_command.tau[i] = 0;
             }
             std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "Getting up " << std::fixed << std::setprecision(2) << rl.running_percent * 100.0f << "%" << std::flush;
@@ -139,8 +139,8 @@ public:
             {
                 fsm_command->motor_command.q[i] = (1 - rl.running_percent) * rl.now_state.motor_state.q[i] + rl.running_percent * rl.start_state.motor_state.q[i];
                 fsm_command->motor_command.dq[i] = 0;
-                fsm_command->motor_command.kp[i] = rl.params.fixed_kp[0][i].item<double>();
-                fsm_command->motor_command.kd[i] = rl.params.fixed_kd[0][i].item<double>();
+                fsm_command->motor_command.kp[i] = rl.params.fixed_kp[i];
+                fsm_command->motor_command.kd[i] = rl.params.fixed_kd[i];
                 fsm_command->motor_command.tau[i] = 0;
             }
             std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "Getting down "<< std::fixed << std::setprecision(2) << rl.running_percent * 100.0f << "%" << std::flush;
@@ -194,21 +194,21 @@ public:
     {
         std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "RL Controller x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
 
-        torch::Tensor _output_dof_pos, _output_dof_vel;
+        std::vector<float> _output_dof_pos, _output_dof_vel;
         if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
         {
             for (int i = 0; i < rl.params.num_of_dofs; ++i)
             {
-                if (_output_dof_pos.defined() && _output_dof_pos.numel() > 0)
+                if (!_output_dof_pos.empty())
                 {
-                    fsm_command->motor_command.q[i] = rl.output_dof_pos[0][i].item<double>();
+                    fsm_command->motor_command.q[i] = _output_dof_pos[i];
                 }
-                if (_output_dof_vel.defined() && _output_dof_vel.numel() > 0)
+                if (!_output_dof_vel.empty())
                 {
-                    fsm_command->motor_command.dq[i] = rl.output_dof_vel[0][i].item<double>();
+                    fsm_command->motor_command.dq[i] = _output_dof_vel[i];
                 }
-                fsm_command->motor_command.kp[i] = rl.params.rl_kp[0][i].item<double>();
-                fsm_command->motor_command.kd[i] = rl.params.rl_kd[0][i].item<double>();
+                fsm_command->motor_command.kp[i] = rl.params.rl_kp[i];
+                fsm_command->motor_command.kd[i] = rl.params.rl_kd[i];
                 fsm_command->motor_command.tau[i] = 0;
             }
         }
@@ -288,21 +288,21 @@ public:
     {
         std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "RL Controller x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
 
-        torch::Tensor _output_dof_pos, _output_dof_vel;
+        std::vector<float> _output_dof_pos, _output_dof_vel;
         if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
         {
             for (int i = 0; i < rl.params.num_of_dofs; ++i)
             {
-                if (_output_dof_pos.defined() && _output_dof_pos.numel() > 0)
+                if (!_output_dof_pos.empty())
                 {
-                    fsm_command->motor_command.q[i] = rl.output_dof_pos[0][i].item<double>();
+                    fsm_command->motor_command.q[i] = _output_dof_pos[i];
                 }
-                if (_output_dof_vel.defined() && _output_dof_vel.numel() > 0)
+                if (!_output_dof_vel.empty())
                 {
-                    fsm_command->motor_command.dq[i] = rl.output_dof_vel[0][i].item<double>();
+                    fsm_command->motor_command.dq[i] = _output_dof_vel[i];
                 }
-                fsm_command->motor_command.kp[i] = rl.params.rl_kp[0][i].item<double>();
-                fsm_command->motor_command.kd[i] = rl.params.rl_kd[0][i].item<double>();
+                fsm_command->motor_command.kp[i] = rl.params.rl_kp[i];
+                fsm_command->motor_command.kd[i] = rl.params.rl_kd[i];
                 fsm_command->motor_command.tau[i] = 0;
             }
         }
@@ -387,21 +387,21 @@ public:
         float running_progress = motion_time / rl.motion_length * 100.0f;
         std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "Running progress "<< std::fixed << std::setprecision(2) << running_progress << "%" << std::flush;
 
-        torch::Tensor _output_dof_pos, _output_dof_vel;
+        std::vector<float> _output_dof_pos, _output_dof_vel;
         if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
         {
             for (int i = 0; i < rl.params.num_of_dofs; ++i)
             {
-                if (_output_dof_pos.defined() && _output_dof_pos.numel() > 0)
+                if (!_output_dof_pos.empty())
                 {
-                    fsm_command->motor_command.q[i] = rl.output_dof_pos[0][i].item<double>();
+                    fsm_command->motor_command.q[i] = _output_dof_pos[i];
                 }
-                if (_output_dof_vel.defined() && _output_dof_vel.numel() > 0)
+                if (!_output_dof_vel.empty())
                 {
-                    fsm_command->motor_command.dq[i] = rl.output_dof_vel[0][i].item<double>();
+                    fsm_command->motor_command.dq[i] = _output_dof_vel[i];
                 }
-                fsm_command->motor_command.kp[i] = rl.params.rl_kp[0][i].item<double>();
-                fsm_command->motor_command.kd[i] = rl.params.rl_kd[0][i].item<double>();
+                fsm_command->motor_command.kp[i] = rl.params.rl_kp[i];
+                fsm_command->motor_command.kd[i] = rl.params.rl_kd[i];
                 fsm_command->motor_command.tau[i] = 0;
             }
         }
@@ -475,21 +475,21 @@ public:
         float running_progress = motion_time / rl.motion_length * 100.0f;
         std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "Running progress "<< std::fixed << std::setprecision(2) << running_progress << "%" << std::flush;
 
-        torch::Tensor _output_dof_pos, _output_dof_vel;
+        std::vector<float> _output_dof_pos, _output_dof_vel;
         if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
         {
             for (int i = 0; i < rl.params.num_of_dofs; ++i)
             {
-                if (_output_dof_pos.defined() && _output_dof_pos.numel() > 0)
+                if (!_output_dof_pos.empty())
                 {
-                    fsm_command->motor_command.q[i] = rl.output_dof_pos[0][i].item<double>();
+                    fsm_command->motor_command.q[i] = _output_dof_pos[i];
                 }
-                if (_output_dof_vel.defined() && _output_dof_vel.numel() > 0)
+                if (!_output_dof_vel.empty())
                 {
-                    fsm_command->motor_command.dq[i] = rl.output_dof_vel[0][i].item<double>();
+                    fsm_command->motor_command.dq[i] = _output_dof_vel[i];
                 }
-                fsm_command->motor_command.kp[i] = rl.params.rl_kp[0][i].item<double>();
-                fsm_command->motor_command.kd[i] = rl.params.rl_kd[0][i].item<double>();
+                fsm_command->motor_command.kp[i] = rl.params.rl_kp[i];
+                fsm_command->motor_command.kd[i] = rl.params.rl_kd[i];
                 fsm_command->motor_command.tau[i] = 0;
             }
         }
@@ -563,21 +563,21 @@ public:
         float running_progress = motion_time / rl.motion_length * 100.0f;
         std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "Running progress "<< std::fixed << std::setprecision(2) << running_progress << "%" << std::flush;
 
-        torch::Tensor _output_dof_pos, _output_dof_vel;
+        std::vector<float> _output_dof_pos, _output_dof_vel;
         if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
         {
             for (int i = 0; i < rl.params.num_of_dofs; ++i)
             {
-                if (_output_dof_pos.defined() && _output_dof_pos.numel() > 0)
+                if (!_output_dof_pos.empty())
                 {
-                    fsm_command->motor_command.q[i] = rl.output_dof_pos[0][i].item<double>();
+                    fsm_command->motor_command.q[i] = _output_dof_pos[i];
                 }
-                if (_output_dof_vel.defined() && _output_dof_vel.numel() > 0)
+                if (!_output_dof_vel.empty())
                 {
-                    fsm_command->motor_command.dq[i] = rl.output_dof_vel[0][i].item<double>();
+                    fsm_command->motor_command.dq[i] = _output_dof_vel[i];
                 }
-                fsm_command->motor_command.kp[i] = rl.params.rl_kp[0][i].item<double>();
-                fsm_command->motor_command.kd[i] = rl.params.rl_kd[0][i].item<double>();
+                fsm_command->motor_command.kp[i] = rl.params.rl_kp[i];
+                fsm_command->motor_command.kd[i] = rl.params.rl_kd[i];
                 fsm_command->motor_command.tau[i] = 0;
             }
         }

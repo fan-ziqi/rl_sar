@@ -11,6 +11,7 @@
 
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
+#include "model_interface.hpp"
 #include "loop.hpp"
 #include "fsm.hpp"
 
@@ -58,9 +59,9 @@ public:
 
 private:
     // rl functions
-    torch::Tensor Forward() override;
-    void GetState(RobotState<double> *state) override;
-    void SetCommand(const RobotCommand<double> *command) override;
+    std::vector<float> Forward() override;
+    void GetState(RobotState<float> *state) override;
+    void SetCommand(const RobotCommand<float> *command) override;
     void RunModel();
     void RobotControl();
 
@@ -73,7 +74,7 @@ private:
     // plot
     const int plot_size = 100;
     std::vector<int> plot_t;
-    std::vector<std::vector<double>> plot_real_joint_pos, plot_target_joint_pos;
+    std::vector<std::vector<float>> plot_real_joint_pos, plot_target_joint_pos;
     void Plot();
 
     // ros interface
@@ -121,9 +122,9 @@ private:
     // others
     std::string gazebo_model_name;
     int motiontime = 0;
-    std::map<std::string, double> joint_positions;
-    std::map<std::string, double> joint_velocities;
-    std::map<std::string, double> joint_efforts;
+    std::map<std::string, float> joint_positions;
+    std::map<std::string, float> joint_velocities;
+    std::map<std::string, float> joint_efforts;
     void StartJointController(const std::string& ros_namespace, const std::vector<std::string>& names);
 };
 

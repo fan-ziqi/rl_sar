@@ -71,10 +71,6 @@ RL_Sim::RL_Sim()
         std::cout << LOGGER::ERROR << "No FSM registered for robot: " << this->robot_name << std::endl;
     }
 
-    // init torch
-    torch::autograd::GradMode::set_enabled(false);
-    torch::set_num_threads(4);
-
     // init robot
 #if defined(USE_ROS1)
     this->joint_publishers_commands.resize(this->params.num_of_dofs);
@@ -82,6 +78,7 @@ RL_Sim::RL_Sim()
     this->robot_command_publisher_msg.motor_command.resize(this->params.num_of_dofs);
     this->robot_state_subscriber_msg.motor_state.resize(this->params.num_of_dofs);
 #endif
+    this->InitJointNum(this->params.num_of_dofs);
     this->InitOutputs();
     this->InitControl();
 
@@ -111,9 +108,9 @@ RL_Sim::RL_Sim()
                     this->JointStatesCallback(msg, joint_controller_name);
                 }
             );
-        this->joint_positions[joint_controller_name] = 0.0;
-        this->joint_velocities[joint_controller_name] = 0.0;
-        this->joint_efforts[joint_controller_name] = 0.0;
+        this->joint_positions[joint_controller_name] = 0.0f;
+        this->joint_velocities[joint_controller_name] = 0.0f;
+        this->joint_efforts[joint_controller_name] = 0.0f;
     }
 
     // service
@@ -167,8 +164,8 @@ RL_Sim::RL_Sim()
     this->plot_t = std::vector<int>(this->plot_size, 0);
     this->plot_real_joint_pos.resize(this->params.num_of_dofs);
     this->plot_target_joint_pos.resize(this->params.num_of_dofs);
-    for (auto &vector : this->plot_real_joint_pos) { vector = std::vector<double>(this->plot_size, 0); }
-    for (auto &vector : this->plot_target_joint_pos) { vector = std::vector<double>(this->plot_size, 0); }
+    for (auto &vector : this->plot_real_joint_pos) { vector = std::vector<float>(this->plot_size, 0); }
+    for (auto &vector : this->plot_target_joint_pos) { vector = std::vector<float>(this->plot_size, 0); }
     this->loop_plot = std::make_shared<LoopFunc>("loop_plot", 0.001, std::bind(&RL_Sim::Plot, this));
     this->loop_plot->start();
 #endif
@@ -255,7 +252,7 @@ void RL_Sim::StartJointController(const std::string& ros_namespace, const std::v
 #endif
 }
 
-void RL_Sim::GetState(RobotState<double> *state)
+void RL_Sim::GetState(RobotState<float> *state)
 {
 #if defined(USE_ROS1)
     const auto &orientation = this->pose.orientation;
@@ -288,7 +285,7 @@ void RL_Sim::GetState(RobotState<double> *state)
     }
 }
 
-void RL_Sim::SetCommand(const RobotCommand<double> *command)
+void RL_Sim::SetCommand(const RobotCommand<float> *command)
 {
     for (int i = 0; i < this->params.num_of_dofs; ++i)
     {
@@ -510,32 +507,32 @@ void RL_Sim::RunModel()
     if (this->rl_init_done && simulation_running)
     {
         this->episode_length_buf += 1;
-        // this->obs.lin_vel = torch::tensor({{this->vel.linear.x, this->vel.linear.y, this->vel.linear.z}});
-        this->obs.ang_vel = torch::tensor(this->robot_state.imu.gyroscope).unsqueeze(0);
+        // this->obs.lin_vel = {this->vel.linear.x, this->vel.linear.y, this->vel.linear.z};
+        this->obs.ang_vel = this->robot_state.imu.gyroscope;
         if (this->control.navigation_mode)
         {
-            this->obs.commands = torch::tensor({{this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z}});
+            this->obs.commands = {this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z};
         }
         else
         {
-            this->obs.commands = torch::tensor({{this->control.x, this->control.y, this->control.yaw}});
+            this->obs.commands = {this->control.x, this->control.y, this->control.yaw};
         }
-        this->obs.base_quat = torch::tensor(this->robot_state.imu.quaternion).unsqueeze(0);
-        this->obs.dof_pos = torch::tensor(this->robot_state.motor_state.q).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
-        this->obs.dof_vel = torch::tensor(this->robot_state.motor_state.dq).narrow(0, 0, this->params.num_of_dofs).unsqueeze(0);
+        this->obs.base_quat = this->robot_state.imu.quaternion;
+        this->obs.dof_pos = this->robot_state.motor_state.q;
+        this->obs.dof_vel = this->robot_state.motor_state.dq;
 
         this->obs.actions = this->Forward();
         this->ComputeOutput(this->obs.actions, this->output_dof_pos, this->output_dof_vel, this->output_dof_tau);
 
-        if (this->output_dof_pos.defined() && this->output_dof_pos.numel() > 0)
+        if (!this->output_dof_pos.empty())
         {
             output_dof_pos_queue.push(this->output_dof_pos);
         }
-        if (this->output_dof_vel.defined() && this->output_dof_vel.numel() > 0)
+        if (!this->output_dof_vel.empty())
         {
             output_dof_vel_queue.push(this->output_dof_vel);
         }
-        if (this->output_dof_tau.defined() && this->output_dof_tau.numel() > 0)
+        if (!this->output_dof_tau.empty())
         {
             output_dof_tau_queue.push(this->output_dof_tau);
         }
@@ -544,37 +541,35 @@ void RL_Sim::RunModel()
         // this->AttitudeProtect(this->robot_state.imu.quaternion, 75.0f, 75.0f);
 
 #ifdef CSV_LOGGER
-        torch::Tensor tau_est = torch::zeros({1, this->params.num_of_dofs});
+        std::vector<float> tau_est(this->params.num_of_dofs, 0.0f);
         for (int i = 0; i < this->params.num_of_dofs; ++i)
         {
-            tau_est[0][i] = this->joint_efforts[this->params.joint_controller_names[i]];
+            tau_est[i] = this->joint_efforts[this->params.joint_controller_names[i]];
         }
         this->CSVLogger(this->output_dof_tau, tau_est, this->obs.dof_pos, this->output_dof_pos, this->obs.dof_vel);
 #endif
     }
 }
 
-torch::Tensor RL_Sim::Forward()
+std::vector<float> RL_Sim::Forward()
 {
-    torch::autograd::GradMode::set_enabled(false);
+    std::vector<float> clamped_obs = this->ComputeObservation();
 
-    torch::Tensor clamped_obs = this->ComputeObservation();
-
-    torch::Tensor actions;
+    std::vector<float> actions;
     if (this->params.observations_history.size() != 0)
     {
         this->history_obs_buf.insert(clamped_obs);
         this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
-        actions = this->model.forward({this->history_obs}).toTensor();
+        actions = this->model->forward({this->history_obs});
     }
     else
     {
-        actions = this->model.forward({clamped_obs}).toTensor();
+        actions = this->model->forward({clamped_obs});
     }
 
-    if (this->params.clip_actions_upper.numel() != 0 && this->params.clip_actions_lower.numel() != 0)
+    if (!this->params.clip_actions_upper.empty() && !this->params.clip_actions_lower.empty())
     {
-        return torch::clamp(actions, this->params.clip_actions_lower, this->params.clip_actions_upper);
+        return clamp(actions, this->params.clip_actions_lower, this->params.clip_actions_upper);
     }
     else
     {

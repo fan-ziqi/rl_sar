@@ -8,7 +8,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SYSTEM_TYPE ${CMAKE_SYSTEM_NAME})
 
 set(USE_CMAKE OFF CACHE BOOL "Use Cmake build system")
-message(STATUS "USE_CMAKE: ${USE_CMAKE}")
 if(USE_CMAKE)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -79,7 +78,14 @@ if(NOT USE_CMAKE)
     find_package(gazebo REQUIRED)
 endif()
 
-find_package(Torch REQUIRED)
+# Model Interface
+add_subdirectory(library/thirdparty/model_interface)
+
+# Find LibTorch if it was configured in the subdirectory
+if(USE_TORCH)
+    find_package(Torch QUIET)
+endif()
+
 find_package(TBB REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
@@ -184,13 +190,31 @@ include_directories(
     library/core/rl_sdk
     library/core/loop
     library/core/fsm
+    library/core/vector_math
+    library/core/model_interface
     policy
 )
+
+# library for model interface
+add_library(model_interface library/core/model_interface/model_interface.cpp)
+if(USE_TORCH)
+    target_link_libraries(model_interface PUBLIC ${TORCH_LIBRARIES})
+    target_compile_definitions(model_interface PRIVATE USE_TORCH)
+endif()
+if(USE_ONNX)
+    target_link_libraries(model_interface PUBLIC ${ONNX_RUNTIME_LIB})
+    target_compile_definitions(model_interface PRIVATE USE_ONNX)
+endif()
+if(NOT USE_CMAKE)
+    if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
+        install(TARGETS model_interface DESTINATION lib/${PROJECT_NAME})
+    endif()
+endif()
 
 # library for rl sdk
 add_library(rl_sdk library/core/rl_sdk/rl_sdk.cpp)
 target_link_libraries(rl_sdk PUBLIC
-    "${TORCH_LIBRARIES}"
+    model_interface
     Python3::Python
     Python3::Module
     TBB::tbb
@@ -209,7 +233,6 @@ endif()
 
 # library for observation buffer
 add_library(observation_buffer library/core/observation_buffer/observation_buffer.cpp)
-target_link_libraries(observation_buffer PUBLIC "${TORCH_LIBRARIES}")
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         install(TARGETS observation_buffer DESTINATION lib/${PROJECT_NAME})
@@ -388,3 +411,43 @@ endif()
 #     observation_buffer
 # )
 # install(TARGETS test_observation_buffer DESTINATION lib/${PROJECT_NAME})
+# add_executable(test_vector_math test/test_vector_math.cpp)
+# install(TARGETS test_vector_math DESTINATION lib/${PROJECT_NAME})
+
+message(STATUS "========================================")
+message(STATUS "       RL_SAR Build Configuration       ")
+message(STATUS "========================================")
+message(STATUS "Project: ${PROJECT_NAME} v${PROJECT_VERSION}")
+message(STATUS "System: ${SYSTEM_TYPE}")
+message(STATUS "Architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
+message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "USE_CMAKE: ${USE_CMAKE}")
+message(STATUS "----------------------------------------")
+message(STATUS "Backend Configuration:")
+message(STATUS "USE_TORCH: ${USE_TORCH}")
+message(STATUS "USE_ONNX: ${USE_ONNX}")
+if(USE_TORCH)
+    if(Torch_VERSION)
+        message(STATUS "LibTorch version: ${Torch_VERSION}")
+    else()
+        message(STATUS "LibTorch: Available")
+    endif()
+    if(IS_JETSON)
+        message(STATUS "LibTorch: Jetson device detected")
+        if(JETPACK_VERSION)
+            message(STATUS "JetPack version: ${JETPACK_VERSION}")
+        endif()
+    endif()
+endif()
+if(USE_ONNX)
+    if(ONNX_RUNTIME_VERSION)
+        message(STATUS "ONNX Runtime version: ${ONNX_RUNTIME_VERSION}")
+    elseif(onnxruntime_VERSION)
+        message(STATUS "ONNX Runtime version: ${onnxruntime_VERSION}")
+    else()
+        message(STATUS "ONNX Runtime: Available")
+    endif()
+endif()
+message(STATUS "========================================")

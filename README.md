@@ -14,6 +14,8 @@ This repository provides a framework for simulation verification and physical de
 >
 > Supports both **ROS-Noetic** and **ROS2-Foxy/Humble**
 >
+> Supports both **libtorch** and **onnxruntime**
+>
 > Supports both **Linux** and **macOS**(Experimental)
 
 Support List:
@@ -82,19 +84,7 @@ sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interfac
 sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-control ros-$ROS_DISTRO-ros2-controllers ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-robot-state-publisher ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-gazebo-ros2-control ros-$ROS_DISTRO-gazebo-ros-pkgs ros-$ROS_DISTRO-xacro
 ```
 
-Download and deploy `libtorch` at any location (Please modify **\<YOUR_PATH\>** below to the actual path)
-
-```bash
-cd <YOUR_PATH>
-wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip
-unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
-echo 'export Torch_DIR=<YOUR_PATH>/libtorch' >> ~/.bashrc
-source ~/.bashrc
-```
-
 ## Compilation
-
-Since this project supports multiple versions of ROS, some symbolic links need to be created for different versions. A build script is provided in the project root directory for one-click compilation.
 
 Execute the following script in the project root directory to compile the entire project:
 
