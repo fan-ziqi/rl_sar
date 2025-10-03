@@ -175,7 +175,36 @@ If Gazebo cannot be opened when you start it for the first time, you need to dow
 git clone https://github.com/osrf/gazebo_models.git ~/.gazebo/models
 ```
 
-### Gamepad and Keyboard Controls
+### Control with Mobile Web (Experimental)
+
+Install dependencies
+
+```bash
+sudo apt install ros-${ROS_DISTRO}-rosbridge-suite
+sudo apt install ros-${ROS_DISTRO}-web-video-server
+
+# If you are using a ROS2 version other than Humble, Jazz, and Rolling, you need to build `web_video_server` from source
+cd <your_ros2_workspace>/src
+git clone https://github.com/RobotWebTools/web_video_server.git
+cd <your_ros2_workspace>
+colcon build --packages-select web_video_server
+```
+
+Run rosbridge and web_video_server in robot
+
+```bash
+# ROS1
+roslaunch rosbridge_server rosbridge_websocket.launch
+rosrun web_video_server web_video_server
+
+# ROS2
+ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+ros2 run web_video_server web_video_server
+```
+
+Visit [http://robot.robotsfan.com/](http://robot.robotsfan.com/), fill in the IP address and port, check the settings page in the upper right corner, then connect to the robot. After entering the control page, turn the screen horizontally and click the full screen button in the upper left corner, Then you can control the robot using your phone's browser!
+
+### Control with Gamepad or Keyboard
 
 |Gamepad Control|Keyboard Control|Description|
 |---|---|---|
@@ -426,3 +455,4 @@ The project uses some code from the following open-source code repositories:
 - [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways)
 - [ccrpRepo/RoboMimic_Deploy](https://github.com/ccrpRepo/RoboMimic_Deploy)
 - [Deeprobotics/Lite3_Motion_SDK](https://github.com/DeepRoboticsLab/Lite3_MotionSDK)
+- [chengyangkj/ROS_Flutter_Gui_App](https://github.com/chengyangkj/ROS_Flutter_Gui_App)
