@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
+project(rl_sar VERSION 4.0.0 LANGUAGES CXX)
 
 # Set C++ standard globally
 set(CMAKE_CXX_STANDARD 17)
