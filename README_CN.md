@@ -44,10 +44,17 @@
 
 ## 准备
 
-拉取代码
+拉取仓库
 
 ```bash
-git clone https://github.com/fan-ziqi/rl_sar.git
+git clone --recursive https://github.com/fan-ziqi/rl_sar.git
+```
+
+如需更新
+
+```bash
+git pull
+git submodule update --init --recursive
 ```
 
 ## 依赖
