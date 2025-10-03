@@ -44,10 +44,17 @@ Support List:
 
 ## Preparation
 
-Clone the code
+Clone the repository
 
 ```bash
-git clone https://github.com/fan-ziqi/rl_sar.git
+git clone --recursive https://github.com/fan-ziqi/rl_sar.git
+```
+
+To update
+
+```bash
+git pull
+git submodule update --init --recursive
 ```
 
 ## Dependency

@@ -1,0 +1,12 @@
+[submodule "src/rl_sar/library/thirdparty/robot_sdk/deeprobotics/gamepad"]
+	path = src/rl_sar/library/thirdparty/robot_sdk/deeprobotics/gamepad
+	url = https://github.com/DeepRoboticsLab/gamepad.git
+[submodule "src/rl_sar/library/thirdparty/robot_sdk/deeprobotics/Lite3_MotionSDK"]
+	path = src/rl_sar/library/thirdparty/robot_sdk/deeprobotics/Lite3_MotionSDK
+	url = https://github.com/DeepRoboticsLab/Lite3_MotionSDK.git
+[submodule "src/rl_sar/library/thirdparty/robot_sdk/unitree/unitree_legged_sdk"]
+	path = src/rl_sar/library/thirdparty/robot_sdk/unitree/unitree_legged_sdk
+	url = https://github.com/unitreerobotics/unitree_legged_sdk.git
+[submodule "src/rl_sar/library/thirdparty/robot_sdk/unitree/unitree_sdk2"]
+	path = src/rl_sar/library/thirdparty/robot_sdk/unitree/unitree_sdk2
+	url = https://github.com/unitreerobotics/unitree_sdk2.git
