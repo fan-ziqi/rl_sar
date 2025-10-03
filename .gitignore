@@ -9,6 +9,7 @@ log
 .cache
 *.json
 __pycache__
+.DS_Store
 cmake_build
 
 package.xml

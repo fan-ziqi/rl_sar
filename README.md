@@ -1,6 +1,7 @@
 # rl_sar
 
 [![Ubuntu 20.04/22.04](https://img.shields.io/badge/Ubuntu-20.04/22.04-blue.svg?logo=ubuntu)](https://ubuntu.com/)
+[![macOS](https://img.shields.io/badge/macOS-Experimental-orange.svg?logo=apple)](https://www.apple.com/macos/)
 [![ROS Noetic](https://img.shields.io/badge/ros-noetic-brightgreen.svg?logo=ros)](https://wiki.ros.org/noetic)
 [![ROS2 Foxy/Humble](https://img.shields.io/badge/ros2-foxy/humble-brightgreen.svg?logo=ros)](https://wiki.ros.org/foxy)
 [![License](https://img.shields.io/badge/license-Apache2.0-yellow.svg?logo=apache)](https://opensource.org/license/apache-2-0)
@@ -12,6 +13,8 @@ This repository provides a framework for simulation verification and physical de
 > Supports both **IsaacGym** and **IsaacSim**
 >
 > Supports both **ROS-Noetic** and **ROS2-Foxy/Humble**
+>
+> Supports both **Linux** and **macOS**(Experimental)
 
 Support List:
 
@@ -59,15 +62,23 @@ git submodule update --init --recursive
 
 ## Dependency
 
-If you are using `ros-noetic` (Ubuntu 20.04), you need to install the following ROS packages:
+Install the required packages:
 
 ```bash
-sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller ros-noetic-joy ros-noetic-ros-control ros-noetic-ros-controllers ros-noetic-controller-manager
+# Ubuntu
+sudo apt install cmake g++ build-essential libyaml-cpp-dev libeigen3-dev libboost-all-dev libspdlog-dev libfmt-dev libtbb-dev liblcm-dev
+
+# macOS
+brew install boost lcm yaml-cpp tbb libomp pkg-config
 ```
 
-If you are using `ros2-foxy` (Ubuntu 20.04) or `ros2-humble` (Ubuntu 22.04), you need to install the following ROS2 packages:
+If you need to use ROS, install the following dependency packages:
 
 ```bash
+# ros-noetic (Ubuntu20.04)
+sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interface ros-noetic-gazebo-ros-control ros-noetic-joint-state-controller ros-noetic-effort-controllers ros-noetic-joint-trajectory-controller ros-noetic-joy ros-noetic-ros-control ros-noetic-ros-controllers ros-noetic-controller-manager
+
+# ros2-foxy (Ubuntu20.04) / ros2-humble (Ubuntu22.04)
 sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-control ros-$ROS_DISTRO-ros2-controllers ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-robot-state-publisher ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-gazebo-ros2-control ros-$ROS_DISTRO-gazebo-ros-pkgs ros-$ROS_DISTRO-xacro
 ```
 
@@ -80,37 +91,6 @@ unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
 echo 'export Torch_DIR=<YOUR_PATH>/libtorch' >> ~/.bashrc
 source ~/.bashrc
 ```
-
-Install `yaml-cpp` and `lcm`. If you are using Ubuntu, you can directly use the package manager for installation:
-
-```bash
-sudo apt install liblcm-dev libyaml-cpp-dev
-```
-
-<details>
-
-<summary>You can also use source code installation (Click to expand)</summary>
-
-Install yaml-cpp
-
-```bash
-git clone https://github.com/jbeder/yaml-cpp.git
-cd yaml-cpp && mkdir build && cd build
-cmake -DYAML_BUILD_SHARED_LIBS=on .. && make
-sudo make install
-sudo ldconfig
-```
-
-Install lcm
-
-```bash
-git clone https://github.com/lcm-proj/lcm.git
-cd lcm && mkdir build && cd build
-cmake .. && make
-sudo make install
-sudo ldconfig
-```
-</details>
 
 ## Compilation
 
@@ -160,6 +140,9 @@ Examples:
 
 > [!TIP]
 > If catkin build report errors: `Unable to find either executable 'empy' or Python module 'em'`, run `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3` before `catkin build`
+
+> [!NOTE]
+> If using macOS, you need to use `./build.sh -m` command to compile. Currently only supports `rl_real_l4w4`, more features will be supported in the future.
 
 ## Running
 

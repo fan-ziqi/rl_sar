@@ -17,10 +17,15 @@
 #include <sstream>
 #include <iomanip>
 
+#ifdef __linux__
+#include <pthread.h>
+#include <sched.h>
+#endif
+
 class LoopFunc
 {
 public:
-    LoopFunc(const std::string &name, double period, std::function<void()> func, int bindCPU = -1)
+    LoopFunc(const std::string &name, float period, std::function<void()> func, int bindCPU = -1)
         : _name(name), _period(period), _func(func), _bindCPU(bindCPU), _running(false) {}
 
     void start()
@@ -55,7 +60,7 @@ public:
 
 private:
     std::string _name;
-    double _period;
+    float _period;
     std::function<void()> _func;
     int _bindCPU;
     std::atomic<bool> _running;
@@ -102,6 +107,7 @@ private:
 
     void setThreadAffinity(std::thread::native_handle_type threadHandle, int cpuId)
     {
+#ifdef __linux__
         cpu_set_t cpuset;
         CPU_ZERO(&cpuset);
         CPU_SET(cpuId, &cpuset);
@@ -111,6 +117,10 @@ private:
             oss << "Error setting thread affinity: CPU " << cpuId << " may not be valid or accessible.";
             throw std::runtime_error(oss.str());
         }
+#else
+        // Thread affinity not supported on this platform
+        std::cout << "Thread affinity not supported on this platform" << std::endl;
+#endif
     }
 };
 
