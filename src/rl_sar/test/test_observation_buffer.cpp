@@ -13,30 +13,24 @@ Output:
 
 Initializing buffer with: obs_dims=[2 3 4], history_length=3, observations_history=[0 0 1 2], priority=time
 Inserting observation t-2:
- 11  12  21  22  23  31  32  33  34
-[ CPULongType{1,9} ]
+[ 11 12 21 22 23 31 32 33 34 ]
 Inserting observation t-1:
- 110  120  210  220  230  310  320  330  340
-[ CPULongType{1,9} ]
+[ 110 120 210 220 230 310 320 330 340 ]
 Inserting observation t:
- 1100  1200  2100  2200  2300  3100  3200  3300  3400
-[ CPULongType{1,9} ]
+[ 1100 1200 2100 2200 2300 3100 3200 3300 3400 ]
 time priority output:
-[ 1100 1200 2100 2200 2300 3100 3200 3300 3400 1100 1200 2100 2200 2300 3100 3200 3300 3400 110 120 210 220 230 310 320 330 340 11 12 21 22 23 31 32 33 34 ]
+[ 11 12 21 22 23 31 32 33 34 11 12 21 22 23 31 32 33 34 110 120 210 220 230 310 320 330 340 1100 1200 2100 2200 2300 3100 3200 3300 3400 ]
 
 Initializing buffer with: obs_dims=[2 3 4], history_length=3, observations_history=[0 0 1 2], priority=term
 Inserting observation t-2:
- 11  12  21  22  23  31  32  33  34
-[ CPULongType{1,9} ]
+[ 11 12 21 22 23 31 32 33 34 ]
 Inserting observation t-1:
- 110  120  210  220  230  310  320  330  340
-[ CPULongType{1,9} ]
+[ 110 120 210 220 230 310 320 330 340 ]
 Inserting observation t:
- 1100  1200  2100  2200  2300  3100  3200  3300  3400
-[ CPULongType{1,9} ]
+[ 1100 1200 2100 2200 2300 3100 3200 3300 3400 ]
 term priority output:
-[ 1100 1200 1100 1200 110 120 11 12 2100 2200 2300 2100 2200 2300 210 220 230 21 22 23 3100 3200 3300 3400 3100 3200 3300 3400 310 320 330 340 31 32 33 34 ]
-
+[ 11 12 11 12 110 120 1100 1200 21 22 23 21 22 23 210 220 230 2100 2200 2300 31 32 33 34 31 32 33 34 310 320 330 340 3100 3200 3300 3400 ]
+ 
 */
 
 void test_buffer(const std::string& priority)
@@ -54,9 +48,9 @@ void test_buffer(const std::string& priority)
 
     ObservationBuffer buffer(num_envs, obs_dims, history_length, priority);
 
-    torch::Tensor obs1 = torch::tensor({{11, 12, 21, 22, 23, 31, 32, 33, 34}});
-    torch::Tensor obs2 = obs1 * 10;
-    torch::Tensor obs3 = obs1 * 100;
+    std::vector<float> obs1 = {11, 12, 21, 22, 23, 31, 32, 33, 34};
+    std::vector<float> obs2 = {110, 120, 210, 220, 230, 310, 320, 330, 340};
+    std::vector<float> obs3 = {1100, 1200, 2100, 2200, 2300, 3100, 3200, 3300, 3400};
 
     std::cout << "Inserting observation t-2:\n" << obs1 << "\n";
     buffer.insert(obs1);
@@ -69,12 +63,7 @@ void test_buffer(const std::string& priority)
 
     auto history = buffer.get_obs_vec(observations_history);
 
-    std::cout << priority << " priority output:\n[ ";
-    for (int i = 0; i < history.size(1); ++i)
-    {
-        std::cout << history.index({0, i}).item<float>() << " ";
-    }
-    std::cout << "]\n\n";
+    std::cout << priority << " priority output:\n" << history << "\n\n";
 }
 
 int main()

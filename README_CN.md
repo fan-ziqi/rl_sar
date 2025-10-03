@@ -14,6 +14,8 @@
 >
 > 支持**ROS-Noetic**和**ROS2-Foxy/Humble**
 >
+> 支持**libtorch**和**onnxruntime**
+>
 > 支持**Linux**和**macOS**(实验性)
 
 支持列表：
@@ -82,19 +84,7 @@ sudo apt install ros-noetic-teleop-twist-keyboard ros-noetic-controller-interfac
 sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-control ros-$ROS_DISTRO-ros2-controllers ros-$ROS_DISTRO-control-toolbox ros-$ROS_DISTRO-robot-state-publisher ros-$ROS_DISTRO-joint-state-publisher-gui ros-$ROS_DISTRO-gazebo-ros2-control ros-$ROS_DISTRO-gazebo-ros-pkgs ros-$ROS_DISTRO-xacro
 ```
 
-在任意位置下载并部署`libtorch`（请修改下面的 **\<YOUR_PATH\>** 为实际路径）
-
-```bash
-cd <YOUR_PATH>
-wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip
-unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
-echo 'export Torch_DIR=<YOUR_PATH>/libtorch' >> ~/.bashrc
-source ~/.bashrc
-```
-
 ## 编译
-
-由于本项目支持多版本的ROS，需要针对不同版本创建一些软链接，项目根目录中提供了编译脚本供一键编译。
 
 在项目根目录中执行下面的脚本编译整个项目
 

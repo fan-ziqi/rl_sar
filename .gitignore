@@ -13,3 +13,6 @@ __pycache__
 cmake_build
 
 package.xml
+
+onnxruntime
+libtorch

@@ -12,6 +12,7 @@
 
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
+#include "model_interface.hpp"
 #include "loop.hpp"
 #include "fsm.hpp"
 
@@ -48,9 +49,9 @@ public:
 
 private:
     // rl functions
-    torch::Tensor Forward() override;
-    void GetState(RobotState<double> *state) override;
-    void SetCommand(const RobotCommand<double> *command) override;
+    std::vector<float> Forward() override;
+    void GetState(RobotState<float> *state) override;
+    void SetCommand(const RobotCommand<float> *command) override;
     void RunModel();
     void RobotControl();
 
@@ -64,7 +65,7 @@ private:
     // plot
     const int plot_size = 100;
     std::vector<int> plot_t;
-    std::vector<std::vector<double>> plot_real_joint_pos, plot_target_joint_pos;
+    std::vector<std::vector<float>> plot_real_joint_pos, plot_target_joint_pos;
     void Plot();
 
     // Lite3 SDK interface
@@ -82,8 +83,8 @@ private:
 
     // others
     int motiontime = 0;
-    std::vector<double> mapped_joint_positions;
-    std::vector<double> mapped_joint_velocities;
+    std::vector<float> mapped_joint_positions;
+    std::vector<float> mapped_joint_velocities;
 
 #if defined(USE_ROS1) && defined(USE_ROS)
     geometry_msgs::Twist cmd_vel;
