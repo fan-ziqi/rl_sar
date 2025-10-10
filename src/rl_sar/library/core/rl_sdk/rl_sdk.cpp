@@ -182,7 +182,7 @@ void RL::InitRL(std::string robot_path)
 
     // init model
     std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/" + this->params.model_name;
-    this->model = ModelInterface::ModelFactory::load_model(model_path);
+    this->model = InferenceRuntime::ModelFactory::load_model(model_path);
 }
 
 void RL::ComputeOutput(const std::vector<float> &actions, std::vector<float> &output_dof_pos, std::vector<float> &output_dof_vel, std::vector<float> &output_dof_tau)

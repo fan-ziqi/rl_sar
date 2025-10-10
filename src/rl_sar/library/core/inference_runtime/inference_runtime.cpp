@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "model_interface.hpp"
+#include "inference_runtime.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <numeric>
@@ -12,7 +12,7 @@
 #include <ATen/Parallel.h>
 #endif
 
-namespace ModelInterface
+namespace InferenceRuntime
 {
 
 // ============================================================================
@@ -28,7 +28,7 @@ TorchModel::TorchModel()
 #endif
 }
 
-TorchModel::~TorchModel() 
+TorchModel::~TorchModel()
 {
 }
 
@@ -75,7 +75,7 @@ std::vector<float> TorchModel::forward(const std::vector<std::vector<float>>& in
     {
         throw std::runtime_error("Model not loaded");
     }
-    
+
 #ifdef USE_TORCH
     try
     {
@@ -86,10 +86,10 @@ std::vector<float> TorchModel::forward(const std::vector<std::vector<float>>& in
             std::vector<int64_t> shape = {1, static_cast<int64_t>(input.size())};
             torch_inputs.push_back(vector_to_torch(input, shape));
         }
-        
+
         // Execute forward inference
         auto output = model_.forward(torch_inputs).toTensor();
-        
+
         // Convert output tensor to vector
         return torch_to_vector(output);
     }
@@ -121,16 +121,16 @@ std::vector<float> TorchModel::torch_to_vector(const torch::Tensor& tensor)
 {
     // Convert Torch tensor to contiguous tensor on CPU
     auto cpu_tensor = tensor.contiguous().to(torch::kCPU);
-    
+
     // Get data pointer
     float* data_ptr = cpu_tensor.data_ptr<float>();
-    
+
     // Get total number of elements
     int64_t num_elements = cpu_tensor.numel();
-    
+
     // Copy data to vector
     std::vector<float> result(data_ptr, data_ptr + num_elements);
-    
+
     return result;
 }
 #endif
@@ -139,7 +139,7 @@ std::vector<float> TorchModel::torch_to_vector(const torch::Tensor& tensor)
 // ONNXModel Implementation
 // ============================================================================
 
-ONNXModel::ONNXModel() 
+ONNXModel::ONNXModel()
 #ifdef USE_ONNX
     : memory_info_(Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault))
 #endif
@@ -167,13 +167,13 @@ bool ONNXModel::load(const std::string& model_path)
         Ort::SessionOptions session_options;
         session_options.SetIntraOpNumThreads(1);
         session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
-        
+
         // Create inference session
         session_ = std::make_unique<Ort::Session>(*env_, model_path.c_str(), session_options);
-        
+
         // Setup input/output information
         setup_input_output_info();
-        
+
         model_path_ = model_path;
         loaded_ = true;
         std::cout << "Successfully loaded ONNX model: " << model_path << std::endl;
@@ -198,32 +198,32 @@ std::vector<float> ONNXModel::forward(const std::vector<std::vector<float>>& inp
     {
         throw std::runtime_error("Model not loaded");
     }
-    
+
 #ifdef USE_ONNX
     try
     {
         // Create memory info
         Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-        
+
         // Prepare input tensors
         std::vector<Ort::Value> ort_inputs;
         for (size_t i = 0; i < inputs.size() && i < input_shapes_.size(); ++i)
         {
             auto input_shape = session_->GetInputTypeInfo(i).GetTensorTypeAndShapeInfo().GetShape();
             auto input_tensor = Ort::Value::CreateTensor<float>(
-                memory_info, 
-                const_cast<float*>(inputs[i].data()), 
+                memory_info,
+                const_cast<float*>(inputs[i].data()),
                 inputs[i].size(),
-                input_shape.data(), 
+                input_shape.data(),
                 input_shape.size()
             );
             ort_inputs.push_back(std::move(input_tensor));
         }
-        
+
         // Prepare input/output name C string arrays
         std::vector<const char*> input_names_cstr;
         std::vector<const char*> output_names_cstr;
-        
+
         for (const auto& name : input_node_names_)
         {
             input_names_cstr.push_back(name.c_str());
@@ -232,17 +232,17 @@ std::vector<float> ONNXModel::forward(const std::vector<std::vector<float>>& inp
         {
             output_names_cstr.push_back(name.c_str());
         }
-        
+
         // Execute inference
         auto outputs = session_->Run(
-            Ort::RunOptions{nullptr}, 
-            input_names_cstr.data(), 
-            ort_inputs.data(), 
+            Ort::RunOptions{nullptr},
+            input_names_cstr.data(),
+            ort_inputs.data(),
             ort_inputs.size(),
-            output_names_cstr.data(), 
+            output_names_cstr.data(),
             output_names_cstr.size()
         );
-        
+
         // Extract output data
         return extract_output_data(outputs);
     }
@@ -269,18 +269,18 @@ void ONNXModel::setup_input_output_info()
     size_t num_input_nodes = session_->GetInputCount();
     input_node_names_.reserve(num_input_nodes);
     input_shapes_.reserve(num_input_nodes);
-    
+
     for (size_t i = 0; i < num_input_nodes; ++i)
     {
         // Get input name
         auto input_name = session_->GetInputNameAllocated(i, Ort::AllocatorWithDefaultOptions());
         input_node_names_.push_back(std::string(input_name.get()));
-        
+
         // Get input shape
         Ort::TypeInfo input_type_info = session_->GetInputTypeInfo(i);
         auto input_tensor_info = input_type_info.GetTensorTypeAndShapeInfo();
         auto input_dims = input_tensor_info.GetShape();
-        
+
         std::vector<int64_t> shape;
         for (auto dim : input_dims)
         {
@@ -288,7 +288,7 @@ void ONNXModel::setup_input_output_info()
             if (dim == -1)
             {
                 shape.push_back(1);
-            } 
+            }
             else
             {
                 shape.push_back(dim);
@@ -296,23 +296,23 @@ void ONNXModel::setup_input_output_info()
         }
         input_shapes_.push_back(shape);
     }
-    
+
     // Get output node information
     size_t num_output_nodes = session_->GetOutputCount();
     output_node_names_.reserve(num_output_nodes);
     output_shapes_.reserve(num_output_nodes);
-    
+
     for (size_t i = 0; i < num_output_nodes; ++i)
     {
         // Get output name
         auto output_name = session_->GetOutputNameAllocated(i, Ort::AllocatorWithDefaultOptions());
         output_node_names_.push_back(std::string(output_name.get()));
-        
+
         // Get output shape
         Ort::TypeInfo output_type_info = session_->GetOutputTypeInfo(i);
         auto output_tensor_info = output_type_info.GetTensorTypeAndShapeInfo();
         auto output_dims = output_tensor_info.GetShape();
-        
+
         std::vector<int64_t> shape;
         for (auto dim : output_dims)
         {
@@ -320,7 +320,7 @@ void ONNXModel::setup_input_output_info()
             if (dim == -1)
             {
                 shape.push_back(1);
-            } 
+            }
             else
             {
                 shape.push_back(dim);
@@ -336,14 +336,14 @@ std::vector<float> ONNXModel::extract_output_data(const std::vector<Ort::Value>&
     {
         throw std::runtime_error("No outputs from ONNX model");
     }
-    
+
     // Get first output tensor
     auto& output = outputs[0];
     float* output_data = const_cast<float*>(output.GetTensorData<float>());
-    
+
     // Calculate total number of output elements
     auto output_shape = output.GetTensorTypeAndShapeInfo().GetShape();
-    
+
     int64_t num_elements = 1;
     for (auto dim : output_shape)
     {
@@ -352,10 +352,10 @@ std::vector<float> ONNXModel::extract_output_data(const std::vector<Ort::Value>&
             num_elements *= dim;
         }
     }
-    
+
     // Copy output data to vector
     std::vector<float> result(output_data, output_data + num_elements);
-    
+
     return result;
 }
 #endif
@@ -387,10 +387,10 @@ ModelFactory::ModelType ModelFactory::detect_model_type(const std::string& model
     // Extract file extension from path
     std::filesystem::path path(model_path);
     std::string extension = path.extension().string();
-    
+
     // Convert to lowercase for case-insensitive comparison
     std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
-    
+
     // Determine model type based on extension
     if (extension == ".pt" || extension == ".pth")
     {
@@ -413,7 +413,7 @@ std::unique_ptr<Model> ModelFactory::load_model(const std::string& model_path, M
     {
         type = detect_model_type(model_path);
     }
-    
+
     // Create and load model
     auto model = create_model(type);
     if (model && model->load(model_path))
@@ -423,4 +423,4 @@ std::unique_ptr<Model> ModelFactory::load_model(const std::string& model_path, M
     return nullptr;
 }
 
-} // namespace ModelInterface
+} // namespace InferenceRuntime

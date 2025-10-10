@@ -79,12 +79,125 @@ if(NOT USE_CMAKE)
     find_package(gazebo REQUIRED)
 endif()
 
-# Model Interface
-add_subdirectory(library/thirdparty/model_interface)
+# Inference Runtime
 
-# Find LibTorch if it was configured in the subdirectory
-if(USE_TORCH)
+# Get project root directory
+get_filename_component(PROJECT_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
+set(INFERENCE_RUNTIME_DIR "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/inference_runtime")
+
+# ONNX Runtime Setup
+set(USE_ONNX "OFF")
+set(ONNX_RUNTIME_LIB "")
+set(ONNX_RUNTIME_DIR "${INFERENCE_RUNTIME_DIR}/onnxruntime")
+
+if(EXISTS "${ONNX_RUNTIME_DIR}/include" AND EXISTS "${ONNX_RUNTIME_DIR}/lib")
+    set(USE_ONNX "ON")
+    add_compile_definitions(USE_ONNX)
+
+    message(STATUS "Found ONNX Runtime at: ${ONNX_RUNTIME_DIR}")
+
+    # Read ONNX Runtime version
+    if(EXISTS "${ONNX_RUNTIME_DIR}/VERSION_NUMBER")
+        file(READ "${ONNX_RUNTIME_DIR}/VERSION_NUMBER" ONNX_RUNTIME_VERSION)
+        string(STRIP "${ONNX_RUNTIME_VERSION}" ONNX_RUNTIME_VERSION)
+    endif()
+
+    include_directories("${ONNX_RUNTIME_DIR}/include")
+
+    # Detect library extension
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        set(LIB_EXT "so")
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        set(LIB_EXT "dylib")
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        set(LIB_EXT "lib")
+    endif()
+
+    # Find library
+    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        set(LIB_NAMES onnxruntime.lib)
+    else()
+        set(LIB_NAMES libonnxruntime.${LIB_EXT} onnxruntime.${LIB_EXT})
+    endif()
+
+    find_library(ONNX_RUNTIME_LIB_PATH
+        NAMES ${LIB_NAMES}
+        PATHS "${ONNX_RUNTIME_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+
+    if(ONNX_RUNTIME_LIB_PATH)
+        if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+            add_library(onnxruntime_prebuilt STATIC IMPORTED GLOBAL)
+        else()
+            add_library(onnxruntime_prebuilt SHARED IMPORTED GLOBAL)
+        endif()
+
+        set_target_properties(onnxruntime_prebuilt PROPERTIES
+            IMPORTED_LOCATION "${ONNX_RUNTIME_LIB_PATH}"
+            INTERFACE_INCLUDE_DIRECTORIES "${ONNX_RUNTIME_DIR}/include"
+        )
+
+        set(ONNX_RUNTIME_LIB onnxruntime_prebuilt)
+        message(STATUS "ONNX Runtime library: ${ONNX_RUNTIME_LIB_PATH}")
+    else()
+        message(WARNING "ONNX Runtime library not found")
+        set(USE_ONNX "OFF")
+    endif()
+else()
+    message(WARNING "ONNX Runtime not found. Please run: bash download_inference_runtime.sh onnx")
+endif()
+
+# LibTorch Setup
+set(USE_TORCH "OFF")
+set(TORCH_LIBRARIES "")
+set(LIBTORCH_DIR "${INFERENCE_RUNTIME_DIR}/libtorch")
+
+if(EXISTS "${LIBTORCH_DIR}/include" AND EXISTS "${LIBTORCH_DIR}/lib")
+    set(USE_TORCH "ON")
+    add_compile_definitions(USE_TORCH)
+
+    message(STATUS "Found LibTorch at: ${LIBTORCH_DIR}")
+
+    set(CMAKE_PREFIX_PATH "${LIBTORCH_DIR};${CMAKE_PREFIX_PATH}")
     find_package(Torch QUIET)
+
+    if(Torch_FOUND)
+        message(STATUS "LibTorch version: ${Torch_VERSION}")
+        message(STATUS "Torch libraries: ${TORCH_LIBRARIES}")
+    else()
+        set(USE_TORCH "OFF")
+        message(WARNING "LibTorch found but find_package(Torch) failed")
+    endif()
+else()
+    message(WARNING "LibTorch not found. Please run: bash download_inference_runtime.sh libtorch")
+endif()
+
+# RPATH Configuration for inference libraries
+if(USE_TORCH OR USE_ONNX)
+    set(CMAKE_SKIP_BUILD_RPATH FALSE)
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+
+    set(PREBUILT_LIB_PATHS "")
+    if(USE_TORCH)
+        list(APPEND PREBUILT_LIB_PATHS "${LIBTORCH_DIR}/lib")
+    endif()
+    if(USE_ONNX)
+        list(APPEND PREBUILT_LIB_PATHS "${ONNX_RUNTIME_DIR}/lib")
+    endif()
+    # OpenMP path will be added later after it's found on macOS
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${PREBUILT_LIB_PATHS}")
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--disable-new-dtags")
+    endif()
+
+    message(STATUS "Configured RPATH:")
+    foreach(path ${PREBUILT_LIB_PATHS})
+        message(STATUS "  - ${path}")
+    endforeach()
 endif()
 
 find_package(TBB REQUIRED)
@@ -108,6 +221,19 @@ elseif(SYSTEM_TYPE STREQUAL "Darwin")
     link_directories(/opt/homebrew/lib)
     if(YAML_CPP_INCLUDE_DIR)
         include_directories(${YAML_CPP_INCLUDE_DIR})
+    endif()
+
+    # Find OpenMP (required by LibTorch on macOS)
+    find_library(OMP_LIB NAMES omp PATHS /opt/homebrew/lib /opt/homebrew/opt/libomp/lib)
+    if(OMP_LIB)
+        message(STATUS "Found OpenMP library: ${OMP_LIB}")
+        set(OPENMP_LIBRARIES ${OMP_LIB})
+        # Add OpenMP path to RPATH (for LibTorch dependency)
+        get_filename_component(OMP_LIB_DIR "${OPENMP_LIBRARIES}" DIRECTORY)
+        set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${OMP_LIB_DIR}")
+        message(STATUS "Added OpenMP to RPATH: ${OMP_LIB_DIR}")
+    else()
+        message(WARNING "OpenMP not found. Please install: brew install libomp")
     endif()
 endif()
 
@@ -192,30 +318,34 @@ include_directories(
     library/core/loop
     library/core/fsm
     library/core/vector_math
-    library/core/model_interface
+    library/core/inference_runtime
     policy
 )
 
-# library for model interface
-add_library(model_interface library/core/model_interface/model_interface.cpp)
+# library for inference runtime
+add_library(inference_runtime library/core/inference_runtime/inference_runtime.cpp)
 if(USE_TORCH)
-    target_link_libraries(model_interface PUBLIC ${TORCH_LIBRARIES})
-    target_compile_definitions(model_interface PRIVATE USE_TORCH)
+    target_link_libraries(inference_runtime PUBLIC ${TORCH_LIBRARIES})
+    target_compile_definitions(inference_runtime PRIVATE USE_TORCH)
+    # Link OpenMP on macOS (required by LibTorch)
+    if(SYSTEM_TYPE STREQUAL "Darwin" AND OPENMP_LIBRARIES)
+        target_link_libraries(inference_runtime PUBLIC ${OPENMP_LIBRARIES})
+    endif()
 endif()
 if(USE_ONNX)
-    target_link_libraries(model_interface PUBLIC ${ONNX_RUNTIME_LIB})
-    target_compile_definitions(model_interface PRIVATE USE_ONNX)
+    target_link_libraries(inference_runtime PUBLIC ${ONNX_RUNTIME_LIB})
+    target_compile_definitions(inference_runtime PRIVATE USE_ONNX)
 endif()
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
-        install(TARGETS model_interface DESTINATION lib/${PROJECT_NAME})
+        install(TARGETS inference_runtime DESTINATION lib/${PROJECT_NAME})
     endif()
 endif()
 
 # library for rl sdk
 add_library(rl_sdk library/core/rl_sdk/rl_sdk.cpp)
 target_link_libraries(rl_sdk PUBLIC
-    model_interface
+    inference_runtime
     Python3::Python
     Python3::Module
     TBB::tbb
