@@ -181,7 +181,7 @@ void RL::InitRL(std::string robot_path)
     }
 
     // init model
-    std::string model_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/" + this->params.model_name;
+    std::string model_path = std::string(POLICY_DIR) + "/" + robot_path + "/" + this->params.model_name;
     this->model = InferenceRuntime::ModelFactory::load_model(model_path);
 }
 
@@ -402,8 +402,8 @@ std::vector<T> ReadVectorFromYaml(const YAML::Node &node)
 
 void RL::ReadYamlBase(std::string robot_path)
 {
-    // The config file is located at "rl_sar/src/rl_sar/policy/<robot_path>/base.yaml"
-    std::string config_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/base.yaml";
+    // The config file is located at "rl_sar_internal/policy/<robot_path>/base.yaml"
+    std::string config_path = std::string(POLICY_DIR) + "/" + robot_path + "/base.yaml";
     YAML::Node config;
     try
     {
@@ -430,8 +430,8 @@ void RL::ReadYamlBase(std::string robot_path)
 
 void RL::ReadYamlRL(std::string robot_path)
 {
-    // The config file is located at "rl_sar/src/rl_sar/policy/<robot_path>/config.yaml"
-    std::string config_path = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/config.yaml";
+    // The config file is located at "rl_sar_internal/policy/<robot_path>/config.yaml"
+    std::string config_path = std::string(POLICY_DIR) + "/" + robot_path + "/config.yaml";
     YAML::Node config;
     try
     {
@@ -486,7 +486,7 @@ void RL::ReadYamlRL(std::string robot_path)
 
 void RL::CSVInit(std::string robot_path)
 {
-    csv_filename = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/policy/" + robot_path + "/motor";
+    csv_filename = std::string(POLICY_DIR) + "/" + robot_path + "/motor";
 
     // Uncomment these lines if need timestamp for file name
     // auto now = std::chrono::system_clock::now();

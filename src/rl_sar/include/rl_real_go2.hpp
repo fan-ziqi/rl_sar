@@ -14,7 +14,8 @@
 #include "observation_buffer.hpp"
 #include "inference_runtime.hpp"
 #include "loop.hpp"
-#include "fsm.hpp"
+#include "fsm_go2.hpp"
+#include "fsm_go2w.hpp"
 
 #include <unitree/robot/channel/channel_publisher.hpp>
 #include <unitree/robot/channel/channel_subscriber.hpp>

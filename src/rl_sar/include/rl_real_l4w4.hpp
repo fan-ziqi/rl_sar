@@ -14,7 +14,7 @@
 #include "observation_buffer.hpp"
 #include "inference_runtime.hpp"
 #include "loop.hpp"
-#include "fsm.hpp"
+#include "fsm_l4w4.hpp"
 
 #include "l4w4_sdk.hpp"
 #include <csignal>

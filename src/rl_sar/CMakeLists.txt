@@ -36,7 +36,11 @@ if(UPPER_BUILD_TYPE STREQUAL "DEBUG")
     add_compile_options(-g)
 endif()
 
+# Get project root directory
+get_filename_component(PROJECT_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
+
 add_definitions(-DCMAKE_CURRENT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+add_definitions(-DPOLICY_DIR="${PROJECT_ROOT_DIR}/policy")
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
 if(NOT USE_CMAKE)
@@ -81,9 +85,7 @@ endif()
 
 # Inference Runtime
 
-# Get project root directory
-get_filename_component(PROJECT_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
-set(INFERENCE_RUNTIME_DIR "${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/inference_runtime")
+set(INFERENCE_RUNTIME_DIR "${PROJECT_ROOT_DIR}/inference_runtime")
 
 # ONNX Runtime Setup
 set(USE_ONNX "OFF")
@@ -319,7 +321,7 @@ include_directories(
     library/core/fsm
     library/core/vector_math
     library/core/inference_runtime
-    policy
+    fsm_robot
 )
 
 # library for inference runtime
@@ -530,7 +532,7 @@ endif()
 if(NOT USE_CMAKE)
     if($ENV{ROS_DISTRO} MATCHES "foxy|humble")
         install(
-            DIRECTORY launch worlds policy
+            DIRECTORY launch worlds ${PROJECT_ROOT_DIR}/policy
             DESTINATION share/${PROJECT_NAME}/${dir}
         )
     endif()

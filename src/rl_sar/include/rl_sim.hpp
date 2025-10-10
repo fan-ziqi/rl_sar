@@ -13,7 +13,7 @@
 #include "observation_buffer.hpp"
 #include "inference_runtime.hpp"
 #include "loop.hpp"
-#include "fsm.hpp"
+#include "fsm_all.hpp"
 
 #include <csignal>
 #include <vector>
