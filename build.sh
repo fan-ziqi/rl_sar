@@ -64,12 +64,11 @@ setup_inference_runtime() {
     print_header "[Setting up Inference Runtime]"
 
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-    CPP_MODEL_INTERFACE_DIR="src/rl_sar/library/thirdparty/inference_runtime"
     DOWNLOAD_SCRIPT="${SCRIPT_DIR}/download_inference_runtime.sh"
 
     if [ -f "$DOWNLOAD_SCRIPT" ]; then
         print_info "Checking inference libraries..."
-        bash "$DOWNLOAD_SCRIPT" "$CPP_MODEL_INTERFACE_DIR" || {
+        bash "$DOWNLOAD_SCRIPT" || {
             print_error "Failed to setup inference libraries"
             exit 1
         }
@@ -152,6 +151,7 @@ clean_workspace() {
         echo "  - Package.xml symlinks for: ${packages[*]}"
     fi
     echo "  - directory build/"
+    echo "  - directory cmake_build/"
     echo "  - directory devel/"
     echo "  - directory install/"
     echo "  - directory log/"
@@ -195,7 +195,7 @@ clean_workspace() {
 
     # Clean build artifacts
     print_info "Cleaning build artifacts..."
-    rm -rf build/ devel/ install/ log/ logs/ .catkin_tools/
+    rm -rf build/ cmake_build/ devel/ install/ log/ logs/ .catkin_tools/
 
     print_success "Clean completed!"
 }

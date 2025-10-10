@@ -14,7 +14,7 @@
 #include "observation_buffer.hpp"
 #include "inference_runtime.hpp"
 #include "loop.hpp"
-#include "fsm.hpp"
+#include "fsm_lite3.hpp"
 
 // Lite3 SDK
 #include "sender.h"
