@@ -11,7 +11,7 @@
 
 #include "rl_sdk.hpp"
 #include "observation_buffer.hpp"
-#include "model_interface.hpp"
+#include "inference_runtime.hpp"
 #include "loop.hpp"
 #include "fsm.hpp"
 

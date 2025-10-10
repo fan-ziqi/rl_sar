@@ -60,6 +60,25 @@ ask_confirmation() {
 # Build Functions
 # ========================
 
+setup_inference_runtime() {
+    print_header "[Setting up Inference Runtime]"
+
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+    CPP_MODEL_INTERFACE_DIR="src/rl_sar/library/thirdparty/inference_runtime"
+    DOWNLOAD_SCRIPT="${SCRIPT_DIR}/download_inference_runtime.sh"
+
+    if [ -f "$DOWNLOAD_SCRIPT" ]; then
+        print_info "Checking inference libraries..."
+        bash "$DOWNLOAD_SCRIPT" "$CPP_MODEL_INTERFACE_DIR" || {
+            print_error "Failed to setup inference libraries"
+            exit 1
+        }
+        print_success "Inference runtime setup completed!"
+    else
+        print_warning "Download script not found: $DOWNLOAD_SCRIPT"
+    fi
+}
+
 run_cmake_build() {
     print_header "[Running CMake Build]"
     print_warning "NOTE: CMake build is for hardware deployment only, not for simulation."
@@ -343,6 +362,7 @@ main() {
 
     # Handle CMake build mode
     if [ "$cmake_mode" = true ]; then
+        setup_inference_runtime
         run_cmake_build
         exit 0
     fi
@@ -360,6 +380,7 @@ main() {
         exit 1
     fi
 
+    setup_inference_runtime
     run_ros_build "${packages[@]}"
 }
 

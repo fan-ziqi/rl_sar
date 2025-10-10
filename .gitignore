@@ -1,18 +1,38 @@
+# CMake
 build
 devel
 logs
 install
 log
 .catkin_tools
+cmake_build
+package.xml
+
+# Rust
+rust_build
+Cargo.lock
+
+# Python
+__pycache__
+
+# IDE
 .vscode
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Interface
+onnxruntime
+libtorch
+
+# Data
 *.csv
 .cache
 *.json
-__pycache__
-.DS_Store
-cmake_build
 
-package.xml
-
-onnxruntime
-libtorch
+# temp
+*.zip
+*.tgz
+*.tar.gz
+temp_extract*/

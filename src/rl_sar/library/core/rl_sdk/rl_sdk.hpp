@@ -20,7 +20,7 @@
 #include "fsm_core.hpp"
 #include "observation_buffer.hpp"
 #include "vector_math.hpp"
-#include "model_interface.hpp"
+#include "inference_runtime.hpp"
 
 namespace LOGGER
 {
@@ -260,7 +260,7 @@ public:
     void AttitudeProtect(const std::vector<float> &quaternion, float pitch_threshold, float roll_threshold);
 
     // rl module
-    std::unique_ptr<ModelInterface::Model> model;
+    std::unique_ptr<InferenceRuntime::Model> model;
     // output buffer
     std::vector<float> output_dof_tau;
     std::vector<float> output_dof_pos;
