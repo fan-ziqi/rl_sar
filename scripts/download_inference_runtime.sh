@@ -8,33 +8,15 @@
 
 set -e
 
-# Color definitions
-COLOR_ERROR='\033[0;31m'     # Red
-COLOR_SUCCESS='\033[0;32m'   # Green
-COLOR_WARNING='\033[1;33m'   # Yellow
-COLOR_INFO='\033[0;34m'      # Blue
-COLOR_RESET='\033[0m'        # Reset
-
-# Helper functions
-print_success() {
-    echo -e "${COLOR_SUCCESS}[SUCCESS]${COLOR_RESET} $1"
-}
-
-print_warning() {
-    echo -e "${COLOR_WARNING}[WARNING]${COLOR_RESET} $1"
-}
-
-print_error() {
-    echo -e "${COLOR_ERROR}[ERROR]${COLOR_RESET} $1"
-}
-
-print_info() {
-    echo -e "${COLOR_INFO}[INFO]${COLOR_RESET} $1"
-}
-
-# Get script directory (project root)
+# Get script directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-cd "$SCRIPT_DIR"
+
+# Get project root (parent directory of scripts)
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT"
+
+# Load common utilities
+source "${SCRIPT_DIR}/common.sh"
 
 # Detect platform and architecture
 OS_TYPE="$(uname -s)"
@@ -58,7 +40,7 @@ else
 fi
 
 # Inference runtime storage path
-MODEL_INTERFACE_DIR="${SCRIPT_DIR}/${TARGET_DIR}"
+MODEL_INTERFACE_DIR="${PROJECT_ROOT}/${TARGET_DIR}"
 mkdir -p "${MODEL_INTERFACE_DIR}"
 
 # LibTorch version and path
