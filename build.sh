@@ -1,60 +1,15 @@
 #!/bin/bash
 set -e
 
+# Get script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+# Load common utilities
+source "${SCRIPT_DIR}/scripts/common.sh"
+
 # ========================
 # Configuration
 # ========================
-
-# Color definitions
-COLOR_ERROR='\033[0;31m'     # Red
-COLOR_SUCCESS='\033[0;32m'   # Green
-COLOR_WARNING='\033[1;33m'   # Yellow
-COLOR_INFO='\033[0;34m'      # Blue
-COLOR_DEBUG='\033[0;36m'     # Cyan
-COLOR_RESET='\033[0m'        # Reset
-
-# ========================
-# Helper Functions
-# ========================
-
-print_separator() {
-    echo -e "${COLOR_INFO}-------------------------------------------------------------------${COLOR_RESET}"
-}
-
-print_header() {
-    print_separator
-    echo -e "${COLOR_INFO}$1${COLOR_RESET}"
-}
-
-print_success() {
-    echo -e "${COLOR_SUCCESS}$1${COLOR_RESET}"
-}
-
-print_warning() {
-    echo -e "${COLOR_WARNING}$1${COLOR_RESET}"
-}
-
-print_error() {
-    echo -e "${COLOR_ERROR}$1${COLOR_RESET}"
-}
-
-print_info() {
-    echo -e "${COLOR_INFO}$1${COLOR_RESET}"
-}
-
-ask_confirmation() {
-    local message="$1"
-    echo -e -n "${COLOR_WARNING}$message (y/n): ${COLOR_RESET}"
-    read -r response
-    case "$response" in
-        [yY]) return 0 ;;
-        [nN]) return 1 ;;
-        *)
-            print_error "Please enter 'y' or 'n'"
-            ask_confirmation "$message"
-            ;;
-    esac
-}
 
 # ========================
 # Build Functions
@@ -64,7 +19,7 @@ setup_inference_runtime() {
     print_header "[Setting up Inference Runtime]"
 
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-    DOWNLOAD_SCRIPT="${SCRIPT_DIR}/download_inference_runtime.sh"
+    DOWNLOAD_SCRIPT="${SCRIPT_DIR}/scripts/download_inference_runtime.sh"
 
     if [ -f "$DOWNLOAD_SCRIPT" ]; then
         print_info "Checking inference libraries..."
