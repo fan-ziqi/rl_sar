@@ -511,7 +511,7 @@ void RL_Sim::RunModel()
         this->obs.ang_vel = this->robot_state.imu.gyroscope;
         if (this->control.navigation_mode)
         {
-            this->obs.commands = {this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z};
+            this->obs.commands = {(float)this->cmd_vel.linear.x, (float)this->cmd_vel.linear.y, (float)this->cmd_vel.angular.z};
         }
         else
         {
