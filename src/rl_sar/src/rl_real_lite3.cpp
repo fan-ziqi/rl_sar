@@ -237,7 +237,7 @@ void RL_Real::RunModel()
         if (this->control.navigation_mode)
         {
 #if !defined(USE_CMAKE) && defined(USE_ROS)
-            this->obs.commands = {this->cmd_vel.linear.x, this->cmd_vel.linear.y, this->cmd_vel.angular.z};
+            this->obs.commands = {(float)this->cmd_vel.linear.x, (float)this->cmd_vel.linear.y, (float)this->cmd_vel.angular.z};
 #endif
         }
         else
