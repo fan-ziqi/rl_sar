@@ -19,7 +19,6 @@ public:
 
     void Enter() override
     {
-        rl.running_percent = 0.0f;
         std::cout << LOGGER::NOTE << "Entered passive mode. Press '0' (Keyboard) or 'A' (Gamepad) to switch to RLFSMStateGetUp." << std::endl;
     }
 
@@ -52,30 +51,18 @@ class RLFSMStateGetUp : public RLFSMState
 public:
     RLFSMStateGetUp(RL *rl) : RLFSMState(*rl, "RLFSMStateGetUp") {}
 
+    float percent_getup = 0.0f;
+
     void Enter() override
     {
-        rl.running_percent = 0.0f;
+        percent_getup = 0.0f;
         rl.now_state = *fsm_state;
         rl.start_state = rl.now_state;
     }
 
     void Run() override
     {
-        if (rl.running_percent < 1.0f)
-        {
-            rl.running_percent += 1.0f / 500.0f;
-            rl.running_percent = std::min(rl.running_percent, 1.0f);
-
-            for (int i = 0; i < rl.params.num_of_dofs; ++i)
-            {
-                fsm_command->motor_command.q[i] = (1 - rl.running_percent) * rl.now_state.motor_state.q[i] + rl.running_percent * rl.params.default_dof_pos[i];
-                fsm_command->motor_command.dq[i] = 0;
-                fsm_command->motor_command.kp[i] = rl.params.fixed_kp[i];
-                fsm_command->motor_command.kd[i] = rl.params.fixed_kd[i];
-                fsm_command->motor_command.tau[i] = 0;
-            }
-            std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "Getting up " << std::fixed << std::setprecision(2) << rl.running_percent * 100.0f << "%" << std::flush;
-        }
+        Interpolate(percent_getup, rl.now_state.motor_state.q, rl.params.default_dof_pos, 2.0f, "Getting up", true);
     }
 
     void Exit() override {}
@@ -86,7 +73,7 @@ public:
         {
             return "RLFSMStatePassive";
         }
-        if (rl.running_percent == 1.0f)
+        if (percent_getup >= 1.0f)
         {
             if (rl.control.current_keyboard == Input::Keyboard::Num1 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
             {
@@ -106,36 +93,24 @@ class RLFSMStateGetDown : public RLFSMState
 public:
     RLFSMStateGetDown(RL *rl) : RLFSMState(*rl, "RLFSMStateGetDown") {}
 
+    float percent_getdown = 0.0f;
+
     void Enter() override
     {
-        rl.running_percent = 0.0f;
+        percent_getdown = 0.0f;
         rl.now_state = *fsm_state;
     }
 
     void Run() override
     {
-        if (rl.running_percent < 1.0f)
-        {
-            rl.running_percent += 1.0f / 500.0f;
-            rl.running_percent = std::min(rl.running_percent, 1.0f);
-
-            for (int i = 0; i < rl.params.num_of_dofs; ++i)
-            {
-                fsm_command->motor_command.q[i] = (1 - rl.running_percent) * rl.now_state.motor_state.q[i] + rl.running_percent * rl.start_state.motor_state.q[i];
-                fsm_command->motor_command.dq[i] = 0;
-                fsm_command->motor_command.kp[i] = rl.params.fixed_kp[i];
-                fsm_command->motor_command.kd[i] = rl.params.fixed_kd[i];
-                fsm_command->motor_command.tau[i] = 0;
-            }
-            std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "Getting down "<< std::fixed << std::setprecision(2) << rl.running_percent * 100.0f << "%" << std::flush;
-        }
+        Interpolate(percent_getdown, rl.now_state.motor_state.q, rl.start_state.motor_state.q, 2.0f, "Getting down", true);
     }
 
     void Exit() override {}
 
     std::string CheckChange() override
     {
-        if (rl.control.current_keyboard == Input::Keyboard::P || rl.control.current_gamepad == Input::Gamepad::LB_X || rl.running_percent == 1.0f)
+        if (rl.control.current_keyboard == Input::Keyboard::P || rl.control.current_gamepad == Input::Gamepad::LB_X || percent_getdown >= 1.0f)
         {
             return "RLFSMStatePassive";
         }
@@ -152,8 +127,11 @@ class RLFSMStateRL_Locomotion : public RLFSMState
 public:
     RLFSMStateRL_Locomotion(RL *rl) : RLFSMState(*rl, "RLFSMStateRL_Locomotion") {}
 
+    float percent_transition = 0.0f;
+
     void Enter() override
     {
+        percent_transition = 0.0f;
         rl.episode_length_buf = 0;
 
         // read params from yaml
@@ -163,39 +141,25 @@ public:
         {
             rl.InitRL(robot_path);
             rl.rl_init_done = true;
+            rl.now_state = *fsm_state;
         }
         catch (const std::exception& e)
         {
             std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
             rl.rl_init_done = false;
-            rl.control.current_keyboard = Input::Keyboard::Num0;
+            rl.control.SetKeyboard(Input::Keyboard::P);
         }
-
-        // pos init
     }
 
     void Run() override
     {
-        std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "RL Controller x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
+        if (!rl.rl_init_done) return;
 
-        std::vector<float> _output_dof_pos, _output_dof_vel;
-        if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
-        {
-            for (int i = 0; i < rl.params.num_of_dofs; ++i)
-            {
-                if (!_output_dof_pos.empty())
-                {
-                    fsm_command->motor_command.q[i] = _output_dof_pos[i];
-                }
-                if (!_output_dof_vel.empty())
-                {
-                    fsm_command->motor_command.dq[i] = _output_dof_vel[i];
-                }
-                fsm_command->motor_command.kp[i] = rl.params.rl_kp[i];
-                fsm_command->motor_command.kd[i] = rl.params.rl_kd[i];
-                fsm_command->motor_command.tau[i] = 0;
-            }
-        }
+        // position transition from last default_dof_pos to current default_dof_pos
+        if (Interpolate(percent_transition, rl.now_state.motor_state.q, rl.params.default_dof_pos, 0.5f, "Policy transition", true)) return;
+
+        std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "RL Controller [" << rl.config_name << "] x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
+        RLControl();
     }
 
     void Exit() override
