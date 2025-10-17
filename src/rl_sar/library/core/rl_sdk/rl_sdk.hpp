@@ -212,7 +212,6 @@ public:
     FSM fsm;
     RobotState<float> start_state;
     RobotState<float> now_state;
-    float running_percent = 0.0f;
     bool rl_init_done = false;
 
     // init
@@ -272,9 +271,21 @@ class RLFSMState : public FSMState
 public:
     RLFSMState(RL& rl, const std::string& name)
         : FSMState(name), rl(rl), fsm_state(nullptr), fsm_command(nullptr) {}
+
     RL& rl;
     const RobotState<float> *fsm_state;
     RobotCommand<float> *fsm_command;
+
+    bool Interpolate(
+        float& percent,
+        const std::vector<float>& start_pos,
+        const std::vector<float>& target_pos,
+        float duration_seconds,  // 插值时间（秒）
+        const std::string& description = "",
+        bool use_fixed_gains = true
+    );
+
+    void RLControl();
 };
 
 #endif // RL_SDK_HPP

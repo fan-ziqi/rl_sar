@@ -125,15 +125,19 @@ void RL::InitObservations()
     this->obs.commands = {0.0f, 0.0f, 0.0f};
     this->obs.base_quat = {0.0f, 0.0f, 0.0f, 1.0f};
     this->obs.dof_pos = this->params.default_dof_pos;
+    this->obs.dof_vel.clear();
     this->obs.dof_vel.resize(this->params.num_of_dofs, 0.0f);
+    this->obs.actions.clear();
     this->obs.actions.resize(this->params.num_of_dofs, 0.0f);
     this->ComputeObservation();
 }
 
 void RL::InitOutputs()
 {
+    this->output_dof_tau.clear();
     this->output_dof_tau.resize(this->params.num_of_dofs, 0.0f);
     this->output_dof_pos = this->params.default_dof_pos;
+    this->output_dof_vel.clear();
     this->output_dof_vel.resize(this->params.num_of_dofs, 0.0f);
 }
 
@@ -183,6 +187,10 @@ void RL::InitRL(std::string robot_path)
     // init model
     std::string model_path = std::string(POLICY_DIR) + "/" + robot_path + "/" + this->params.model_name;
     this->model = InferenceRuntime::ModelFactory::load_model(model_path);
+    if (!this->model)
+    {
+        throw std::runtime_error("Failed to load model from: " + model_path);
+    }
 }
 
 void RL::ComputeOutput(const std::vector<float> &actions, std::vector<float> &output_dof_pos, std::vector<float> &output_dof_vel, std::vector<float> &output_dof_tau)
@@ -523,4 +531,88 @@ void RL::CSVLogger(const std::vector<float>& torque, const std::vector<float>& t
     file << std::endl;
 
     file.close();
+}
+
+bool RLFSMState::Interpolate(
+    float& percent,
+    const std::vector<float>& start_pos,
+    const std::vector<float>& target_pos,
+    float duration_seconds,
+    const std::string& description,
+    bool use_fixed_gains)
+{
+    if (percent >= 1.0f)
+    {
+        return false;
+    }
+
+    // 首次调用时检查距离
+    if (percent == 0.0f)
+    {
+        // 计算最大关节位置差
+        float max_diff = 0.0f;
+        for (size_t i = 0; i < start_pos.size() && i < target_pos.size(); ++i)
+        {
+            max_diff = std::max(max_diff, std::abs(start_pos[i] - target_pos[i]));
+        }
+
+        // 如果位置差很小（< 0.01 rad），直接完成
+        if (max_diff < 0.01f)
+        {
+            percent = 1.0f;
+            return false;
+        }
+    }
+
+    // 根据期望时间和控制周期计算步长并递增
+    int required_frames = std::max(1, static_cast<int>(std::ceil(duration_seconds / rl.params.dt)));
+    float step = 1.0f / required_frames;
+
+    percent += step;
+    percent = std::min(percent, 1.0f);
+
+    auto& kp = use_fixed_gains ? rl.params.fixed_kp : rl.params.rl_kp;
+    auto& kd = use_fixed_gains ? rl.params.fixed_kd : rl.params.rl_kd;
+
+    for (int i = 0; i < rl.params.num_of_dofs; ++i)
+    {
+        fsm_command->motor_command.q[i] = (1 - percent) * start_pos[i] + percent * target_pos[i];
+        fsm_command->motor_command.dq[i] = 0;
+        fsm_command->motor_command.kp[i] = kp[i];
+        fsm_command->motor_command.kd[i] = kd[i];
+        fsm_command->motor_command.tau[i] = 0;
+    }
+
+    if (!description.empty())
+    {
+        std::cout << "\r\033[K" << std::flush << LOGGER::INFO
+                  << "Position Control [" << description << "] "
+                  << std::fixed << std::setprecision(2)
+                  << percent * 100.0f << "%"
+                  << std::flush;
+    }
+
+    return true;
+}
+
+void RLFSMState::RLControl()
+{
+    std::vector<float> _output_dof_pos, _output_dof_vel;
+    if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
+    {
+        for (int i = 0; i < rl.params.num_of_dofs; ++i)
+        {
+            if (!_output_dof_pos.empty())
+            {
+                fsm_command->motor_command.q[i] = _output_dof_pos[i];
+            }
+            if (!_output_dof_vel.empty())
+            {
+                fsm_command->motor_command.dq[i] = _output_dof_vel[i];
+            }
+            fsm_command->motor_command.kp[i] = rl.params.rl_kp[i];
+            fsm_command->motor_command.kd[i] = rl.params.rl_kd[i];
+            fsm_command->motor_command.tau[i] = 0;
+        }
+    }
 }

@@ -27,7 +27,7 @@ protected:
 class FSM
 {
 public:
-    FSM() : current_state_(nullptr), next_state_(nullptr), mode_(Mode::NORMAL) {}
+    FSM() : current_state_(nullptr), next_state_(nullptr), previous_state_(nullptr), mode_(Mode::NORMAL) {}
 
     void AddState(std::shared_ptr<FSMState> state)
     {
@@ -71,6 +71,7 @@ public:
         else if (mode_ == Mode::CHANGE)
         {
             current_state_->Exit();
+            previous_state_ = current_state_;
             current_state_ = next_state_;
             current_state_->Enter();
             mode_ = Mode::NORMAL;
@@ -87,6 +88,7 @@ public:
     std::unordered_map<std::string, std::shared_ptr<FSMState>> states_;
     std::shared_ptr<FSMState> current_state_;
     std::shared_ptr<FSMState> next_state_;
+    std::shared_ptr<FSMState> previous_state_;
     Mode mode_;
 };
 
