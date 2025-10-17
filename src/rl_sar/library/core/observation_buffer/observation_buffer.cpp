@@ -140,7 +140,8 @@ std::vector<float> ObservationBuffer::get_obs_vec(std::vector<int> obs_ids)
             {
                 if (obs_id >= 0 && obs_id < history_length)
                 {
-                    int slice_idx = history_length - obs_id - 1; // 0 is newest, history_length-1 is oldest
+                    // obs_id=0 is newest (at index 0), obs_id=N is oldest (at index N)
+                    int slice_idx = obs_id;
                     for (int i = 0; i < num_obs_total; ++i)
                     {
                         output.push_back(obs_buf[env_idx][slice_idx][i]);
@@ -162,7 +163,8 @@ std::vector<float> ObservationBuffer::get_obs_vec(std::vector<int> obs_ids)
                 {
                     if (step >= 0 && step < history_length)
                     {
-                        int time_offset = history_length - step - 1; // 0 is newest, history_length-1 is oldest
+                        // step=0 is newest (at index 0), step=N is oldest (at index N)
+                        int time_offset = step;
                         for (int j = 0; j < dim; ++j)
                         {
                             output.push_back(obs_buf[env_idx][time_offset][obs_offset + j]);
