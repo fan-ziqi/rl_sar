@@ -47,18 +47,11 @@ public:
     virtual bool is_loaded() const = 0;
 
     /**
-     * @brief Multi-input forward inference
-     * @param inputs Vector of input data vectors
+     * @brief Forward inference (single input, supports initializer list)
+     * @param inputs Vector of input data vectors (usually single element)
      * @return Inference result vector
      */
     virtual std::vector<float> forward(const std::vector<std::vector<float>>& inputs) = 0;
-
-    /**
-     * @brief Single-input forward inference
-     * @param input Input data vector
-     * @return Inference result vector
-     */
-    virtual std::vector<float> forward(const std::vector<float>& input) = 0;
 
     /**
      * @brief Get model type string
@@ -89,14 +82,7 @@ public:
     bool load(const std::string& model_path) override;
     bool is_loaded() const override { return loaded_; }
     std::vector<float> forward(const std::vector<std::vector<float>>& inputs) override;
-    std::vector<float> forward(const std::vector<float>& input) override;
     std::string get_model_type() const override { return "torch"; }
-
-    /**
-     * @brief Set Torch inference thread count
-     * @param num_threads Thread count
-     */
-    void set_torch_threads(int num_threads);
 
 private:
 #ifdef USE_TORCH
@@ -145,7 +131,6 @@ public:
     bool load(const std::string& model_path) override;
     bool is_loaded() const override { return loaded_; }
     std::vector<float> forward(const std::vector<std::vector<float>>& inputs) override;
-    std::vector<float> forward(const std::vector<float>& input) override;
     std::string get_model_type() const override { return "onnx"; }
 
 private:
