@@ -14,6 +14,7 @@
 
 #ifdef USE_TORCH
 #include <torch/script.h>
+#include <ATen/Parallel.h>
 #endif
 
 #ifdef USE_ONNX
@@ -60,34 +61,38 @@ void print_test_result(const TestResult& result) {
 }
 
 #ifdef USE_TORCH
-TestResult test_direct_torch(const std::string& model_path, const std::vector<float>& input, int iterations) {
+// Test 1: PyTorch - Direct API
+TestResult test_torch_direct(const std::string& model_path, const std::vector<float>& input, int iterations) {
     TestResult result;
-    result.name = "Direct Torch (No Abstraction)";
+    result.name = "PyTorch Direct API";
 
-    print_header("Testing Direct Torch API");
-    std::cout << "Loading model with torch::jit::load()..." << std::endl;
+    print_header("Test 1: PyTorch Direct API");
+    std::cout << "Settings: torch::set_num_threads(4)" << std::endl;
 
-    // Load model directly with torch
+    torch::set_num_threads(4);
     auto model = torch::jit::load(model_path);
-    model.eval();
 
-    std::cout << "Model loaded successfully" << std::endl;
-    std::cout << "\nRunning " << iterations << " iterations..." << std::endl;
+    std::cout << "Model loaded" << std::endl;
+
+    bool continuous_mode = (iterations <= 0);
+    if (continuous_mode) {
+        std::cout << "CONTINUOUS mode (Ctrl+C to stop)..." << std::endl;
+    } else {
+        std::cout << "Running " << iterations << " iterations..." << std::endl;
+    }
 
     std::vector<std::vector<float>> all_outputs;
     std::vector<double> times;
 
-    for (int i = 0; i < iterations; i++) {
-        // Convert input to tensor
+    int i = 0;
+    while (continuous_mode || i < iterations) {
         auto input_tensor = torch::tensor(input, torch::kFloat32).reshape({1, (int64_t)input.size()});
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        // Forward pass
         torch::autograd::GradMode::set_enabled(false);
         auto output_tensor = model.forward({input_tensor}).toTensor();
 
-        // Convert back to vector
         auto cpu_tensor = output_tensor.contiguous().to(torch::kCPU);
         float* data_ptr = cpu_tensor.data_ptr<float>();
         int64_t num_elements = cpu_tensor.numel();
@@ -99,14 +104,24 @@ TestResult test_direct_torch(const std::string& model_path, const std::vector<fl
         times.push_back(elapsed_ms);
         all_outputs.push_back(output);
 
-        if (i < 5 || i >= iterations - 2) {
-            std::cout << "Iter " << std::setw(2) << i << " | Time: " << std::setw(7)
-                      << std::fixed << std::setprecision(4) << elapsed_ms << " ms | Output[0:5]: ";
-            print_output_sample(output);
-            std::cout << std::endl;
-        } else if (i == 5) {
-            std::cout << "..." << std::endl;
+        if (continuous_mode) {
+            if (i % 100 == 0) {
+                std::cout << "Iter " << std::setw(6) << i << " | Time: " << std::setw(7)
+                          << std::fixed << std::setprecision(4) << elapsed_ms << " ms | Output[0:5]: ";
+                print_output_sample(output);
+                std::cout << std::endl;
+            }
+        } else {
+            if (i < 5 || i >= iterations - 2) {
+                std::cout << "Iter " << std::setw(2) << i << " | Time: " << std::setw(7)
+                          << std::fixed << std::setprecision(4) << elapsed_ms << " ms | Output[0:5]: ";
+                print_output_sample(output);
+                std::cout << std::endl;
+            } else if (i == 5) {
+                std::cout << "..." << std::endl;
+            }
         }
+        i++;
     }
 
     // Calculate statistics
@@ -140,37 +155,41 @@ TestResult test_direct_torch(const std::string& model_path, const std::vector<fl
 
     return result;
 }
+#endif
 
-TestResult test_direct_torch_frozen(const std::string& model_path, const std::vector<float>& input, int iterations) {
+#ifdef USE_TORCH
+// Test 2: PyTorch - Abstraction Layer (InferenceRuntime)
+TestResult test_torch_abstraction(const std::string& model_path, const std::vector<float>& input, int iterations) {
     TestResult result;
-    result.name = "Direct Torch API (No Abstraction)";
+    result.name = "PyTorch (InferenceRuntime)";
 
-    print_header("Testing Direct Torch API (No Abstraction)");
-    std::cout << "Loading model with torch::jit::load() + freeze()..." << std::endl;
+    print_header("Test 2: PyTorch Abstraction Layer");
+    std::cout << "Loading with ModelFactory::load_model()..." << std::endl;
 
-    // Load and freeze model
-    auto model = torch::jit::load(model_path);
-    model.eval();
-    model = torch::jit::freeze(model);
+    auto model = InferenceRuntime::ModelFactory::load_model(model_path);
+    if (!model) {
+        std::cout << "ERROR: Failed to load model!" << std::endl;
+        result.is_stable = false;
+        return result;
+    }
 
-    std::cout << "Model loaded and frozen successfully" << std::endl;
-    std::cout << "\nRunning " << iterations << " iterations..." << std::endl;
+    std::cout << "Model loaded (type: " << model->get_model_type() << ")" << std::endl;
+
+    bool continuous_mode = (iterations <= 0);
+    if (continuous_mode) {
+        std::cout << "CONTINUOUS mode (Ctrl+C to stop)..." << std::endl;
+    } else {
+        std::cout << "Running " << iterations << " iterations..." << std::endl;
+    }
 
     std::vector<std::vector<float>> all_outputs;
     std::vector<double> times;
 
-    for (int i = 0; i < iterations; i++) {
-        auto input_tensor = torch::tensor(input, torch::kFloat32).reshape({1, (int64_t)input.size()});
-
+    int i = 0;
+    while (continuous_mode || i < iterations) {
         auto start = std::chrono::high_resolution_clock::now();
 
-        torch::autograd::GradMode::set_enabled(false);
-        auto output_tensor = model.forward({input_tensor}).toTensor();
-
-        auto cpu_tensor = output_tensor.contiguous().to(torch::kCPU);
-        float* data_ptr = cpu_tensor.data_ptr<float>();
-        int64_t num_elements = cpu_tensor.numel();
-        std::vector<float> output(data_ptr, data_ptr + num_elements);
+        auto output = model->forward({input});
 
         auto end = std::chrono::high_resolution_clock::now();
         double elapsed_ms = std::chrono::duration<double, std::milli>(end - start).count();
@@ -178,14 +197,24 @@ TestResult test_direct_torch_frozen(const std::string& model_path, const std::ve
         times.push_back(elapsed_ms);
         all_outputs.push_back(output);
 
-        if (i < 5 || i >= iterations - 2) {
-            std::cout << "Iter " << std::setw(2) << i << " | Time: " << std::setw(7)
-                      << std::fixed << std::setprecision(4) << elapsed_ms << " ms | Output[0:5]: ";
-            print_output_sample(output);
-            std::cout << std::endl;
-        } else if (i == 5) {
-            std::cout << "..." << std::endl;
+        if (continuous_mode) {
+            if (i % 100 == 0) {
+                std::cout << "Iter " << std::setw(6) << i << " | Time: " << std::setw(7)
+                          << std::fixed << std::setprecision(4) << elapsed_ms << " ms | Output[0:5]: ";
+                print_output_sample(output);
+                std::cout << std::endl;
+            }
+        } else {
+            if (i < 5 || i >= iterations - 2) {
+                std::cout << "Iter " << std::setw(2) << i << " | Time: " << std::setw(7)
+                          << std::fixed << std::setprecision(4) << elapsed_ms << " ms | Output[0:5]: ";
+                print_output_sample(output);
+                std::cout << std::endl;
+            } else if (i == 5) {
+                std::cout << "..." << std::endl;
+            }
         }
+        i++;
     }
 
     // Calculate statistics
@@ -222,9 +251,10 @@ TestResult test_direct_torch_frozen(const std::string& model_path, const std::ve
 #endif
 
 #ifdef USE_ONNX
-TestResult test_direct_onnx(const std::string& model_path, const std::vector<float>& input, int iterations) {
+// Test 3: ONNX - Direct API
+TestResult test_onnx_direct(const std::string& model_path, const std::vector<float>& input, int iterations) {
     TestResult result;
-    result.name = "Direct ONNX Runtime (No Abstraction)";
+    result.name = "ONNX Direct API";
 
     print_header("Testing Direct ONNX Runtime API");
     std::cout << "Loading model with Ort::Session()..." << std::endl;
@@ -247,14 +277,21 @@ TestResult test_direct_onnx(const std::string& model_path, const std::vector<flo
     std::cout << "Input shape: [";
     for (auto dim : input_shape) std::cout << dim << " ";
     std::cout << "]" << std::endl;
-    std::cout << "\nRunning " << iterations << " iterations..." << std::endl;
+
+    bool continuous_mode = (iterations <= 0);
+    if (continuous_mode) {
+        std::cout << "\nRunning in CONTINUOUS mode (press Ctrl+C to stop)..." << std::endl;
+    } else {
+        std::cout << "\nRunning " << iterations << " iterations..." << std::endl;
+    }
 
     std::vector<std::vector<float>> all_outputs;
     std::vector<double> times;
 
     Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
 
-    for (int i = 0; i < iterations; i++) {
+    int i = 0;
+    while (continuous_mode || i < iterations) {
         // Prepare input tensor
         std::vector<float> input_copy = input;
         auto input_tensor = Ort::Value::CreateTensor<float>(
@@ -288,14 +325,25 @@ TestResult test_direct_onnx(const std::string& model_path, const std::vector<flo
         times.push_back(elapsed_ms);
         all_outputs.push_back(output);
 
-        if (i < 5 || i >= iterations - 2) {
-            std::cout << "Iter " << std::setw(2) << i << " | Time: " << std::setw(7)
-                      << std::fixed << std::setprecision(4) << elapsed_ms << " ms | Output[0:5]: ";
-            print_output_sample(output);
-            std::cout << std::endl;
-        } else if (i == 5) {
-            std::cout << "..." << std::endl;
+        if (continuous_mode) {
+            // In continuous mode, print every 100 iterations
+            if (i % 100 == 0) {
+                std::cout << "Iter " << std::setw(6) << i << " | Time: " << std::setw(7)
+                          << std::fixed << std::setprecision(4) << elapsed_ms << " ms | Output[0:5]: ";
+                print_output_sample(output);
+                std::cout << std::endl;
+            }
+        } else {
+            if (i < 5 || i >= iterations - 2) {
+                std::cout << "Iter " << std::setw(2) << i << " | Time: " << std::setw(7)
+                          << std::fixed << std::setprecision(4) << elapsed_ms << " ms | Output[0:5]: ";
+                print_output_sample(output);
+                std::cout << std::endl;
+            } else if (i == 5) {
+                std::cout << "..." << std::endl;
+            }
         }
+        i++;
     }
 
     // Calculate statistics
@@ -329,14 +377,14 @@ TestResult test_direct_onnx(const std::string& model_path, const std::vector<flo
 
     return result;
 }
-#endif
 
-TestResult test_abstraction_layer(const std::string& model_path, const std::vector<float>& input, int iterations) {
+// Test 4: ONNX - Abstraction Layer (InferenceRuntime)
+TestResult test_onnx_abstraction(const std::string& model_path, const std::vector<float>& input, int iterations) {
     TestResult result;
-    result.name = "Abstraction Layer (InferenceRuntime)";
+    result.name = "ONNX (InferenceRuntime)";
 
-    print_header("Testing Abstraction Layer (InferenceRuntime)");
-    std::cout << "Loading model with ModelFactory::load_model()..." << std::endl;
+    print_header("Test 4: ONNX Abstraction Layer");
+    std::cout << "Loading with ModelFactory::load_model()..." << std::endl;
 
     auto model = InferenceRuntime::ModelFactory::load_model(model_path);
     if (!model) {
@@ -345,16 +393,23 @@ TestResult test_abstraction_layer(const std::string& model_path, const std::vect
         return result;
     }
 
-    std::cout << "Model loaded successfully (type: " << model->get_model_type() << ")" << std::endl;
-    std::cout << "\nRunning " << iterations << " iterations..." << std::endl;
+    std::cout << "Model loaded (type: " << model->get_model_type() << ")" << std::endl;
+
+    bool continuous_mode = (iterations <= 0);
+    if (continuous_mode) {
+        std::cout << "CONTINUOUS mode (Ctrl+C to stop)..." << std::endl;
+    } else {
+        std::cout << "Running " << iterations << " iterations..." << std::endl;
+    }
 
     std::vector<std::vector<float>> all_outputs;
     std::vector<double> times;
 
-    for (int i = 0; i < iterations; i++) {
+    int i = 0;
+    while (continuous_mode || i < iterations) {
         auto start = std::chrono::high_resolution_clock::now();
 
-        auto output = model->forward(input);
+        auto output = model->forward({input});
 
         auto end = std::chrono::high_resolution_clock::now();
         double elapsed_ms = std::chrono::duration<double, std::milli>(end - start).count();
@@ -362,14 +417,24 @@ TestResult test_abstraction_layer(const std::string& model_path, const std::vect
         times.push_back(elapsed_ms);
         all_outputs.push_back(output);
 
-        if (i < 5 || i >= iterations - 2) {
-            std::cout << "Iter " << std::setw(2) << i << " | Time: " << std::setw(7)
-                      << std::fixed << std::setprecision(4) << elapsed_ms << " ms | Output[0:5]: ";
-            print_output_sample(output);
-            std::cout << std::endl;
-        } else if (i == 5) {
-            std::cout << "..." << std::endl;
+        if (continuous_mode) {
+            if (i % 100 == 0) {
+                std::cout << "Iter " << std::setw(6) << i << " | Time: " << std::setw(7)
+                          << std::fixed << std::setprecision(4) << elapsed_ms << " ms | Output[0:5]: ";
+                print_output_sample(output);
+                std::cout << std::endl;
+            }
+        } else {
+            if (i < 5 || i >= iterations - 2) {
+                std::cout << "Iter " << std::setw(2) << i << " | Time: " << std::setw(7)
+                          << std::fixed << std::setprecision(4) << elapsed_ms << " ms | Output[0:5]: ";
+                print_output_sample(output);
+                std::cout << std::endl;
+            } else if (i == 5) {
+                std::cout << "..." << std::endl;
+            }
         }
+        i++;
     }
 
     // Calculate statistics
@@ -403,87 +468,122 @@ TestResult test_abstraction_layer(const std::string& model_path, const std::vect
 
     return result;
 }
+#endif
 
 int main(int argc, char** argv)
 {
-    if (argc < 3) {
-        std::cout << "Usage: " << argv[0] << " <model_path> <input_size> [iterations]" << std::endl;
-        std::cout << "Example: " << argv[0] << " policy/go2/himloco/himloco.pt 270 30" << std::endl;
+    if (argc < 5) {
+        std::cout << "Usage: " << argv[0] << " <model_path> <framework> <use_abstraction> <input_size> [iterations]" << std::endl;
+        std::cout << std::endl;
+        std::cout << "Parameters:" << std::endl;
+        std::cout << "  model_path        : Path to model file (.pt or .onnx)" << std::endl;
+        std::cout << "  framework         : torch or onnx" << std::endl;
+        std::cout << "  use_abstraction   : 0 (direct API) or 1 (use InferenceRuntime abstraction layer)" << std::endl;
+        std::cout << "  input_size        : Size of input vector" << std::endl;
+        std::cout << "  iterations        : Number of iterations (0 or -1 for continuous mode, Ctrl+C to stop)" << std::endl;
+        std::cout << std::endl;
+        std::cout << "Examples:" << std::endl;
+        std::cout << "  # Test torch model with direct API, 30 iterations" << std::endl;
+        std::cout << "  " << argv[0] << " policy/go2/himloco/himloco.pt torch 0 270 30" << std::endl;
+        std::cout << std::endl;
+        std::cout << "  # Test torch model with abstraction layer, continuous mode" << std::endl;
+        std::cout << "  " << argv[0] << " policy/go2/himloco/himloco.pt torch 1 270 0" << std::endl;
+        std::cout << std::endl;
+        std::cout << "  # Test ONNX model with direct API, 100 iterations" << std::endl;
+        std::cout << "  " << argv[0] << " policy/tita/robot_lab/policy.onnx onnx 0 270 100" << std::endl;
         return 1;
     }
 
     std::string model_path = argv[1];
-    int input_size = std::stoi(argv[2]);
-    int iterations = (argc >= 4) ? std::stoi(argv[3]) : 30;
+    std::string framework = argv[2];
+    bool use_abstraction = (std::stoi(argv[3]) != 0);
+    int input_size = std::stoi(argv[4]);
+    int iterations = (argc >= 6) ? std::stoi(argv[5]) : 30;
+
+    // Validate framework
+    if (framework != "torch" && framework != "onnx") {
+        std::cout << "ERROR: Invalid framework '" << framework << "'. Must be 'torch' or 'onnx'" << std::endl;
+        return 1;
+    }
 
     print_header("Model Inference Stability & Performance Test");
-    std::cout << "Model:      " << model_path << std::endl;
-    std::cout << "Input size: " << input_size << std::endl;
-    std::cout << "Iterations: " << iterations << std::endl;
-    std::cout << "Input:      all values = 0.1" << std::endl;
+    std::cout << "Model:        " << model_path << std::endl;
+    std::cout << "Framework:    " << framework << std::endl;
+    std::cout << "Abstraction:  " << (use_abstraction ? "YES (InferenceRuntime)" : "NO (Direct API)") << std::endl;
+    std::cout << "Input size:   " << input_size << std::endl;
+    if (iterations <= 0) {
+        std::cout << "Iterations:   CONTINUOUS (press Ctrl+C to stop)" << std::endl;
+    } else {
+        std::cout << "Iterations:   " << iterations << std::endl;
+    }
+    std::cout << "Input:        all values = 0.1" << std::endl;
 
     // Create input vector filled with 0.1
     std::vector<float> input(input_size, 0.1f);
 
     std::vector<TestResult> results;
 
-    bool is_torch_model = (model_path.find(".pt") != std::string::npos || model_path.find(".pth") != std::string::npos);
-    bool is_onnx_model = (model_path.find(".onnx") != std::string::npos);
-
-    // Test 1: Direct API (without abstraction layer)
-#ifdef USE_TORCH
-    if (is_torch_model) {
-        try {
-            // Use frozen version for best stability
-            results.push_back(test_direct_torch_frozen(model_path, input, iterations));
-        } catch (const std::exception& e) {
-            std::cout << "ERROR in direct torch test: " << e.what() << std::endl;
-        }
-    }
-#endif
-
-#ifdef USE_ONNX
-    if (is_onnx_model) {
-        try {
-            results.push_back(test_direct_onnx(model_path, input, iterations));
-        } catch (const std::exception& e) {
-            std::cout << "ERROR in direct ONNX test: " << e.what() << std::endl;
-        }
-    }
-#endif
-
-    // Test 2: With abstraction layer (InferenceRuntime)
     try {
-        results.push_back(test_abstraction_layer(model_path, input, iterations));
+        if (framework == "torch") {
+#ifdef USE_TORCH
+            if (use_abstraction) {
+                results.push_back(test_torch_abstraction(model_path, input, iterations));
+            } else {
+                results.push_back(test_torch_direct(model_path, input, iterations));
+            }
+#else
+            std::cout << "ERROR: Torch support not compiled. Rebuild with USE_TORCH=ON" << std::endl;
+            return 1;
+#endif
+        } else if (framework == "onnx") {
+#ifdef USE_ONNX
+            if (use_abstraction) {
+                results.push_back(test_onnx_abstraction(model_path, input, iterations));
+            } else {
+                results.push_back(test_onnx_direct(model_path, input, iterations));
+            }
+#else
+            std::cout << "ERROR: ONNX support not compiled. Rebuild with USE_ONNX=ON" << std::endl;
+            return 1;
+#endif
+        }
     } catch (const std::exception& e) {
-        std::cout << "ERROR in abstraction layer test: " << e.what() << std::endl;
+        std::cout << "ERROR: " << e.what() << std::endl;
+        return 1;
     }
 
     // Print comparison
-    print_header("Summary & Comparison");
+    if (iterations > 0) {
+        print_header("Summary & Comparison");
 
-    for (const auto& result : results) {
-        print_test_result(result);
-    }
-
-    // Final verdict
-    std::cout << "\n========================================" << std::endl;
-    bool all_stable = true;
-    for (const auto& result : results) {
-        if (!result.is_stable) {
-            all_stable = false;
-            std::cout << "⚠ WARNING: " << result.name << " is UNSTABLE!" << std::endl;
+        for (const auto& result : results) {
+            print_test_result(result);
         }
-    }
 
-    if (all_stable) {
-        std::cout << "✓ All tests PASSED - outputs are stable" << std::endl;
+        // Final verdict
+        std::cout << "\n========================================" << std::endl;
+        bool all_stable = true;
+        for (const auto& result : results) {
+            if (!result.is_stable) {
+                all_stable = false;
+                std::cout << "⚠ WARNING: " << result.name << " is UNSTABLE!" << std::endl;
+            }
+        }
+
+        if (all_stable) {
+            std::cout << "✓ All tests PASSED - outputs are stable" << std::endl;
+        } else {
+            std::cout << "\n✗ Some tests FAILED - outputs are unstable" << std::endl;
+            std::cout << "This indicates BatchNorm or other stateful layers are updating during inference." << std::endl;
+        }
+        std::cout << "========================================" << std::endl;
+
+        return all_stable ? 0 : 1;
     } else {
-        std::cout << "\n✗ Some tests FAILED - outputs are unstable" << std::endl;
-        std::cout << "This indicates BatchNorm or other stateful layers are updating during inference." << std::endl;
+        std::cout << "\n========================================" << std::endl;
+        std::cout << "Continuous mode stopped by user." << std::endl;
+        std::cout << "========================================" << std::endl;
+        return 0;
     }
-    std::cout << "========================================" << std::endl;
-
-    return all_stable ? 0 : 1;
 }
 

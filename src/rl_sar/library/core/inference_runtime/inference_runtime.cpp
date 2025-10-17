@@ -22,24 +22,13 @@ namespace InferenceRuntime
 TorchModel::TorchModel()
 {
 #ifdef USE_TORCH
-    // Disable gradient computation to improve inference performance
-    torch::autograd::GradMode::set_enabled(false);
-    std::cout << "Torch environment initialized" << std::endl;
+    // Set threads before model load
+    torch::set_num_threads(1);
 #endif
 }
 
 TorchModel::~TorchModel()
 {
-}
-
-void TorchModel::set_torch_threads(int num_threads)
-{
-#ifdef USE_TORCH
-    torch::set_num_threads(num_threads);
-    std::cout << "Torch threads set to: " << num_threads << std::endl;
-#else
-    std::cout << "Torch support not compiled, ignoring thread setting" << std::endl;
-#endif
 }
 
 bool TorchModel::load(const std::string& model_path)
@@ -49,8 +38,6 @@ bool TorchModel::load(const std::string& model_path)
 #ifdef USE_TORCH
         // Load TorchScript model
         model_ = torch::jit::load(model_path);
-        model_.eval();
-        torch::autograd::GradMode::set_enabled(false);
         model_path_ = model_path;
         loaded_ = true;
         std::cout << "Successfully loaded Torch model: " << model_path << std::endl;
@@ -79,16 +66,18 @@ std::vector<float> TorchModel::forward(const std::vector<std::vector<float>>& in
 #ifdef USE_TORCH
     try
     {
-        // Convert input vectors to Torch tensors
-        std::vector<torch::jit::IValue> torch_inputs;
-        for (const auto& input : inputs)
-        {
-            std::vector<int64_t> shape = {1, static_cast<int64_t>(input.size())};
-            torch_inputs.push_back(vector_to_torch(input, shape));
-        }
+        // Convert input vector to Torch tensor (use first input only)
+        const auto& input = inputs[0];
+        auto input_tensor = torch::tensor(input, torch::kFloat32).reshape({1, static_cast<int64_t>(input.size())});
+
+        // Disable gradient computation before each forward pass
+        torch::autograd::GradMode::set_enabled(false);
+
+        // Ensure single-threaded execution (critical for performance!)
+        torch::set_num_threads(1);
 
         // Execute forward inference
-        auto output = model_.forward(torch_inputs).toTensor();
+        auto output = model_.forward({input_tensor}).toTensor();
 
         // Convert output tensor to vector
         return torch_to_vector(output);
@@ -103,35 +92,29 @@ std::vector<float> TorchModel::forward(const std::vector<std::vector<float>>& in
 #endif
 }
 
-std::vector<float> TorchModel::forward(const std::vector<float>& input)
-{
-    // Wrap single input as multi-input format, then call multi-input version of forward
-    return forward(std::vector<std::vector<float>>{input});
-}
-
 #ifdef USE_TORCH
 torch::Tensor TorchModel::vector_to_torch(const std::vector<float>& data, const std::vector<int64_t>& shape)
 {
-    // Create Torch tensor from vector data
-    auto tensor = torch::from_blob(const_cast<float*>(data.data()), shape, torch::kFloat32).clone();
+    // Use torch::tensor() + reshape() to match test program behavior
+    auto tensor = torch::tensor(data, torch::kFloat32).reshape(shape);
     return tensor;
 }
 
 std::vector<float> TorchModel::torch_to_vector(const torch::Tensor& tensor)
 {
-    // Convert Torch tensor to contiguous tensor on CPU
-    auto cpu_tensor = tensor.contiguous().to(torch::kCPU);
+    // Ensure tensor is contiguous and on CPU
+    auto cpu_tensor = tensor.is_contiguous() ? tensor : tensor.contiguous();
+    if (cpu_tensor.device().type() != torch::kCPU)
+    {
+        cpu_tensor = cpu_tensor.to(torch::kCPU);
+    }
 
-    // Get data pointer
+    // Get data pointer and size
     float* data_ptr = cpu_tensor.data_ptr<float>();
-
-    // Get total number of elements
     int64_t num_elements = cpu_tensor.numel();
 
     // Copy data to vector
-    std::vector<float> result(data_ptr, data_ptr + num_elements);
-
-    return result;
+    return std::vector<float>(data_ptr, data_ptr + num_elements);
 }
 #endif
 
@@ -205,42 +188,31 @@ std::vector<float> ONNXModel::forward(const std::vector<std::vector<float>>& inp
         // Create memory info
         Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
 
-        // Prepare input tensors
-        std::vector<Ort::Value> ort_inputs;
-        for (size_t i = 0; i < inputs.size() && i < input_shapes_.size(); ++i)
-        {
-            auto input_shape = session_->GetInputTypeInfo(i).GetTensorTypeAndShapeInfo().GetShape();
-            auto input_tensor = Ort::Value::CreateTensor<float>(
-                memory_info,
-                const_cast<float*>(inputs[i].data()),
-                inputs[i].size(),
-                input_shape.data(),
-                input_shape.size()
-            );
-            ort_inputs.push_back(std::move(input_tensor));
-        }
+        // Get input (use first input only)
+        const auto& input = inputs[0];
+        auto input_shape = session_->GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
 
-        // Prepare input/output name C string arrays
-        std::vector<const char*> input_names_cstr;
-        std::vector<const char*> output_names_cstr;
+        // Create input tensor
+        auto input_tensor = Ort::Value::CreateTensor<float>(
+            memory_info,
+            const_cast<float*>(input.data()),
+            input.size(),
+            input_shape.data(),
+            input_shape.size()
+        );
 
-        for (const auto& name : input_node_names_)
-        {
-            input_names_cstr.push_back(name.c_str());
-        }
-        for (const auto& name : output_node_names_)
-        {
-            output_names_cstr.push_back(name.c_str());
-        }
+        // Prepare input/output names
+        const char* input_names[] = {input_node_names_[0].c_str()};
+        const char* output_names[] = {output_node_names_[0].c_str()};
 
         // Execute inference
         auto outputs = session_->Run(
             Ort::RunOptions{nullptr},
-            input_names_cstr.data(),
-            ort_inputs.data(),
-            ort_inputs.size(),
-            output_names_cstr.data(),
-            output_names_cstr.size()
+            input_names,
+            &input_tensor,
+            1,
+            output_names,
+            1
         );
 
         // Extract output data
@@ -254,12 +226,6 @@ std::vector<float> ONNXModel::forward(const std::vector<std::vector<float>>& inp
 #else
     throw std::runtime_error("ONNX support not compiled");
 #endif
-}
-
-std::vector<float> ONNXModel::forward(const std::vector<float>& input)
-{
-    // Wrap single input as multi-input format, then call multi-input version of forward
-    return forward(std::vector<std::vector<float>>{input});
 }
 
 #ifdef USE_ONNX
@@ -369,12 +335,7 @@ std::unique_ptr<Model> ModelFactory::create_model(ModelType type)
     switch (type)
     {
         case ModelType::TORCH:
-        {
-            auto model = std::make_unique<TorchModel>();
-            // Set Torch thread count to 4 for performance optimization
-            model->set_torch_threads(4);
-            return model;
-        }
+            return std::make_unique<TorchModel>();
         case ModelType::ONNX:
             return std::make_unique<ONNXModel>();
         default:
