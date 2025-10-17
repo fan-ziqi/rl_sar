@@ -181,7 +181,7 @@ public:
         if (!rl.rl_init_done) return;
 
         // position transition from last default_dof_pos to current default_dof_pos
-        if (Interpolate(percent_transition, rl.now_state.motor_state.q, rl.params.default_dof_pos, 0.5f, "Policy transition", true)) return;
+        // if (Interpolate(percent_transition, rl.now_state.motor_state.q, rl.params.default_dof_pos, 0.5f, "Policy transition", true)) return;
 
         std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "RL Controller [" << rl.config_name << "] x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
         RLControl();
