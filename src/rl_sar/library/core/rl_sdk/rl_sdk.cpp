@@ -158,6 +158,8 @@ void RL::InitJointNum(size_t num_joints)
 
 void RL::InitRL(std::string robot_path)
 {
+    std::lock_guard<std::mutex> lock(this->model_mutex);
+
     this->ReadYamlRL(robot_path);
     for (std::string &observation : this->params.observations)
     {
@@ -546,25 +548,20 @@ bool RLFSMState::Interpolate(
         return false;
     }
 
-    // 首次调用时检查距离
     if (percent == 0.0f)
     {
-        // 计算最大关节位置差
         float max_diff = 0.0f;
         for (size_t i = 0; i < start_pos.size() && i < target_pos.size(); ++i)
         {
             max_diff = std::max(max_diff, std::abs(start_pos[i] - target_pos[i]));
         }
 
-        // 如果位置差很小（< 0.01 rad），直接完成
-        if (max_diff < 0.01f)
+        if (max_diff < 0.1f)
         {
             percent = 1.0f;
-            return false;
         }
     }
 
-    // 根据期望时间和控制周期计算步长并递增
     int required_frames = std::max(1, static_cast<int>(std::ceil(duration_seconds / rl.params.dt)));
     float step = 1.0f / required_frames;
 
@@ -581,6 +578,11 @@ bool RLFSMState::Interpolate(
         fsm_command->motor_command.kp[i] = kp[i];
         fsm_command->motor_command.kd[i] = kd[i];
         fsm_command->motor_command.tau[i] = 0;
+    }
+
+    if (percent >= 1.0f)
+    {
+        return false;
     }
 
     if (!description.empty())

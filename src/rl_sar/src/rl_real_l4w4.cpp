@@ -282,6 +282,15 @@ void RL_Real::RunModel()
 
 std::vector<float> RL_Real::Forward()
 {
+    std::unique_lock<std::mutex> lock(this->model_mutex, std::try_to_lock);
+
+    // If model is being reinitialized, return previous actions to avoid blocking
+    if (!lock.owns_lock())
+    {
+        std::cout << LOGGER::WARNING << "Model is being reinitialized, using previous actions" << std::endl;
+        return this->obs.actions;
+    }
+
     std::vector<float> clamped_obs = this->ComputeObservation();
 
     std::vector<float> actions;
