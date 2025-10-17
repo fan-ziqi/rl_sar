@@ -49,13 +49,14 @@
 namespace plt = matplotlibcpp;
 
 class RL_Sim : public RL
-#if defined(USE_ROS2)
-    , public rclcpp::Node
-#endif
 {
 public:
-    RL_Sim();
+    RL_Sim(int argc, char **argv);
     ~RL_Sim();
+
+#if defined(USE_ROS2)
+    std::shared_ptr<rclcpp::Node> ros2_node;
+#endif
 
 private:
     // rl functions

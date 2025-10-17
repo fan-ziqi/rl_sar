@@ -5,10 +5,7 @@
 
 #include "rl_sim.hpp"
 
-RL_Sim::RL_Sim()
-#if defined(USE_ROS2)
-    : rclcpp::Node("rl_sim_node")
-#endif
+RL_Sim::RL_Sim(int argc, char **argv)
 {
 #if defined(USE_ROS1)
     this->ang_vel_type = "ang_vel_world";
@@ -16,10 +13,12 @@ RL_Sim::RL_Sim()
     nh.param<std::string>("ros_namespace", this->ros_namespace, "");
     nh.param<std::string>("robot_name", this->robot_name, "");
 #elif defined(USE_ROS2)
+    // 初始化ROS2节点
+    ros2_node = std::make_shared<rclcpp::Node>("rl_sim_node");
     this->ang_vel_type = "ang_vel_body";
-    this->ros_namespace = this->get_namespace();
+    this->ros_namespace = ros2_node->get_namespace();
     // get params from param_node
-    param_client = this->create_client<rcl_interfaces::srv::GetParameters>("/param_node/get_parameters");
+    param_client = ros2_node->create_client<rcl_interfaces::srv::GetParameters>("/param_node/get_parameters");
     while (!param_client->wait_for_service(std::chrono::seconds(1)))
     {
         if (!rclcpp::ok()) {
@@ -32,7 +31,7 @@ RL_Sim::RL_Sim()
     request->names = {"robot_name", "gazebo_model_name"};
     // Use a timeout for the future
     auto future = param_client->async_send_request(request);
-    auto status = rclcpp::spin_until_future_complete(this->get_node_base_interface(), future, std::chrono::seconds(5));
+    auto status = rclcpp::spin_until_future_complete(ros2_node->get_node_base_interface(), future, std::chrono::seconds(5));
     if (status == rclcpp::FutureReturnCode::SUCCESS)
     {
         auto result = future.get();
@@ -121,30 +120,30 @@ RL_Sim::RL_Sim()
 #elif defined(USE_ROS2)
     this->StartJointController(this->ros_namespace, this->params.joint_names);
     // publisher
-    this->robot_command_publisher = this->create_publisher<robot_msgs::msg::RobotCommand>(
+    this->robot_command_publisher = ros2_node->create_publisher<robot_msgs::msg::RobotCommand>(
         this->ros_namespace + "robot_joint_controller/command", rclcpp::SystemDefaultsQoS());
 
     // subscriber
-    this->cmd_vel_subscriber = this->create_subscription<geometry_msgs::msg::Twist>(
+    this->cmd_vel_subscriber = ros2_node->create_subscription<geometry_msgs::msg::Twist>(
         "/cmd_vel", rclcpp::SystemDefaultsQoS(),
         [this] (const geometry_msgs::msg::Twist::SharedPtr msg) {this->CmdvelCallback(msg);}
     );
-    this->joy_subscriber = this->create_subscription<sensor_msgs::msg::Joy>(
+    this->joy_subscriber = ros2_node->create_subscription<sensor_msgs::msg::Joy>(
         "/joy", rclcpp::SystemDefaultsQoS(),
         [this] (const sensor_msgs::msg::Joy::SharedPtr msg) {this->JoyCallback(msg);}
     );
-    this->gazebo_imu_subscriber = this->create_subscription<sensor_msgs::msg::Imu>(
+    this->gazebo_imu_subscriber = ros2_node->create_subscription<sensor_msgs::msg::Imu>(
         "/imu", rclcpp::SystemDefaultsQoS(), [this] (const sensor_msgs::msg::Imu::SharedPtr msg) {this->GazeboImuCallback(msg);}
     );
-    this->robot_state_subscriber = this->create_subscription<robot_msgs::msg::RobotState>(
+    this->robot_state_subscriber = ros2_node->create_subscription<robot_msgs::msg::RobotState>(
         this->ros_namespace + "robot_joint_controller/state", rclcpp::SystemDefaultsQoS(),
         [this] (const robot_msgs::msg::RobotState::SharedPtr msg) {this->RobotStateCallback(msg);}
     );
 
     // service
-    this->gazebo_pause_physics_client = this->create_client<std_srvs::srv::Empty>("/pause_physics");
-    this->gazebo_unpause_physics_client = this->create_client<std_srvs::srv::Empty>("/unpause_physics");
-    this->gazebo_reset_world_client = this->create_client<std_srvs::srv::Empty>("/reset_world");
+    this->gazebo_pause_physics_client = ros2_node->create_client<std_srvs::srv::Empty>("/pause_physics");
+    this->gazebo_unpause_physics_client = ros2_node->create_client<std_srvs::srv::Empty>("/unpause_physics");
+    this->gazebo_reset_world_client = ros2_node->create_client<std_srvs::srv::Empty>("/reset_world");
 
     auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
     auto result = this->gazebo_reset_world_client->async_send_request(empty_request);
@@ -625,11 +624,12 @@ int main(int argc, char **argv)
 #if defined(USE_ROS1)
     signal(SIGINT, signalHandler);
     ros::init(argc, argv, "rl_sar");
-    RL_Sim rl_sar;
+    RL_Sim rl_sar(argc, argv);
     ros::spin();
 #elif defined(USE_ROS2)
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<RL_Sim>());
+    auto rl_sar = std::make_shared<RL_Sim>(argc, argv);
+    rclcpp::spin(rl_sar->ros2_node);
     rclcpp::shutdown();
 #endif
     return 0;
