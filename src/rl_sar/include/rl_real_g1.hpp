@@ -211,13 +211,14 @@ enum G1JointIndex {
   };
 
 class RL_Real : public RL
-#if defined(USE_ROS2) && defined(USE_ROS)
-    , public rclcpp::Node
-#endif
 {
 public:
-    RL_Real();
+    RL_Real(int argc, char **argv);
     ~RL_Real();
+
+#if defined(USE_ROS2) && defined(USE_ROS)
+    std::shared_ptr<rclcpp::Node> ros2_node;
+#endif
 
 private:
     // rl functions

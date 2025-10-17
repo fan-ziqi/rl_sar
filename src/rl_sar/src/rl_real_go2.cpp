@@ -5,16 +5,28 @@
 
 #include "rl_real_go2.hpp"
 
-RL_Real::RL_Real(bool wheel_mode)
-#if defined(USE_ROS2) && defined(USE_ROS)
-    : rclcpp::Node("rl_real_node")
-#endif
+RL_Real::RL_Real(int argc, char **argv)
 {
+    // 处理命令行参数
+    if (argc < 2)
+    {
+        std::cout << LOGGER::ERROR << "Usage: " << argv[0] << " networkInterface [wheel]" << std::endl;
+        throw std::runtime_error("Invalid arguments");
+    }
+
+    // 初始化网络接口
+    ChannelFactory::Instance()->Init(0, argv[1]);
+
+    // 判断是否为wheel模式
+    bool wheel_mode = (argc > 2 && std::string(argv[2]) == "wheel");
+
 #if defined(USE_ROS1) && defined(USE_ROS)
     ros::NodeHandle nh;
     this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Real::CmdvelCallback, this);
 #elif defined(USE_ROS2) && defined(USE_ROS)
-    this->cmd_vel_subscriber = this->create_subscription<geometry_msgs::msg::Twist>(
+    // 初始化ROS2节点
+    ros2_node = std::make_shared<rclcpp::Node>("rl_real_node");
+    this->cmd_vel_subscriber = ros2_node->create_subscription<geometry_msgs::msg::Twist>(
         "/cmd_vel", rclcpp::SystemDefaultsQoS(),
         [this] (const geometry_msgs::msg::Twist::SharedPtr msg) {this->CmdvelCallback(msg);}
     );
@@ -463,23 +475,18 @@ void signalHandler(int signum)
 
 int main(int argc, char **argv)
 {
-    if (argc < 2)
-    {
-        std::cout << "Usage: " << argv[0] << " networkInterface [wheel]" << std::endl;
-        exit(-1);
-    }
-    ChannelFactory::Instance()->Init(0, argv[1]);
 #if defined(USE_ROS1) && defined(USE_ROS)
     signal(SIGINT, signalHandler);
     ros::init(argc, argv, "rl_sar");
-    RL_Real rl_sar(argc > 2 && std::string(argv[2]) == "wheel");
+    RL_Real rl_sar(argc, argv);
     ros::spin();
 #elif defined(USE_ROS2) && defined(USE_ROS)
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<RL_Real>(argc > 2 && std::string(argv[2]) == "wheel"));
+    auto rl_sar = std::make_shared<RL_Real>(argc, argv);
+    rclcpp::spin(rl_sar->ros2_node);
     rclcpp::shutdown();
 #elif defined(USE_CMAKE) || !defined(USE_ROS)
-    RL_Real rl_sar(argc > 2 && std::string(argv[2]) == "wheel");
+    RL_Real rl_sar(argc, argv);
     while (1) { sleep(10); }
 #endif
     return 0;
