@@ -547,6 +547,14 @@ endif()
 # add_executable(test_vector_math test/test_vector_math.cpp)
 # install(TARGETS test_vector_math DESTINATION lib/${PROJECT_NAME})
 
+# add_executable(test_inference_stability test/test_inference_stability.cpp)
+# target_link_libraries(test_inference_stability
+#     inference_runtime
+#     ${TORCH_LIBRARIES}
+#     ${ONNX_RUNTIME_LIB}
+# )
+# install(TARGETS test_inference_stability DESTINATION lib/${PROJECT_NAME})
+
 message(STATUS "========================================")
 message(STATUS "       RL_SAR Build Configuration       ")
 message(STATUS "========================================")
