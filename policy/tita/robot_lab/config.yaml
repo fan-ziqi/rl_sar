@@ -3,6 +3,7 @@ tita/robot_lab:
   num_observations: 33
   observations: ["ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
   observations_history: []  # 0 is the latest observation
+  observations_history_priority: "time"  # "time" or "term" priority
   clip_obs: 100.0
   clip_actions_lower: [-100.0, -100.0, -100.0,
                        -100.0, -100.0, -100.0,
@@ -15,7 +16,7 @@ tita/robot_lab:
           0.0, 0.0]
   rl_kd: [1.0, 1.0, 1.0,
           1.0, 1.0, 1.0,
-          2.0, 2.0]  # TODO
+          2.0, 2.0]
   fixed_kp: [70.0, 70.0, 70.0,
              70.0, 70.0, 70.0,
              0.0, 0.0]
@@ -26,15 +27,15 @@ tita/robot_lab:
   action_scale: [0.125, 0.25, 0.25,
                  0.125, 0.25, 0.25,
                  5.0, 5.0]
-  wheel_indices: [6,7]
+  wheel_indices: [6, 7]
   lin_vel_scale: 2.0
   ang_vel_scale: 0.25
   dof_pos_scale: 1.0
   dof_vel_scale: 0.05
   commands_scale: [1.0, 1.0, 1.0]
-  torque_limits: [60, 60, 60,
-                  60, 60, 60,
-                  15, 15]
+  torque_limits: [60.0, 60.0, 60.0,
+                  60.0, 60.0, 60.0,
+                  15.0, 15.0]
   default_dof_pos: [ 0.00, 0.80, -1.50,
                      0.00, 0.80, -1.50,
                      0.00, 0.00]
