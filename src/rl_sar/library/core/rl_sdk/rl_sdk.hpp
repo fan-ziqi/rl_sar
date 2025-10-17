@@ -15,6 +15,7 @@
 #include <vector>
 #include <memory>
 #include <fstream>
+#include <mutex>
 
 #include <yaml-cpp/yaml.h>
 #include "fsm_core.hpp"
@@ -264,6 +265,9 @@ public:
     std::vector<float> output_dof_tau;
     std::vector<float> output_dof_pos;
     std::vector<float> output_dof_vel;
+
+    // thread safety
+    std::mutex model_mutex;
 };
 
 class RLFSMState : public FSMState
@@ -280,7 +284,7 @@ public:
         float& percent,
         const std::vector<float>& start_pos,
         const std::vector<float>& target_pos,
-        float duration_seconds,  // 插值时间（秒）
+        float duration_seconds,
         const std::string& description = "",
         bool use_fixed_gains = true
     );
