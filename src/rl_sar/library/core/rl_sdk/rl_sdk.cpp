@@ -359,28 +359,51 @@ void RL::AttitudeProtect(const std::vector<float> &quaternion, float pitch_thres
 
 #include <termios.h>
 #include <sys/ioctl.h>
-static bool kbhit()
+#include <fcntl.h>
+#include <unistd.h>
+
+static int kbhit()
 {
-    termios term;
-    tcgetattr(0, &term);
+    static bool initialized = false;
+    static termios original_term;
 
-    termios term2 = term;
-    term2.c_lflag &= ~ICANON;
-    tcsetattr(0, TCSANOW, &term2);
+    // Initialize terminal to non-canonical mode on first call
+    if (!initialized)
+    {
+        tcgetattr(STDIN_FILENO, &original_term);
 
-    int byteswaiting;
-    ioctl(0, FIONREAD, &byteswaiting);
+        termios new_term = original_term;
+        new_term.c_lflag &= ~(ICANON | ECHO);  // Disable canonical mode and echo
+        new_term.c_cc[VMIN] = 0;   // Non-blocking read
+        new_term.c_cc[VTIME] = 0;  // No timeout
 
-    tcsetattr(0, TCSANOW, &term);
+        tcsetattr(STDIN_FILENO, TCSANOW, &new_term);
 
-    return byteswaiting > 0;
+        // Register cleanup function to restore terminal on exit
+        static bool cleanup_registered = false;
+        if (!cleanup_registered)
+        {
+            std::atexit([]() {
+                tcsetattr(STDIN_FILENO, TCSANOW, &original_term);
+            });
+            cleanup_registered = true;
+        }
+
+        initialized = true;
+    }
+
+    // Non-blocking read of a single character
+    char c;
+    int result = read(STDIN_FILENO, &c, 1);
+
+    return (result == 1) ? (unsigned char)c : -1;
 }
 
 void RL::KeyboardInterface()
 {
-    if (kbhit())
+    int c = kbhit();
+    if (c > 0)
     {
-        int c = fgetc(stdin);
         switch (c)
         {
         case '0': this->control.SetKeyboard(Input::Keyboard::Num0); break;
@@ -421,17 +444,36 @@ void RL::KeyboardInterface()
         case 'z': case 'Z': this->control.SetKeyboard(Input::Keyboard::Z); break;
         case ' ': this->control.SetKeyboard(Input::Keyboard::Space); break;
         case '\n': case '\r': this->control.SetKeyboard(Input::Keyboard::Enter); break;
-        case 27: this->control.SetKeyboard(Input::Keyboard::Escape); break;
-        case 0xE0:
+        case 27:  // Escape sequence (for arrow keys on Unix/Linux/macOS)
         {
-            int ext = fgetc(stdin);
-            switch (ext)
+            char seq[2];
+            // Try to read escape sequence non-blockingly
+            if (read(STDIN_FILENO, &seq[0], 1) == 1)
             {
-            case 72: this->control.SetKeyboard(Input::Keyboard::Up); break;
-            case 80: this->control.SetKeyboard(Input::Keyboard::Down); break;
-            case 75: this->control.SetKeyboard(Input::Keyboard::Left); break;
-            case 77: this->control.SetKeyboard(Input::Keyboard::Right); break;
-            default:  break;
+                if (seq[0] == '[')
+                {
+                    if (read(STDIN_FILENO, &seq[1], 1) == 1)
+                    {
+                        switch (seq[1])
+                        {
+                        case 'A': this->control.SetKeyboard(Input::Keyboard::Up); break;
+                        case 'B': this->control.SetKeyboard(Input::Keyboard::Down); break;
+                        case 'C': this->control.SetKeyboard(Input::Keyboard::Right); break;
+                        case 'D': this->control.SetKeyboard(Input::Keyboard::Left); break;
+                        default: break;
+                        }
+                    }
+                }
+                else
+                {
+                    // Plain escape key
+                    this->control.SetKeyboard(Input::Keyboard::Escape);
+                }
+            }
+            else
+            {
+                // Plain escape key
+                this->control.SetKeyboard(Input::Keyboard::Escape);
             }
         } break;
         default:  break;
