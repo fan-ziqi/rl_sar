@@ -24,6 +24,7 @@
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
+#include <memory>
 
 #include <mujoco/mujoco.h>
 #include "joystick.hh"
@@ -55,6 +56,9 @@ public:
     RL_Sim(int argc, char **argv);
     ~RL_Sim();
 
+    // Public member for signal handler access
+    std::unique_ptr<mj::Simulate> sim;
+
 private:
     // rl functions
     std::vector<float> Forward() override;
@@ -79,10 +83,9 @@ private:
     // mujoco
     mjData *mj_data;
     mjModel *mj_model;
-    std::unique_ptr<mj::Simulate> sim;
 
     // joystick
-    Joystick *sys_js;
+    std::unique_ptr<Joystick> sys_js;
     JoystickEvent sys_js_event;
 
     Button sys_js_button[20];
@@ -90,7 +93,7 @@ private:
     bool sys_js_active = false;
     float axis_deadzone = 0.05f;
     int sys_js_max_value = (1 << (16 - 1));
-    void SetupSysJoystick(std::string device, int bits);
+    void SetupSysJoystick(const std::string& device, int bits);
     void GetSysJoystick();
 
     // others

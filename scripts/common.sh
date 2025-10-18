@@ -76,3 +76,42 @@ detect_platform() {
     print_debug "Platform: ${OS_TYPE} (${ARCH_TYPE})"
 }
 
+# Check if network is available
+# Returns 0 if online, 1 if offline
+is_online() {
+    local host="${1:-github.com}"
+    local timeout="${2:-3}"
+
+    # Try multiple methods for better compatibility
+    if command -v curl &> /dev/null; then
+        # Use curl with timeout
+        curl --connect-timeout "$timeout" --silent --head "$host" &> /dev/null
+        return $?
+    elif command -v wget &> /dev/null; then
+        # Use wget with timeout
+        wget --timeout="$timeout" --tries=1 --spider --quiet "$host" &> /dev/null
+        return $?
+    elif command -v ping &> /dev/null; then
+        # Fallback to ping (may not work if ICMP is blocked)
+        ping -c 1 -W "$timeout" "$host" &> /dev/null
+        return $?
+    else
+        # No tool available, assume offline to be safe
+        return 1
+    fi
+}
+
+# Check network with user feedback
+check_network_status() {
+    local host="${1:-github.com}"
+
+    if is_online "$host"; then
+        print_info "Network available, checking for updates..."
+        return 0
+    else
+        print_warning "Network unavailable or cannot access $host"
+        print_info "Using local files (offline mode)"
+        return 1
+    fi
+}
+

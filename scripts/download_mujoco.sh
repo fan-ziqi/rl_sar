@@ -42,13 +42,21 @@ is_mujoco_valid() {
         return 1
     fi
 
-    if [ ! -d "$MUJOCO_DIR/lib" ] || [ ! -d "$MUJOCO_DIR/include" ]; then
-        return 1
-    fi
-
-    if [ -f "$MUJOCO_DIR/include/mujoco/mujoco.h" ]; then
-        return 0
-    fi
+    # Check based on platform
+    case "${OS_TYPE}" in
+        Darwin)
+            # macOS uses framework structure
+            if [ -f "$MUJOCO_DIR/Headers/mujoco.h" ] && [ -f "$MUJOCO_DIR/Versions/Current/libmujoco.${MUJOCO_VERSION}.dylib" ]; then
+                return 0
+            fi
+            ;;
+        *)
+            # Linux/Windows use standard structure
+            if [ -d "$MUJOCO_DIR/lib" ] && [ -d "$MUJOCO_DIR/include" ] && [ -f "$MUJOCO_DIR/include/mujoco/mujoco.h" ]; then
+                return 0
+            fi
+            ;;
+    esac
 
     return 1
 }
@@ -137,27 +145,28 @@ download_mujoco() {
 
     # Extract archive
     print_info "Extracting MuJoCo..."
+    local extract_dir="${temp_dir}/extracted"
+    mkdir -p "${extract_dir}"
 
     if [[ "$archive_name" == *.tar.gz ]]; then
-        tar -xzf "$archive_name" || {
+        tar -xzf "$archive_name" -C "${extract_dir}" || {
             print_error "Extraction failed"
             rm -rf "$temp_dir"
             exit 1
         }
 
-        # Move extracted directory
-        extracted_dir="mujoco-${MUJOCO_VERSION}"
+        # Find extracted directory
+        local extracted_dir=$(find "${extract_dir}" -maxdepth 1 -type d -name "mujoco-*" | head -1)
         if [ -d "$extracted_dir" ]; then
-            rm -rf "${MUJOCO_DIR}"
             mv "$extracted_dir" "${MUJOCO_DIR}"
         else
-            print_error "Extracted directory not found: $extracted_dir"
+            print_error "Extracted directory not found"
             rm -rf "$temp_dir"
             exit 1
         fi
     elif [[ "$archive_name" == *.zip ]]; then
         if command -v unzip &> /dev/null; then
-            unzip -q "$archive_name" || {
+            unzip -o -q "$archive_name" -d "${extract_dir}" || {
                 print_error "Extraction failed"
                 rm -rf "$temp_dir"
                 exit 1
@@ -168,37 +177,59 @@ download_mujoco() {
             exit 1
         fi
 
-        # Move extracted directory
-        extracted_dir="mujoco-${MUJOCO_VERSION}"
+        # Find extracted directory
+        local extracted_dir=$(find "${extract_dir}" -maxdepth 1 -type d -name "mujoco-*" | head -1)
         if [ -d "$extracted_dir" ]; then
-            rm -rf "${MUJOCO_DIR}"
             mv "$extracted_dir" "${MUJOCO_DIR}"
         else
-            print_error "Extracted directory not found: $extracted_dir"
+            print_error "Extracted directory not found"
             rm -rf "$temp_dir"
             exit 1
         fi
     elif [[ "$archive_name" == *.dmg ]]; then
-        print_info "Note: For macOS, please manually install MuJoCo.framework from the DMG file"
-        print_info "DMG location: $temp_dir/$archive_name"
-        print_warning "Manual installation required on macOS"
+        # Automatically extract from DMG on macOS
+        print_info "Extracting MuJoCo from DMG..."
+        local mount_point="${temp_dir}/mujoco_dmg_mount"
+        mkdir -p "${mount_point}"
+        hdiutil attach "$archive_name" -mountpoint "${mount_point}" || {
+            print_error "Failed to mount DMG"
+            rm -rf "$temp_dir"
+            exit 1
+        }
 
-        # For macOS, we expect user to install to /Applications or provide path
-        # Alternatively, we can try to extract from DMG
-        hdiutil attach "$archive_name" -mountpoint /tmp/mujoco_dmg
-        if [ -d "/tmp/mujoco_dmg/MuJoCo.app/Contents" ]; then
-            rm -rf "${MUJOCO_DIR}"
+        if [ -d "${mount_point}/MuJoCo.app/Contents/Frameworks/MuJoCo.framework" ]; then
             mkdir -p "${MUJOCO_DIR}"
-            cp -r /tmp/mujoco_dmg/MuJoCo.app/Contents/Frameworks/MuJoCo.framework/* "${MUJOCO_DIR}/"
-            hdiutil detach /tmp/mujoco_dmg
+            cp -r "${mount_point}/MuJoCo.app/Contents/Frameworks/MuJoCo.framework/"* "${MUJOCO_DIR}/" || {
+                print_error "Failed to copy MuJoCo framework"
+                hdiutil detach "${mount_point}"
+                rm -rf "$temp_dir"
+                exit 1
+            }
+            hdiutil detach "${mount_point}"
+
+            # Fix dylib install_name to use simple @rpath instead of framework path
+            DYLIB_PATH="${MUJOCO_DIR}/Versions/Current/libmujoco.${MUJOCO_VERSION}.dylib"
+            if [ -f "${DYLIB_PATH}" ]; then
+                print_info "Fixing MuJoCo dylib install_name for cross-platform compatibility..."
+                install_name_tool -id "@rpath/libmujoco.${MUJOCO_VERSION}.dylib" "${DYLIB_PATH}" || {
+                    print_warning "Failed to modify dylib install_name, but continuing..."
+                }
+
+                # Re-sign the dylib after modification (required on macOS)
+                print_info "Re-signing MuJoCo dylib..."
+                codesign --force --sign - "${DYLIB_PATH}" || {
+                    print_warning "Failed to re-sign dylib, but continuing..."
+                }
+            fi
         else
-            print_error "Could not extract from DMG"
-            hdiutil detach /tmp/mujoco_dmg
+            print_error "Could not find MuJoCo.framework in DMG"
+            hdiutil detach "${mount_point}"
             rm -rf "$temp_dir"
             exit 1
         fi
     fi
 
+    # Cleanup temporary directory
     cd "$PROJECT_ROOT"
     rm -rf "$temp_dir"
 
@@ -224,21 +255,33 @@ if is_mujoco_valid; then
         else
             print_warning "MuJoCo version mismatch: installed=$installed_version, required=$MUJOCO_VERSION"
             print_info "Reinstalling MuJoCo..."
+            rm -rf "${MUJOCO_DIR}"
         fi
     else
         print_warning "MuJoCo version info not found"
         print_info "Reinstalling MuJoCo..."
+        rm -rf "${MUJOCO_DIR}"
     fi
 else
     print_info "MuJoCo not found or invalid"
+    # Remove incomplete installation
+    if [ -d "${MUJOCO_DIR}" ]; then
+        print_warning "MuJoCo directory incomplete, re-downloading..."
+        rm -rf "${MUJOCO_DIR}"
+    fi
 fi
 
 # Download and install MuJoCo
 download_mujoco
+
+# Verify installation
+if ! is_mujoco_valid; then
+    print_error "MuJoCo installation failed"
+    exit 1
+fi
+
 save_version_info
 
 print_separator
 print_success "MuJoCo ${MUJOCO_VERSION} setup completed successfully!"
 print_info "Installation path: ${MUJOCO_DIR}"
-
-

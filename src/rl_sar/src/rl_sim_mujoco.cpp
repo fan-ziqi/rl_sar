@@ -55,7 +55,7 @@ RL_Sim::RL_Sim(int argc, char **argv)
         std::make_unique<mj::GlfwAdapter>(),
         &cam, &opt, &pert, /* is_passive = */ false);
 
-    std::string filename = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/../robots/" + this->robot_name + "_description/mjcf/scene_terrain.xml";
+    std::string filename = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/../rl_sar_zoo/" + this->robot_name + "_description/mjcf/scene_terrain.xml";
 
     // start physics thread
     std::thread physicsthreadhandle(&PhysicsThread, sim.get(), filename.c_str());
@@ -211,9 +211,9 @@ void RL_Sim::RobotControl()
     this->SetCommand(&this->robot_command);
 }
 
-void RL_Sim::SetupSysJoystick(std::string device, int bits)
+void RL_Sim::SetupSysJoystick(const std::string& device, int bits)
 {
-    this->sys_js = new Joystick(device);
+    this->sys_js = std::make_unique<Joystick>(device);
     if (!this->sys_js->isFound())
     {
         std::cout << LOGGER::ERROR << "Joystick [" << device << "] open failed." << std::endl;
@@ -230,6 +230,12 @@ void RL_Sim::GetSysJoystick()
     {
         this->sys_js_button[i].on_press = false;
         this->sys_js_button[i].on_release = false;
+    }
+
+    // Check if joystick is valid before using
+    if (!this->sys_js)
+    {
+        return;
     }
 
     while (this->sys_js->sample(&this->sys_js_event))
@@ -410,19 +416,35 @@ void RL_Sim::Plot()
     plt::pause(0.01);
 }
 
+// Global pointer to RL_Sim instance for signal handler
+static RL_Sim* g_rl_sim_instance = nullptr;
+
 void signalHandler(int signum)
 {
-    pthread_exit(NULL);
+    std::cout << "\nReceived signal " << signum << ", exiting..." << std::endl;
+
+    // Try to gracefully stop the simulation
+    if (g_rl_sim_instance && g_rl_sim_instance->sim)
+    {
+        g_rl_sim_instance->sim->exitrequest.store(1);
+    }
+
+    // If graceful exit doesn't work, force exit after a short delay
+    // This allows the render loop to check exitrequest
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::_Exit(0);
 }
 
 int main(int argc, char **argv)
 {
     std::string robot_name(argc > 1 ? argv[1] : "");
     signal(SIGINT, signalHandler);
+
     RL_Sim rl_sar(argc, argv);
-    while (1)
-    {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
+    g_rl_sim_instance = &rl_sar;
+
+    // RenderLoop has exited (window closed), exit immediately
+    std::cout << LOGGER::INFO << "Window closed. Exiting..." << std::endl;
+    g_rl_sim_instance = nullptr;
     return 0;
 }

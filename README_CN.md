@@ -75,7 +75,7 @@ git submodule update --init --recursive
 sudo apt install cmake g++ build-essential libyaml-cpp-dev libeigen3-dev libboost-all-dev libspdlog-dev libfmt-dev libtbb-dev liblcm-dev
 
 # macOS
-brew install boost lcm yaml-cpp tbb libomp pkg-config
+brew install boost lcm yaml-cpp tbb libomp pkg-config glfw
 ```
 
 如果需要使用ROS，安装下列依赖包：
