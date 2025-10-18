@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(rl_sar VERSION 4.0.0 LANGUAGES CXX)
 
 # Set C++ standard globally
@@ -324,7 +324,6 @@ include_directories(
     library/core/fsm
     library/core/vector_math
     library/core/inference_runtime
-    library/thirdparty/mujoco_simulate
     fsm_robot
 )
 
@@ -549,10 +548,34 @@ if(USE_MUJOCO)
     add_compile_definitions(USE_MUJOCO)
     set(MUJOCO_DIR "${PROJECT_ROOT_DIR}/library/mujoco")
 
-    # Check MuJoCo installation
-    if(NOT EXISTS "${MUJOCO_DIR}/include/mujoco/mujoco.h")
-        message(FATAL_ERROR "MuJoCo not found. Please run: bash scripts/download_mujoco.sh")
+    # Check MuJoCo installation (different paths for different platforms)
+    if(SYSTEM_TYPE STREQUAL "Darwin")
+        # macOS uses framework structure
+        if(NOT EXISTS "${MUJOCO_DIR}/Headers/mujoco.h")
+            message(FATAL_ERROR "MuJoCo not found. Please run: bash scripts/download_mujoco.sh")
+        endif()
+
+        # Create compatible include structure in build directory for macOS
+        # This allows <mujoco/mujoco.h> to work on macOS where headers are in Headers/ directory
+        set(MUJOCO_COMPAT_INCLUDE_DIR "${CMAKE_BINARY_DIR}/mujoco_include")
+        file(MAKE_DIRECTORY "${MUJOCO_COMPAT_INCLUDE_DIR}/mujoco")
+        file(GLOB MUJOCO_HEADERS "${MUJOCO_DIR}/Headers/*.h")
+        file(COPY ${MUJOCO_HEADERS} DESTINATION "${MUJOCO_COMPAT_INCLUDE_DIR}/mujoco")
+
+        set(MUJOCO_INCLUDE_DIR "${MUJOCO_COMPAT_INCLUDE_DIR}")
+        set(MUJOCO_LIB_DIR "${MUJOCO_DIR}/Versions/Current")
+    else()
+        # Linux/Windows use standard structure
+        if(NOT EXISTS "${MUJOCO_DIR}/include/mujoco/mujoco.h")
+            message(FATAL_ERROR "MuJoCo not found. Please run: bash scripts/download_mujoco.sh")
+        endif()
+        set(MUJOCO_INCLUDE_DIR "${MUJOCO_DIR}/include")
+        set(MUJOCO_LIB_DIR "${MUJOCO_DIR}/lib")
     endif()
+
+    # Add MuJoCo library path to global RPATH
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${MUJOCO_LIB_DIR}")
+    message(STATUS "Added MuJoCo to RPATH: ${MUJOCO_LIB_DIR}")
 
     # Find GLFW
     find_package(glfw3 REQUIRED)
@@ -571,40 +594,63 @@ if(USE_MUJOCO)
     # Import MuJoCo library with RPATH
     add_library(mujoco_prebuilt SHARED IMPORTED)
     set_target_properties(mujoco_prebuilt PROPERTIES
-        IMPORTED_LOCATION "${MUJOCO_DIR}/lib/${MUJOCO_LIB_NAME}"
-        INTERFACE_INCLUDE_DIRECTORIES "${MUJOCO_DIR}/include"
+        IMPORTED_LOCATION "${MUJOCO_LIB_DIR}/${MUJOCO_LIB_NAME}"
+        INTERFACE_INCLUDE_DIRECTORIES "${MUJOCO_INCLUDE_DIR}"
         IMPORTED_NO_SONAME TRUE
     )
 
     # Include directories
     include_directories(
-        ${MUJOCO_DIR}/include
+        ${MUJOCO_INCLUDE_DIR}
         library/thirdparty/joystick
-        library/thirdparty/mujoco_simulate
     )
 
     # Source files
-    file(GLOB MUJOCO_SIMULATE_SRC library/thirdparty/mujoco_simulate/**.cc)
+    file(GLOB MUJOCO_SIMULATE_SRC library/thirdparty/mujoco_simulate/*.cc)
     set(JOYSTICK_SRC library/thirdparty/joystick/joystick.cc)
+
+    # On macOS, also include Objective-C++ files for CoreVideo support
+    if(SYSTEM_TYPE STREQUAL "Darwin")
+        file(GLOB MUJOCO_SIMULATE_MM library/thirdparty/mujoco_simulate/*.mm)
+        list(APPEND MUJOCO_SIMULATE_SRC ${MUJOCO_SIMULATE_MM})
+    endif()
 
     # Build executable
     add_executable(rl_sim_mujoco src/rl_sim_mujoco.cpp ${MUJOCO_SIMULATE_SRC} ${JOYSTICK_SRC})
+
+    # Suppress deprecation warnings for macOS 15.0 API changes in MuJoCo Simulate
+    if(SYSTEM_TYPE STREQUAL "Darwin")
+        set_source_files_properties(
+            ${MUJOCO_SIMULATE_MM}
+            PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations"
+        )
+    endif()
+
+    # Add include directories for mujoco_simulate and joystick headers
+    target_include_directories(rl_sim_mujoco PRIVATE
+        library/thirdparty/mujoco_simulate
+        library/thirdparty/joystick
+    )
+
     target_link_libraries(rl_sim_mujoco
         rl_sdk observation_buffer ${YAML_CPP_LIBRARIES}
         Threads::Threads mujoco_prebuilt glfw
     )
 
-    # macOS OpenMP support
-    if(SYSTEM_TYPE STREQUAL "Darwin" AND OPENMP_LIBRARIES)
-        target_link_libraries(rl_sim_mujoco ${OPENMP_LIBRARIES})
-    endif()
+    # macOS specific frameworks and libraries
+    if(SYSTEM_TYPE STREQUAL "Darwin")
+        # OpenMP support
+        if(OPENMP_LIBRARIES)
+            target_link_libraries(rl_sim_mujoco ${OPENMP_LIBRARIES})
+        endif()
 
-    # RPATH for local MuJoCo library
-    set_target_properties(rl_sim_mujoco PROPERTIES
-        BUILD_RPATH "${MUJOCO_DIR}/lib"
-        INSTALL_RPATH "${MUJOCO_DIR}/lib"
-        INSTALL_RPATH_USE_LINK_PATH TRUE
-    )
+        # Required frameworks for GlfwCoreVideo
+        target_link_libraries(rl_sim_mujoco
+            "-framework CoreVideo"
+            "-framework OpenGL"
+            "-framework AppKit"
+        )
+    endif()
 
     install(TARGETS rl_sim_mujoco DESTINATION bin)
     message(STATUS "MuJoCo configured: ${MUJOCO_DIR}")

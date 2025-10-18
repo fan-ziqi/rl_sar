@@ -75,7 +75,7 @@ Install the required packages:
 sudo apt install cmake g++ build-essential libyaml-cpp-dev libeigen3-dev libboost-all-dev libspdlog-dev libfmt-dev libtbb-dev liblcm-dev
 
 # macOS
-brew install boost lcm yaml-cpp tbb libomp pkg-config
+brew install boost lcm yaml-cpp tbb libomp pkg-config glfw
 ```
 
 If you need to use ROS, install the following dependency packages:
