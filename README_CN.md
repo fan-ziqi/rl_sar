@@ -18,7 +18,7 @@
 >
 > 支持**libtorch**和**onnxruntime**
 >
-> 支持**Linux**和**macOS**(实验性)
+> 支持**Linux**和**macOS**(只支持Mujoco仿真)
 >
 > 支持**Gazebo**和**Mujoco**(部分支持)
 
@@ -119,9 +119,6 @@ sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-cont
 ```bash
 ./build.sh -mj  # or ./build.sh --mujoco
 ```
-
-> [!NOTE]
-> 如果使用macOS，需要使用 `./build.sh -m` 命令进行编译，现只支持 `rl_real_l4w4` ，后续支持更多功能。
 
 详细的使用说明可以通过`./build.sh -h`查看
 

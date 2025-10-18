@@ -18,7 +18,7 @@ This repository provides a framework for simulation verification and physical de
 >
 > Supports both **libtorch** and **onnxruntime**
 >
-> Supports both **Linux** and **macOS**(Experimental)
+> Supports both **Linux** and **macOS**(Only support Mujoco simulation)
 >
 > Supports both **Gazebo** and **Mujoco**(Partial support)
 
@@ -120,9 +120,6 @@ To use the Mujoco simulator
 ./build.sh -mj  # or ./build.sh --mujoco
 ```
 
-> [!NOTE]
-> If using macOS, you need to use the `./build.sh -m` command to compile. Currently only `rl_real_l4w4` is supported, and more features will be supported in the future.
-
 For detailed usage instructions, you can check them via `./build.sh -h`:
 
 ```bash
@@ -145,9 +142,6 @@ Examples:
 
 > [!TIP]
 > If catkin build report errors: `Unable to find either executable 'empy' or Python module 'em'`, run `catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3` before `catkin build`
-
-> [!NOTE]
-> If using macOS, you need to use `./build.sh -m` command to compile. Currently only supports `rl_real_l4w4`, more features will be supported in the future.
 
 ## Running
 
