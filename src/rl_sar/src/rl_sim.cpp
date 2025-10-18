@@ -354,59 +354,9 @@ void RL_Sim::RobotControl()
         this->control.current_keyboard = this->control.last_keyboard;
     }
 
-    if (simulation_running)
-    {
-        this->motiontime++;
-
-        if (this->control.current_keyboard == Input::Keyboard::W)
-        {
-            this->control.x += 0.1;
-            this->control.current_keyboard = this->control.last_keyboard;
-        }
-        if (this->control.current_keyboard == Input::Keyboard::S)
-        {
-            this->control.x -= 0.1;
-            this->control.current_keyboard = this->control.last_keyboard;
-        }
-        if (this->control.current_keyboard == Input::Keyboard::A)
-        {
-            this->control.y += 0.1;
-            this->control.current_keyboard = this->control.last_keyboard;
-        }
-        if (this->control.current_keyboard == Input::Keyboard::D)
-        {
-            this->control.y -= 0.1;
-            this->control.current_keyboard = this->control.last_keyboard;
-        }
-        if (this->control.current_keyboard == Input::Keyboard::Q)
-        {
-            this->control.yaw += 0.1;
-            this->control.current_keyboard = this->control.last_keyboard;
-        }
-        if (this->control.current_keyboard == Input::Keyboard::E)
-        {
-            this->control.yaw -= 0.1;
-            this->control.current_keyboard = this->control.last_keyboard;
-        }
-        if (this->control.current_keyboard == Input::Keyboard::Space)
-        {
-            this->control.x = 0;
-            this->control.y = 0;
-            this->control.yaw = 0;
-            this->control.current_keyboard = this->control.last_keyboard;
-        }
-        if (this->control.current_keyboard == Input::Keyboard::N || this->control.current_gamepad == Input::Gamepad::X)
-        {
-            this->control.navigation_mode = !this->control.navigation_mode;
-            std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
-            this->control.current_keyboard = this->control.last_keyboard;
-            this->control.current_gamepad = this->control.last_gamepad;
-        }
-
-        this->GetState(&this->robot_state);
-        this->StateController(&this->robot_state, &this->robot_command);
-        this->SetCommand(&this->robot_command);
-    }
+    this->GetState(&this->robot_state);
+    this->StateController(&this->robot_state, &this->robot_command);
+    this->SetCommand(&this->robot_command);
 }
 
 #if defined(USE_ROS1)
@@ -482,9 +432,9 @@ void RL_Sim::JoyCallback(
     if (this->joy_msg.buttons[5] && this->joy_msg.axes[6] < 0) this->control.SetGamepad(Input::Gamepad::RB_DPadLeft);
     if (this->joy_msg.buttons[4] && this->joy_msg.buttons[5]) this->control.SetGamepad(Input::Gamepad::LB_RB);
 
-    this->control.x = this->joy_msg.axes[1] * 1.5; // LY
-    this->control.y = this->joy_msg.axes[0] * 1.5; // LX
-    this->control.yaw = this->joy_msg.axes[3] * 1.5; // RX
+    this->control.x = this->joy_msg.axes[1]; // LY
+    this->control.y = this->joy_msg.axes[0]; // LX
+    this->control.yaw = this->joy_msg.axes[3]; // RX
 }
 
 #if defined(USE_ROS1)
@@ -506,15 +456,11 @@ void RL_Sim::RunModel()
     if (this->rl_init_done && simulation_running)
     {
         this->episode_length_buf += 1;
-        // this->obs.lin_vel = {this->vel.linear.x, this->vel.linear.y, this->vel.linear.z};
         this->obs.ang_vel = this->robot_state.imu.gyroscope;
+        this->obs.commands = {this->control.x, this->control.y, this->control.yaw};
         if (this->control.navigation_mode)
         {
             this->obs.commands = {(float)this->cmd_vel.linear.x, (float)this->cmd_vel.linear.y, (float)this->cmd_vel.angular.z};
-        }
-        else
-        {
-            this->obs.commands = {this->control.x, this->control.y, this->control.yaw};
         }
         this->obs.base_quat = this->robot_state.imu.quaternion;
         this->obs.dof_pos = this->robot_state.motor_state.q;

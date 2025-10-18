@@ -175,53 +175,6 @@ void RL_Real::SetCommand(const RobotCommand<float> *command)
 
 void RL_Real::RobotControl()
 {
-    this->motiontime++;
-
-    if (this->control.current_keyboard == Input::Keyboard::W)
-    {
-        this->control.x += 0.1;
-        this->control.current_keyboard = this->control.last_keyboard;
-    }
-    if (this->control.current_keyboard == Input::Keyboard::S)
-    {
-        this->control.x -= 0.1;
-        this->control.current_keyboard = this->control.last_keyboard;
-    }
-    if (this->control.current_keyboard == Input::Keyboard::A)
-    {
-        this->control.y += 0.1;
-        this->control.current_keyboard = this->control.last_keyboard;
-    }
-    if (this->control.current_keyboard == Input::Keyboard::D)
-    {
-        this->control.y -= 0.1;
-        this->control.current_keyboard = this->control.last_keyboard;
-    }
-    if (this->control.current_keyboard == Input::Keyboard::Q)
-    {
-        this->control.yaw += 0.1;
-        this->control.current_keyboard = this->control.last_keyboard;
-    }
-    if (this->control.current_keyboard == Input::Keyboard::E)
-    {
-        this->control.yaw -= 0.1;
-        this->control.current_keyboard = this->control.last_keyboard;
-    }
-    if (this->control.current_keyboard == Input::Keyboard::Space)
-    {
-        this->control.x = 0;
-        this->control.y = 0;
-        this->control.yaw = 0;
-        this->control.current_keyboard = this->control.last_keyboard;
-    }
-    if (this->control.current_keyboard == Input::Keyboard::N || this->control.current_gamepad == Input::Gamepad::X)
-    {
-        this->control.navigation_mode = !this->control.navigation_mode;
-        std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
-        this->control.current_keyboard = this->control.last_keyboard;
-        this->control.current_gamepad = this->control.last_gamepad;
-    }
-
     this->GetState(&this->robot_state);
     this->StateController(&this->robot_state, &this->robot_command);
     this->SetCommand(&this->robot_command);
@@ -233,16 +186,14 @@ void RL_Real::RunModel()
     {
         this->episode_length_buf += 1;
         this->obs.ang_vel = this->robot_state.imu.gyroscope;
+        this->obs.commands = {this->control.x, this->control.y, this->control.yaw};
+#if !defined(USE_CMAKE) && defined(USE_ROS)
         if (this->control.navigation_mode)
         {
-#if !defined(USE_CMAKE) && defined(USE_ROS)
             this->obs.commands = {(float)this->cmd_vel.linear.x, (float)this->cmd_vel.linear.y, (float)this->cmd_vel.angular.z};
+
+        }
 #endif
-        }
-        else
-        {
-            this->obs.commands = {this->control.x, this->control.y, this->control.yaw};
-        }
         this->obs.base_quat = this->robot_state.imu.quaternion;
         this->obs.dof_pos = this->robot_state.motor_state.q;
         this->obs.dof_vel = this->robot_state.motor_state.dq;

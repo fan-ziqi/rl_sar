@@ -146,6 +146,12 @@ struct Control
             current_gamepad = gamepad;
         }
     }
+
+    void ClearInput()
+    {
+        current_keyboard = last_keyboard;
+        current_gamepad = Input::Gamepad::None;
+    }
 };
 
 struct ModelParams
@@ -249,6 +255,7 @@ public:
     std::vector<float> history_obs;
 
     // others
+    int motiontime = 0;
     std::string robot_name, config_name;
     bool simulation_running = true;
     std::string ang_vel_type = "ang_vel_body";  // "ang_vel_world" or "ang_vel_body"

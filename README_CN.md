@@ -4,6 +4,8 @@
 [![macOS](https://img.shields.io/badge/macOS-Experimental-orange.svg?logo=apple)](https://www.apple.com/macos/)
 [![ROS Noetic](https://img.shields.io/badge/ros-noetic-brightgreen.svg?logo=ros)](https://wiki.ros.org/noetic)
 [![ROS2 Foxy/Humble](https://img.shields.io/badge/ros2-foxy/humble-brightgreen.svg?logo=ros)](https://wiki.ros.org/foxy)
+[![Gazebo](https://img.shields.io/badge/Gazebo-Classic-lightgrey.svg?logo=gazebo)](http://gazebosim.org/)
+[![MuJoCo](https://img.shields.io/badge/MuJoCo-3.2.7-orange.svg?logo=mujoco)](https://mujoco.org/)
 [![License](https://img.shields.io/badge/license-Apache2.0-yellow.svg?logo=apache)](https://opensource.org/license/apache-2-0)
 
 [English document](README.md)
@@ -17,22 +19,24 @@
 > 支持**libtorch**和**onnxruntime**
 >
 > 支持**Linux**和**macOS**(实验性)
+>
+> 支持**Gazebo**和**Mujoco**(部分支持)
 
 支持列表：
 
-|Robot Name (rname:=)|Pre-Trained Policy|Real|
-|-|-|-|
-|Unitree-A1 (a1)|legged_gym (IsaacGym)|✅|
-|Unitree-Go2 (go2)|himloco (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
-|Unitree-Go2W (go2w)|robot_lab (IsaacSim)|✅|
-|Unitree-B2 (b2)|robot_lab (IsaacSim)|⚪|
-|Unitree-B2W (b2w)|robot_lab (IsaacSim)|⚪|
-|Unitree-G1 (g1)|unitree_rl_gym (IsaacGym)</br>robomimic pre-loco (IsaacGym)</br>robomimic_dance (IsaacGym)</br>robomimic_kick (IsaacGym)</br>robomimic_kungfu (IsaacGym)|✅</br>✅</br>✅</br>🚫</br>🚫|
-|FFTAI-GR1T1 (gr1t1)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
-|FFTAI-GR1T2 (gr1t2)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
-|zhinao-L4W4 (l4w4)|legged_gym (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
-|Deeprobotics-Lite3 (lite3)|himloco (IsaacGym)|✅|
-|DDTRobot-Tita (tita)|robot_lab (IsaacSim)|⚪|
+|Robot Name (rname:=)|Pre-Trained Policy|Gazebo|Mujoco|Real|
+|-|-|-|-|-|
+|Unitree-A1 (a1)|legged_gym (IsaacGym)|✅|❌|✅|
+|Unitree-Go2 (go2)|himloco (IsaacGym)</br>robot_lab (IsaacSim)|✅|✅|✅</br>✅|
+|Unitree-Go2W (go2w)|robot_lab (IsaacSim)|✅|✅|✅|
+|Unitree-B2 (b2)|robot_lab (IsaacSim)|✅|✅|⚪|
+|Unitree-B2W (b2w)|robot_lab (IsaacSim)|✅|✅|⚪|
+|Unitree-G1 (g1)|unitree_rl_gym (IsaacGym)</br>robomimic pre-loco (IsaacGym)</br>robomimic_dance (IsaacGym)</br>robomimic_kick (IsaacGym)</br>robomimic_kungfu (IsaacGym)|✅|✅|✅</br>✅</br>✅</br>🚫</br>🚫|
+|FFTAI-GR1T1 (gr1t1)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|✅|❌|⚪|
+|FFTAI-GR1T2 (gr1t2)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|✅|❌|⚪|
+|zhinao-L4W4 (l4w4)|legged_gym (IsaacGym)</br>robot_lab (IsaacSim)|✅|❌|✅</br>✅|
+|Deeprobotics-Lite3 (lite3)|himloco (IsaacGym)|✅|❌|✅|
+|DDTRobot-Tita (tita)|robot_lab (IsaacSim)|✅|❌|⚪|
 
 > [!IMPORTANT]
 > Python版本暂时停止维护，如有需要请使用[v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3)版本，后续可能会重新上线。
@@ -110,6 +114,12 @@ sudo apt install ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-ros2-cont
 ./build.sh -m  # or ./build.sh --cmake
 ```
 
+若想使用Mujoco仿真器
+
+```bash
+./build.sh -mj  # or ./build.sh --mujoco
+```
+
 > [!NOTE]
 > 如果使用macOS，需要使用 `./build.sh -m` 命令进行编译，现只支持 `rl_real_l4w4` ，后续支持更多功能。
 
@@ -121,6 +131,7 @@ Usage: ./build.sh [OPTIONS] [PACKAGE_NAMES...]
 Options:
   -c, --clean    Clean workspace (remove symlinks and build artifacts)
   -m, --cmake    Build using CMake (for hardware deployment only)
+  -mj,--mujoco   Build with MuJoCo simulator support (CMake only)"
   -h, --help     Show this help message
 
 Examples:
@@ -129,6 +140,7 @@ Examples:
   ./build.sh -c                 # Clean all symlinks and build artifacts
   ./build.sh --clean package1   # Clean specific package and build artifacts
   ./build.sh -m                 # Build with CMake for hardware deployment
+  ./build.sh -mj                # Build with CMake and MuJoCo simulator support
 ```
 
 > [!TIP]
@@ -141,6 +153,8 @@ Examples:
 运行前请将训练好的pt模型文件拷贝到`rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>`中，并配置`<ROBOT>/<CONFIG>/config.yaml`和`<ROBOT>/base.yaml`中的参数。
 
 ### 仿真
+
+#### Gazebo
 
 打开一个终端，启动gazebo仿真环境
 
@@ -173,6 +187,12 @@ ros2 run rl_sar rl_sim
 
 ```bash
 git clone https://github.com/osrf/gazebo_models.git ~/.gazebo/models
+```
+
+#### Mujoco
+
+```bash
+./cmake_build/bin/rl_sim_mujoco <ROBOT>
 ```
 
 ### 使用手机网页控制 (实验性)
@@ -406,13 +426,13 @@ ros2 run rl_sar rl_real_lite3
 
 ```yaml
 # 你的机器人description
-robots/<ROBOT>_description/CMakeLists.txt
-robots/<ROBOT>_description/package.ros1.xml
-robots/<ROBOT>_description/package.ros2.xml
-robots/<ROBOT>_description/xacro/robot.xacro
-robots/<ROBOT>_description/xacro/gazebo.xacro
-robots/<ROBOT>_description/config/robot_control.yaml
-robots/<ROBOT>_description/config/robot_control_ros2.yaml
+rl_sar_zoo/<ROBOT>_description/CMakeLists.txt
+rl_sar_zoo/<ROBOT>_description/package.ros1.xml
+rl_sar_zoo/<ROBOT>_description/package.ros2.xml
+rl_sar_zoo/<ROBOT>_description/xacro/robot.xacro
+rl_sar_zoo/<ROBOT>_description/xacro/gazebo.xacro
+rl_sar_zoo/<ROBOT>_description/config/robot_control.yaml
+rl_sar_zoo/<ROBOT>_description/config/robot_control_ros2.yaml
 
 # 你训练的policy
 rl_sar/policy/fsm.hpp
@@ -451,6 +471,8 @@ rl_sar/src/rl_real_<ROBOT>.cpp  # 可以按需自定义forward()函数以适配�
 - [unitreerobotics/unitree_sdk2-2.0.0](https://github.com/unitreerobotics/unitree_sdk2/tree/2.0.0)
 - [unitreerobotics/unitree_legged_sdk-v3.2](https://github.com/unitreerobotics/unitree_legged_sdk/tree/v3.2)
 - [unitreerobotics/unitree_guide](https://github.com/unitreerobotics/unitree_guide)
+- [unitreerobotics/unitree_mujoco](https://github.com/unitreerobotics/unitree_mujoco)
+- [google-deepmind/mujoco-3.2.7](https://github.com/google-deepmind/mujoco)
 - [mertgungor/unitree_model_control](https://github.com/mertgungor/unitree_model_control)
 - [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways)
 - [ccrpRepo/RoboMimic_Deploy](https://github.com/ccrpRepo/RoboMimic_Deploy)
