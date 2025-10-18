@@ -44,7 +44,6 @@ struct RobotCommand
         std::vector<T> kp;
         std::vector<T> kd;
 
-        // 初始化方法
         void resize(size_t num_joints)
         {
             mode.resize(num_joints, 0);
@@ -75,7 +74,6 @@ struct RobotState
         std::vector<T> tau_est;
         std::vector<T> cur;
 
-        // 初始化方法
         void resize(size_t num_joints)
         {
             q.resize(num_joints, 0.0f);

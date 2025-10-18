@@ -11,7 +11,6 @@ RL_Real::RL_Real(int argc, char **argv) : unitree_safe(UNITREE_LEGGED_SDK::Legge
     ros::NodeHandle nh;
     this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Real::CmdvelCallback, this);
 #elif defined(USE_ROS2) && defined(USE_ROS)
-    // 初始化ROS2节点
     ros2_node = std::make_shared<rclcpp::Node>("rl_real_node");
     this->cmd_vel_subscriber = ros2_node->create_subscription<geometry_msgs::msg::Twist>(
         "/cmd_vel", rclcpp::SystemDefaultsQoS(),
