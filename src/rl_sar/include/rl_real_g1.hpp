@@ -258,7 +258,6 @@ private:
     ChannelSubscriberPtr<IMUState_> imutorso_subscriber;
 
     // others
-    int motiontime = 0;
     std::vector<float> mapped_joint_positions;
     std::vector<float> mapped_joint_velocities;
 

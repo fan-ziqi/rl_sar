@@ -4,6 +4,8 @@
 [![macOS](https://img.shields.io/badge/macOS-Experimental-orange.svg?logo=apple)](https://www.apple.com/macos/)
 [![ROS Noetic](https://img.shields.io/badge/ros-noetic-brightgreen.svg?logo=ros)](https://wiki.ros.org/noetic)
 [![ROS2 Foxy/Humble](https://img.shields.io/badge/ros2-foxy/humble-brightgreen.svg?logo=ros)](https://wiki.ros.org/foxy)
+[![Gazebo](https://img.shields.io/badge/Gazebo-Classic-lightgrey.svg?logo=gazebo)](http://gazebosim.org/)
+[![MuJoCo](https://img.shields.io/badge/MuJoCo-3.2.7-orange.svg?logo=mujoco)](https://mujoco.org/)
 [![License](https://img.shields.io/badge/license-Apache2.0-yellow.svg?logo=apache)](https://opensource.org/license/apache-2-0)
 
 [中文文档](README_CN.md)
@@ -17,22 +19,24 @@ This repository provides a framework for simulation verification and physical de
 > Supports both **libtorch** and **onnxruntime**
 >
 > Supports both **Linux** and **macOS**(Experimental)
+>
+> Supports both **Gazebo** and **Mujoco**(Partial support)
 
 Support List:
 
-|Robot Name (rname:=)|Pre-Trained Policy|Real|
-|-|-|-|
-|Unitree-A1 (a1)|legged_gym (IsaacGym)|✅|
-|Unitree-Go2 (go2)|himloco (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
-|Unitree-Go2W (go2w)|robot_lab (IsaacSim)|✅|
-|Unitree-B2 (b2)|robot_lab (IsaacSim)|⚪|
-|Unitree-B2W (b2w)|robot_lab (IsaacSim)|⚪|
-|Unitree-G1 (g1)|unitree_rl_gym (IsaacGym)</br>robomimic pre-loco (IsaacGym)</br>robomimic_dance (IsaacGym)</br>robomimic_kick (IsaacGym)</br>robomimic_kungfu (IsaacGym)|✅</br>✅</br>✅</br>🚫</br>🚫|
-|FFTAI-GR1T1 (gr1t1)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
-|FFTAI-GR1T2 (gr1t2)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|⚪|
-|zhinao-L4W4 (l4w4)|legged_gym (IsaacGym)</br>robot_lab (IsaacSim)|✅</br>✅|
-|Deeprobotics-Lite3 (lite3)|himloco (IsaacGym)|✅|
-|DDTRobot-Tita (tita)|robot_lab (IsaacSim)|⚪|
+|Robot Name (rname:=)|Pre-Trained Policy|Gazebo|Mujoco|Real|
+|-|-|-|-|-|
+|Unitree-A1 (a1)|legged_gym (IsaacGym)|✅|❌|✅|
+|Unitree-Go2 (go2)|himloco (IsaacGym)</br>robot_lab (IsaacSim)|✅|✅|✅</br>✅|
+|Unitree-Go2W (go2w)|robot_lab (IsaacSim)|✅|✅|✅|
+|Unitree-B2 (b2)|robot_lab (IsaacSim)|✅|✅|⚪|
+|Unitree-B2W (b2w)|robot_lab (IsaacSim)|✅|✅|⚪|
+|Unitree-G1 (g1)|unitree_rl_gym (IsaacGym)</br>robomimic pre-loco (IsaacGym)</br>robomimic_dance (IsaacGym)</br>robomimic_kick (IsaacGym)</br>robomimic_kungfu (IsaacGym)|✅|✅|✅</br>✅</br>✅</br>🚫</br>🚫|
+|FFTAI-GR1T1 (gr1t1)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|✅|❌|⚪|
+|FFTAI-GR1T2 (gr1t2)</br>(Only available on Ubuntu20.04)|legged_gym (IsaacGym)|✅|❌|⚪|
+|zhinao-L4W4 (l4w4)|legged_gym (IsaacGym)</br>robot_lab (IsaacSim)|✅|❌|✅</br>✅|
+|Deeprobotics-Lite3 (lite3)|himloco (IsaacGym)|✅|❌|✅|
+|DDTRobot-Tita (tita)|robot_lab (IsaacSim)|✅|❌|⚪|
 
 > [!IMPORTANT]
 > Python version temporarily suspended maintenance, please use [v2.3](https://github.com/fan-ziqi/rl_sar/releases/tag/v2.3) if necessary, may be re-released in the future.
@@ -110,6 +114,15 @@ If simulation is not needed and you only want to run on the robot, you can compi
 ./build.sh -m  # or ./build.sh --cmake
 ```
 
+To use the Mujoco simulator
+
+```bash
+./build.sh -mj  # or ./build.sh --mujoco
+```
+
+> [!NOTE]
+> If using macOS, you need to use the `./build.sh -m` command to compile. Currently only `rl_real_l4w4` is supported, and more features will be supported in the future.
+
 For detailed usage instructions, you can check them via `./build.sh -h`:
 
 ```bash
@@ -118,6 +131,7 @@ Usage: ./build.sh [OPTIONS] [PACKAGE_NAMES...]
 Options:
   -c, --clean    Clean workspace (remove symlinks and build artifacts)
   -m, --cmake    Build using CMake (for hardware deployment only)
+  -mj,--mujoco   Build with MuJoCo simulator support (CMake only)"
   -h, --help     Show this help message
 
 Examples:
@@ -126,6 +140,7 @@ Examples:
   ./build.sh -c                 # Clean all symlinks and build artifacts
   ./build.sh --clean package1   # Clean specific package and build artifacts
   ./build.sh -m                 # Build with CMake for hardware deployment
+  ./build.sh -mj                # Build with CMake and MuJoCo simulator support
 ```
 
 > [!TIP]
@@ -141,6 +156,8 @@ In the following text, **\<ROBOT\>/\<CONFIG\>** is used to represent different e
 Before running, copy the trained pt model file to `rl_sar/src/rl_sar/policy/<ROBOT>/<CONFIG>`, and configure the parameters in `<ROBOT>/<CONFIG>/config.yaml` and `<ROBOT>/base.yaml`.
 
 ### Simulation
+
+#### Gazebo
 
 Open a terminal, launch the gazebo simulation environment
 
@@ -173,6 +190,12 @@ If Gazebo cannot be opened when you start it for the first time, you need to dow
 
 ```bash
 git clone https://github.com/osrf/gazebo_models.git ~/.gazebo/models
+```
+
+#### Mujoco
+
+```bash
+./cmake_build/bin/rl_sim_mujoco <ROBOT>
 ```
 
 ### Control with Mobile Web (Experimental)
@@ -406,13 +429,13 @@ The following uses **\<ROBOT\>/\<CONFIG\>** to represent your robot environment,
 
 ```yaml
 # your robot description
-robots/<ROBOT>_description/CMakeLists.txt
-robots/<ROBOT>_description/package.ros1.xml
-robots/<ROBOT>_description/package.ros2.xml
-robots/<ROBOT>_description/xacro/robot.xacro
-robots/<ROBOT>_description/xacro/gazebo.xacro
-robots/<ROBOT>_description/config/robot_control.yaml
-robots/<ROBOT>_description/config/robot_control_ros2.yaml
+rl_sar_zoo/<ROBOT>_description/CMakeLists.txt
+rl_sar_zoo/<ROBOT>_description/package.ros1.xml
+rl_sar_zoo/<ROBOT>_description/package.ros2.xml
+rl_sar_zoo/<ROBOT>_description/xacro/robot.xacro
+rl_sar_zoo/<ROBOT>_description/xacro/gazebo.xacro
+rl_sar_zoo/<ROBOT>_description/config/robot_control.yaml
+rl_sar_zoo/<ROBOT>_description/config/robot_control_ros2.yaml
 
 # your policy
 rl_sar/policy/fsm.hpp
@@ -451,6 +474,8 @@ The project uses some code from the following open-source code repositories:
 - [unitreerobotics/unitree_sdk2-2.0.0](https://github.com/unitreerobotics/unitree_sdk2/tree/2.0.0)
 - [unitreerobotics/unitree_legged_sdk-v3.2](https://github.com/unitreerobotics/unitree_legged_sdk/tree/v3.2)
 - [unitreerobotics/unitree_guide](https://github.com/unitreerobotics/unitree_guide)
+- [unitreerobotics/unitree_mujoco](https://github.com/unitreerobotics/unitree_mujoco)
+- [google-deepmind/mujoco-3.2.7](https://github.com/google-deepmind/mujoco)
 - [mertgungor/unitree_model_control](https://github.com/mertgungor/unitree_model_control)
 - [Improbable-AI/walk-these-ways](https://github.com/Improbable-AI/walk-these-ways)
 - [ccrpRepo/RoboMimic_Deploy](https://github.com/ccrpRepo/RoboMimic_Deploy)

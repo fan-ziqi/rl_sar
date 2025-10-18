@@ -21,6 +21,46 @@ void RL::StateController(const RobotState<float>* state, RobotCommand<float>* co
     }
 
     fsm.Run();
+
+    this->motiontime++;
+
+    if (this->control.current_keyboard == Input::Keyboard::W)
+    {
+        this->control.x += 0.1f;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::S)
+    {
+        this->control.x -= 0.1f;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::A)
+    {
+        this->control.y += 0.1f;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::D)
+    {
+        this->control.y -= 0.1f;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::Q)
+    {
+        this->control.yaw += 0.1f;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::E)
+    {
+        this->control.yaw -= 0.1f;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::Space)
+    {
+        this->control.x = 0.0f;
+        this->control.y = 0.0f;
+        this->control.yaw = 0.0f;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::N || this->control.current_gamepad == Input::Gamepad::X)
+    {
+        this->control.navigation_mode = !this->control.navigation_mode;
+        std::cout << std::endl << LOGGER::INFO << "Navigation mode: " << (this->control.navigation_mode ? "ON" : "OFF") << std::endl;
+    }
+
+    this->control.ClearInput();
 }
 
 std::vector<float> RL::ComputeObservation()

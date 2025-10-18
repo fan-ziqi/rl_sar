@@ -24,11 +24,11 @@ ARCH_TYPE="$(uname -m)"
 
 # Parse arguments: support both new and old usage
 if [ $# -eq 0 ]; then
-    TARGET_DIR="inference_runtime"
+    TARGET_DIR="library/inference_runtime"
     DOWNLOAD_TARGET="all"
 elif [ $# -eq 1 ]; then
     if [[ "$1" == "libtorch" || "$1" == "onnx" || "$1" == "all" ]]; then
-        TARGET_DIR="inference_runtime"
+        TARGET_DIR="library/inference_runtime"
         DOWNLOAD_TARGET="$1"
     else
         TARGET_DIR="$1"

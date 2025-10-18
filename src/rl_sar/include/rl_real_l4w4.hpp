@@ -67,7 +67,6 @@ private:
     xRockerBtnDataStruct l4w4_joy;
 
     // others
-    int motiontime = 0;
     std::vector<float> mapped_joint_positions;
     std::vector<float> mapped_joint_velocities;
 

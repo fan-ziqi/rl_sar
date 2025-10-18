@@ -26,6 +26,10 @@ Thumbs.db
 onnxruntime
 libtorch
 
+# Mujoco
+mujoco
+MUJOCO_LOG.TXT
+
 # Data
 *.csv
 .cache
@@ -36,3 +40,6 @@ libtorch
 *.tgz
 *.tar.gz
 temp_extract*/
+
+# robot descriptions
+rl_sar_zoo

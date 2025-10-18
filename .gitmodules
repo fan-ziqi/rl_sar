@@ -10,3 +10,6 @@
 [submodule "src/rl_sar/library/thirdparty/robot_sdk/unitree/unitree_sdk2"]
 	path = src/rl_sar/library/thirdparty/robot_sdk/unitree/unitree_sdk2
 	url = https://github.com/unitreerobotics/unitree_sdk2.git
+[submodule "src/rl_sar/library/thirdparty/joystick"]
+	path = src/rl_sar/library/thirdparty/joystick
+	url = https://github.com/drewnoakes/joystick.git

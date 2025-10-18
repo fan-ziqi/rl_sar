@@ -119,7 +119,6 @@ private:
     xKeySwitchUnion unitree_joy;
 
     // others
-    int motiontime = 0;
     std::vector<float> mapped_joint_positions;
     std::vector<float> mapped_joint_velocities;
 

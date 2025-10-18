@@ -26,6 +26,9 @@ else()
     add_compile_definitions(USE_CMAKE)
 endif()
 
+# MuJoCo simulator option
+set(USE_MUJOCO OFF CACHE BOOL "Build with MuJoCo simulator support")
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -85,7 +88,7 @@ endif()
 
 # Inference Runtime
 
-set(INFERENCE_RUNTIME_DIR "${PROJECT_ROOT_DIR}/inference_runtime")
+set(INFERENCE_RUNTIME_DIR "${PROJECT_ROOT_DIR}/library/inference_runtime")
 
 # ONNX Runtime Setup
 set(USE_ONNX "OFF")
@@ -321,6 +324,7 @@ include_directories(
     library/core/fsm
     library/core/vector_math
     library/core/inference_runtime
+    library/thirdparty/mujoco_simulate
     fsm_robot
 )
 
@@ -538,7 +542,77 @@ if(NOT USE_CMAKE)
     endif()
 endif()
 
+# ========================
+# mujoco
+# ========================
+if(USE_MUJOCO)
+    add_compile_definitions(USE_MUJOCO)
+    set(MUJOCO_DIR "${PROJECT_ROOT_DIR}/library/mujoco")
+
+    # Check MuJoCo installation
+    if(NOT EXISTS "${MUJOCO_DIR}/include/mujoco/mujoco.h")
+        message(FATAL_ERROR "MuJoCo not found. Please run: bash scripts/download_mujoco.sh")
+    endif()
+
+    # Find GLFW
+    find_package(glfw3 REQUIRED)
+
+    # Platform-specific library names
+    if(SYSTEM_TYPE STREQUAL "Linux")
+        set(MUJOCO_LIB_NAME "libmujoco.so.3.2.7")
+    elseif(SYSTEM_TYPE STREQUAL "Darwin")
+        set(MUJOCO_LIB_NAME "libmujoco.3.2.7.dylib")
+    elseif(SYSTEM_TYPE STREQUAL "Windows")
+        set(MUJOCO_LIB_NAME "mujoco.dll")
+    else()
+        message(FATAL_ERROR "Unsupported platform: ${SYSTEM_TYPE}")
+    endif()
+
+    # Import MuJoCo library with RPATH
+    add_library(mujoco_prebuilt SHARED IMPORTED)
+    set_target_properties(mujoco_prebuilt PROPERTIES
+        IMPORTED_LOCATION "${MUJOCO_DIR}/lib/${MUJOCO_LIB_NAME}"
+        INTERFACE_INCLUDE_DIRECTORIES "${MUJOCO_DIR}/include"
+        IMPORTED_NO_SONAME TRUE
+    )
+
+    # Include directories
+    include_directories(
+        ${MUJOCO_DIR}/include
+        library/thirdparty/joystick
+        library/thirdparty/mujoco_simulate
+    )
+
+    # Source files
+    file(GLOB MUJOCO_SIMULATE_SRC library/thirdparty/mujoco_simulate/**.cc)
+    set(JOYSTICK_SRC library/thirdparty/joystick/joystick.cc)
+
+    # Build executable
+    add_executable(rl_sim_mujoco src/rl_sim_mujoco.cpp ${MUJOCO_SIMULATE_SRC} ${JOYSTICK_SRC})
+    target_link_libraries(rl_sim_mujoco
+        rl_sdk observation_buffer ${YAML_CPP_LIBRARIES}
+        Threads::Threads mujoco_prebuilt glfw
+    )
+
+    # macOS OpenMP support
+    if(SYSTEM_TYPE STREQUAL "Darwin" AND OPENMP_LIBRARIES)
+        target_link_libraries(rl_sim_mujoco ${OPENMP_LIBRARIES})
+    endif()
+
+    # RPATH for local MuJoCo library
+    set_target_properties(rl_sim_mujoco PROPERTIES
+        BUILD_RPATH "${MUJOCO_DIR}/lib"
+        INSTALL_RPATH "${MUJOCO_DIR}/lib"
+        INSTALL_RPATH_USE_LINK_PATH TRUE
+    )
+
+    install(TARGETS rl_sim_mujoco DESTINATION bin)
+    message(STATUS "MuJoCo configured: ${MUJOCO_DIR}")
+endif()
+
+# ========================
 # only for test
+# ========================
 # add_executable(test_observation_buffer test/test_observation_buffer.cpp)
 # target_link_libraries(test_observation_buffer
 #     observation_buffer
@@ -590,5 +664,11 @@ if(USE_ONNX)
     else()
         message(STATUS "ONNX Runtime: Available")
     endif()
+endif()
+message(STATUS "----------------------------------------")
+message(STATUS "Simulator Configuration:")
+message(STATUS "USE_MUJOCO: ${USE_MUJOCO}")
+if(USE_MUJOCO)
+    message(STATUS "MuJoCo: Enabled")
 endif()
 message(STATUS "========================================")
