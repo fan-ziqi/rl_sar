@@ -56,7 +56,7 @@ Support List:
 Clone the repository
 
 ```bash
-git clone --recursive https://github.com/fan-ziqi/rl_sar.git
+git clone --recursive --depth 1 https://github.com/fan-ziqi/rl_sar.git
 ```
 
 To update
