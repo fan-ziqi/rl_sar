@@ -225,7 +225,7 @@ void RL_Sim::SetupSysJoystick(const std::string& device, int bits)
 
 void RL_Sim::GetSysJoystick()
 {
-    // 清除所有按钮的事件状态
+    // Clear all button event states
     for (int i = 0; i < 20; ++i)
     {
         this->sys_js_button[i].on_press = false;

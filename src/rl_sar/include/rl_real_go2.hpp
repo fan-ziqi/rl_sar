@@ -47,7 +47,7 @@ using namespace unitree::robot::b2;
 constexpr double PosStopF = (2.146E+9f);
 constexpr double VelStopF = (16000.0f);
 
-// 遥控器键值联合体
+// union for joystick keys
 typedef union
 {
     struct

@@ -13,7 +13,6 @@ RL_Sim::RL_Sim(int argc, char **argv)
     nh.param<std::string>("ros_namespace", this->ros_namespace, "");
     nh.param<std::string>("robot_name", this->robot_name, "");
 #elif defined(USE_ROS2)
-    // 初始化ROS2节点
     ros2_node = std::make_shared<rclcpp::Node>("rl_sim_node");
     this->ang_vel_type = "ang_vel_body";
     this->ros_namespace = ros2_node->get_namespace();
