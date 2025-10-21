@@ -163,7 +163,7 @@ public:
         {
             std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
             rl.rl_init_done = false;
-            rl.control.SetKeyboard(Input::Keyboard::P);
+            rl.fsm.RequestStateChange("RLFSMStatePassive");
         }
     }
 
@@ -246,7 +246,7 @@ public:
         {
             std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
             rl.rl_init_done = false;
-            rl.control.SetKeyboard(Input::Keyboard::P);
+            rl.fsm.RequestStateChange("RLFSMStatePassive");
         }
     }
 
@@ -329,7 +329,7 @@ public:
         {
             std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
             rl.rl_init_done = false;
-            rl.control.SetKeyboard(Input::Keyboard::P);
+            rl.fsm.RequestStateChange("RLFSMStatePassive");
         }
 
         rl.motion_length = 18.0;
@@ -351,7 +351,7 @@ public:
 
         if (motion_time / rl.motion_length == 1)
         {
-            rl.control.SetKeyboard(Input::Keyboard::Num0);
+            rl.fsm.RequestStateChange("RLFSMStateRL_RoboMimicLoco");
         }
     }
 
@@ -407,7 +407,7 @@ public:
         {
             std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
             rl.rl_init_done = false;
-            rl.control.SetKeyboard(Input::Keyboard::P);
+            rl.fsm.RequestStateChange("RLFSMStatePassive");
         }
 
         rl.motion_length = 17.433;
@@ -429,7 +429,7 @@ public:
 
         if (motion_time / rl.motion_length == 1)
         {
-            rl.control.SetKeyboard(Input::Keyboard::Num0);
+            rl.fsm.RequestStateChange("RLFSMStateRL_RoboMimicLoco");
         }
     }
 
@@ -485,7 +485,7 @@ public:
         {
             std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
             rl.rl_init_done = false;
-            rl.control.SetKeyboard(Input::Keyboard::P);
+            rl.fsm.RequestStateChange("RLFSMStatePassive");
         }
 
         rl.motion_length = 3.633;
@@ -507,7 +507,7 @@ public:
 
         if (motion_time / rl.motion_length == 1)
         {
-            rl.control.SetKeyboard(Input::Keyboard::Num0);
+            rl.fsm.RequestStateChange("RLFSMStateRL_RoboMimicLoco");
         }
     }
 

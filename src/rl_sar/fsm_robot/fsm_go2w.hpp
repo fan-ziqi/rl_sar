@@ -162,7 +162,7 @@ public:
         rl.episode_length_buf = 0;
 
         // read params from yaml
-        rl.config_name = "robot_lab";
+        rl.config_name = "robot_la1b";
         std::string robot_path = rl.robot_name + "/" + rl.config_name;
         try
         {
@@ -174,7 +174,7 @@ public:
         {
             std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
             rl.rl_init_done = false;
-            rl.control.SetKeyboard(Input::Keyboard::P);
+            rl.fsm.RequestStateChange("RLFSMStatePassive");
         }
     }
 

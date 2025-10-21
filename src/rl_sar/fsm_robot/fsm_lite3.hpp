@@ -173,7 +173,7 @@ public:
         {
             std::cout << LOGGER::ERROR << "InitRL() failed: " << e.what() << std::endl;
             rl.rl_init_done = false;
-            rl.control.SetKeyboard(Input::Keyboard::P);
+            rl.fsm.RequestStateChange("RLFSMStatePassive");
         }
     }
 
