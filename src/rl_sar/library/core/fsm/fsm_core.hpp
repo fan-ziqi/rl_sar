@@ -73,7 +73,15 @@ public:
             current_state_->Exit();
             previous_state_ = current_state_;
             current_state_ = next_state_;
+            auto expected_state = next_state_;  // Save the state we're entering
             current_state_->Enter();
+
+            // Check if Enter() triggered another state change request
+            if (mode_ == Mode::CHANGE && next_state_ != expected_state) {
+                // Enter() requested a new state change, return and process it in next cycle
+                return;
+            }
+
             mode_ = Mode::NORMAL;
             current_state_->Run();
         }
