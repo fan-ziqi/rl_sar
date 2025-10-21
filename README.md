@@ -189,7 +189,8 @@ git clone https://github.com/osrf/gazebo_models.git ~/.gazebo/models
 #### Mujoco
 
 ```bash
-./cmake_build/bin/rl_sim_mujoco <ROBOT>
+./cmake_build/bin/rl_sim_mujoco <ROBOT> <SCENE>
+# Example: ./cmake_build/bin/rl_sim_mujoco g1 scene_29dof
 ```
 
 ### Control with Mobile Web (Experimental)

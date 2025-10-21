@@ -83,6 +83,7 @@ private:
     // mujoco
     mjData *mj_data;
     mjModel *mj_model;
+    std::string scene_name;
 
     // joystick
     std::unique_ptr<Joystick> sys_js;
