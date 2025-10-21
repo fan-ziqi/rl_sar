@@ -7,14 +7,15 @@
 
 RL_Sim::RL_Sim(int argc, char **argv)
 {
-    if (argc < 2)
+    if (argc < 3)
     {
-        std::cout << LOGGER::ERROR << "Usage: " << argv[0] << " robot_name" << std::endl;
+        std::cout << LOGGER::ERROR << "Usage: " << argv[0] << " robot_name scene_name" << std::endl;
         throw std::runtime_error("Invalid arguments");
     }
     else
     {
         this->robot_name = argv[1];
+        this->scene_name = argv[2];
     }
 
     this->ang_vel_type = "ang_vel_body";
@@ -55,7 +56,7 @@ RL_Sim::RL_Sim(int argc, char **argv)
         std::make_unique<mj::GlfwAdapter>(),
         &cam, &opt, &pert, /* is_passive = */ false);
 
-    std::string filename = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/../rl_sar_zoo/" + this->robot_name + "_description/mjcf/scene_terrain.xml";
+    std::string filename = std::string(CMAKE_CURRENT_SOURCE_DIR) + "/../rl_sar_zoo/" + this->robot_name + "_description/mjcf/" + this->scene_name + ".xml";
 
     // start physics thread
     std::thread physicsthreadhandle(&PhysicsThread, sim.get(), filename.c_str());
