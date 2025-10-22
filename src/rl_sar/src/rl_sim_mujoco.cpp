@@ -5,8 +5,13 @@
 
 #include "rl_sim_mujoco.hpp"
 
+RL_Sim* RL_Sim::instance = nullptr;
+
 RL_Sim::RL_Sim(int argc, char **argv)
 {
+    // Set static instance pointer early for signal handler
+    instance = this;
+
     if (argc < 3)
     {
         std::cout << LOGGER::ERROR << "Usage: " << argv[0] << " robot_name scene_name" << std::endl;
@@ -21,7 +26,7 @@ RL_Sim::RL_Sim(int argc, char **argv)
     this->ang_vel_type = "ang_vel_body";
 
     // now launch mujoco
-    std::cout << LOGGER::INFO << "Launching mujoco..." << std::endl;
+    std::cout << LOGGER::INFO << "[MuJoCo] Launching..." << std::endl;
 
     // display an error if running on macOS under Rosetta 2
 #if defined(__APPLE__) && defined(__AVX__)
@@ -33,7 +38,7 @@ RL_Sim::RL_Sim(int argc, char **argv)
 #endif
 
     // print version, check compatibility
-    std::printf("MuJoCo version %s\n", mj_versionString());
+    std::cout << LOGGER::INFO << "[MuJoCo] Version: " << mj_versionString() << std::endl;
     if (mjVERSION_HEADER != mj_version())
     {
         mju_error("Headers and library have different versions");
@@ -66,7 +71,7 @@ RL_Sim::RL_Sim(int argc, char **argv)
     {
         if (d)
         {
-            std::cout << "Mujoco data is prepared" << std::endl;
+            std::cout << LOGGER::INFO << "[MuJoCo] Data prepared" << std::endl;
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -90,7 +95,7 @@ RL_Sim::RL_Sim(int argc, char **argv)
     }
     else
     {
-        std::cout << LOGGER::ERROR << "No FSM registered for robot: " << this->robot_name << std::endl;
+        std::cout << LOGGER::ERROR << "[FSM] No FSM registered for robot: " << this->robot_name << std::endl;
     }
 
     // init robot
@@ -133,6 +138,9 @@ RL_Sim::RL_Sim(int argc, char **argv)
 
 RL_Sim::~RL_Sim()
 {
+    // Clear static instance pointer
+    instance = nullptr;
+
     this->loop_keyboard->shutdown();
     this->loop_joystick->shutdown();
     this->loop_control->shutdown();
@@ -417,35 +425,20 @@ void RL_Sim::Plot()
     plt::pause(0.01);
 }
 
-// Global pointer to RL_Sim instance for signal handler
-static RL_Sim* g_rl_sim_instance = nullptr;
-
+// Signal handler for Ctrl+C
 void signalHandler(int signum)
 {
-    std::cout << "\nReceived signal " << signum << ", exiting..." << std::endl;
-
-    // Try to gracefully stop the simulation
-    if (g_rl_sim_instance && g_rl_sim_instance->sim)
+    std::cout << LOGGER::INFO << "Received signal " << signum << ", exiting..." << std::endl;
+    if (RL_Sim::instance && RL_Sim::instance->sim)
     {
-        g_rl_sim_instance->sim->exitrequest.store(1);
+        RL_Sim::instance->sim->exitrequest.store(1);
     }
-
-    // If graceful exit doesn't work, force exit after a short delay
-    // This allows the render loop to check exitrequest
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    std::_Exit(0);
 }
 
 int main(int argc, char **argv)
 {
     std::string robot_name(argc > 1 ? argv[1] : "");
     signal(SIGINT, signalHandler);
-
     RL_Sim rl_sar(argc, argv);
-    g_rl_sim_instance = &rl_sar;
-
-    // RenderLoop has exited (window closed), exit immediately
-    std::cout << LOGGER::INFO << "Window closed. Exiting..." << std::endl;
-    g_rl_sim_instance = nullptr;
     return 0;
 }

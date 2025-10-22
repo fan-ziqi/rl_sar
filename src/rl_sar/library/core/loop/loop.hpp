@@ -16,6 +16,7 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>
+#include "logger.hpp"
 
 #ifdef __linux__
 #include <pthread.h>
@@ -31,7 +32,8 @@ public:
     void start()
     {
         _running = true;
-        log("[Loop Start] named: " + _name + ", period: " + formatPeriod() + "(ms)" + (_bindCPU != -1 ? ", run at cpu: " + std::to_string(_bindCPU) : ", cpu unspecified"));
+        std::cout << LOGGER::INFO << "[Loop] Loop start - name: " << _name << ", period: " << formatPeriod() << "ms"
+                  << (_bindCPU != -1 ? ", cpu: " + std::to_string(_bindCPU) : ", cpu: unspecified") << std::endl;
         if (_bindCPU != -1)
         {
             _thread = std::thread(&LoopFunc::loop, this);
@@ -55,7 +57,7 @@ public:
         {
             _thread.join();
         }
-        log("[Loop End] named: " + _name);
+        std::cout << LOGGER::INFO << "[Loop] Loop end - name: " << _name << std::endl;
     }
 
 private:
@@ -98,13 +100,6 @@ private:
         return stream.str();
     }
 
-    void log(const std::string &message)
-    {
-        static std::mutex logMutex;
-        std::lock_guard<std::mutex> lock(logMutex);
-        std::cout << message << std::endl;
-    }
-
     void setThreadAffinity(std::thread::native_handle_type threadHandle, int cpuId)
     {
 #ifdef __linux__
@@ -119,7 +114,7 @@ private:
         }
 #else
         // Thread affinity not supported on this platform
-        std::cout << "Thread affinity not supported on this platform" << std::endl;
+        std::cout << LOGGER::WARNING << "Thread affinity not supported on this platform" << std::endl;
 #endif
     }
 };

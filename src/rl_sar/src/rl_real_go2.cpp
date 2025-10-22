@@ -36,7 +36,7 @@ RL_Real::RL_Real(int argc, char **argv)
     }
     else
     {
-        std::cout << LOGGER::ERROR << "No FSM registered for robot: " << this->robot_name << std::endl;
+        std::cout << LOGGER::ERROR << "[FSM] No FSM registered for robot: " << this->robot_name << std::endl;
     }
 
     // init robot

@@ -56,8 +56,8 @@ public:
     RL_Sim(int argc, char **argv);
     ~RL_Sim();
 
-    // Public member for signal handler access
     std::unique_ptr<mj::Simulate> sim;
+    static RL_Sim* instance;
 
 private:
     // rl functions

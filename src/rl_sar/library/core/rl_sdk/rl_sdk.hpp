@@ -22,15 +22,7 @@
 #include "observation_buffer.hpp"
 #include "vector_math.hpp"
 #include "inference_runtime.hpp"
-
-namespace LOGGER
-{
-    const char *const INFO    = "\033[0;37m[INFO]\033[0m ";
-    const char *const WARNING = "\033[0;33m[WARNING]\033[0m ";
-    const char *const ERROR   = "\033[0;31m[ERROR]\033[0m ";
-    const char *const DEBUG   = "\033[0;32m[DEBUG]\033[0m ";
-    const char *const NOTE    = "\033[0;34m[NOTE]\033[0m ";
-}
+#include "logger.hpp"
 
 template <typename T>
 struct RobotCommand
