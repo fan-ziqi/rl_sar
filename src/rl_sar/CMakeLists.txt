@@ -324,6 +324,7 @@ include_directories(
     library/core/fsm
     library/core/vector_math
     library/core/inference_runtime
+    library/core/logger
     fsm_robot
 )
 

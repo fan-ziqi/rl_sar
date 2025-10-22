@@ -40,17 +40,17 @@ bool TorchModel::load(const std::string& model_path)
         model_ = torch::jit::load(model_path);
         model_path_ = model_path;
         loaded_ = true;
-        std::cout << "Successfully loaded Torch model: " << model_path << std::endl;
+        std::cout << LOGGER::INFO << "Successfully loaded Torch model: " << model_path << std::endl;
         return true;
 #else
-        std::cout << "Torch support not compiled. Please define USE_TORCH." << std::endl;
+        std::cout << LOGGER::WARNING << "Torch support not compiled. Please define USE_TORCH." << std::endl;
         loaded_ = false;
         return false;
 #endif
     }
     catch (const std::exception& e)
     {
-        std::cout << "Failed to load Torch model: " << e.what() << std::endl;
+        std::cout << LOGGER::ERROR << "Failed to load Torch model: " << e.what() << std::endl;
         loaded_ = false;
         return false;
     }
@@ -84,7 +84,7 @@ std::vector<float> TorchModel::forward(const std::vector<std::vector<float>>& in
     }
     catch (const std::exception& e)
     {
-        std::cout << "Torch inference error: " << e.what() << std::endl;
+        std::cout << LOGGER::ERROR << "Torch inference error: " << e.what() << std::endl;
         throw;
     }
 #else
@@ -159,17 +159,17 @@ bool ONNXModel::load(const std::string& model_path)
 
         model_path_ = model_path;
         loaded_ = true;
-        std::cout << "Successfully loaded ONNX model: " << model_path << std::endl;
+        std::cout << LOGGER::INFO << "Successfully loaded ONNX model: " << model_path << std::endl;
         return true;
 #else
-        std::cout << "ONNX support not compiled. Please define USE_ONNX." << std::endl;
+        std::cout << LOGGER::WARNING << "ONNX support not compiled. Please define USE_ONNX." << std::endl;
         loaded_ = false;
         return false;
 #endif
     }
     catch (const std::exception& e)
     {
-        std::cout << "Failed to load ONNX model: " << e.what() << std::endl;
+        std::cout << LOGGER::ERROR << "Failed to load ONNX model: " << e.what() << std::endl;
         loaded_ = false;
         return false;
     }
@@ -220,7 +220,7 @@ std::vector<float> ONNXModel::forward(const std::vector<std::vector<float>>& inp
     }
     catch (const std::exception& e)
     {
-        std::cout << "ONNX inference error: " << e.what() << std::endl;
+        std::cout << LOGGER::ERROR << "ONNX inference error: " << e.what() << std::endl;
         throw;
     }
 #else

@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <memory>
 #include <vector>
+#include "logger.hpp"
 
 class FSMState
 {
@@ -39,7 +40,7 @@ public:
         current_state_ = states_.at(name);
         current_state_->Enter();
         next_state_ = current_state_;
-        std::cout << "[FSM] Set initial state: " << name << std::endl;
+        std::cout << LOGGER::INFO << "[FSM] Set initial state: " << name << std::endl;
     }
 
     void RequestStateChange(const std::string& state_name)
@@ -48,7 +49,7 @@ public:
         {
             next_state_ = states_.at(state_name);
             mode_ = Mode::CHANGE;
-            std::cout << std::endl << "\033[0;34m[FSM]\033[0m Request switch from " << current_state_->GetStateName() << " to " << next_state_->GetStateName() << std::endl;
+            std::cout << std::endl << LOGGER::INFO << "[FSM] Request switch from " << current_state_->GetStateName() << " to " << next_state_->GetStateName() << std::endl;
         }
     }
 
@@ -65,7 +66,7 @@ public:
             {
                 mode_ = Mode::CHANGE;
                 next_state_ = states_.at(next);
-                std::cout << std::endl << "\033[0;34m[FSM]\033[0m Switch from " << current_state_->GetStateName() << " to " << next_state_->GetStateName() << std::endl;
+                std::cout << std::endl << LOGGER::NOTE << "[FSM] Switch from " << current_state_->GetStateName() << " to " << next_state_->GetStateName() << std::endl;
             }
         }
         else if (mode_ == Mode::CHANGE)
@@ -125,7 +126,7 @@ public:
         {
             std::string type = factory->GetType();
             factories_[type] = factory;
-            std::cout << "[FSMManager] Registered type: " << type << std::endl;
+            std::cout << LOGGER::INFO << "[FSMManager] Registered type: " << type << std::endl;
         }
     }
 
@@ -134,14 +135,14 @@ public:
         auto it = factories_.find(type);
         if (it == factories_.end())
         {
-            std::cout << "\033[0;31m[FSMManager]\033[0m Error: Unsupported type: " << type << std::endl;
+            std::cout << LOGGER::ERROR << "[FSMManager] Error: Unsupported type: " << type << std::endl;
             return nullptr;
         }
         auto factory = it->second;
         auto state_names = factory->GetSupportedStates();
         if (state_names.empty())
         {
-            std::cout << "\033[0;31m[FSMManager]\033[0m Error: No states registered for type: " << type << std::endl;
+            std::cout << LOGGER::ERROR << "[FSMManager] Error: No states registered for type: " << type << std::endl;
             return nullptr;
         }
         auto fsm = std::make_shared<FSM>();
@@ -152,7 +153,7 @@ public:
                 fsm->AddState(state);
         }
         fsm->SetInitialState(factory->GetInitialState());
-        std::cout << "[FSMManager] FSM created for type: " << type << std::endl;
+        std::cout << LOGGER::INFO << "[FSMManager] FSM created for type: " << type << std::endl;
         return fsm;
     }
 

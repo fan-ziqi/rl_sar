@@ -11,6 +11,7 @@
 #include <memory>
 #include <filesystem>
 #include <algorithm>
+#include "logger.hpp"
 
 #ifdef USE_TORCH
 #include <torch/script.h>
