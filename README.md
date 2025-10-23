@@ -334,37 +334,7 @@ Connect your computer to the robot using the Ethernet cable and log into the Jet
 ssh unitree@192.168.123.18
 ```
 
-Check the JetPack version:
-
-```bash
-sudo pip install jetson-stats
-sudo jtop
-```
-
-Download and install the PyTorch version that matches your JetPack:
-
-```bash
-wget https://developer.download.nvidia.cn/compute/redist/jp/v512/pytorch/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl
-sudo apt install python-is-python3 python3.9-dev
-pip install torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl
-```
-
-Check the installed torch path:
-
-```bash
-python -c "import torch; print(torch.__file__)"
-```
-
-Manually create the `libtorch` directory and copy necessary files
-
-```bash
-mkdir ~/libtorch
-cp -r /home/unitree/.local/lib/python3.8/site-packages/torch/{bin,include,lib,share} ~/libtorch
-echo 'export Torch_DIR=~/libtorch' >> ~/.bashrc
-source ~/.bashrc
-```
-
-Pull the code and compile it. The process is the same as above.
+Connect the phone to the USB of the dongle, enable USB network sharing on the phone, pull and compile the code, and then unplug the phone and network cable. The usage process is the same as above.
 
 </details>
 
