@@ -420,27 +420,30 @@ ros2 run rl_sar rl_real_lite3
 
 ## 添加你的机器人
 
-下面使用 **\<ROBOT\>/\<CONFIG\>** 代替表示你的机器人环境，且路径均在`rl_sar/src/`下。您只需要创建或修改下述文件，命名必须跟下面一样。（你可以参考go2w对应的文件）
+下面使用 **\<ROBOT\>/\<CONFIG\>** 代替表示你的机器人环境。你只需要创建或修改下述文件，命名必须跟下面一样。（你可以参考go2w对应的文件）
 
 ```yaml
 # 你的机器人description
-rl_sar_zoo/<ROBOT>_description/CMakeLists.txt
-rl_sar_zoo/<ROBOT>_description/package.ros1.xml
-rl_sar_zoo/<ROBOT>_description/package.ros2.xml
-rl_sar_zoo/<ROBOT>_description/xacro/robot.xacro
-rl_sar_zoo/<ROBOT>_description/xacro/gazebo.xacro
-rl_sar_zoo/<ROBOT>_description/config/robot_control.yaml
-rl_sar_zoo/<ROBOT>_description/config/robot_control_ros2.yaml
+rl_sar/src/rl_sar_zoo/<ROBOT>_description/CMakeLists.txt
+rl_sar/src/rl_sar_zoo/<ROBOT>_description/package.ros1.xml
+rl_sar/src/rl_sar_zoo/<ROBOT>_description/package.ros2.xml
+rl_sar/src/rl_sar_zoo/<ROBOT>_description/xacro/robot.xacro
+rl_sar/src/rl_sar_zoo/<ROBOT>_description/xacro/gazebo.xacro
+rl_sar/src/rl_sar_zoo/<ROBOT>_description/config/robot_control.yaml
+rl_sar/src/rl_sar_zoo/<ROBOT>_description/config/robot_control_ros2.yaml
 
 # 你训练的policy
-rl_sar/policy/fsm.hpp
-rl_sar/policy/<ROBOT>/fsm.hpp
-rl_sar/policy/<ROBOT>/base.yaml  # 此文件中必须遵守实物机器人的关节顺序
-rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml
-rl_sar/policy/<ROBOT>/<CONFIG>/<POLICY>.pt  # 必须导出jit才可使用
+policy/<ROBOT>/base.yaml  # 此文件中必须遵守实物机器人的关节顺序
+policy/<ROBOT>/<CONFIG>/config.yaml
+policy/<ROBOT>/<CONFIG>/<POLICY>.pt  # libtorch使用，注意导出jit
+policy/<ROBOT>/<CONFIG>/<POLICY>.onnx  # onnxruntime使用
+
+# 机器人的fsm
+src/rl_sar/fsm_robot/fsm_<ROBOT>.hpp
+src/rl_sar/fsm_robot/fsm_all.hpp
 
 # 你实物机器人的代码
-rl_sar/src/rl_real_<ROBOT>.cpp  # 可以按需自定义forward()函数以适配您的policy
+rl_sar/src/rl_sar/src/rl_real_<ROBOT>.cpp  # 可以按需自定义forward()函数以适配您的policy
 ```
 
 ## 贡献
