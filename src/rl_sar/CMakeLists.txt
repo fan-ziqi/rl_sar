@@ -470,6 +470,10 @@ if(SYSTEM_TYPE STREQUAL "Linux")
         observation_buffer
             ${YAML_CPP_LIBRARIES}
     )
+    # Add unitree_sdk2 library path to RPATH
+    set_target_properties(rl_real_go2 PROPERTIES
+        INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/robot_sdk/unitree/unitree_sdk2/thirdparty/lib/${ARCH_DIR}"
+    )
     if(NOT USE_CMAKE)
         if($ENV{ROS_DISTRO} MATCHES "noetic")
             target_link_libraries(rl_real_go2 ${catkin_LIBRARIES})
@@ -491,6 +495,10 @@ if(SYSTEM_TYPE STREQUAL "Linux")
         rl_sdk
         observation_buffer
             ${YAML_CPP_LIBRARIES}
+    )
+    # Add unitree_sdk2 library path to RPATH
+    set_target_properties(rl_real_g1 PROPERTIES
+        INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${CMAKE_CURRENT_SOURCE_DIR}/library/thirdparty/robot_sdk/unitree/unitree_sdk2/thirdparty/lib/${ARCH_DIR}"
     )
     if(NOT USE_CMAKE)
         if($ENV{ROS_DISTRO} MATCHES "noetic")

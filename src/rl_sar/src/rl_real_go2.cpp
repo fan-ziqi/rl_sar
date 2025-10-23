@@ -410,6 +410,14 @@ void signalHandler(int signum)
     ros::shutdown();
     exit(0);
 }
+#elif defined(USE_CMAKE) || !defined(USE_ROS)
+// Signal handler for CMAKE mode
+volatile sig_atomic_t g_shutdown_requested = 0;
+void signalHandler(int signum)
+{
+    std::cout << LOGGER::INFO << "Received signal " << signum << ", shutting down..." << std::endl;
+    g_shutdown_requested = 1;
+}
 #endif
 
 int main(int argc, char **argv)
@@ -432,8 +440,10 @@ int main(int argc, char **argv)
     rclcpp::spin(rl_sar->ros2_node);
     rclcpp::shutdown();
 #elif defined(USE_CMAKE) || !defined(USE_ROS)
+    signal(SIGINT, signalHandler);
     RL_Real rl_sar(argc, argv);
-    while (1) { sleep(10); }
+    while (!g_shutdown_requested) { sleep(1); }
+    std::cout << LOGGER::INFO << "Exiting..." << std::endl;
 #endif
 
     return 0;
