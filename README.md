@@ -420,27 +420,30 @@ Take A1 as an example below
 
 ## Add Your Robot
 
-The following uses **\<ROBOT\>/\<CONFIG\>** to represent your robot environment, with all paths relative to `rl_sar/src/`. You only need to create or modify the following files, and the names must exactly match those shown below. (You can refer to the corresponding files in go2w as examples.)
+The following uses **\<ROBOT\>/\<CONFIG\>** to represent your robot environment. You only need to create or modify the following files, and the names must exactly match those shown below. (You can refer to the corresponding files in go2w as examples.)
 
 ```yaml
 # your robot description
-rl_sar_zoo/<ROBOT>_description/CMakeLists.txt
-rl_sar_zoo/<ROBOT>_description/package.ros1.xml
-rl_sar_zoo/<ROBOT>_description/package.ros2.xml
-rl_sar_zoo/<ROBOT>_description/xacro/robot.xacro
-rl_sar_zoo/<ROBOT>_description/xacro/gazebo.xacro
-rl_sar_zoo/<ROBOT>_description/config/robot_control.yaml
-rl_sar_zoo/<ROBOT>_description/config/robot_control_ros2.yaml
+rl_sar/src/rl_sar_zoo/<ROBOT>_description/CMakeLists.txt
+rl_sar/src/rl_sar_zoo/<ROBOT>_description/package.ros1.xml
+rl_sar/src/rl_sar_zoo/<ROBOT>_description/package.ros2.xml
+rl_sar/src/rl_sar_zoo/<ROBOT>_description/xacro/robot.xacro
+rl_sar/src/rl_sar_zoo/<ROBOT>_description/xacro/gazebo.xacro
+rl_sar/src/rl_sar_zoo/<ROBOT>_description/config/robot_control.yaml
+rl_sar/src/rl_sar_zoo/<ROBOT>_description/config/robot_control_ros2.yaml
 
 # your policy
-rl_sar/policy/fsm.hpp
-rl_sar/policy/<ROBOT>/fsm.hpp
-rl_sar/policy/<ROBOT>/base.yaml  # This file must follow the physical robot's joint order
-rl_sar/policy/<ROBOT>/<CONFIG>/config.yaml
-rl_sar/policy/<ROBOT>/<CONFIG>/<POLICY>.pt  # Must be exported as JIT to be usable
+policy/<ROBOT>/base.yaml  # This file must follow the physical robot's joint order
+policy/<ROBOT>/<CONFIG>/config.yaml
+policy/<ROBOT>/<CONFIG>/<POLICY>.pt  # for libtorch, note that exporting JIT is required
+policy/<ROBOT>/<CONFIG>/<POLICY>.onnx  # for onnxruntime
+
+# fsm for robot
+src/rl_sar/fsm_robot/fsm_<ROBOT>.hpp
+src/rl_sar/fsm_robot/fsm_all.hpp
 
 # your real robot code
-rl_sar/src/rl_real_<ROBOT>.cpp  # You can customize the forward() function as needed to adapt to your policy
+rl_sar/src/rl_sar/src/rl_real_<ROBOT>.cpp  # You can customize the forward() function as needed to adapt to your policy
 ```
 
 ## Contributing
