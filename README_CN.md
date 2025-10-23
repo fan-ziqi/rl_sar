@@ -63,7 +63,7 @@ git clone --recursive --depth 1 https://github.com/fan-ziqi/rl_sar.git
 
 ```bash
 git pull
-git submodule update --init --recursive
+git submodule update --init --recursive --recommend-shallow --progress
 ```
 
 ## 依赖

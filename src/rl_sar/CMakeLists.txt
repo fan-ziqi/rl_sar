@@ -95,7 +95,14 @@ set(USE_ONNX "OFF")
 set(ONNX_RUNTIME_LIB "")
 set(ONNX_RUNTIME_DIR "${INFERENCE_RUNTIME_DIR}/onnxruntime")
 
-if(EXISTS "${ONNX_RUNTIME_DIR}/include" AND EXISTS "${ONNX_RUNTIME_DIR}/lib")
+# Detect Jetson platform
+set(IS_JETSON FALSE)
+if(EXISTS "/etc/nv_tegra_release")
+    set(IS_JETSON TRUE)
+    message(STATUS "Jetson platform detected - ONNX Runtime will be disabled")
+endif()
+
+if(EXISTS "${ONNX_RUNTIME_DIR}/include" AND EXISTS "${ONNX_RUNTIME_DIR}/lib" AND NOT IS_JETSON)
     set(USE_ONNX "ON")
     add_compile_definitions(USE_ONNX)
 
@@ -164,11 +171,12 @@ if(EXISTS "${LIBTORCH_DIR}/include" AND EXISTS "${LIBTORCH_DIR}/lib")
 
     message(STATUS "Found LibTorch at: ${LIBTORCH_DIR}")
 
-    # For Jetson with old CMake: disable CUDA arch detection to avoid CUDA17 requirement
+    # For Jetson with old CMake: set common Jetson CUDA architectures to avoid CUDA17 requirement
     if(CMAKE_VERSION VERSION_LESS "3.18")
-        set(TORCH_CUDA_ARCH_LIST "Manual" CACHE STRING "CUDA architectures")
-        set(ENV{TORCH_CUDA_ARCH_LIST} "Manual")
-        message(STATUS "CMake ${CMAKE_VERSION} detected - setting manual CUDA arch to bypass detection")
+        # Common Jetson architectures: 5.3(Nano), 6.2(TX2), 7.2(Xavier), 8.7(Orin)
+        set(TORCH_CUDA_ARCH_LIST "5.3;6.2;7.2;8.7" CACHE STRING "CUDA architectures")
+        set(ENV{TORCH_CUDA_ARCH_LIST} "5.3;6.2;7.2;8.7")
+        message(STATUS "CMake ${CMAKE_VERSION} detected - using common Jetson CUDA architectures")
     endif()
 
     set(CMAKE_PREFIX_PATH "${LIBTORCH_DIR};${CMAKE_PREFIX_PATH}")
