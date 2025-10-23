@@ -63,7 +63,7 @@ To update
 
 ```bash
 git pull
-git submodule update --init --recursive
+git submodule update --init --recursive --recommend-shallow --progress
 ```
 
 ## Dependency
