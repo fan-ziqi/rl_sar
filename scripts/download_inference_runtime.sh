@@ -70,6 +70,19 @@ is_libtorch_valid() {
 
 # Function: Download LibTorch
 download_libtorch() {
+    # Check if Jetson platform
+    if [ "${IS_JETSON}" = true ]; then
+        print_info "Jetson platform detected - using install_pytorch_jetson.sh"
+        if [ -x "${SCRIPT_DIR}/install_pytorch_jetson.sh" ]; then
+            "${SCRIPT_DIR}/install_pytorch_jetson.sh" "${LIBTORCH_DIR}"
+            return $?
+        else
+            print_error "install_pytorch_jetson.sh not found or not executable"
+            print_info "Please ensure ${SCRIPT_DIR}/install_pytorch_jetson.sh exists"
+            return 1
+        fi
+    fi
+
     local url=""
     local archive_name=""
 
@@ -85,6 +98,12 @@ download_libtorch() {
             fi
             ;;
         Linux)
+            if [ "${ARCH_TYPE}" = "aarch64" ]; then
+                print_error "ARM64 Linux detected but not identified as Jetson"
+                print_error "LibTorch prebuilt binaries for generic ARM64 Linux are not available"
+                print_info "If this is a Jetson device, please check /etc/nv_tegra_release"
+                exit 1
+            fi
             url="https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}%2Bcpu.zip"
             archive_name="libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}+cpu.zip"
             ;;

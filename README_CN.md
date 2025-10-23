@@ -334,37 +334,7 @@ ros2 run rl_sar rl_real_g1 <YOUR_NETWORK_INTERFACE>
 ssh unitree@192.168.123.18
 ```
 
-查看jetpack版本
-
-```bash
-sudo pip install jetson-stats
-sudo jtop
-```
-
-下载并安装对应jetpack版本的pytorch
-
-```bash
-wget https://developer.download.nvidia.cn/compute/redist/jp/v512/pytorch/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl
-sudo apt install python-is-python3 python3.9-dev
-pip install torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl
-```
-
-查看torch路径
-
-```bash
-python -c "import torch; print(torch.__file__)"
-```
-
-自行修改下面路径，手动创建libtorch库
-
-```bash
-mkdir ~/libtorch
-cp -r /home/unitree/.local/lib/python3.8/site-packages/torch/{bin,include,lib,share} ~/libtorch
-echo 'export Torch_DIR=~/libtorch' >> ~/.bashrc
-source ~/.bashrc
-```
-
-拉取代码并编译，流程与上文相同。
+将手机连接机器狗的USB，开启手机的USB网络共享，拉取代码并编译，然后即可拔掉手机和网线，使用流程与上文相同。
 
 </details>
 

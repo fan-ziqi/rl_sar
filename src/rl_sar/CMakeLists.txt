@@ -164,6 +164,13 @@ if(EXISTS "${LIBTORCH_DIR}/include" AND EXISTS "${LIBTORCH_DIR}/lib")
 
     message(STATUS "Found LibTorch at: ${LIBTORCH_DIR}")
 
+    # For Jetson with old CMake: disable CUDA arch detection to avoid CUDA17 requirement
+    if(CMAKE_VERSION VERSION_LESS "3.18")
+        set(TORCH_CUDA_ARCH_LIST "Manual" CACHE STRING "CUDA architectures")
+        set(ENV{TORCH_CUDA_ARCH_LIST} "Manual")
+        message(STATUS "CMake ${CMAKE_VERSION} detected - setting manual CUDA arch to bypass detection")
+    endif()
+
     set(CMAKE_PREFIX_PATH "${LIBTORCH_DIR};${CMAKE_PREFIX_PATH}")
     find_package(Torch QUIET)
 
