@@ -328,13 +328,98 @@ ros2 run rl_sar rl_real_g1 <YOUR_NETWORK_INTERFACE>
 
 #### 在机载Jetson中部署
 
-使用网线连接电脑和机器狗，登陆Jetson主机，密码123：
+使用网线连接电脑和机器人，登陆Jetson主机，密码123：
 
 ```bash
 ssh unitree@192.168.123.18
 ```
 
-将手机连接机器狗的USB，开启手机的USB网络共享，拉取代码并编译，然后即可拔掉手机和网线，使用流程与上文相同。
+将手机连接机器人的USB，开启手机的USB网络共享，拉取代码并使用 `./build.sh -m` 编译，编译成功后运行：
+
+```bash
+# Go2:
+./cmake_build/bin/rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
+
+# G1(29dofs):
+./cmake_build/bin/rl_real_g1 <YOUR_NETWORK_INTERFACE>
+```
+
+然后即可拔掉手机和网线，使用遥控器控制。
+
+#### 开机自启动
+
+如需设置开机自启动，可以参考以下流程：
+
+创建一个服务文件
+
+```bash
+sudo touch /etc/systemd/system/rl_sar.service
+```
+
+写入以下内容，假设rl_sar工程在 `~/rl_sar` 目录下
+
+```
+[Unit]
+Description=RL SAR Service
+After=network.target
+
+[Service]
+Type=simple
+User=unitree
+WorkingDirectory=/home/unitree/rl_sar
+ExecStart=/home/unitree/rl_sar/cmake_build/bin/rl_real_go2 eth0 wheel
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+```
+
+重新加载 systemd 配置：
+
+```bash
+sudo systemctl daemon-reload
+```
+
+设置开机自动启动：
+
+```bash
+sudo systemctl enable rl_sar.service
+```
+
+禁用开机自动启动：
+
+```bash
+sudo systemctl disable rl_sar.service
+```
+
+启动服务：
+
+```bash
+sudo systemctl enable rl_sar.service
+```
+
+停止服务：
+
+```bash
+sudo systemctl stop rl_sar.service
+```
+
+重启服务：
+
+```bash
+sudo systemctl restart rl_sar.service
+```
+
+查看服务日志：
+
+```bash
+sudo journalctl -u rl_sar.service -f
+```
+
+重启后机机器人会先运行内置站立程序，rl_sar服务启动后则会自动阻尼趴下，随后可以使用遥控器正常控制。
 
 </details>
 

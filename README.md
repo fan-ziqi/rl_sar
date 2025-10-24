@@ -334,7 +334,92 @@ Connect your computer to the robot using the Ethernet cable and log into the Jet
 ssh unitree@192.168.123.18
 ```
 
-Connect the phone to the USB of the dongle, enable USB network sharing on the phone, pull and compile the code, and then unplug the phone and network cable. The usage process is the same as above.
+Connect the phone to the USB of the robot, enable USB network sharing on the phone, pull the code and compile it using `./build.sh -m`. After successful compilation, run:
+
+```bash
+# Go2:
+./cmake_build/bin/rl_real_go2 <YOUR_NETWORK_INTERFACE> [wheel]
+
+# G1(29dofs):
+./cmake_build/bin/rl_real_g1 <YOUR_NETWORK_INTERFACE>
+```
+
+Then you can unplug the phone and network cable, and control the robot using the remote controller.
+
+#### Auto-Start on Boot
+
+If you need to set up auto-start on boot, you can follow this process:
+
+Create a service file
+
+```bash
+sudo touch /etc/systemd/system/rl_sar.service
+```
+
+Write the following content, assuming the rl_sar project is in the `~/rl_sar` directory
+
+```
+[Unit]
+Description=RL SAR Service
+After=network.target
+
+[Service]
+Type=simple
+User=unitree
+WorkingDirectory=/home/unitree/rl_sar
+ExecStart=/home/unitree/rl_sar/cmake_build/bin/rl_real_go2 eth0 wheel
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Reload the systemd configuration:
+
+```bash
+sudo systemctl daemon-reload
+```
+
+Enable auto-start on boot:
+
+```bash
+sudo systemctl enable rl_sar.service
+```
+
+Disable auto-start on boot:
+
+```bash
+sudo systemctl disable rl_sar.service
+```
+
+Start the service:
+
+```bash
+sudo systemctl start rl_sar.service
+```
+
+Stop the service:
+
+```bash
+sudo systemctl stop rl_sar.service
+```
+
+Restart the service:
+
+```bash
+sudo systemctl restart rl_sar.service
+```
+
+View service logs:
+
+```bash
+sudo journalctl -u rl_sar.service -f
+```
+
+After reboot, the robot will first run the built-in standing program. After the rl_sar service starts, it will automatically dampen down, and then can be controlled normally using the remote controller.
 
 </details>
 
