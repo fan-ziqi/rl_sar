@@ -6,7 +6,7 @@
 #ifndef L4W4_FSM_HPP
 #define L4W4_FSM_HPP
 
-#include "fsm_core.hpp"
+#include "fsm.hpp"
 #include "rl_sdk.hpp"
 
 namespace l4w4_fsm

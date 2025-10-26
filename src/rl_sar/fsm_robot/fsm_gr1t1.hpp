@@ -6,7 +6,7 @@
 #ifndef GR1T1_FSM_HPP
 #define GR1T1_FSM_HPP
 
-#include "fsm_core.hpp"
+#include "fsm.hpp"
 #include "rl_sdk.hpp"
 
 namespace gr1t1_fsm

@@ -18,7 +18,7 @@
 #include <mutex>
 
 #include <yaml-cpp/yaml.h>
-#include "fsm_core.hpp"
+#include "fsm.hpp"
 #include "observation_buffer.hpp"
 #include "vector_math.hpp"
 #include "inference_runtime.hpp"

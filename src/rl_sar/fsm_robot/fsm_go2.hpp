@@ -6,7 +6,7 @@
 #ifndef GO2_FSM_HPP
 #define GO2_FSM_HPP
 
-#include "fsm_core.hpp"
+#include "fsm.hpp"
 #include "rl_sdk.hpp"
 
 namespace go2_fsm

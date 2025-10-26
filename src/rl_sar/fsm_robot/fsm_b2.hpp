@@ -6,7 +6,7 @@
 #ifndef B2_FSM_HPP
 #define B2_FSM_HPP
 
-#include "fsm_core.hpp"
+#include "fsm.hpp"
 #include "rl_sdk.hpp"
 
 namespace b2_fsm
