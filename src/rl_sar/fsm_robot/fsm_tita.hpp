@@ -6,7 +6,7 @@
 #ifndef TITA_FSM_HPP
 #define TITA_FSM_HPP
 
-#include "fsm_core.hpp"
+#include "fsm.hpp"
 #include "rl_sdk.hpp"
 
 namespace tita_fsm

@@ -6,7 +6,7 @@
 #ifndef G1_FSM_HPP
 #define G1_FSM_HPP
 
-#include "fsm_core.hpp"
+#include "fsm.hpp"
 #include "rl_sdk.hpp"
 
 namespace g1_fsm

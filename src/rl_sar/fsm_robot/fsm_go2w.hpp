@@ -6,7 +6,7 @@
 #ifndef GO2W_FSM_HPP
 #define GO2W_FSM_HPP
 
-#include "fsm_core.hpp"
+#include "fsm.hpp"
 #include "rl_sdk.hpp"
 
 namespace go2w_fsm
