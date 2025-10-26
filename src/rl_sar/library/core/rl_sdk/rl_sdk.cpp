@@ -662,18 +662,14 @@ bool RLFSMState::Interpolate(
         fsm_command->motor_command.tau[i] = 0;
     }
 
+    if (!description.empty())
+    {
+        LOGGER::PrintProgress(percent, description, 40);
+    }
+
     if (percent >= 1.0f)
     {
         return false;
-    }
-
-    if (!description.empty())
-    {
-        std::cout << "\r\033[K" << std::flush << LOGGER::INFO
-                  << "Position Control [" << description << "] "
-                  << std::fixed << std::setprecision(2)
-                  << percent * 100.0f << "%"
-                  << std::flush;
     }
 
     return true;
