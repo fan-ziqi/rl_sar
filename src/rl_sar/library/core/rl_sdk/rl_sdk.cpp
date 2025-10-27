@@ -67,74 +67,101 @@ std::vector<float> RL::ComputeObservation()
 {
     std::vector<std::vector<float>> obs_list;
 
-    for (const std::string &observation : this->params.observations)
+    for (const std::string &observation : this->params.Get<std::vector<std::string>>("observations"))
     {
+        // ============= Base Observations =============
         if (observation == "lin_vel")
         {
-            obs_list.push_back(this->obs.lin_vel * this->params.lin_vel_scale);
+            obs_list.push_back(this->obs.lin_vel * this->params.Get<float>("lin_vel_scale"));
         }
-        else if (observation == "ang_vel_body")
+        else if (observation == "ang_vel")
         {
-            obs_list.push_back(this->obs.ang_vel * this->params.ang_vel_scale);
-        }
-        else if (observation == "ang_vel_world")
-        {
-            obs_list.push_back(this->QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.ang_vel_scale);
+            // In ROS1 Gazebo, the coordinate system for angular velocity is in the world coordinate system.
+            // In ROS2 Gazebo, mujoco and real robot, the coordinate system for angular velocity is in the body coordinate system.
+            if (this->ang_vel_axis == "body")
+            {
+                obs_list.push_back(this->obs.ang_vel * this->params.Get<float>("ang_vel_scale"));
+            }
+            else if (this->ang_vel_axis == "world")
+            {
+                obs_list.push_back(QuatRotateInverse(this->obs.base_quat, this->obs.ang_vel) * this->params.Get<float>("ang_vel_scale"));
+            }
         }
         else if (observation == "gravity_vec")
         {
-            obs_list.push_back(this->QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec));
+            obs_list.push_back(QuatRotateInverse(this->obs.base_quat, this->obs.gravity_vec));
         }
         else if (observation == "commands")
         {
-            obs_list.push_back(this->obs.commands * this->params.commands_scale);
+            obs_list.push_back(this->obs.commands * this->params.Get<std::vector<float>>("commands_scale"));
         }
         else if (observation == "dof_pos")
         {
-            std::vector<float> dof_pos_rel = this->obs.dof_pos - this->params.default_dof_pos;
-            for (int i : this->params.wheel_indices)
+            std::vector<float> dof_pos_rel = this->obs.dof_pos - this->params.Get<std::vector<float>>("default_dof_pos");
+            for (int i : this->params.Get<std::vector<int>>("wheel_indices"))
             {
                 dof_pos_rel[i] = 0.0f;
             }
-            obs_list.push_back(dof_pos_rel * this->params.dof_pos_scale);
+            obs_list.push_back(dof_pos_rel * this->params.Get<float>("dof_pos_scale"));
         }
         else if (observation == "dof_vel")
         {
-            obs_list.push_back(this->obs.dof_vel * this->params.dof_vel_scale);
+            obs_list.push_back(this->obs.dof_vel * this->params.Get<float>("dof_vel_scale"));
         }
         else if (observation == "actions")
         {
             obs_list.push_back(this->obs.actions);
         }
-        else if (observation == "phase")
+        // ============= Other Observations =============
+        else if (observation == "whole_body_tracking/motion_command")
         {
-            float motion_time = this->episode_length_buf * this->params.dt * this->params.decimation;
-            float phase = 3.1415926f * motion_time / 2.0f;
-            std::vector<float> phase_tensor = {
-                std::sin(phase),
-                std::cos(phase),
-                std::sin(phase / 2.0f),
-                std::cos(phase / 2.0f),
-                std::sin(phase / 4.0f),
-                std::cos(phase / 4.0f)
-            };
-            obs_list.push_back(phase_tensor);
+            std::vector<float> motion_cmd;
+            if (this->motion_loader)
+            {
+                auto joint_pos_sdk = this->motion_loader->GetJointPos();
+                auto joint_vel_sdk = this->motion_loader->GetJointVel();
+                auto joint_mapping = this->params.Get<std::vector<int>>("joint_mapping");
+                std::vector<float> joint_pos_training(joint_mapping.size());
+                std::vector<float> joint_vel_training(joint_mapping.size());
+                for (size_t i = 0; i < joint_mapping.size(); ++i)
+                {
+                    joint_pos_training[i] = joint_pos_sdk[joint_mapping[i]];
+                    joint_vel_training[i] = joint_vel_sdk[joint_mapping[i]];
+                }
+                motion_cmd.insert(motion_cmd.end(), joint_pos_training.begin(), joint_pos_training.end());
+                motion_cmd.insert(motion_cmd.end(), joint_vel_training.begin(), joint_vel_training.end());
+            }
+            else
+            {
+                motion_cmd.resize(this->params.Get<int>("num_of_dofs") * 2, 0.0f);
+            }
+            obs_list.push_back(motion_cmd);
         }
-        else if (observation == "g1_phase")
+        else if (observation == "whole_body_tracking/motion_anchor_ori_b")
         {
-            float motion_time = this->episode_length_buf * this->params.dt * this->params.decimation;
-            float period = 0.8f;
-            float count = motion_time;
-            float phase = std::fmod(count, period) / period;
-            std::vector<float> phase_tensor = {
-                std::sin(2.0f * 3.1415926f * phase),
-                std::cos(2.0f * 3.1415926f * phase)
-            };
-            obs_list.push_back(phase_tensor);
+            std::vector<float> anchor_ori(6, 0.0f);
+            if (this->motion_loader)
+            {
+                auto waist_sdk_indices = this->params.Get<std::vector<int>>("waist_joint_indices");
+                std::vector<float> waist_angles = {
+                    this->obs.dof_pos[InverseJointMapping(waist_sdk_indices[0])],
+                    this->obs.dof_pos[InverseJointMapping(waist_sdk_indices[1])],
+                    this->obs.dof_pos[InverseJointMapping(waist_sdk_indices[2])]
+                };
+                std::vector<float> robot_torso_quat_w = MotionLoader::ComputeTorsoQuat(this->obs.base_quat, waist_angles);
+                std::vector<float> ref_torso_quat_w = this->motion_loader->GetAnchorQuat();
+                std::vector<float> init_quat = this->motion_loader->GetInitQuat();
+                std::vector<float> motion_anchor_quat_w = QuaternionMultiply(init_quat, ref_torso_quat_w);
+                std::vector<float> robot_quat_inv = QuaternionConjugate(robot_torso_quat_w);
+                std::vector<float> relative_quat = QuaternionMultiply(robot_quat_inv, motion_anchor_quat_w);
+                std::vector<float> rot_matrix = QuaternionToRotationMatrix(relative_quat);
+                anchor_ori = MatrixFirstTwoColumns(rot_matrix);
+            }
+            obs_list.push_back(anchor_ori);
         }
-        else if (observation == "g1_mimic_phase")
+        else if (observation == "RoboMimic_Deploy/phase")
         {
-            float motion_time = this->episode_length_buf * this->params.dt * this->params.decimation;
+            float motion_time = this->episode_length_buf * this->params.Get<float>("dt") * this->params.Get<int>("decimation");
             float count = motion_time;
             float phase = count / this->motion_length;
             std::vector<float> phase_vec = {phase};
@@ -153,7 +180,7 @@ std::vector<float> RL::ComputeObservation()
     {
         obs.insert(obs.end(), obs_vec.begin(), obs_vec.end());
     }
-    std::vector<float> clamped_obs = clamp(obs, -this->params.clip_obs, this->params.clip_obs);
+    std::vector<float> clamped_obs = clamp(obs, -this->params.Get<float>("clip_obs"), this->params.Get<float>("clip_obs"));
     return clamped_obs;
 }
 
@@ -164,21 +191,22 @@ void RL::InitObservations()
     this->obs.gravity_vec = {0.0f, 0.0f, -1.0f};
     this->obs.commands = {0.0f, 0.0f, 0.0f};
     this->obs.base_quat = {0.0f, 0.0f, 0.0f, 1.0f};
-    this->obs.dof_pos = this->params.default_dof_pos;
+    this->obs.dof_pos = this->params.Get<std::vector<float>>("default_dof_pos");
     this->obs.dof_vel.clear();
-    this->obs.dof_vel.resize(this->params.num_of_dofs, 0.0f);
+    this->obs.dof_vel.resize(this->params.Get<int>("num_of_dofs"), 0.0f);
     this->obs.actions.clear();
-    this->obs.actions.resize(this->params.num_of_dofs, 0.0f);
+    this->obs.actions.resize(this->params.Get<int>("num_of_dofs"), 0.0f);
     this->ComputeObservation();
 }
 
 void RL::InitOutputs()
 {
+    int num_of_dofs = this->params.Get<int>("num_of_dofs");
     this->output_dof_tau.clear();
-    this->output_dof_tau.resize(this->params.num_of_dofs, 0.0f);
-    this->output_dof_pos = this->params.default_dof_pos;
+    this->output_dof_tau.resize(num_of_dofs, 0.0f);
+    this->output_dof_pos = this->params.Get<std::vector<float>>("default_dof_pos");
     this->output_dof_vel.clear();
-    this->output_dof_vel.resize(this->params.num_of_dofs, 0.0f);
+    this->output_dof_vel.resize(num_of_dofs, 0.0f);
 }
 
 void RL::InitControl()
@@ -196,23 +224,14 @@ void RL::InitJointNum(size_t num_joints)
     this->robot_command.motor_command.resize(num_joints);
 }
 
-void RL::InitRL(std::string robot_path)
+void RL::InitRL(std::string robot_config_path)
 {
     std::lock_guard<std::mutex> lock(this->model_mutex);
 
-    this->ReadYamlRL(robot_path);
-    for (std::string &observation : this->params.observations)
-    {
-        if (observation == "ang_vel")
-        {
-            // In ROS1 Gazebo, the coordinate system for angular velocity is in the world coordinate system.
-            // In ROS2 Gazebo and real robot, the coordinate system for angular velocity is in the body coordinate system.
-            observation = this->ang_vel_type;
-        }
-    }
+    this->ReadYaml(robot_config_path, "config.yaml");
 
     // init joint num first
-    this->InitJointNum(this->params.num_of_dofs);
+    this->InitJointNum(this->params.Get<int>("num_of_dofs"));
 
     // init rl
     this->InitObservations();
@@ -220,14 +239,15 @@ void RL::InitRL(std::string robot_path)
     this->InitControl();
 
     // init obs history
-    if (!this->params.observations_history.empty())
+    const auto& observations_history = this->params.Get<std::vector<int>>("observations_history");  // avoid dangling reference
+    if (!observations_history.empty())
     {
-        int history_length = *std::max_element(this->params.observations_history.begin(), this->params.observations_history.end()) + 1;
-        this->history_obs_buf = ObservationBuffer(1, this->obs_dims, history_length, this->params.observations_history_priority);
+        int history_length = *std::max_element(observations_history.begin(), observations_history.end()) + 1;
+        this->history_obs_buf = ObservationBuffer(1, this->obs_dims, history_length, this->params.Get<std::string>("observations_history_priority"));
     }
 
     // init model
-    std::string model_path = std::string(POLICY_DIR) + "/" + robot_path + "/" + this->params.model_name;
+    std::string model_path = std::string(POLICY_DIR) + "/" + robot_config_path + "/" + this->params.Get<std::string>("model_name");
     this->model = InferenceRuntime::ModelFactory::load_model(model_path);
     if (!this->model)
     {
@@ -237,52 +257,28 @@ void RL::InitRL(std::string robot_path)
 
 void RL::ComputeOutput(const std::vector<float> &actions, std::vector<float> &output_dof_pos, std::vector<float> &output_dof_vel, std::vector<float> &output_dof_tau)
 {
-    std::vector<float> actions_scaled = actions * this->params.action_scale;
+    std::vector<float> actions_scaled = actions * this->params.Get<std::vector<float>>("action_scale");
     std::vector<float> pos_actions_scaled = actions_scaled;
     std::vector<float> vel_actions_scaled(actions.size(), 0.0f);
-    for (int i : this->params.wheel_indices)
+    for (int i : this->params.Get<std::vector<int>>("wheel_indices"))
     {
         pos_actions_scaled[i] = 0.0f;
         vel_actions_scaled[i] = actions_scaled[i];
     }
     std::vector<float> all_actions_scaled = pos_actions_scaled + vel_actions_scaled;
-    output_dof_pos = pos_actions_scaled + this->params.default_dof_pos;
+    output_dof_pos = pos_actions_scaled + this->params.Get<std::vector<float>>("default_dof_pos");
     output_dof_vel = vel_actions_scaled;
-    output_dof_tau = this->params.rl_kp * (all_actions_scaled + this->params.default_dof_pos - this->obs.dof_pos) - this->params.rl_kd * this->obs.dof_vel;
-    output_dof_tau = clamp(output_dof_tau, -this->params.torque_limits, this->params.torque_limits);
+    output_dof_tau = this->params.Get<std::vector<float>>("rl_kp") * (all_actions_scaled + this->params.Get<std::vector<float>>("default_dof_pos") - this->obs.dof_pos) - this->params.Get<std::vector<float>>("rl_kd") * this->obs.dof_vel;
+    output_dof_tau = clamp(output_dof_tau, -this->params.Get<std::vector<float>>("torque_limits"), this->params.Get<std::vector<float>>("torque_limits"));
 }
 
-std::vector<float> RL::QuatRotateInverse(const std::vector<float>& q, const std::vector<float>& v)
+int RL::InverseJointMapping(int idx) const
 {
-    // wxyz
-    float q_w = q[0];
-    float q_x = q[1];
-    float q_y = q[2];
-    float q_z = q[3];
-
-    float v_x = v[0];
-    float v_y = v[1];
-    float v_z = v[2];
-
-    float a_x = v_x * (2.0f * q_w * q_w - 1.0f);
-    float a_y = v_y * (2.0f * q_w * q_w - 1.0f);
-    float a_z = v_z * (2.0f * q_w * q_w - 1.0f);
-
-    float cross_x = q_y * v_z - q_z * v_y;
-    float cross_y = q_z * v_x - q_x * v_z;
-    float cross_z = q_x * v_y - q_y * v_x;
-
-    float b_x = cross_x * q_w * 2.0f;
-    float b_y = cross_y * q_w * 2.0f;
-    float b_z = cross_z * q_w * 2.0f;
-
-    float dot = q_x * v_x + q_y * v_y + q_z * v_z;
-
-    float c_x = q_x * dot * 2.0f;
-    float c_y = q_y * dot * 2.0f;
-    float c_z = q_z * dot * 2.0f;
-
-    return {a_x - b_x + c_x, a_y - b_y + c_y, a_z - b_z + c_z};
+    auto joint_mapping = this->params.Get<std::vector<int>>("joint_mapping");
+    for (size_t i = 0; i < joint_mapping.size(); ++i) {
+        if (joint_mapping[i] == idx) return (int)i;
+    }
+    return -1;
 }
 
 void RL::TorqueProtect(const std::vector<float>& origin_output_dof_tau)
@@ -292,8 +288,8 @@ void RL::TorqueProtect(const std::vector<float>& origin_output_dof_tau)
     for (size_t i = 0; i < origin_output_dof_tau.size(); ++i)
     {
         float torque_value = origin_output_dof_tau[i];
-        float limit_lower = -this->params.torque_limits[i];
-        float limit_upper = this->params.torque_limits[i];
+        float limit_lower = -this->params.Get<std::vector<float>>("torque_limits")[i];
+        float limit_upper = this->params.Get<std::vector<float>>("torque_limits")[i];
 
         if (torque_value < limit_lower || torque_value > limit_upper)
         {
@@ -307,8 +303,8 @@ void RL::TorqueProtect(const std::vector<float>& origin_output_dof_tau)
         {
             int index = out_of_range_indices[i];
             float value = out_of_range_values[i];
-            float limit_lower = -this->params.torque_limits[index];
-            float limit_upper = this->params.torque_limits[index];
+            float limit_lower = -this->params.Get<std::vector<float>>("torque_limits")[index];
+            float limit_upper = this->params.Get<std::vector<float>>("torque_limits")[index];
 
             std::cout << LOGGER::WARNING << "Torque(" << index + 1 << ")=" << value << " out of range(" << limit_lower << ", " << limit_upper << ")" << std::endl;
         }
@@ -320,30 +316,10 @@ void RL::TorqueProtect(const std::vector<float>& origin_output_dof_tau)
 
 void RL::AttitudeProtect(const std::vector<float> &quaternion, float pitch_threshold, float roll_threshold)
 {
-    float rad2deg = 57.2958f;
-    float w, x, y, z;
-
-    w = quaternion[0];
-    x = quaternion[1];
-    y = quaternion[2];
-    z = quaternion[3];
-
-    // Calculate roll (rotation around the X-axis)
-    float sinr_cosp = 2 * (w * x + y * z);
-    float cosr_cosp = 1 - 2 * (x * x + y * y);
-    float roll = std::atan2(sinr_cosp, cosr_cosp) * rad2deg;
-
-    // Calculate pitch (rotation around the Y-axis)
-    float sinp = 2 * (w * y - z * x);
-    float pitch;
-    if (std::fabs(sinp) >= 1)
-    {
-        pitch = std::copysign(90.0f, sinp); // Clamp to avoid out-of-range values
-    }
-    else
-    {
-        pitch = std::asin(sinp) * rad2deg;
-    }
+    // Use QuaternionToEuler from vector_math.hpp
+    std::vector<float> euler = QuaternionToEuler(quaternion);
+    float roll = euler[0] * 57.2958f;   // Convert to degrees
+    float pitch = euler[1] * 57.2958f;
 
     if (std::fabs(roll) > roll_threshold)
     {
@@ -492,14 +468,13 @@ std::vector<T> ReadVectorFromYaml(const YAML::Node &node)
     return values;
 }
 
-void RL::ReadYamlBase(std::string robot_path)
+void RL::ReadYaml(const std::string& file_path, const std::string& file_name)
 {
-    // The config file is located at "rl_sar_internal/policy/<robot_path>/base.yaml"
-    std::string config_path = std::string(POLICY_DIR) + "/" + robot_path + "/base.yaml";
+    std::string config_path = std::string(POLICY_DIR) + "/" + file_path + "/" + file_name;
     YAML::Node config;
     try
     {
-        config = YAML::LoadFile(config_path)[robot_path];
+        config = YAML::LoadFile(config_path)[file_path];
     }
     catch (YAML::BadFile &e)
     {
@@ -507,73 +482,11 @@ void RL::ReadYamlBase(std::string robot_path)
         return;
     }
 
-    this->params.dt = config["dt"].as<float>();
-    this->params.decimation = config["decimation"].as<int>();
-    this->params.wheel_indices = ReadVectorFromYaml<int>(config["wheel_indices"]);
-    this->params.num_of_dofs = config["num_of_dofs"].as<int>();
-    this->params.fixed_kp = ReadVectorFromYaml<float>(config["fixed_kp"]);
-    this->params.fixed_kd = ReadVectorFromYaml<float>(config["fixed_kd"]);
-    this->params.torque_limits = ReadVectorFromYaml<float>(config["torque_limits"]);
-    this->params.default_dof_pos = ReadVectorFromYaml<float>(config["default_dof_pos"]);
-    this->params.joint_names = ReadVectorFromYaml<std::string>(config["joint_names"]);
-    this->params.joint_controller_names = ReadVectorFromYaml<std::string>(config["joint_controller_names"]);
-    this->params.joint_mapping = ReadVectorFromYaml<int>(config["joint_mapping"]);
-}
-
-void RL::ReadYamlRL(std::string robot_path)
-{
-    // The config file is located at "rl_sar_internal/policy/<robot_path>/config.yaml"
-    std::string config_path = std::string(POLICY_DIR) + "/" + robot_path + "/config.yaml";
-    YAML::Node config;
-    try
+    for (auto it = config.begin(); it != config.end(); ++it)
     {
-        config = YAML::LoadFile(config_path)[robot_path];
+        std::string key = it->first.as<std::string>();
+        this->params.config_node[key] = it->second;
     }
-    catch (YAML::BadFile &e)
-    {
-        std::cout << LOGGER::ERROR << "The file '" << config_path << "' does not exist" << std::endl;
-        return;
-    }
-
-    this->params.model_name = config["model_name"].as<std::string>();
-    this->params.num_observations = config["num_observations"].as<int>();
-    this->params.observations = ReadVectorFromYaml<std::string>(config["observations"]);
-    if (config["observations_history"].IsNull())
-    {
-        this->params.observations_history = {};
-    }
-    else
-    {
-        this->params.observations_history = ReadVectorFromYaml<int>(config["observations_history"]);
-    }
-    this->params.observations_history_priority = config["observations_history_priority"].as<std::string>();
-    this->params.clip_obs = config["clip_obs"].as<float>();
-    if (config["clip_actions_lower"].IsNull() && config["clip_actions_upper"].IsNull())
-    {
-        this->params.clip_actions_upper = {};
-        this->params.clip_actions_lower = {};
-    }
-    else
-    {
-        this->params.clip_actions_upper = ReadVectorFromYaml<float>(config["clip_actions_upper"]);
-        this->params.clip_actions_lower = ReadVectorFromYaml<float>(config["clip_actions_lower"]);
-    }
-    this->params.action_scale = ReadVectorFromYaml<float>(config["action_scale"]);
-    this->params.wheel_indices = ReadVectorFromYaml<int>(config["wheel_indices"]);
-    this->params.num_of_dofs = config["num_of_dofs"].as<int>();
-    this->params.lin_vel_scale = config["lin_vel_scale"].as<float>();
-    this->params.ang_vel_scale = config["ang_vel_scale"].as<float>();
-    this->params.dof_pos_scale = config["dof_pos_scale"].as<float>();
-    this->params.dof_vel_scale = config["dof_vel_scale"].as<float>();
-    this->params.commands_scale = ReadVectorFromYaml<float>(config["commands_scale"]);
-    // this->params.commands_scale = {this->params.lin_vel_scale, this->params.lin_vel_scale, this->params.ang_vel_scale};
-    this->params.rl_kp = ReadVectorFromYaml<float>(config["rl_kp"]);
-    this->params.rl_kd = ReadVectorFromYaml<float>(config["rl_kd"]);
-    this->params.fixed_kp = ReadVectorFromYaml<float>(config["fixed_kp"]);
-    this->params.fixed_kd = ReadVectorFromYaml<float>(config["fixed_kd"]);
-    this->params.torque_limits = ReadVectorFromYaml<float>(config["torque_limits"]);
-    this->params.default_dof_pos = ReadVectorFromYaml<float>(config["default_dof_pos"]);
-    this->params.joint_mapping = ReadVectorFromYaml<int>(config["joint_mapping"]);
 }
 
 void RL::CSVInit(std::string robot_path)
@@ -591,11 +504,11 @@ void RL::CSVInit(std::string robot_path)
     csv_filename += ".csv";
     std::ofstream file(csv_filename.c_str());
 
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << "tau_cal_" << i << ","; }
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << "tau_est_" << i << ","; }
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << "joint_pos_" << i << ","; }
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << "joint_pos_target_" << i << ","; }
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << "joint_vel_" << i << ","; }
+    for(int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i) { file << "tau_cal_" << i << ","; }
+    for(int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i) { file << "tau_est_" << i << ","; }
+    for(int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i) { file << "joint_pos_" << i << ","; }
+    for(int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i) { file << "joint_pos_target_" << i << ","; }
+    for(int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i) { file << "joint_vel_" << i << ","; }
 
     file << std::endl;
 
@@ -606,11 +519,11 @@ void RL::CSVLogger(const std::vector<float>& torque, const std::vector<float>& t
 {
     std::ofstream file(csv_filename.c_str(), std::ios_base::app);
 
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << torque[i] << ","; }
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << tau_est[i] << ","; }
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << joint_pos[i] << ","; }
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << joint_pos_target[i] << ","; }
-    for(int i = 0; i < this->params.num_of_dofs; ++i) { file << joint_vel[i] << ","; }
+    for(int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i) { file << torque[i] << ","; }
+    for(int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i) { file << tau_est[i] << ","; }
+    for(int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i) { file << joint_pos[i] << ","; }
+    for(int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i) { file << joint_pos_target[i] << ","; }
+    for(int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i) { file << joint_vel[i] << ","; }
 
     file << std::endl;
 
@@ -644,16 +557,16 @@ bool RLFSMState::Interpolate(
         }
     }
 
-    int required_frames = std::max(1, static_cast<int>(std::ceil(duration_seconds / rl.params.dt)));
+    int required_frames = std::max(1, static_cast<int>(std::ceil(duration_seconds / rl.params.Get<float>("dt"))));
     float step = 1.0f / required_frames;
 
     percent += step;
     percent = std::min(percent, 1.0f);
 
-    auto& kp = use_fixed_gains ? rl.params.fixed_kp : rl.params.rl_kp;
-    auto& kd = use_fixed_gains ? rl.params.fixed_kd : rl.params.rl_kd;
+    auto kp = use_fixed_gains ? rl.params.Get<std::vector<float>>("fixed_kp") : rl.params.Get<std::vector<float>>("rl_kp");
+    auto kd = use_fixed_gains ? rl.params.Get<std::vector<float>>("fixed_kd") : rl.params.Get<std::vector<float>>("rl_kd");
 
-    for (int i = 0; i < rl.params.num_of_dofs; ++i)
+    for (int i = 0; i < rl.params.Get<int>("num_of_dofs"); ++i)
     {
         fsm_command->motor_command.q[i] = (1 - percent) * start_pos[i] + percent * target_pos[i];
         fsm_command->motor_command.dq[i] = 0;
@@ -680,7 +593,7 @@ void RLFSMState::RLControl()
     std::vector<float> _output_dof_pos, _output_dof_vel;
     if (rl.output_dof_pos_queue.try_pop(_output_dof_pos) && rl.output_dof_vel_queue.try_pop(_output_dof_vel))
     {
-        for (int i = 0; i < rl.params.num_of_dofs; ++i)
+        for (int i = 0; i < rl.params.Get<int>("num_of_dofs"); ++i)
         {
             if (!_output_dof_pos.empty())
             {
@@ -690,8 +603,8 @@ void RLFSMState::RLControl()
             {
                 fsm_command->motor_command.dq[i] = _output_dof_vel[i];
             }
-            fsm_command->motor_command.kp[i] = rl.params.rl_kp[i];
-            fsm_command->motor_command.kd[i] = rl.params.rl_kd[i];
+            fsm_command->motor_command.kp[i] = rl.params.Get<std::vector<float>>("rl_kp")[i];
+            fsm_command->motor_command.kd[i] = rl.params.Get<std::vector<float>>("rl_kd")[i];
             fsm_command->motor_command.tau[i] = 0;
         }
     }

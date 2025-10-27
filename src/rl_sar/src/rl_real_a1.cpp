@@ -19,9 +19,9 @@ RL_Real::RL_Real(int argc, char **argv) : unitree_safe(UNITREE_LEGGED_SDK::Legge
 #endif
 
     // read params from yaml
-    this->ang_vel_type = "ang_vel_body";
+    this->ang_vel_axis = "body";
     this->robot_name = "a1";
-    this->ReadYamlBase(this->robot_name);
+    this->ReadYaml(this->robot_name, "base.yaml");
 
     // auto load FSM by robot_name
     if (FSMManager::GetInstance().IsTypeSupported(this->robot_name))
@@ -39,7 +39,7 @@ RL_Real::RL_Real(int argc, char **argv) : unitree_safe(UNITREE_LEGGED_SDK::Legge
 
     // init robot
     this->unitree_udp.InitCmdData(this->unitree_low_command);
-    this->InitJointNum(this->params.num_of_dofs);
+    this->InitJointNum(this->params.Get<int>("num_of_dofs"));
     this->InitOutputs();
     this->InitControl();
 
@@ -47,8 +47,8 @@ RL_Real::RL_Real(int argc, char **argv) : unitree_safe(UNITREE_LEGGED_SDK::Legge
     this->loop_udpSend = std::make_shared<LoopFunc>("loop_udpSend", 0.002, std::bind(&RL_Real::UDPSend, this), 3);
     this->loop_udpRecv = std::make_shared<LoopFunc>("loop_udpRecv", 0.002, std::bind(&RL_Real::UDPRecv, this), 3);
     this->loop_keyboard = std::make_shared<LoopFunc>("loop_keyboard", 0.05, std::bind(&RL_Real::KeyboardInterface, this));
-    this->loop_control = std::make_shared<LoopFunc>("loop_control", this->params.dt, std::bind(&RL_Real::RobotControl, this));
-    this->loop_rl = std::make_shared<LoopFunc>("loop_rl", this->params.dt * this->params.decimation, std::bind(&RL_Real::RunModel, this));
+    this->loop_control = std::make_shared<LoopFunc>("loop_control", this->params.Get<float>("dt"), std::bind(&RL_Real::RobotControl, this));
+    this->loop_rl = std::make_shared<LoopFunc>("loop_rl", this->params.Get<float>("dt") * this->params.Get<int>("decimation"), std::bind(&RL_Real::RunModel, this));
     this->loop_udpSend->start();
     this->loop_udpRecv->start();
     this->loop_keyboard->start();
@@ -57,8 +57,8 @@ RL_Real::RL_Real(int argc, char **argv) : unitree_safe(UNITREE_LEGGED_SDK::Legge
 
 #ifdef PLOT
     this->plot_t = std::vector<int>(this->plot_size, 0);
-    this->plot_real_joint_pos.resize(this->params.num_of_dofs);
-    this->plot_target_joint_pos.resize(this->params.num_of_dofs);
+    this->plot_real_joint_pos.resize(this->params.Get<int>("num_of_dofs"));
+    this->plot_target_joint_pos.resize(this->params.Get<int>("num_of_dofs"));
     for (auto &vector : this->plot_real_joint_pos) { vector = std::vector<float>(this->plot_size, 0); }
     for (auto &vector : this->plot_target_joint_pos) { vector = std::vector<float>(this->plot_size, 0); }
     this->loop_plot = std::make_shared<LoopFunc>("loop_plot", 0.002, std::bind(&RL_Real::Plot, this));
@@ -134,24 +134,24 @@ void RL_Real::GetState(RobotState<float> *state)
     {
         state->imu.gyroscope[i] = this->unitree_low_state.imu.gyroscope[i];
     }
-    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
     {
-        state->motor_state.q[i] = this->unitree_low_state.motorState[this->params.joint_mapping[i]].q;
-        state->motor_state.dq[i] = this->unitree_low_state.motorState[this->params.joint_mapping[i]].dq;
-        state->motor_state.tau_est[i] = this->unitree_low_state.motorState[this->params.joint_mapping[i]].tauEst;
+        state->motor_state.q[i] = this->unitree_low_state.motorState[this->params.Get<std::vector<int>>("joint_mapping")[i]].q;
+        state->motor_state.dq[i] = this->unitree_low_state.motorState[this->params.Get<std::vector<int>>("joint_mapping")[i]].dq;
+        state->motor_state.tau_est[i] = this->unitree_low_state.motorState[this->params.Get<std::vector<int>>("joint_mapping")[i]].tauEst;
     }
 }
 
 void RL_Real::SetCommand(const RobotCommand<float> *command)
 {
-    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
     {
-        this->unitree_low_command.motorCmd[this->params.joint_mapping[i]].mode = 0x0A;
-        this->unitree_low_command.motorCmd[this->params.joint_mapping[i]].q = command->motor_command.q[i];
-        this->unitree_low_command.motorCmd[this->params.joint_mapping[i]].dq = command->motor_command.dq[i];
-        this->unitree_low_command.motorCmd[this->params.joint_mapping[i]].Kp = command->motor_command.kp[i];
-        this->unitree_low_command.motorCmd[this->params.joint_mapping[i]].Kd = command->motor_command.kd[i];
-        this->unitree_low_command.motorCmd[this->params.joint_mapping[i]].tau = command->motor_command.tau[i];
+        this->unitree_low_command.motorCmd[this->params.Get<std::vector<int>>("joint_mapping")[i]].mode = 0x0A;
+        this->unitree_low_command.motorCmd[this->params.Get<std::vector<int>>("joint_mapping")[i]].q = command->motor_command.q[i];
+        this->unitree_low_command.motorCmd[this->params.Get<std::vector<int>>("joint_mapping")[i]].dq = command->motor_command.dq[i];
+        this->unitree_low_command.motorCmd[this->params.Get<std::vector<int>>("joint_mapping")[i]].Kp = command->motor_command.kp[i];
+        this->unitree_low_command.motorCmd[this->params.Get<std::vector<int>>("joint_mapping")[i]].Kd = command->motor_command.kd[i];
+        this->unitree_low_command.motorCmd[this->params.Get<std::vector<int>>("joint_mapping")[i]].tau = command->motor_command.tau[i];
     }
 
     this->unitree_safe.PowerProtect(this->unitree_low_command, this->unitree_low_state, 8);
@@ -224,10 +224,10 @@ std::vector<float> RL_Real::Forward()
     std::vector<float> clamped_obs = this->ComputeObservation();
 
     std::vector<float> actions;
-    if (!this->params.observations_history.empty())
+    if (!this->params.Get<std::vector<int>>("observations_history").empty())
     {
         this->history_obs_buf.insert(clamped_obs);
-        this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
+        this->history_obs = this->history_obs_buf.get_obs_vec(this->params.Get<std::vector<int>>("observations_history"));
         actions = this->model->forward({this->history_obs});
     }
     else
@@ -235,9 +235,9 @@ std::vector<float> RL_Real::Forward()
         actions = this->model->forward({clamped_obs});
     }
 
-    if (!this->params.clip_actions_upper.empty() && !this->params.clip_actions_lower.empty())
+    if (!this->params.Get<std::vector<float>>("clip_actions_upper").empty() && !this->params.Get<std::vector<float>>("clip_actions_lower").empty())
     {
-        return clamp(actions, this->params.clip_actions_lower, this->params.clip_actions_upper);
+        return clamp(actions, this->params.Get<std::vector<float>>("clip_actions_lower"), this->params.Get<std::vector<float>>("clip_actions_upper"));
     }
     else
     {
@@ -251,13 +251,13 @@ void RL_Real::Plot()
     this->plot_t.push_back(this->motiontime);
     plt::cla();
     plt::clf();
-    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
     {
         this->plot_real_joint_pos[i].erase(this->plot_real_joint_pos[i].begin());
         this->plot_target_joint_pos[i].erase(this->plot_target_joint_pos[i].begin());
         this->plot_real_joint_pos[i].push_back(this->unitree_low_state.motorState[i].q);
         this->plot_target_joint_pos[i].push_back(this->unitree_low_command.motorCmd[i].q);
-        plt::subplot(this->params.num_of_dofs, 1, i + 1);
+        plt::subplot(this->params.Get<int>("num_of_dofs"), 1, i + 1);
         plt::named_plot("_real_joint_pos", this->plot_t, this->plot_real_joint_pos[i], "r");
         plt::named_plot("_target_joint_pos", this->plot_t, this->plot_target_joint_pos[i], "b");
         plt::xlim(this->plot_t.front(), this->plot_t.back());

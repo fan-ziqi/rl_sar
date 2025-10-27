@@ -48,6 +48,7 @@
 #include <iostream>
 #include <iomanip>
 #include <type_traits>
+#include <cmath>
 
 /**
  * @brief Clamps a scalar value between minimum and maximum bounds
@@ -411,6 +412,215 @@ inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
     }
     os << "]";
     return os;
+}
+
+// ============================================================================
+// QUATERNION MATH FUNCTIONS
+// ============================================================================
+
+/**
+ * @brief Normalize a quaternion
+ * @param q Input quaternion [w, x, y, z]
+ * @return Normalized quaternion [w, x, y, z]
+ * @note Quaternion format: [w, x, y, z] (scalar-first convention)
+ */
+inline std::vector<float> QuaternionNormalize(const std::vector<float>& q)
+{
+    float norm = std::sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]);
+    if (norm < 1e-8f) {
+        return {1.0f, 0.0f, 0.0f, 0.0f};
+    }
+    return {q[0] / norm, q[1] / norm, q[2] / norm, q[3] / norm};
+}
+
+/**
+ * @brief Multiply two quaternions (Hamilton product)
+ * @param q1 First quaternion [w, x, y, z]
+ * @param q2 Second quaternion [w, x, y, z]
+ * @return Product quaternion q1 * q2 as [w, x, y, z]
+ */
+inline std::vector<float> QuaternionMultiply(const std::vector<float>& q1, const std::vector<float>& q2)
+{
+    return {
+        q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2] - q1[3] * q2[3],
+        q1[0] * q2[1] + q1[1] * q2[0] + q1[2] * q2[3] - q1[3] * q2[2],
+        q1[0] * q2[2] - q1[1] * q2[3] + q1[2] * q2[0] + q1[3] * q2[1],
+        q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1] + q1[3] * q2[0]
+    };
+}
+
+/**
+ * @brief Compute the conjugate of a quaternion
+ * @param q Input quaternion [w, x, y, z]
+ * @return Conjugate quaternion [w, -x, -y, -z]
+ */
+inline std::vector<float> QuaternionConjugate(const std::vector<float>& q)
+{
+    return {q[0], -q[1], -q[2], -q[3]};
+}
+
+/**
+ * @brief Create quaternion from axis-angle representation
+ * @param axis Rotation axis (should be normalized)
+ * @param angle Rotation angle in radians
+ * @return Quaternion [w, x, y, z] representing the rotation
+ */
+inline std::vector<float> QuaternionFromAxisAngle(const std::vector<float>& axis, float angle)
+{
+    float half_angle = angle * 0.5f;
+    float sin_half = std::sin(half_angle);
+    return {
+        std::cos(half_angle),
+        axis[0] * sin_half,
+        axis[1] * sin_half,
+        axis[2] * sin_half
+    };
+}
+
+/**
+ * @brief Rotate a vector by a quaternion (inverse rotation)
+ * @param q Quaternion [w, x, y, z]
+ * @param v Vector [x, y, z]
+ * @return Rotated vector
+ * @note This applies q^-1 * v * q rotation (inverse/conjugate rotation)
+ */
+inline std::vector<float> QuatRotateInverse(const std::vector<float>& q, const std::vector<float>& v)
+{
+    float q_w = q[0];
+    float q_x = q[1];
+    float q_y = q[2];
+    float q_z = q[3];
+
+    float v_x = v[0];
+    float v_y = v[1];
+    float v_z = v[2];
+
+    float a_x = v_x * (2.0f * q_w * q_w - 1.0f);
+    float a_y = v_y * (2.0f * q_w * q_w - 1.0f);
+    float a_z = v_z * (2.0f * q_w * q_w - 1.0f);
+
+    float cross_x = q_y * v_z - q_z * v_y;
+    float cross_y = q_z * v_x - q_x * v_z;
+    float cross_z = q_x * v_y - q_y * v_x;
+
+    float b_x = cross_x * q_w * 2.0f;
+    float b_y = cross_y * q_w * 2.0f;
+    float b_z = cross_z * q_w * 2.0f;
+
+    float dot = q_x * v_x + q_y * v_y + q_z * v_z;
+
+    float c_x = q_x * dot * 2.0f;
+    float c_y = q_y * dot * 2.0f;
+    float c_z = q_z * dot * 2.0f;
+
+    return {a_x - b_x + c_x, a_y - b_y + c_y, a_z - b_z + c_z};
+}
+
+/**
+ * @brief Convert quaternion to rotation matrix (3x3)
+ * @param q Quaternion [w, x, y, z]
+ * @return Rotation matrix as vector of 9 elements [row-major: R00, R01, R02, R10, R11, ...]
+ */
+inline std::vector<float> QuaternionToRotationMatrix(const std::vector<float>& q)
+{
+    float w = q[0];
+    float x = q[1];
+    float y = q[2];
+    float z = q[3];
+
+    float xx = x * x;
+    float yy = y * y;
+    float zz = z * z;
+    float xy = x * y;
+    float xz = x * z;
+    float yz = y * z;
+    float wx = w * x;
+    float wy = w * y;
+    float wz = w * z;
+
+    return {
+        1.0f - 2.0f * (yy + zz), 2.0f * (xy - wz), 2.0f * (xz + wy),
+        2.0f * (xy + wz), 1.0f - 2.0f * (xx + zz), 2.0f * (yz - wx),
+        2.0f * (xz - wy), 2.0f * (yz + wx), 1.0f - 2.0f * (xx + yy)
+    };
+}
+
+/**
+ * @brief Convert quaternion to Euler angles (roll, pitch, yaw)
+ * @param q Quaternion [w, x, y, z]
+ * @return Euler angles [roll, pitch, yaw] in radians
+ */
+inline std::vector<float> QuaternionToEuler(const std::vector<float>& q)
+{
+    float w = q[0];
+    float x = q[1];
+    float y = q[2];
+    float z = q[3];
+
+    // Roll (rotation around X-axis)
+    float sinr_cosp = 2.0f * (w * x + y * z);
+    float cosr_cosp = 1.0f - 2.0f * (x * x + y * y);
+    float roll = std::atan2(sinr_cosp, cosr_cosp);
+
+    // Pitch (rotation around Y-axis)
+    float sinp = 2.0f * (w * y - z * x);
+    float pitch;
+    if (std::fabs(sinp) >= 1.0f)
+        pitch = std::copysign(3.14159265f / 2.0f, sinp); // Use 90 degrees if out of range
+    else
+        pitch = std::asin(sinp);
+
+    // Yaw (rotation around Z-axis)
+    float siny_cosp = 2.0f * (w * z + x * y);
+    float cosy_cosp = 1.0f - 2.0f * (y * y + z * z);
+    float yaw = std::atan2(siny_cosp, cosy_cosp);
+
+    return {roll, pitch, yaw};
+}
+
+/**
+ * @brief Extract yaw component from a quaternion
+ * @param q Input quaternion [w, x, y, z]
+ * @return Quaternion representing only the yaw rotation around Z-axis [w, x, y, z]
+ */
+inline std::vector<float> QuaternionYawOnly(const std::vector<float>& q)
+{
+    // Extract yaw angle from quaternion
+    float siny_cosp = 2.0f * (q[0] * q[3] + q[1] * q[2]);
+    float cosy_cosp = 1.0f - 2.0f * (q[2] * q[2] + q[3] * q[3]);
+    float yaw = std::atan2(siny_cosp, cosy_cosp);
+
+    // Create quaternion with only yaw rotation
+    float half_yaw = yaw * 0.5f;
+    return {std::cos(half_yaw), 0.0f, 0.0f, std::sin(half_yaw)};
+}
+
+/**
+ * @brief Transpose a 3x3 rotation matrix
+ * @param mat Input matrix [9 elements, row-major]
+ * @return Transposed matrix
+ */
+inline std::vector<float> TransposeMatrix3x3(const std::vector<float>& mat)
+{
+    return {
+        mat[0], mat[3], mat[6],
+        mat[1], mat[4], mat[7],
+        mat[2], mat[5], mat[8]
+    };
+}
+
+/**
+ * @brief Extract first two columns of a 3x3 matrix (6 elements)
+ * @param mat Input matrix [9 elements, row-major]
+ * @return First two columns as vector [R00, R01, R10, R11, R20, R21]
+ */
+inline std::vector<float> MatrixFirstTwoColumns(const std::vector<float>& mat)
+{
+    return {
+        mat[0], mat[1],  // First column: R00, R01
+        mat[3], mat[4],  // Second column: R10, R11
+        mat[6], mat[7]   // Third column: R20, R21
+    };
 }
 
 #endif // VECTOR_MATH_HPP

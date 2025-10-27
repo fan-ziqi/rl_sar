@@ -23,6 +23,7 @@
 #include "vector_math.hpp"
 #include "inference_runtime.hpp"
 #include "logger.hpp"
+#include "motion_loader.hpp"
 
 template <typename T>
 struct RobotCommand
@@ -144,37 +145,28 @@ struct Control
     }
 };
 
-struct ModelParams
+struct YamlParams
 {
-    std::string model_name;
-    float dt;
-    int decimation;
-    int num_observations;
-    std::vector<std::string> observations;
-    std::vector<int> observations_history;
-    std::string observations_history_priority;
-    float damping;
-    float stiffness;
-    std::vector<float> action_scale;
-    std::vector<int> wheel_indices;
-    int num_of_dofs;
-    float lin_vel_scale;
-    float ang_vel_scale;
-    float dof_pos_scale;
-    float dof_vel_scale;
-    float clip_obs;
-    std::vector<float> clip_actions_upper;
-    std::vector<float> clip_actions_lower;
-    std::vector<float> torque_limits;
-    std::vector<float> rl_kd;
-    std::vector<float> rl_kp;
-    std::vector<float> fixed_kp;
-    std::vector<float> fixed_kd;
-    std::vector<float> commands_scale;
-    std::vector<float> default_dof_pos;
-    std::vector<std::string> joint_controller_names;
-    std::vector<std::string> joint_names;
-    std::vector<int> joint_mapping;
+    YAML::Node config_node;
+
+    // Get config value by key
+    // WARNING: For vectors/containers, store result in a variable before using iterators/references:
+    //   ✓ auto vec = params.Get<std::vector<int>>("key"); vec.begin()
+    //   ✗ params.Get<std::vector<int>>("key").begin()  // dangling reference!
+    template<typename T>
+    T Get(const std::string& key, const T& default_value = T()) const
+    {
+        if (config_node[key])
+        {
+            return config_node[key].as<T>();
+        }
+        return default_value;
+    }
+
+    bool Has(const std::string& key) const
+    {
+        return config_node[key].IsDefined();
+    }
 };
 
 template <typename T>
@@ -196,7 +188,7 @@ public:
     RL() {};
     ~RL() {};
 
-    ModelParams params;
+    YamlParams params;
     Observations<float> obs;
     std::vector<int> obs_dims;
 
@@ -215,7 +207,7 @@ public:
     void InitObservations();
     void InitOutputs();
     void InitControl();
-    void InitRL(std::string robot_path);
+    void InitRL(std::string robot_config_path);
     void InitJointNum(size_t num_joints);
 
     // rl functions
@@ -225,11 +217,9 @@ public:
     virtual void SetCommand(const RobotCommand<float> *command) = 0;
     void StateController(const RobotState<float> *state, RobotCommand<float> *command);
     void ComputeOutput(const std::vector<float> &actions, std::vector<float> &output_dof_pos, std::vector<float> &output_dof_vel, std::vector<float> &output_dof_tau);
-    std::vector<float> QuatRotateInverse(const std::vector<float> &q, const std::vector<float> &v);
 
     // yaml params
-    void ReadYamlBase(std::string robot_name);
-    void ReadYamlRL(std::string robot_name);
+    void ReadYaml(const std::string& file_path, const std::string& file_name);
 
     // csv logger
     std::string csv_filename;
@@ -248,9 +238,13 @@ public:
     int motiontime = 0;
     std::string robot_name, config_name;
     bool simulation_running = true;
-    std::string ang_vel_type = "ang_vel_body";  // "ang_vel_world" or "ang_vel_body"
+    std::string ang_vel_axis = "body";  // "world" or "body"
     unsigned long long episode_length_buf = 0;
     float motion_length = 0.0;
+    int InverseJointMapping(int idx) const;
+
+    // Motion tracking (for mimic/dance tasks)
+    std::unique_ptr<MotionLoader> motion_loader;
 
     // protect func
     void TorqueProtect(const std::vector<float> &origin_output_dof_tau);

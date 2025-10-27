@@ -338,6 +338,7 @@ include_directories(
     library/core/loop
     library/core/fsm
     library/core/vector_math
+    library/core/motion_loader
     library/core/inference_runtime
     library/core/logger
     fsm_robot
@@ -363,9 +364,13 @@ if(NOT USE_CMAKE)
     endif()
 endif()
 
+# library for motion loader
+add_library(motion_loader library/core/motion_loader/motion_loader.cpp)
+
 # library for rl sdk
 add_library(rl_sdk library/core/rl_sdk/rl_sdk.cpp)
 target_link_libraries(rl_sdk PUBLIC
+    motion_loader
     inference_runtime
     Python3::Python
     Python3::Module

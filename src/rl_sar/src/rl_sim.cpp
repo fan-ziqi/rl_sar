@@ -8,13 +8,13 @@
 RL_Sim::RL_Sim(int argc, char **argv)
 {
 #if defined(USE_ROS1)
-    this->ang_vel_type = "ang_vel_world";
+    this->ang_vel_axis = "world";
     ros::NodeHandle nh;
     nh.param<std::string>("ros_namespace", this->ros_namespace, "");
     nh.param<std::string>("robot_name", this->robot_name, "");
 #elif defined(USE_ROS2)
     ros2_node = std::make_shared<rclcpp::Node>("rl_sim_node");
-    this->ang_vel_type = "ang_vel_body";
+    this->ang_vel_axis = "body";
     this->ros_namespace = ros2_node->get_namespace();
     // get params from param_node
     param_client = ros2_node->create_client<rcl_interfaces::srv::GetParameters>("/param_node/get_parameters");
@@ -53,7 +53,7 @@ RL_Sim::RL_Sim(int argc, char **argv)
 #endif
 
     // read params from yaml
-    this->ReadYamlBase(this->robot_name);
+    this->ReadYaml(this->robot_name, "base.yaml");
 
     // auto load FSM by robot_name
     if (FSMManager::GetInstance().IsTypeSupported(this->robot_name))
@@ -71,21 +71,22 @@ RL_Sim::RL_Sim(int argc, char **argv)
 
     // init robot
 #if defined(USE_ROS1)
-    this->joint_publishers_commands.resize(this->params.num_of_dofs);
+    this->joint_publishers_commands.resize(this->params.Get<int>("num_of_dofs"));
 #elif defined(USE_ROS2)
-    this->robot_command_publisher_msg.motor_command.resize(this->params.num_of_dofs);
-    this->robot_state_subscriber_msg.motor_state.resize(this->params.num_of_dofs);
+    this->robot_command_publisher_msg.motor_command.resize(this->params.Get<int>("num_of_dofs"));
+    this->robot_state_subscriber_msg.motor_state.resize(this->params.Get<int>("num_of_dofs"));
 #endif
-    this->InitJointNum(this->params.num_of_dofs);
+    this->InitJointNum(this->params.Get<int>("num_of_dofs"));
     this->InitOutputs();
     this->InitControl();
 
 #if defined(USE_ROS1)
-    this->StartJointController(this->ros_namespace, this->params.joint_controller_names);
+    auto joint_controller_names_vec = this->params.Get<std::vector<std::string>>("joint_controller_names");  // avoid dangling reference
+    this->StartJointController(this->ros_namespace, joint_controller_names_vec);
     // publisher
-    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
     {
-        const std::string &joint_controller_name = this->params.joint_controller_names[i];
+        const std::string &joint_controller_name = joint_controller_names_vec[i];
         const std::string topic_name = this->ros_namespace + joint_controller_name + "/command";
         this->joint_publishers[joint_controller_name] =
             nh.advertise<robot_msgs::MotorCommand>(topic_name, 10);
@@ -95,9 +96,9 @@ RL_Sim::RL_Sim(int argc, char **argv)
     this->cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 10, &RL_Sim::CmdvelCallback, this);
     this->joy_subscriber = nh.subscribe<sensor_msgs::Joy>("/joy", 10, &RL_Sim::JoyCallback, this);
     this->model_state_subscriber = nh.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 10, &RL_Sim::ModelStatesCallback, this);
-    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
     {
-        const std::string &joint_controller_name = this->params.joint_controller_names[i];
+        const std::string &joint_controller_name = joint_controller_names_vec[i];
         const std::string topic_name = this->ros_namespace + joint_controller_name + "/state";
         this->joint_subscribers[joint_controller_name] =
             nh.subscribe<robot_msgs::MotorState>(topic_name, 10,
@@ -117,7 +118,7 @@ RL_Sim::RL_Sim(int argc, char **argv)
     this->gazebo_unpause_physics_client = nh.serviceClient<std_srvs::Empty>("/gazebo/unpause_physics");
     this->gazebo_reset_world_client = nh.serviceClient<std_srvs::Empty>("/gazebo/reset_world");
 #elif defined(USE_ROS2)
-    this->StartJointController(this->ros_namespace, this->params.joint_names);
+    this->StartJointController(this->ros_namespace, this->params.Get<std::vector<std::string>>("joint_names"));
     // publisher
     this->robot_command_publisher = ros2_node->create_publisher<robot_msgs::msg::RobotCommand>(
         this->ros_namespace + "robot_joint_controller/command", rclcpp::SystemDefaultsQoS());
@@ -149,8 +150,8 @@ RL_Sim::RL_Sim(int argc, char **argv)
 #endif
 
     // loop
-    this->loop_control = std::make_shared<LoopFunc>("loop_control", this->params.dt, std::bind(&RL_Sim::RobotControl, this));
-    this->loop_rl = std::make_shared<LoopFunc>("loop_rl", this->params.dt * this->params.decimation, std::bind(&RL_Sim::RunModel, this));
+    this->loop_control = std::make_shared<LoopFunc>("loop_control", this->params.Get<float>("dt"), std::bind(&RL_Sim::RobotControl, this));
+    this->loop_rl = std::make_shared<LoopFunc>("loop_rl", this->params.Get<float>("dt") * this->params.Get<int>("decimation"), std::bind(&RL_Sim::RunModel, this));
     this->loop_control->start();
     this->loop_rl->start();
 
@@ -160,8 +161,8 @@ RL_Sim::RL_Sim(int argc, char **argv)
 
 #ifdef PLOT
     this->plot_t = std::vector<int>(this->plot_size, 0);
-    this->plot_real_joint_pos.resize(this->params.num_of_dofs);
-    this->plot_target_joint_pos.resize(this->params.num_of_dofs);
+    this->plot_real_joint_pos.resize(this->params.Get<int>("num_of_dofs"));
+    this->plot_target_joint_pos.resize(this->params.Get<int>("num_of_dofs"));
     for (auto &vector : this->plot_real_joint_pos) { vector = std::vector<float>(this->plot_size, 0); }
     for (auto &vector : this->plot_target_joint_pos) { vector = std::vector<float>(this->plot_size, 0); }
     this->loop_plot = std::make_shared<LoopFunc>("loop_plot", 0.001, std::bind(&RL_Sim::Plot, this));
@@ -269,43 +270,43 @@ void RL_Sim::GetState(RobotState<float> *state)
     state->imu.gyroscope[1] = angular_velocity.y;
     state->imu.gyroscope[2] = angular_velocity.z;
 
-    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
     {
 #if defined(USE_ROS1)
-        state->motor_state.q[i] = this->joint_positions[this->params.joint_controller_names[this->params.joint_mapping[i]]];
-        state->motor_state.dq[i] = this->joint_velocities[this->params.joint_controller_names[this->params.joint_mapping[i]]];
-        state->motor_state.tau_est[i] = this->joint_efforts[this->params.joint_controller_names[this->params.joint_mapping[i]]];
+        state->motor_state.q[i] = this->joint_positions[this->params.Get<std::vector<std::string>>("joint_controller_names")[this->params.Get<std::vector<int>>("joint_mapping")[i]]];
+        state->motor_state.dq[i] = this->joint_velocities[this->params.Get<std::vector<std::string>>("joint_controller_names")[this->params.Get<std::vector<int>>("joint_mapping")[i]]];
+        state->motor_state.tau_est[i] = this->joint_efforts[this->params.Get<std::vector<std::string>>("joint_controller_names")[this->params.Get<std::vector<int>>("joint_mapping")[i]]];
 #elif defined(USE_ROS2)
-        state->motor_state.q[i] = this->robot_state_subscriber_msg.motor_state[this->params.joint_mapping[i]].q;
-        state->motor_state.dq[i] = this->robot_state_subscriber_msg.motor_state[this->params.joint_mapping[i]].dq;
-        state->motor_state.tau_est[i] = this->robot_state_subscriber_msg.motor_state[this->params.joint_mapping[i]].tau_est;
+        state->motor_state.q[i] = this->robot_state_subscriber_msg.motor_state[this->params.Get<std::vector<int>>("joint_mapping")[i]].q;
+        state->motor_state.dq[i] = this->robot_state_subscriber_msg.motor_state[this->params.Get<std::vector<int>>("joint_mapping")[i]].dq;
+        state->motor_state.tau_est[i] = this->robot_state_subscriber_msg.motor_state[this->params.Get<std::vector<int>>("joint_mapping")[i]].tau_est;
 #endif
     }
 }
 
 void RL_Sim::SetCommand(const RobotCommand<float> *command)
 {
-    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
     {
 #if defined(USE_ROS1)
-        this->joint_publishers_commands[this->params.joint_mapping[i]].q = command->motor_command.q[i];
-        this->joint_publishers_commands[this->params.joint_mapping[i]].dq = command->motor_command.dq[i];
-        this->joint_publishers_commands[this->params.joint_mapping[i]].kp = command->motor_command.kp[i];
-        this->joint_publishers_commands[this->params.joint_mapping[i]].kd = command->motor_command.kd[i];
-        this->joint_publishers_commands[this->params.joint_mapping[i]].tau = command->motor_command.tau[i];
+        this->joint_publishers_commands[this->params.Get<std::vector<int>>("joint_mapping")[i]].q = command->motor_command.q[i];
+        this->joint_publishers_commands[this->params.Get<std::vector<int>>("joint_mapping")[i]].dq = command->motor_command.dq[i];
+        this->joint_publishers_commands[this->params.Get<std::vector<int>>("joint_mapping")[i]].kp = command->motor_command.kp[i];
+        this->joint_publishers_commands[this->params.Get<std::vector<int>>("joint_mapping")[i]].kd = command->motor_command.kd[i];
+        this->joint_publishers_commands[this->params.Get<std::vector<int>>("joint_mapping")[i]].tau = command->motor_command.tau[i];
 #elif defined(USE_ROS2)
-        this->robot_command_publisher_msg.motor_command[this->params.joint_mapping[i]].q = command->motor_command.q[i];
-        this->robot_command_publisher_msg.motor_command[this->params.joint_mapping[i]].dq = command->motor_command.dq[i];
-        this->robot_command_publisher_msg.motor_command[this->params.joint_mapping[i]].kp = command->motor_command.kp[i];
-        this->robot_command_publisher_msg.motor_command[this->params.joint_mapping[i]].kd = command->motor_command.kd[i];
-        this->robot_command_publisher_msg.motor_command[this->params.joint_mapping[i]].tau = command->motor_command.tau[i];
+        this->robot_command_publisher_msg.motor_command[this->params.Get<std::vector<int>>("joint_mapping")[i]].q = command->motor_command.q[i];
+        this->robot_command_publisher_msg.motor_command[this->params.Get<std::vector<int>>("joint_mapping")[i]].dq = command->motor_command.dq[i];
+        this->robot_command_publisher_msg.motor_command[this->params.Get<std::vector<int>>("joint_mapping")[i]].kp = command->motor_command.kp[i];
+        this->robot_command_publisher_msg.motor_command[this->params.Get<std::vector<int>>("joint_mapping")[i]].kd = command->motor_command.kd[i];
+        this->robot_command_publisher_msg.motor_command[this->params.Get<std::vector<int>>("joint_mapping")[i]].tau = command->motor_command.tau[i];
 #endif
     }
 
 #if defined(USE_ROS1)
-    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
     {
-        this->joint_publishers[this->params.joint_controller_names[i]].publish(this->joint_publishers_commands[i]);
+        this->joint_publishers[this->params.Get<std::vector<std::string>>("joint_controller_names")[i]].publish(this->joint_publishers_commands[i]);
     }
 #elif defined(USE_ROS2)
     this->robot_command_publisher->publish(this->robot_command_publisher_msg);
@@ -485,10 +486,10 @@ void RL_Sim::RunModel()
         // this->AttitudeProtect(this->robot_state.imu.quaternion, 75.0f, 75.0f);
 
 #ifdef CSV_LOGGER
-        std::vector<float> tau_est(this->params.num_of_dofs, 0.0f);
-        for (int i = 0; i < this->params.num_of_dofs; ++i)
+        std::vector<float> tau_est(this->params.Get<int>("num_of_dofs"), 0.0f);
+        for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
         {
-            tau_est[i] = this->joint_efforts[this->params.joint_controller_names[i]];
+            tau_est[i] = this->joint_efforts[this->params.Get<std::vector<std::string>>("joint_controller_names")[i]];
         }
         this->CSVLogger(this->output_dof_tau, tau_est, this->obs.dof_pos, this->output_dof_pos, this->obs.dof_vel);
 #endif
@@ -509,10 +510,10 @@ std::vector<float> RL_Sim::Forward()
     std::vector<float> clamped_obs = this->ComputeObservation();
 
     std::vector<float> actions;
-    if (this->params.observations_history.size() != 0)
+    if (this->params.Get<std::vector<int>>("observations_history").size() != 0)
     {
         this->history_obs_buf.insert(clamped_obs);
-        this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
+        this->history_obs = this->history_obs_buf.get_obs_vec(this->params.Get<std::vector<int>>("observations_history"));
         actions = this->model->forward({this->history_obs});
     }
     else
@@ -520,9 +521,9 @@ std::vector<float> RL_Sim::Forward()
         actions = this->model->forward({clamped_obs});
     }
 
-    if (!this->params.clip_actions_upper.empty() && !this->params.clip_actions_lower.empty())
+    if (!this->params.Get<std::vector<float>>("clip_actions_upper").empty() && !this->params.Get<std::vector<float>>("clip_actions_lower").empty())
     {
-        return clamp(actions, this->params.clip_actions_lower, this->params.clip_actions_upper);
+        return clamp(actions, this->params.Get<std::vector<float>>("clip_actions_lower"), this->params.Get<std::vector<float>>("clip_actions_upper"));
     }
     else
     {
@@ -536,18 +537,18 @@ void RL_Sim::Plot()
     this->plot_t.push_back(this->motiontime);
     plt::cla();
     plt::clf();
-    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
     {
         this->plot_real_joint_pos[i].erase(this->plot_real_joint_pos[i].begin());
         this->plot_target_joint_pos[i].erase(this->plot_target_joint_pos[i].begin());
 #if defined(USE_ROS1)
-        this->plot_real_joint_pos[i].push_back(this->joint_positions[this->params.joint_controller_names[i]]);
+        this->plot_real_joint_pos[i].push_back(this->joint_positions[this->params.Get<std::vector<std::string>>("joint_controller_names")[i]]);
         this->plot_target_joint_pos[i].push_back(this->joint_publishers_commands[i].q);
 #elif defined(USE_ROS2)
         this->plot_real_joint_pos[i].push_back(this->robot_state_subscriber_msg.motor_state[i].q);
         this->plot_target_joint_pos[i].push_back(this->robot_command_publisher_msg.motor_command[i].q);
 #endif
-        plt::subplot(this->params.num_of_dofs, 1, i + 1);
+        plt::subplot(this->params.Get<int>("num_of_dofs"), 1, i + 1);
         plt::named_plot("_real_joint_pos", this->plot_t, this->plot_real_joint_pos[i], "r");
         plt::named_plot("_target_joint_pos", this->plot_t, this->plot_target_joint_pos[i], "b");
         plt::xlim(this->plot_t.front(), this->plot_t.back());
