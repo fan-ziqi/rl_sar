@@ -23,7 +23,7 @@ RL_Sim::RL_Sim(int argc, char **argv)
         this->scene_name = argv[2];
     }
 
-    this->ang_vel_type = "ang_vel_body";
+    this->ang_vel_axis = "body";
 
     // now launch mujoco
     std::cout << LOGGER::INFO << "[MuJoCo] Launching..." << std::endl;
@@ -82,7 +82,7 @@ RL_Sim::RL_Sim(int argc, char **argv)
     this->SetupSysJoystick("/dev/input/js0", 16); // 16 bits joystick
 
     // read params from yaml
-    this->ReadYamlBase(this->robot_name);
+    this->ReadYaml(this->robot_name, "base.yaml");
 
     // auto load FSM by robot_name
     if (FSMManager::GetInstance().IsTypeSupported(this->robot_name))
@@ -99,13 +99,13 @@ RL_Sim::RL_Sim(int argc, char **argv)
     }
 
     // init robot
-    this->InitJointNum(this->params.num_of_dofs);
+    this->InitJointNum(this->params.Get<int>("num_of_dofs"));
     this->InitOutputs();
     this->InitControl();
 
     // loop
-    this->loop_control = std::make_shared<LoopFunc>("loop_control", this->params.dt, std::bind(&RL_Sim::RobotControl, this));
-    this->loop_rl = std::make_shared<LoopFunc>("loop_rl", this->params.dt * this->params.decimation, std::bind(&RL_Sim::RunModel, this));
+    this->loop_control = std::make_shared<LoopFunc>("loop_control", this->params.Get<float>("dt"), std::bind(&RL_Sim::RobotControl, this));
+    this->loop_rl = std::make_shared<LoopFunc>("loop_rl", this->params.Get<float>("dt") * this->params.Get<int>("decimation"), std::bind(&RL_Sim::RunModel, this));
     this->loop_control->start();
     this->loop_rl->start();
 
@@ -119,8 +119,8 @@ RL_Sim::RL_Sim(int argc, char **argv)
 
 #ifdef PLOT
     this->plot_t = std::vector<int>(this->plot_size, 0);
-    this->plot_real_joint_pos.resize(this->params.num_of_dofs);
-    this->plot_target_joint_pos.resize(this->params.num_of_dofs);
+    this->plot_real_joint_pos.resize(this->params.Get<int>("num_of_dofs"));
+    this->plot_target_joint_pos.resize(this->params.Get<int>("num_of_dofs"));
     for (auto &vector : this->plot_real_joint_pos) { vector = std::vector<float>(this->plot_size, 0); }
     for (auto &vector : this->plot_target_joint_pos) { vector = std::vector<float>(this->plot_size, 0); }
     this->loop_plot = std::make_shared<LoopFunc>("loop_plot", 0.001, std::bind(&RL_Sim::Plot, this));
@@ -155,20 +155,20 @@ void RL_Sim::GetState(RobotState<float> *state)
 {
     if (mj_data)
     {
-        state->imu.quaternion[0] = mj_data->sensordata[3 * this->params.num_of_dofs + 0];
-        state->imu.quaternion[1] = mj_data->sensordata[3 * this->params.num_of_dofs + 1];
-        state->imu.quaternion[2] = mj_data->sensordata[3 * this->params.num_of_dofs + 2];
-        state->imu.quaternion[3] = mj_data->sensordata[3 * this->params.num_of_dofs + 3];
+        state->imu.quaternion[0] = mj_data->sensordata[3 * this->params.Get<int>("num_of_dofs") + 0];
+        state->imu.quaternion[1] = mj_data->sensordata[3 * this->params.Get<int>("num_of_dofs") + 1];
+        state->imu.quaternion[2] = mj_data->sensordata[3 * this->params.Get<int>("num_of_dofs") + 2];
+        state->imu.quaternion[3] = mj_data->sensordata[3 * this->params.Get<int>("num_of_dofs") + 3];
 
-        state->imu.gyroscope[0] = mj_data->sensordata[3 * this->params.num_of_dofs + 4];
-        state->imu.gyroscope[1] = mj_data->sensordata[3 * this->params.num_of_dofs + 5];
-        state->imu.gyroscope[2] = mj_data->sensordata[3 * this->params.num_of_dofs + 6];
+        state->imu.gyroscope[0] = mj_data->sensordata[3 * this->params.Get<int>("num_of_dofs") + 4];
+        state->imu.gyroscope[1] = mj_data->sensordata[3 * this->params.Get<int>("num_of_dofs") + 5];
+        state->imu.gyroscope[2] = mj_data->sensordata[3 * this->params.Get<int>("num_of_dofs") + 6];
 
-        for (int i = 0; i < this->params.num_of_dofs; ++i)
+        for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
         {
-            state->motor_state.q[i] = mj_data->sensordata[this->params.joint_mapping[i]];
-            state->motor_state.dq[i] = mj_data->sensordata[this->params.joint_mapping[i] + this->params.num_of_dofs];
-            state->motor_state.tau_est[i] = mj_data->sensordata[this->params.joint_mapping[i] + 2 * this->params.num_of_dofs];
+            state->motor_state.q[i] = mj_data->sensordata[this->params.Get<std::vector<int>>("joint_mapping")[i]];
+            state->motor_state.dq[i] = mj_data->sensordata[this->params.Get<std::vector<int>>("joint_mapping")[i] + this->params.Get<int>("num_of_dofs")];
+            state->motor_state.tau_est[i] = mj_data->sensordata[this->params.Get<std::vector<int>>("joint_mapping")[i] + 2 * this->params.Get<int>("num_of_dofs")];
         }
     }
 }
@@ -177,12 +177,12 @@ void RL_Sim::SetCommand(const RobotCommand<float> *command)
 {
     if (mj_data)
     {
-        for (int i = 0; i < this->params.num_of_dofs; ++i)
+        for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
         {
-            mj_data->ctrl[this->params.joint_mapping[i]] =
+            mj_data->ctrl[this->params.Get<std::vector<int>>("joint_mapping")[i]] =
                 command->motor_command.tau[i] +
-                command->motor_command.kp[i] * (command->motor_command.q[i] - mj_data->sensordata[this->params.joint_mapping[i]]) +
-                command->motor_command.kd[i] * (command->motor_command.dq[i] - mj_data->sensordata[this->params.joint_mapping[i] + this->params.num_of_dofs]);
+                command->motor_command.kp[i] * (command->motor_command.q[i] - mj_data->sensordata[this->params.Get<std::vector<int>>("joint_mapping")[i]]) +
+                command->motor_command.kd[i] * (command->motor_command.dq[i] - mj_data->sensordata[this->params.Get<std::vector<int>>("joint_mapping")[i] + this->params.Get<int>("num_of_dofs")]);
         }
     }
 }
@@ -277,8 +277,8 @@ void RL_Sim::GetSysJoystick()
     if (this->sys_js_button[10].on_press) this->control.SetGamepad(Input::Gamepad::RStick);
     if (this->sys_js_axis[7] < 0) this->control.SetGamepad(Input::Gamepad::DPadUp);
     if (this->sys_js_axis[7] > 0) this->control.SetGamepad(Input::Gamepad::DPadDown);
-    if (this->sys_js_axis[6] < 0) this->control.SetGamepad(Input::Gamepad::DPadLeft);
-    if (this->sys_js_axis[6] > 0) this->control.SetGamepad(Input::Gamepad::DPadRight);
+    if (this->sys_js_axis[6] > 0) this->control.SetGamepad(Input::Gamepad::DPadLeft);
+    if (this->sys_js_axis[6] < 0) this->control.SetGamepad(Input::Gamepad::DPadRight);
     if (this->sys_js_button[4].pressed && this->sys_js_button[0].on_press) this->control.SetGamepad(Input::Gamepad::LB_A);
     if (this->sys_js_button[4].pressed && this->sys_js_button[1].on_press) this->control.SetGamepad(Input::Gamepad::LB_B);
     if (this->sys_js_button[4].pressed && this->sys_js_button[2].on_press) this->control.SetGamepad(Input::Gamepad::LB_X);
@@ -287,8 +287,8 @@ void RL_Sim::GetSysJoystick()
     if (this->sys_js_button[4].pressed && this->sys_js_button[10].on_press) this->control.SetGamepad(Input::Gamepad::LB_RStick);
     if (this->sys_js_button[4].pressed && this->sys_js_axis[7] < 0) this->control.SetGamepad(Input::Gamepad::LB_DPadUp);
     if (this->sys_js_button[4].pressed && this->sys_js_axis[7] > 0) this->control.SetGamepad(Input::Gamepad::LB_DPadDown);
-    if (this->sys_js_button[4].pressed && this->sys_js_axis[6] < 0) this->control.SetGamepad(Input::Gamepad::LB_DPadRight);
-    if (this->sys_js_button[4].pressed && this->sys_js_axis[6] > 0) this->control.SetGamepad(Input::Gamepad::LB_DPadLeft);
+    if (this->sys_js_button[4].pressed && this->sys_js_axis[6] > 0) this->control.SetGamepad(Input::Gamepad::LB_DPadRight);
+    if (this->sys_js_button[4].pressed && this->sys_js_axis[6] < 0) this->control.SetGamepad(Input::Gamepad::LB_DPadLeft);
     if (this->sys_js_button[5].pressed && this->sys_js_button[0].on_press) this->control.SetGamepad(Input::Gamepad::RB_A);
     if (this->sys_js_button[5].pressed && this->sys_js_button[1].on_press) this->control.SetGamepad(Input::Gamepad::RB_B);
     if (this->sys_js_button[5].pressed && this->sys_js_button[2].on_press) this->control.SetGamepad(Input::Gamepad::RB_X);
@@ -297,8 +297,8 @@ void RL_Sim::GetSysJoystick()
     if (this->sys_js_button[5].pressed && this->sys_js_button[10].on_press) this->control.SetGamepad(Input::Gamepad::RB_RStick);
     if (this->sys_js_button[5].pressed && this->sys_js_axis[7] < 0) this->control.SetGamepad(Input::Gamepad::RB_DPadUp);
     if (this->sys_js_button[5].pressed && this->sys_js_axis[7] > 0) this->control.SetGamepad(Input::Gamepad::RB_DPadDown);
-    if (this->sys_js_button[5].pressed && this->sys_js_axis[6] < 0) this->control.SetGamepad(Input::Gamepad::RB_DPadRight);
-    if (this->sys_js_button[5].pressed && this->sys_js_axis[6] > 0) this->control.SetGamepad(Input::Gamepad::RB_DPadLeft);
+    if (this->sys_js_button[5].pressed && this->sys_js_axis[6] > 0) this->control.SetGamepad(Input::Gamepad::RB_DPadRight);
+    if (this->sys_js_button[5].pressed && this->sys_js_axis[6] < 0) this->control.SetGamepad(Input::Gamepad::RB_DPadLeft);
     if (this->sys_js_button[4].pressed && this->sys_js_button[5].on_press) this->control.SetGamepad(Input::Gamepad::LB_RB);
 
     float ly = -float(this->sys_js_axis[1]) / float(this->sys_js_max_value);
@@ -359,10 +359,10 @@ void RL_Sim::RunModel()
         // this->AttitudeProtect(this->robot_state.imu.quaternion, 75.0f, 75.0f);
 
 #ifdef CSV_LOGGER
-        std::vector<float> tau_est(this->params.num_of_dofs, 0.0f);
-        for (int i = 0; i < this->params.num_of_dofs; ++i)
+        std::vector<float> tau_est(this->params.Get<int>("num_of_dofs"), 0.0f);
+        for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
         {
-            tau_est[i] = this->joint_efforts[this->params.joint_controller_names[i]];
+            tau_est[i] = this->joint_efforts[this->params.Get<std::vector<std::string>>("joint_controller_names")[i]];
         }
         this->CSVLogger(this->output_dof_tau, tau_est, this->obs.dof_pos, this->output_dof_pos, this->obs.dof_vel);
 #endif
@@ -383,10 +383,10 @@ std::vector<float> RL_Sim::Forward()
     std::vector<float> clamped_obs = this->ComputeObservation();
 
     std::vector<float> actions;
-    if (this->params.observations_history.size() != 0)
+    if (this->params.Get<std::vector<int>>("observations_history").size() != 0)
     {
         this->history_obs_buf.insert(clamped_obs);
-        this->history_obs = this->history_obs_buf.get_obs_vec(this->params.observations_history);
+        this->history_obs = this->history_obs_buf.get_obs_vec(this->params.Get<std::vector<int>>("observations_history"));
         actions = this->model->forward({this->history_obs});
     }
     else
@@ -394,9 +394,9 @@ std::vector<float> RL_Sim::Forward()
         actions = this->model->forward({clamped_obs});
     }
 
-    if (!this->params.clip_actions_upper.empty() && !this->params.clip_actions_lower.empty())
+    if (!this->params.Get<std::vector<float>>("clip_actions_upper").empty() && !this->params.Get<std::vector<float>>("clip_actions_lower").empty())
     {
-        return clamp(actions, this->params.clip_actions_lower, this->params.clip_actions_upper);
+        return clamp(actions, this->params.Get<std::vector<float>>("clip_actions_lower"), this->params.Get<std::vector<float>>("clip_actions_upper"));
     }
     else
     {
@@ -410,13 +410,13 @@ void RL_Sim::Plot()
     this->plot_t.push_back(this->motiontime);
     plt::cla();
     plt::clf();
-    for (int i = 0; i < this->params.num_of_dofs; ++i)
+    for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
     {
         this->plot_real_joint_pos[i].erase(this->plot_real_joint_pos[i].begin());
         this->plot_target_joint_pos[i].erase(this->plot_target_joint_pos[i].begin());
         this->plot_real_joint_pos[i].push_back(mj_data->sensordata[i]);
         // this->plot_target_joint_pos[i].push_back();  // TODO
-        plt::subplot(this->params.num_of_dofs, 1, i + 1);
+        plt::subplot(this->params.Get<int>("num_of_dofs"), 1, i + 1);
         plt::named_plot("_real_joint_pos", this->plot_t, this->plot_real_joint_pos[i], "r");
         plt::named_plot("_target_joint_pos", this->plot_t, this->plot_target_joint_pos[i], "b");
         plt::xlim(this->plot_t.front(), this->plot_t.back());

@@ -24,7 +24,7 @@ public:
 
     void Run() override
     {
-        for (int i = 0; i < rl.params.num_of_dofs; ++i)
+        for (int i = 0; i < rl.params.Get<int>("num_of_dofs"); ++i)
         {
             // fsm_command->motor_command.q[i] = fsm_state->motor_state.q[i];
             fsm_command->motor_command.dq[i] = 0;
@@ -84,11 +84,11 @@ public:
         {
 
             if (Interpolate(percent_pre_getup, rl.now_state.motor_state.q, pre_running_pos, 1.0f, "Pre Getting up", true)) return;
-            if (Interpolate(percent_getup, pre_running_pos, rl.params.default_dof_pos, 2.0f, "Getting up", true)) return;
+            if (Interpolate(percent_getup, pre_running_pos, rl.params.Get<std::vector<float>>("default_dof_pos"), 2.0f, "Getting up", true)) return;
         }
         else
         {
-            if (Interpolate(percent_getup, rl.now_state.motor_state.q, rl.params.default_dof_pos, 1.0f, "Getting up", true)) return;
+            if (Interpolate(percent_getup, rl.now_state.motor_state.q, rl.params.Get<std::vector<float>>("default_dof_pos"), 1.0f, "Getting up", true)) return;
         }
     }
 
@@ -104,7 +104,7 @@ public:
         {
             if (rl.control.current_keyboard == Input::Keyboard::Num1 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
             {
-                return "RLFSMStateRL_Locomotion";
+                return "RLFSMStateRLLocomotion";
             }
             else if (rl.control.current_keyboard == Input::Keyboard::Num9 || rl.control.current_gamepad == Input::Gamepad::B)
             {
@@ -149,10 +149,10 @@ public:
     }
 };
 
-class RLFSMStateRL_Locomotion : public RLFSMState
+class RLFSMStateRLLocomotion : public RLFSMState
 {
 public:
-    RLFSMStateRL_Locomotion(RL *rl) : RLFSMState(*rl, "RLFSMStateRL_Locomotion") {}
+    RLFSMStateRLLocomotion(RL *rl) : RLFSMState(*rl, "RLFSMStateRLLocomotion") {}
 
     float percent_transition = 0.0f;
 
@@ -163,10 +163,10 @@ public:
 
         // read params from yaml
         rl.config_name = "robot_lab";
-        std::string robot_path = rl.robot_name + "/" + rl.config_name;
+        std::string robot_config_path = rl.robot_name + "/" + rl.config_name;
         try
         {
-            rl.InitRL(robot_path);
+            rl.InitRL(robot_config_path);
             rl.rl_init_done = true;
             rl.now_state = *fsm_state;
         }
@@ -183,7 +183,7 @@ public:
         if (!rl.rl_init_done) return;
 
         // position transition from last default_dof_pos to current default_dof_pos
-        // if (Interpolate(percent_transition, rl.now_state.motor_state.q, rl.params.default_dof_pos, 0.5f, "Policy transition", true)) return;
+        // if (Interpolate(percent_transition, rl.now_state.motor_state.q, rl.params.Get<std::vector<float>>("default_dof_pos"), 0.5f, "Policy transition", true)) return;
 
         std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "RL Controller [" << rl.config_name << "] x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
         RLControl();
@@ -210,7 +210,7 @@ public:
         }
         else if (rl.control.current_keyboard == Input::Keyboard::Num1 || rl.control.current_gamepad == Input::Gamepad::RB_DPadUp)
         {
-            return "RLFSMStateRL_Locomotion";
+            return "RLFSMStateRLLocomotion";
         }
         return state_name_;
     }
@@ -231,8 +231,8 @@ public:
             return std::make_shared<go2w_fsm::RLFSMStateGetUp>(rl);
         else if (state_name == "RLFSMStateGetDown")
             return std::make_shared<go2w_fsm::RLFSMStateGetDown>(rl);
-        else if (state_name == "RLFSMStateRL_Locomotion")
-            return std::make_shared<go2w_fsm::RLFSMStateRL_Locomotion>(rl);
+        else if (state_name == "RLFSMStateRLLocomotion")
+            return std::make_shared<go2w_fsm::RLFSMStateRLLocomotion>(rl);
         return nullptr;
     }
     std::string GetType() const override { return "go2w"; }
@@ -242,7 +242,7 @@ public:
             "RLFSMStatePassive",
             "RLFSMStateGetUp",
             "RLFSMStateGetDown",
-            "RLFSMStateRL_Locomotion"
+            "RLFSMStateRLLocomotion"
         };
     }
     std::string GetInitialState() const override { return initial_state_; }

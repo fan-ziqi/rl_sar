@@ -1,7 +1,7 @@
 # Copyright (c) 2024-2025 Ziqi Fan
 # SPDX-License-Identifier: Apache-2.0
 
-g1/robomimic/loco:
+g1/robomimic/locomotion:
   model_name: "policy_29dof.pt"
   num_observations: 96
   observations: ["ang_vel", "gravity_vec", "commands", "dof_pos", "dof_vel", "actions"]
