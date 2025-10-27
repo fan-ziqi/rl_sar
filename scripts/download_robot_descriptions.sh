@@ -31,6 +31,30 @@ ROBOT_DESC_DIR="${PROJECT_ROOT}/${TARGET_DIR}"
 REPO_URL="https://github.com/fan-ziqi/rl_sar_zoo.git"
 REPO_BRANCH="main"
 
+# Expected version - update this when URDF files need to be updated
+EXPECTED_VERSION="1.0.1"
+
+# Robot descriptions VERSION file (installed version)
+ROBOT_DESC_VERSION_FILE="${ROBOT_DESC_DIR}/VERSION"
+
+# Function: Get current installed version
+get_current_version() {
+    if [ -f "$ROBOT_DESC_VERSION_FILE" ]; then
+        cat "$ROBOT_DESC_VERSION_FILE" | tr -d '[:space:]'
+    else
+        echo "0.0.0"
+    fi
+}
+
+# Function: Check if version is up-to-date
+is_version_uptodate() {
+    local current_version=$(get_current_version)
+    if [ "$current_version" = "$EXPECTED_VERSION" ]; then
+        return 0
+    fi
+    return 1
+}
+
 # Function: Validate robot descriptions installation
 is_robot_descriptions_valid() {
     if [ ! -d "$ROBOT_DESC_DIR" ]; then
@@ -52,6 +76,18 @@ print_header "[Robot Descriptions Setup]"
 
 # Check if robot descriptions already exist and are valid
 if is_robot_descriptions_valid; then
+    # Check if version is up-to-date
+    if is_version_uptodate; then
+        current_version=$(get_current_version)
+        print_success "Robot descriptions are up-to-date (version: ${current_version})"
+        print_info "Installation path: ${ROBOT_DESC_DIR}"
+        exit 0
+    fi
+
+    # Version mismatch - need to update
+    current_version=$(get_current_version)
+    print_warning "Version mismatch: installed=${current_version}, expected=${EXPECTED_VERSION}"
+
     # Check network status
     if check_network_status "github.com"; then
         # Online: try to update if it's a git repository
@@ -61,10 +97,17 @@ if is_robot_descriptions_valid; then
 
             git pull origin "$REPO_BRANCH" || {
                 print_warning "Update failed, continuing with existing version"
+                cd "$PROJECT_ROOT"
+                exit 0
             }
 
             cd "$PROJECT_ROOT"
+            print_success "Robot descriptions updated successfully"
+        else
+            print_warning "Not a git repository, cannot update"
         fi
+    else
+        print_warning "Network unavailable, skipping update"
     fi
 
     print_success "Robot descriptions are available"
@@ -136,6 +179,10 @@ if ! is_robot_descriptions_valid; then
     exit 1
 fi
 
+# Set version file after successful installation
+set_version "$EXPECTED_VERSION"
+
 print_separator
 print_success "Robot descriptions setup completed!"
 print_info "Installation path: ${ROBOT_DESC_DIR}"
+print_info "Version: ${EXPECTED_VERSION}"
