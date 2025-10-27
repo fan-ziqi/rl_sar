@@ -45,7 +45,13 @@ public:
 
     void RequestStateChange(const std::string& state_name)
     {
-        if (states_.find(state_name) != states_.end() && current_state_ && current_state_->GetStateName() != state_name)
+        if (states_.find(state_name) == states_.end())
+        {
+            std::cout << LOGGER::ERROR << "[FSM] State '" << state_name << "' not found!" << std::endl;
+            return;
+        }
+
+        if (current_state_ && current_state_->GetStateName() != state_name)
         {
             next_state_ = states_.at(state_name);
             mode_ = Mode::CHANGE;
