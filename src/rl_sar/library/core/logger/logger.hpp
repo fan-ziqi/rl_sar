@@ -9,6 +9,8 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 namespace LOGGER
 {
@@ -23,18 +25,56 @@ namespace LOGGER
     const char *const COLOR_RESET = "\033[0m";
 
     /**
+     * @brief Get terminal width
+     * @return Terminal width in columns, or 80 as default if unavailable
+     */
+    inline int GetTerminalWidth()
+    {
+        struct winsize w;
+        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == 0 && w.ws_col > 0)
+        {
+            return w.ws_col;
+        }
+        return 80; // Default fallback width
+    }
+
+    /**
      * @brief Print progress bar with graphical representation
      * @param percent Progress percentage (0.0-1.0)
      * @param description Progress description
-     * @param bar_width Width of the progress bar in characters (default 40)
+     * @note The bar width will be automatically adjusted based on terminal width
      */
-    inline void PrintProgress(float percent, const std::string& description, int bar_width = 40)
+    inline void PrintProgress(float percent, const std::string& description)
     {
         if (percent >= 1.0f)
         {
             // Clear progress bar line and show completion message
             std::cout << "\r\033[K" << INFO << description << " completed" << std::endl;
             return;
+        }
+
+        int term_width = GetTerminalWidth();
+
+        // Fixed overhead: "[INFO]   " (9) + "[] " (3) + "100.00% - " (10) = 22 characters
+        int fixed_overhead = 22;
+
+        // Priority: keep description complete, use remaining space for progress bar
+        int desc_length = description.length();
+
+        // Calculate remaining space after description
+        int remaining_space = term_width - fixed_overhead - desc_length;
+
+        // Determine bar width based on remaining space
+        int bar_width = remaining_space;
+
+        // Ensure bar width is within reasonable bounds
+        if (bar_width < 5)
+        {
+            bar_width = 5;  // Minimum bar width to show some progress
+        }
+        else if (bar_width > 50)
+        {
+            bar_width = 50;  // Maximum bar width for readability
         }
 
         int filled = static_cast<int>(percent * bar_width);
@@ -46,9 +86,9 @@ namespace LOGGER
             bar += (i < filled) ? "█" : "░";
         }
 
-        // Write to stdout
+        // Write to stdout with percentage showing 2 decimal places
         std::cout << "\r\033[K" << INFO << "[" << PROGRESS_BAR_COLOR << bar << COLOR_RESET << "] "
-                  << static_cast<int>(percent * 100) << "% - " << description << std::flush;
+                  << std::fixed << std::setprecision(2) << (percent * 100) << "% - " << description << std::flush;
     }
 }
 

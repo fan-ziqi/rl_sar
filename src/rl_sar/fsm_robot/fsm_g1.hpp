@@ -241,8 +241,8 @@ public:
 
         float motion_time = rl.episode_length_buf * rl.params.Get<float>("dt") * rl.params.Get<int>("decimation");
         motion_time = fmin(motion_time, rl.motion_length);
-        float running_progress = motion_time / rl.motion_length * 100.0f;
-        std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "RL Controller [" << rl.config_name << "] Running progress "<< std::fixed << std::setprecision(2) << running_progress << "%" << std::flush;
+        float percent = motion_time / rl.motion_length;
+        LOGGER::PrintProgress(percent, rl.config_name);
 
         RLControl();
 
@@ -332,8 +332,8 @@ public:
         // Calculate motion time and progress
         float motion_time = rl.episode_length_buf * rl.params.Get<float>("dt") * rl.params.Get<int>("decimation");
         motion_time = std::fmin(motion_time, rl.motion_length);
-        float running_progress = (motion_time / rl.motion_length) * 100.0f;
-        std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "RL Controller [" << rl.config_name << "] Running progress "<< std::fixed << std::setprecision(2) << running_progress << "%" << std::flush;
+        float percent = motion_time / rl.motion_length;
+        LOGGER::PrintProgress(percent, rl.config_name);
 
         rl.motion_loader->Update(motion_time);
 
@@ -425,8 +425,8 @@ RLFSMStateRLWholeBodyTrackingGangnamStyle(RL *rl) : RLFSMState(*rl, "RLFSMStateR
         // Calculate motion time and progress
         float motion_time = rl.episode_length_buf * rl.params.Get<float>("dt") * rl.params.Get<int>("decimation");
         motion_time = std::fmin(motion_time, rl.motion_length);
-        float running_progress = (motion_time / rl.motion_length) * 100.0f;
-        std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "RL Controller [" << rl.config_name << "] Running progress "<< std::fixed << std::setprecision(2) << running_progress << "%" << std::flush;
+        float percent = motion_time / rl.motion_length;
+        LOGGER::PrintProgress(percent, rl.config_name);
 
         rl.motion_loader->Update(motion_time);
 
