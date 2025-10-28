@@ -577,7 +577,7 @@ bool RLFSMState::Interpolate(
 
     if (!description.empty())
     {
-        LOGGER::PrintProgress(percent, description, 40);
+        LOGGER::PrintProgress(percent, description);
     }
 
     if (percent >= 1.0f)
