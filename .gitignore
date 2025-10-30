@@ -31,7 +31,6 @@ mujoco
 MUJOCO_LOG.TXT
 
 # Data
-*.csv
 .cache
 *.json
 
