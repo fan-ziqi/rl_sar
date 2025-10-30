@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 g1/whole_body_tracking/gangnam_style:
-  model_name: "policy.onnx"
+  model_name: "policy.pt"
   num_observations: 154
   observations: ["whole_body_tracking/motion_command", "whole_body_tracking/motion_anchor_ori_b", "ang_vel", "dof_pos", "dof_vel", "actions"]
   observations_history: []  # 0 is the latest observation
