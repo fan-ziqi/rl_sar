@@ -179,9 +179,6 @@ if ! is_robot_descriptions_valid; then
     exit 1
 fi
 
-# Set version file after successful installation
-set_version "$EXPECTED_VERSION"
-
 print_separator
 print_success "Robot descriptions setup completed!"
 print_info "Installation path: ${ROBOT_DESC_DIR}"
