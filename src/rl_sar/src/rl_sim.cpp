@@ -315,6 +315,10 @@ void RL_Sim::SetCommand(const RobotCommand<float> *command)
 
 void RL_Sim::RobotControl()
 {
+    this->GetState(&this->robot_state);
+
+    this->StateController(&this->robot_state, &this->robot_command);
+
     if (this->control.current_keyboard == Input::Keyboard::R || this->control.current_gamepad == Input::Gamepad::RB_Y)
     {
 #if defined(USE_ROS1)
@@ -354,8 +358,8 @@ void RL_Sim::RobotControl()
         this->control.current_keyboard = this->control.last_keyboard;
     }
 
-    this->GetState(&this->robot_state);
-    this->StateController(&this->robot_state, &this->robot_command);
+    this->control.ClearInput();
+
     this->SetCommand(&this->robot_command);
 }
 

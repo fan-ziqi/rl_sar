@@ -181,7 +181,11 @@ void RL_Real::SetCommand(const RobotCommand<float> *command)
 void RL_Real::RobotControl()
 {
     this->GetState(&this->robot_state);
+
     this->StateController(&this->robot_state, &this->robot_command);
+
+    this->control.ClearInput();
+
     this->SetCommand(&this->robot_command);
 }
 

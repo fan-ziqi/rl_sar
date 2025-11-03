@@ -192,6 +192,10 @@ void RL_Sim::RobotControl()
     // Lock the sim mutex once for the entire control cycle to prevent race conditions
     const std::lock_guard<std::recursive_mutex> lock(sim->mtx);
 
+    this->GetState(&this->robot_state);
+
+    this->StateController(&this->robot_state, &this->robot_command);
+
     if (this->control.current_keyboard == Input::Keyboard::R || this->control.current_gamepad == Input::Gamepad::RB_Y)
     {
         if (this->mj_model && this->mj_data)
@@ -215,8 +219,8 @@ void RL_Sim::RobotControl()
         simulation_running = !simulation_running;
     }
 
-    this->GetState(&this->robot_state);
-    this->StateController(&this->robot_state, &this->robot_command);
+    this->control.ClearInput();
+
     this->SetCommand(&this->robot_command);
 }
 
