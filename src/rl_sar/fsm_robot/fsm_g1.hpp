@@ -140,7 +140,6 @@ RLFSMStateRLRoboMimicLocomotion(RL *rl) : RLFSMState(*rl, "RLFSMStateRLRoboMimic
         try
         {
             rl.InitRL(robot_config_path);
-            rl.rl_init_done = true;
             rl.now_state = *fsm_state;
         }
         catch (const std::exception& e)
@@ -153,10 +152,10 @@ RLFSMStateRLRoboMimicLocomotion(RL *rl) : RLFSMState(*rl, "RLFSMStateRLRoboMimic
 
     void Run() override
     {
-        if (!rl.rl_init_done) return;
-
         // position transition from last default_dof_pos to current default_dof_pos
         // if (Interpolate(percent_transition, rl.now_state.motor_state.q, rl.params.Get<std::vector<float>>("default_dof_pos"), 0.5f, "Policy transition", true)) return;
+
+        if (!rl.rl_init_done) rl.rl_init_done = true;
 
         std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "RL Controller [" << rl.config_name << "] x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
         RLControl();
@@ -219,7 +218,6 @@ public:
         try
         {
             rl.InitRL(robot_config_path);
-            rl.rl_init_done = true;
             rl.now_state = *fsm_state;
         }
         catch (const std::exception& e)
@@ -234,10 +232,10 @@ public:
 
     void Run() override
     {
-        if (!rl.rl_init_done) return;
-
         // position transition from last default_dof_pos to current default_dof_pos
         // if (Interpolate(percent_transition, rl.now_state.motor_state.q, rl.params.Get<std::vector<float>>("default_dof_pos"), 0.5f, "Policy transition", true)) return;
+
+        if (!rl.rl_init_done) rl.rl_init_done = true;
 
         float motion_time = rl.episode_length_buf * rl.params.Get<float>("dt") * rl.params.Get<int>("decimation");
         motion_time = fmin(motion_time, rl.motion_length);
@@ -311,7 +309,6 @@ public:
 
             std::cout << LOGGER::INFO << "Motion duration: " << rl.motion_length << "s" << std::endl;
 
-            rl.rl_init_done = true;
             rl.now_state = *fsm_state;
         }
         catch (const std::exception& e)
@@ -324,10 +321,10 @@ public:
 
     void Run() override
     {
-        if (!rl.rl_init_done) return;
-
         // position transition from last default_dof_pos to current default_dof_pos
         // if (Interpolate(percent_transition, rl.now_state.motor_state.q, rl.params.Get<std::vector<float>>("default_dof_pos"), 0.5f, "Policy transition", true)) return;
+
+        if (!rl.rl_init_done) rl.rl_init_done = true;
 
         // Calculate motion time and progress
         float motion_time = rl.episode_length_buf * rl.params.Get<float>("dt") * rl.params.Get<int>("decimation");
@@ -404,7 +401,6 @@ RLFSMStateRLWholeBodyTrackingGangnamStyle(RL *rl) : RLFSMState(*rl, "RLFSMStateR
 
             std::cout << LOGGER::INFO << "Motion duration: " << rl.motion_length << "s" << std::endl;
 
-            rl.rl_init_done = true;
             rl.now_state = *fsm_state;
         }
         catch (const std::exception& e)
@@ -417,10 +413,10 @@ RLFSMStateRLWholeBodyTrackingGangnamStyle(RL *rl) : RLFSMState(*rl, "RLFSMStateR
 
     void Run() override
     {
-        if (!rl.rl_init_done) return;
-
         // position transition from last default_dof_pos to current default_dof_pos
         // if (Interpolate(percent_transition, rl.now_state.motor_state.q, rl.params.Get<std::vector<float>>("default_dof_pos"), 0.5f, "Policy transition", true)) return;
+
+        if (!rl.rl_init_done) rl.rl_init_done = true;
 
         // Calculate motion time and progress
         float motion_time = rl.episode_length_buf * rl.params.Get<float>("dt") * rl.params.Get<int>("decimation");

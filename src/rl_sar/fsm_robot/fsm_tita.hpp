@@ -165,7 +165,6 @@ public:
         try
         {
             rl.InitRL(robot_config_path);
-            rl.rl_init_done = true;
             rl.now_state = *fsm_state;
         }
         catch (const std::exception& e)
@@ -178,10 +177,10 @@ public:
 
     void Run() override
     {
-        if (!rl.rl_init_done) return;
-
         // position transition from last default_dof_pos to current default_dof_pos
         // if (Interpolate(percent_transition, rl.now_state.motor_state.q, rl.params.Get<std::vector<float>>("default_dof_pos"), 0.5f, "Policy transition", true)) return;
+
+        if (!rl.rl_init_done) rl.rl_init_done = true;
 
         std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "RL Controller [" << rl.config_name << "] x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
         RLControl();
