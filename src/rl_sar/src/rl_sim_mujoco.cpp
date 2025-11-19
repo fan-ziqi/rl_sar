@@ -441,7 +441,6 @@ void signalHandler(int signum)
 
 int main(int argc, char **argv)
 {
-    std::string robot_name(argc > 1 ? argv[1] : "");
     signal(SIGINT, signalHandler);
     RL_Sim rl_sar(argc, argv);
     return 0;
