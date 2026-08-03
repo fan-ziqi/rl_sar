@@ -19,7 +19,7 @@ RL_Real::RL_Real(int argc, char **argv)
 #endif
 
     // read params from yaml
-    this->ang_vel_axis = "world";
+    this->ang_vel_axis = "body";
     this->robot_name = "lite3";
     this->ReadYaml(this->robot_name, "base.yaml");
 
