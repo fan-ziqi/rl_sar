@@ -214,17 +214,17 @@ void RobotJointController::SetCommandCallback(const robot_msgs::msg::MotorComman
 
 void RobotJointController::PositionLimit(double &position)
 {
-    std::clamp(position, joints_urdf_->limits->lower, joints_urdf_->limits->upper);
+    position = std::clamp(position, joints_urdf_->limits->lower, joints_urdf_->limits->upper);
 }
 
 void RobotJointController::VelocityLimit(double &velocity)
 {
-    std::clamp(velocity, -joints_urdf_->limits->velocity, joints_urdf_->limits->velocity);
+    velocity = std::clamp(velocity, -joints_urdf_->limits->velocity, joints_urdf_->limits->velocity);
 }
 
 void RobotJointController::EffortLimit(double &effort)
 {
-    std::clamp(effort, -joints_urdf_->limits->effort, joints_urdf_->limits->effort);
+    effort = std::clamp(effort, -joints_urdf_->limits->effort, joints_urdf_->limits->effort);
 }
 
 } // namespace robot_joint_controller
