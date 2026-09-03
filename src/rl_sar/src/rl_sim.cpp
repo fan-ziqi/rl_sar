@@ -145,8 +145,7 @@ RL_Sim::RL_Sim(int argc, char **argv)
     this->gazebo_unpause_physics_client = ros2_node->create_client<std_srvs::srv::Empty>("/unpause_physics");
     this->gazebo_reset_world_client = ros2_node->create_client<std_srvs::srv::Empty>("/reset_world");
 
-    auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
-    auto result = this->gazebo_reset_world_client->async_send_request(empty_request);
+    this->RequestGazeboWorldReset();
 #endif
 
     // loop
@@ -253,6 +252,8 @@ void RL_Sim::StartJointController(const std::string& ros_namespace, const std::v
 
 void RL_Sim::GetState(RobotState<float> *state)
 {
+    const std::lock_guard<std::mutex> lock(this->state_mutex);
+
 #if defined(USE_ROS1)
     const auto &orientation = this->pose.orientation;
     const auto &angular_velocity = this->vel.angular;
@@ -286,6 +287,7 @@ void RL_Sim::GetState(RobotState<float> *state)
 
 void RL_Sim::SetCommand(const RobotCommand<float> *command)
 {
+    const std::lock_guard<std::mutex> lock(this->state_mutex);
     for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
     {
 #if defined(USE_ROS1)
@@ -315,19 +317,18 @@ void RL_Sim::SetCommand(const RobotCommand<float> *command)
 
 void RL_Sim::RobotControl()
 {
+    const bool reset_history = this->post_reset_state_ready.exchange(false, std::memory_order_acq_rel);
     this->GetState(&this->robot_state);
+    if (reset_history)
+    {
+        this->RequestObservationHistoryReset();
+    }
 
     this->StateController(&this->robot_state, &this->robot_command);
 
     if (this->control.current_keyboard == Input::Keyboard::R || this->control.current_gamepad == Input::Gamepad::RB_Y)
     {
-#if defined(USE_ROS1)
-        std_srvs::Empty empty;
-        this->gazebo_reset_world_client.call(empty);
-#elif defined(USE_ROS2)
-        auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
-        auto result = this->gazebo_reset_world_client->async_send_request(empty_request);
-#endif
+        this->RequestGazeboWorldReset();
         this->control.current_keyboard = this->control.last_keyboard;
     }
     if (this->control.current_keyboard == Input::Keyboard::Enter || this->control.current_gamepad == Input::Gamepad::RB_X)
@@ -366,13 +367,25 @@ void RL_Sim::RobotControl()
 #if defined(USE_ROS1)
 void RL_Sim::ModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr &msg)
 {
+    const std::lock_guard<std::mutex> lock(this->state_mutex);
     this->vel = msg->twist[2];
     this->pose = msg->pose[2];
+    if (this->waiting_for_post_reset_state)
+    {
+        this->post_reset_base_state_received = true;
+        this->CompleteObservationHistoryResetIfReady();
+    }
 }
 #elif defined(USE_ROS2)
 void RL_Sim::GazeboImuCallback(const sensor_msgs::msg::Imu::SharedPtr msg)
 {
+    const std::lock_guard<std::mutex> lock(this->state_mutex);
     this->gazebo_imu = *msg;
+    if (this->waiting_for_post_reset_state)
+    {
+        this->post_reset_base_state_received = true;
+        this->CompleteObservationHistoryResetIfReady();
+    }
 }
 #endif
 
@@ -444,23 +457,115 @@ void RL_Sim::JoyCallback(
 #if defined(USE_ROS1)
 void RL_Sim::JointStatesCallback(const robot_msgs::MotorState::ConstPtr &msg, const std::string &joint_controller_name)
 {
+    const std::lock_guard<std::mutex> lock(this->state_mutex);
     this->joint_positions[joint_controller_name] = msg->q;
     this->joint_velocities[joint_controller_name] = msg->dq;
     this->joint_efforts[joint_controller_name] = msg->tau_est;
+    if (this->waiting_for_post_reset_state)
+    {
+        this->post_reset_joint_states_pending.erase(joint_controller_name);
+        this->CompleteObservationHistoryResetIfReady();
+    }
 }
 #elif defined(USE_ROS2)
 void RL_Sim::RobotStateCallback(const robot_msgs::msg::RobotState::SharedPtr msg)
 {
+    const std::lock_guard<std::mutex> lock(this->state_mutex);
     this->robot_state_subscriber_msg = *msg;
+    if (this->waiting_for_post_reset_state)
+    {
+        this->post_reset_joint_state_received = true;
+        this->CompleteObservationHistoryResetIfReady();
+    }
 }
 #endif
+
+void RL_Sim::RequestGazeboWorldReset()
+{
+    if (this->reset_in_progress.exchange(true, std::memory_order_acq_rel))
+    {
+        return;
+    }
+
+#if defined(USE_ROS1)
+    std_srvs::Empty empty;
+    if (this->gazebo_reset_world_client.call(empty))
+    {
+        this->BeginObservationHistoryReset();
+    }
+    else
+    {
+        this->reset_in_progress.store(false, std::memory_order_release);
+    }
+#elif defined(USE_ROS2)
+    auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
+    try
+    {
+        auto result = this->gazebo_reset_world_client->async_send_request(
+            empty_request,
+            [this](rclcpp::Client<std_srvs::srv::Empty>::SharedFuture response)
+            {
+                try
+                {
+                    response.get();
+                    this->BeginObservationHistoryReset();
+                }
+                catch (const std::exception& error)
+                {
+                    this->reset_in_progress.store(false, std::memory_order_release);
+                    std::cerr << LOGGER::ERROR << "Failed to reset Gazebo world: " << error.what() << std::endl;
+                }
+            });
+        (void)result;
+    }
+    catch (const std::exception& error)
+    {
+        this->reset_in_progress.store(false, std::memory_order_release);
+        std::cerr << LOGGER::ERROR << "Failed to request Gazebo world reset: " << error.what() << std::endl;
+    }
+#endif
+}
+
+void RL_Sim::BeginObservationHistoryReset()
+{
+    const std::lock_guard<std::mutex> lock(this->state_mutex);
+    this->waiting_for_post_reset_state = true;
+    this->post_reset_base_state_received = false;
+    this->post_reset_state_ready.store(false, std::memory_order_release);
+#if defined(USE_ROS1)
+    this->post_reset_joint_states_pending.clear();
+    const auto joint_controller_names = this->params.Get<std::vector<std::string>>("joint_controller_names");
+    this->post_reset_joint_states_pending.insert(joint_controller_names.begin(), joint_controller_names.end());
+#elif defined(USE_ROS2)
+    this->post_reset_joint_state_received = false;
+#endif
+}
+
+void RL_Sim::CompleteObservationHistoryResetIfReady()
+{
+#if defined(USE_ROS1)
+    const bool joint_state_ready = this->post_reset_joint_states_pending.empty();
+#elif defined(USE_ROS2)
+    const bool joint_state_ready = this->post_reset_joint_state_received;
+#endif
+    if (this->waiting_for_post_reset_state && this->post_reset_base_state_received && joint_state_ready)
+    {
+        this->waiting_for_post_reset_state = false;
+        this->post_reset_state_ready.store(true, std::memory_order_release);
+    }
+}
 
 void RL_Sim::RunModel()
 {
     if (this->rl_init_done && simulation_running)
     {
         this->episode_length_buf += 1;
-        this->obs.ang_vel = this->robot_state.imu.gyroscope;
+        RobotState<float> robot_state_snapshot;
+        {
+            const std::lock_guard<std::mutex> lock(this->state_mutex);
+            robot_state_snapshot = this->robot_state;
+        }
+        this->obs.ang_vel = robot_state_snapshot.imu.gyroscope;
         this->obs.commands[0] = this->control.x;
         this->obs.commands[1] = this->control.y;
         this->obs.commands[2] = this->control.yaw;
@@ -470,9 +575,9 @@ void RL_Sim::RunModel()
             this->obs.commands[1] = (float)this->cmd_vel.linear.y;
             this->obs.commands[2] = (float)this->cmd_vel.angular.z;
         }
-        this->obs.base_quat = this->robot_state.imu.quaternion;
-        this->obs.dof_pos = this->robot_state.motor_state.q;
-        this->obs.dof_vel = this->robot_state.motor_state.dq;
+        this->obs.base_quat = robot_state_snapshot.imu.quaternion;
+        this->obs.dof_pos = robot_state_snapshot.motor_state.q;
+        this->obs.dof_vel = robot_state_snapshot.motor_state.dq;
 
         this->obs.actions = this->Forward();
         this->ComputeOutput(this->obs.actions, this->output_dof_pos, this->output_dof_vel, this->output_dof_tau);
@@ -495,9 +600,12 @@ void RL_Sim::RunModel()
 
 #ifdef CSV_LOGGER
         std::vector<float> tau_est(this->params.Get<int>("num_of_dofs"), 0.0f);
-        for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
         {
-            tau_est[i] = this->joint_efforts[this->params.Get<std::vector<std::string>>("joint_controller_names")[i]];
+            const std::lock_guard<std::mutex> lock(this->state_mutex);
+            for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
+            {
+                tau_est[i] = this->joint_efforts[this->params.Get<std::vector<std::string>>("joint_controller_names")[i]];
+            }
         }
         this->CSVLogger(this->output_dof_tau, tau_est, this->obs.dof_pos, this->output_dof_pos, this->obs.dof_vel);
 #endif
@@ -515,18 +623,35 @@ std::vector<float> RL_Sim::Forward()
         return this->obs.actions;
     }
 
+    const bool reset_history = this->history_reset_requested.exchange(false, std::memory_order_acq_rel);
+    if (reset_history)
+    {
+        std::fill(this->obs.actions.begin(), this->obs.actions.end(), 0.0f);
+    }
     std::vector<float> clamped_obs = this->ComputeObservation();
 
     std::vector<float> actions;
     if (this->params.Get<std::vector<int>>("observations_history").size() != 0)
     {
-        this->history_obs_buf.insert(clamped_obs);
+        if (reset_history)
+        {
+            this->history_obs_buf.reset({0}, clamped_obs);
+        }
+        else
+        {
+            this->history_obs_buf.insert(clamped_obs);
+        }
         this->history_obs = this->history_obs_buf.get_obs_vec(this->params.Get<std::vector<int>>("observations_history"));
         actions = this->model->forward({this->history_obs});
     }
     else
     {
         actions = this->model->forward({clamped_obs});
+    }
+
+    if (reset_history)
+    {
+        this->reset_in_progress.store(false, std::memory_order_release);
     }
 
     if (!this->params.Get<std::vector<float>>("clip_actions_upper").empty() && !this->params.Get<std::vector<float>>("clip_actions_lower").empty())
@@ -541,22 +666,34 @@ std::vector<float> RL_Sim::Forward()
 
 void RL_Sim::Plot()
 {
+    const int num_dofs = this->params.Get<int>("num_of_dofs");
+    std::vector<float> real_joint_pos(num_dofs);
+    std::vector<float> target_joint_pos(num_dofs);
+    {
+        const std::lock_guard<std::mutex> lock(this->state_mutex);
+        for (int i = 0; i < num_dofs; ++i)
+        {
+#if defined(USE_ROS1)
+            real_joint_pos[i] = this->joint_positions[this->params.Get<std::vector<std::string>>("joint_controller_names")[i]];
+            target_joint_pos[i] = this->joint_publishers_commands[i].q;
+#elif defined(USE_ROS2)
+            real_joint_pos[i] = this->robot_state_subscriber_msg.motor_state[i].q;
+            target_joint_pos[i] = this->robot_command_publisher_msg.motor_command[i].q;
+#endif
+        }
+    }
+
     this->plot_t.erase(this->plot_t.begin());
     this->plot_t.push_back(this->motiontime);
     plt::cla();
     plt::clf();
-    for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
+    for (int i = 0; i < num_dofs; ++i)
     {
         this->plot_real_joint_pos[i].erase(this->plot_real_joint_pos[i].begin());
         this->plot_target_joint_pos[i].erase(this->plot_target_joint_pos[i].begin());
-#if defined(USE_ROS1)
-        this->plot_real_joint_pos[i].push_back(this->joint_positions[this->params.Get<std::vector<std::string>>("joint_controller_names")[i]]);
-        this->plot_target_joint_pos[i].push_back(this->joint_publishers_commands[i].q);
-#elif defined(USE_ROS2)
-        this->plot_real_joint_pos[i].push_back(this->robot_state_subscriber_msg.motor_state[i].q);
-        this->plot_target_joint_pos[i].push_back(this->robot_command_publisher_msg.motor_command[i].q);
-#endif
-        plt::subplot(this->params.Get<int>("num_of_dofs"), 1, i + 1);
+        this->plot_real_joint_pos[i].push_back(real_joint_pos[i]);
+        this->plot_target_joint_pos[i].push_back(target_joint_pos[i]);
+        plt::subplot(num_dofs, 1, i + 1);
         plt::named_plot("_real_joint_pos", this->plot_t, this->plot_real_joint_pos[i], "r");
         plt::named_plot("_target_joint_pos", this->plot_t, this->plot_target_joint_pos[i], "b");
         plt::xlim(this->plot_t.front(), this->plot_t.back());

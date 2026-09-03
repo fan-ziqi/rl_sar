@@ -17,8 +17,8 @@ ObservationBuffer::ObservationBuffer(int num_envs,
                                      const std::string& priority)
     : num_envs(num_envs),
       obs_dims(obs_dims),
-      history_length(history_length),
-      priority(priority)
+      priority(priority),
+      history_length(history_length)
 {
     if (num_envs <= 0 || history_length <= 0)
     {
@@ -42,6 +42,7 @@ ObservationBuffer::ObservationBuffer(int num_envs,
 
     // Initialize buffer: [env][time][obs]
     obs_buf.resize(num_envs);
+    initialized.resize(num_envs, false);
     for (int env_idx = 0; env_idx < num_envs; ++env_idx)
     {
         obs_buf[env_idx].resize(history_length);
@@ -54,7 +55,7 @@ ObservationBuffer::ObservationBuffer(int num_envs,
 
 void ObservationBuffer::reset(std::vector<int> reset_idxs, const std::vector<float>& new_obs)
 {
-    if (obs_buf.empty())
+    if (obs_buf.empty() || new_obs.size() != static_cast<size_t>(num_obs_total))
     {
         return;
     }
@@ -67,11 +68,9 @@ void ObservationBuffer::reset(std::vector<int> reset_idxs, const std::vector<flo
             // Copy new observation data to all time steps
             for (int t = 0; t < history_length; ++t)
             {
-                for (int i = 0; i < num_obs_total && i < static_cast<int>(new_obs.size()); ++i)
-                {
-                    obs_buf[env_idx][t][i] = new_obs[i];
-                }
+                obs_buf[env_idx][t] = new_obs;
             }
+            initialized[env_idx] = true;
         }
     }
 }
@@ -86,6 +85,18 @@ void ObservationBuffer::insert(const std::vector<float>& new_obs)
     // Shift historical observations forward by one position for all environments
     for (int env_idx = 0; env_idx < num_envs; ++env_idx)
     {
+        // Policies are trained with the first post-reset observation repeated
+        // across the history window, not synthetic zero observations.
+        if (!initialized[env_idx])
+        {
+            for (int t = 0; t < history_length; ++t)
+            {
+                obs_buf[env_idx][t] = new_obs;
+            }
+            initialized[env_idx] = true;
+            continue;
+        }
+
         // Move from back to front to avoid overwriting
         for (int t = history_length - 1; t > 0; --t)
         {
@@ -113,23 +124,23 @@ std::vector<float> ObservationBuffer::get_obs_vec(std::vector<int> obs_ids)
     }
 
     // Calculate output size
-    int output_size = 0;
-    for (int obs_id : obs_ids)
+    int valid_history_steps = 0;
+    for (int step : obs_ids)
     {
-        if (obs_id >= 0 && obs_id < static_cast<int>(obs_dims.size()))
+        if (step >= 0 && step < history_length)
         {
-            output_size += obs_dims[obs_id];
+            ++valid_history_steps;
         }
     }
 
-    if (output_size == 0)
+    if (valid_history_steps == 0)
     {
         return std::vector<float>();
     }
 
     // Create output vector
     std::vector<float> output;
-    output.reserve(num_envs * history_length * output_size);
+    output.reserve(num_envs * valid_history_steps * num_obs_total);
 
     if (this->priority == "time")
     {

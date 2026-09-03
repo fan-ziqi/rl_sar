@@ -11,6 +11,7 @@
 #include <exception>
 #include <unistd.h>
 #include <algorithm>
+#include <atomic>
 #include <tbb/concurrent_queue.h>
 #include <vector>
 #include <memory>
@@ -209,6 +210,7 @@ public:
     void InitControl();
     void InitRL(std::string robot_config_path);
     void InitJointNum(size_t num_joints);
+    void RequestObservationHistoryReset();
 
     // rl functions
     virtual std::vector<float> Forward() = 0;
@@ -233,6 +235,7 @@ public:
     // history buffer
     ObservationBuffer history_obs_buf;
     std::vector<float> history_obs;
+    std::atomic<bool> history_reset_requested{false};
 
     // others
     int motiontime = 0;
