@@ -222,6 +222,11 @@ void RL::InitJointNum(size_t num_joints)
     this->robot_command.motor_command.resize(num_joints);
 }
 
+void RL::RequestObservationHistoryReset()
+{
+    this->history_reset_requested.store(true, std::memory_order_release);
+}
+
 void RL::InitRL(std::string robot_config_path)
 {
     std::lock_guard<std::mutex> lock(this->model_mutex);

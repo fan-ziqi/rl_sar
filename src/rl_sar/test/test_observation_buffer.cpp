@@ -4,71 +4,103 @@
  */
 
 #include "observation_buffer.hpp"
-#include <iostream>
+
 #include <stdexcept>
-#include <algorithm>
+#include <string>
+#include <vector>
 
-/*
-Output:
-
-Initializing buffer with: obs_dims=[2 3 4], history_length=3, observations_history=[0 0 1 2], priority=time
-Inserting observation t-2:
-[ 11 12 21 22 23 31 32 33 34 ]
-Inserting observation t-1:
-[ 110 120 210 220 230 310 320 330 340 ]
-Inserting observation t:
-[ 1100 1200 2100 2200 2300 3100 3200 3300 3400 ]
-time priority output:
-[ 11 12 21 22 23 31 32 33 34 11 12 21 22 23 31 32 33 34 110 120 210 220 230 310 320 330 340 1100 1200 2100 2200 2300 3100 3200 3300 3400 ]
-
-Initializing buffer with: obs_dims=[2 3 4], history_length=3, observations_history=[0 0 1 2], priority=term
-Inserting observation t-2:
-[ 11 12 21 22 23 31 32 33 34 ]
-Inserting observation t-1:
-[ 110 120 210 220 230 310 320 330 340 ]
-Inserting observation t:
-[ 1100 1200 2100 2200 2300 3100 3200 3300 3400 ]
-term priority output:
-[ 11 12 11 12 110 120 1100 1200 21 22 23 21 22 23 210 220 230 2100 2200 2300 31 32 33 34 31 32 33 34 310 320 330 340 3100 3200 3300 3400 ]
- 
-*/
-
-void test_buffer(const std::string& priority)
+void expect_equal(const std::vector<float>& actual,
+                  const std::vector<float>& expected,
+                  const std::string& description)
 {
-    std::vector<int> obs_dims = {2, 3, 4};
-    int num_envs = 1;
-    std::vector<int> observations_history = {0, 0, 1, 2};
-    int history_length = *std::max_element(observations_history.begin(), observations_history.end()) + 1;
+    if (actual != expected)
+    {
+        throw std::runtime_error("Unexpected observation history: " + description);
+    }
+}
 
-    std::cout << "Initializing buffer with: "
-                << "obs_dims=[" << obs_dims << "], "
-                << "history_length=" << history_length << ", "
-                << "observations_history=[" << observations_history << "], "
-                << "priority=" << priority << "\n";
+void test_first_observation_fills_history()
+{
+    ObservationBuffer buffer(1, {2}, 3, "time");
 
-    ObservationBuffer buffer(num_envs, obs_dims, history_length, priority);
+    buffer.insert({1.0f, 2.0f});
+    expect_equal(
+        buffer.get_obs_vec({0, 1, 2}),
+        {1.0f, 2.0f, 1.0f, 2.0f, 1.0f, 2.0f},
+        "initial observation");
 
-    std::vector<float> obs1 = {11, 12, 21, 22, 23, 31, 32, 33, 34};
-    std::vector<float> obs2 = {110, 120, 210, 220, 230, 310, 320, 330, 340};
-    std::vector<float> obs3 = {1100, 1200, 2100, 2200, 2300, 3100, 3200, 3300, 3400};
+    buffer.insert({3.0f, 4.0f});
+    expect_equal(
+        buffer.get_obs_vec({0, 1, 2}),
+        {3.0f, 4.0f, 1.0f, 2.0f, 1.0f, 2.0f},
+        "second observation");
+}
 
-    std::cout << "Inserting observation t-2:\n" << obs1 << "\n";
-    buffer.insert(obs1);
+void test_reset_replaces_stale_history()
+{
+    ObservationBuffer buffer(1, {2}, 3, "time");
+    buffer.insert({1.0f, 2.0f});
+    buffer.insert({3.0f, 4.0f});
 
-    std::cout << "Inserting observation t-1:\n" << obs2 << "\n";
-    buffer.insert(obs2);
+    buffer.reset({0}, {9.0f, 8.0f});
 
-    std::cout << "Inserting observation t:\n" << obs3 << "\n";
-    buffer.insert(obs3);
+    expect_equal(
+        buffer.get_obs_vec({0, 1, 2}),
+        {9.0f, 8.0f, 9.0f, 8.0f, 9.0f, 8.0f},
+        "reset observation");
+}
 
-    auto history = buffer.get_obs_vec(observations_history);
+void test_term_priority_preserves_seeded_history()
+{
+    ObservationBuffer buffer(1, {1, 2}, 2, "term");
+    buffer.insert({1.0f, 10.0f, 11.0f});
+    buffer.insert({2.0f, 20.0f, 21.0f});
 
-    std::cout << priority << " priority output:\n" << history << "\n\n";
+    expect_equal(
+        buffer.get_obs_vec({0, 1}),
+        {2.0f, 1.0f, 20.0f, 21.0f, 10.0f, 11.0f},
+        "term priority");
+}
+
+void test_reset_only_changes_selected_environment()
+{
+    ObservationBuffer buffer(2, {1}, 2, "time");
+    buffer.insert({1.0f});
+    buffer.reset({1}, {9.0f});
+
+    expect_equal(buffer.get_obs_vec({0, 1}), {1.0f, 1.0f, 9.0f, 9.0f}, "selected reset");
+
+    buffer.insert({2.0f});
+    expect_equal(buffer.get_obs_vec({0, 1}), {2.0f, 1.0f, 2.0f, 9.0f}, "selected update");
+}
+
+void test_history_index_is_independent_of_term_count()
+{
+    ObservationBuffer buffer(1, {2}, 4, "time");
+    buffer.insert({5.0f, 6.0f});
+
+    expect_equal(buffer.get_obs_vec({3}), {5.0f, 6.0f}, "oldest history index");
+}
+
+void test_reset_ignores_wrong_observation_size()
+{
+    ObservationBuffer buffer(1, {2}, 3, "time");
+    buffer.insert({1.0f, 2.0f});
+    buffer.reset({0}, {9.0f});
+
+    expect_equal(
+        buffer.get_obs_vec({0, 1, 2}),
+        {1.0f, 2.0f, 1.0f, 2.0f, 1.0f, 2.0f},
+        "invalid reset observation");
 }
 
 int main()
 {
-    test_buffer("time");
-    test_buffer("term");
+    test_first_observation_fills_history();
+    test_reset_replaces_stale_history();
+    test_term_priority_preserves_seeded_history();
+    test_reset_only_changes_selected_environment();
+    test_history_index_is_independent_of_term_count();
+    test_reset_ignores_wrong_observation_size();
     return 0;
 }

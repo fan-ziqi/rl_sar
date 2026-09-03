@@ -23,6 +23,8 @@
 #include <sys/wait.h>
 #include <filesystem>
 #include <fstream>
+#include <mutex>
+#include <set>
 #include <stdexcept>
 
 #if defined(USE_ROS1)
@@ -65,6 +67,9 @@ private:
     void SetCommand(const RobotCommand<float> *command) override;
     void RunModel();
     void RobotControl();
+    void RequestGazeboWorldReset();
+    void BeginObservationHistoryReset();
+    void CompleteObservationHistoryResetIfReady();
 
     // loop
     std::shared_ptr<LoopFunc> loop_keyboard;
@@ -125,6 +130,16 @@ private:
     std::map<std::string, float> joint_positions;
     std::map<std::string, float> joint_velocities;
     std::map<std::string, float> joint_efforts;
+    std::mutex state_mutex;
+    bool waiting_for_post_reset_state = false;
+    bool post_reset_base_state_received = false;
+#if defined(USE_ROS1)
+    std::set<std::string> post_reset_joint_states_pending;
+#elif defined(USE_ROS2)
+    bool post_reset_joint_state_received = false;
+#endif
+    std::atomic<bool> reset_in_progress{false};
+    std::atomic<bool> post_reset_state_ready{false};
     void StartJointController(const std::string& ros_namespace, const std::vector<std::string>& names);
 };
 

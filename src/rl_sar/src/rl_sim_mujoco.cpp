@@ -153,6 +153,7 @@ RL_Sim::~RL_Sim()
 
 void RL_Sim::GetState(RobotState<float> *state)
 {
+    const std::lock_guard<std::mutex> lock(this->state_mutex);
     if (mj_data)
     {
         state->imu.quaternion[0] = mj_data->sensordata[3 * this->params.Get<int>("num_of_dofs") + 0];
@@ -202,6 +203,8 @@ void RL_Sim::RobotControl()
         {
             mj_resetData(this->mj_model, this->mj_data);
             mj_forward(this->mj_model, this->mj_data);
+            this->GetState(&this->robot_state);
+            this->RequestObservationHistoryReset();
         }
     }
     if (this->control.current_keyboard == Input::Keyboard::Enter || this->control.current_gamepad == Input::Gamepad::RB_X)
@@ -332,7 +335,12 @@ void RL_Sim::RunModel()
     if (this->rl_init_done && simulation_running)
     {
         this->episode_length_buf += 1;
-        this->obs.ang_vel = this->robot_state.imu.gyroscope;
+        RobotState<float> robot_state_snapshot;
+        {
+            const std::lock_guard<std::mutex> lock(this->state_mutex);
+            robot_state_snapshot = this->robot_state;
+        }
+        this->obs.ang_vel = robot_state_snapshot.imu.gyroscope;
         this->obs.commands[0] = this->control.x;
         this->obs.commands[1] = this->control.y;
         this->obs.commands[2] = this->control.yaw;
@@ -343,9 +351,9 @@ void RL_Sim::RunModel()
         //     this->obs.commands[1] = (float)this->cmd_vel.linear.y;
         //     this->obs.commands[2] = (float)this->cmd_vel.angular.z;
         // }
-        this->obs.base_quat = this->robot_state.imu.quaternion;
-        this->obs.dof_pos = this->robot_state.motor_state.q;
-        this->obs.dof_vel = this->robot_state.motor_state.dq;
+        this->obs.base_quat = robot_state_snapshot.imu.quaternion;
+        this->obs.dof_pos = robot_state_snapshot.motor_state.q;
+        this->obs.dof_vel = robot_state_snapshot.motor_state.dq;
 
         this->obs.actions = this->Forward();
         this->ComputeOutput(this->obs.actions, this->output_dof_pos, this->output_dof_vel, this->output_dof_tau);
@@ -388,12 +396,24 @@ std::vector<float> RL_Sim::Forward()
         return this->obs.actions;
     }
 
+    const bool reset_history = this->history_reset_requested.exchange(false, std::memory_order_acq_rel);
+    if (reset_history)
+    {
+        std::fill(this->obs.actions.begin(), this->obs.actions.end(), 0.0f);
+    }
     std::vector<float> clamped_obs = this->ComputeObservation();
 
     std::vector<float> actions;
     if (this->params.Get<std::vector<int>>("observations_history").size() != 0)
     {
-        this->history_obs_buf.insert(clamped_obs);
+        if (reset_history)
+        {
+            this->history_obs_buf.reset({0}, clamped_obs);
+        }
+        else
+        {
+            this->history_obs_buf.insert(clamped_obs);
+        }
         this->history_obs = this->history_obs_buf.get_obs_vec(this->params.Get<std::vector<int>>("observations_history"));
         actions = this->model->forward({this->history_obs});
     }

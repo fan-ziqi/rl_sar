@@ -60,6 +60,7 @@ private:
     int history_length = 0;                                 ///< History buffer length
     int num_obs_total = 0;                                  ///< Total observation size
     std::vector<std::vector<std::vector<float>>> obs_buf;   ///< Observation buffer [env][time][obs]
+    std::vector<bool> initialized;                          ///< Whether each environment has received an observation
 };
 
 #endif // OBSERVATION_BUFFER_HPP

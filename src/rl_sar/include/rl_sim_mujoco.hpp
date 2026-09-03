@@ -23,6 +23,7 @@
 #include <sys/wait.h>
 #include <filesystem>
 #include <fstream>
+#include <mutex>
 #include <stdexcept>
 #include <memory>
 
@@ -84,6 +85,7 @@ private:
     mjData *mj_data;
     mjModel *mj_model;
     std::string scene_name;
+    std::mutex state_mutex;
 
     // joystick
     std::unique_ptr<Joystick> sys_js;
